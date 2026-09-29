@@ -1,0 +1,60 @@
+{
+  "$schema": "pelican-bay-detail-inventory/1",
+  "status": "preliminary: hand count by the chief evaluator from drafts/C-poster/gen.mjs, keyframe.png and closeup.png. At R0, tools/detail-inventory.mjs recounts the draft by the same rules (definitions.detailItem in rubric.json). If the counts differ, the larger of the two counts is used as the baseline, and the result is hash-locked before R1.",
+  "source": {
+    "draft": "drafts/C-poster",
+    "sha256": {
+      "keyframe.png": "4573b5ffe084c00f3ee13025113738c3802b5e0b3d767e00645994bf3dc99837",
+      "closeup.png": "bf455f98843e3760dd119d9792ef26c37c4839acf1586a8a3a07892b39d325ba",
+      "gen.mjs": "7439b65463144b450079666c5830bb51071d3836bed6f7ed2c5d8fa713dde20d",
+      "keyframe.svg": "33bb3b53fb2174e7dee641fb4afc1413970c403379cc29459cc1008dd223b9ca"
+    },
+    "stats": { "keyframe.svg raw bytes": 400022, "keyframe.svg gzip -9 bytes": 88804, "elements": { "path": 623, "rect": 88, "circle": 58, "g": 87, "clipPath": 14, "pattern": 8 } }
+  },
+  "rules": "An inventory line is one distinct kind of object, part or texture treatment, counted within its layer. Repeated identical instances count once: 4 cabanas give 1 line, 32 spokes give 1 line. A visibly different design variant counts as a separate line, for example a cabana with an open door, or a far sailboat versus a near sailboat. A line counts only if it covers at least 2 px² at 1600×900@1 in the default view or in the close camera, and is less than 50% occluded. Lines are split into object lines (O) and texture lines (T, halftone, weave, scale patterns, hatching and so on).",
+  "layers": {
+    "pelican": {
+      "O": ["body mass", "neck", "head", "eye (R ring + N pupil + P highlight)", "upper eyelid line", "bare facial skin", "upper bill", "lower bill", "nail", "gape / smile line", "pouch", "crest", "near wing coverts (upper arm)", "secondary fringe", "primaries fan at grip", "far wing (flat B)", "thigh 'trousers'", "tarsus (bare leg)", "foot + web", "tail", "scarf", "scarf fringe", "flank cast shadow"],
+      "T": ["B key line", "contour-feather scallop lines", "body halftone", "pouch texture lines"]
+    },
+    "bike": {
+      "O": ["tyre", "rim (2 inks)", "spokes (tangential)", "hub (3 rings)", "valve", "spoke reflector", "fender", "fender pinstripe", "fender stays", "rear reflector", "main tubes", "tube highlight lines", "head-tube bands", "seat post", "seat-cluster lug disc", "BB shell disc", "fork + highlight", "fork crown", "head badge (diamond)", "saddle", "saddle springs", "saddle rivets", "saddle rails", "stem", "swept handlebar", "grip", "bell", "basket", "basket rim", "basket stays", "fish (3 designs, 1 line)", "headlamp", "chain", "chainring teeth", "spider", "chainring bolts", "cog", "crank arm + highlight", "pedal", "pedal reflectors"],
+      "T": ["basket weave", "chain link dashes"]
+    },
+    "sea": {
+      "O": ["far sea band", "near sea band", "horizon line", "sun glitter path (2 inks)", "near sailboat (mast, main, jib, pennant, red panel, wake)", "far sailboat"],
+      "T": ["sea halftone band", "wave ticks (light)", "wave ticks (dark)"]
+    },
+    "land": {
+      "O": ["headland", "teal hill", "hill highlight strokes", "lighthouse (stripes, lamp room, cap)", "lighthouse beam", "keeper's cottage", "sand", "sand scalloped edge", "cabana", "parasol", "sea wall", "sea-wall coping", "lamp post", "palm trunk", "palm fronds (2 inks)", "coconuts", "road", "road dashes", "kerb lines", "rider shadow", "shrub mounds", "dune-grass fans", "poppies", "foreground base"],
+      "T": ["hill halftone", "sand halftone", "sea-wall halftone + joints", "road halftone", "shrub halftone", "palm trunk rings"]
+    },
+    "sky": {
+      "O": ["sky bands (4 inks)", "sunburst wedges", "sun disc", "sun ring", "sun streak bars", "deco cumulus (2 inks)", "cloud base bars", "gulls"],
+      "T": ["band-transition halftone", "sunburst cream halftone"]
+    },
+    "fx": {
+      "O": ["speed lines"],
+      "T": []
+    },
+    "typography_frame": {
+      "O": ["PELICAN BAY stroke capitals", "title inline (R)", "title stepped shadow (N)", "tagline bar", "tagline 'THE COAST ROAD · BY BICYCLE'", "diamond ornament", "鹈鹕湾 vertical cartouche", "paper margin", "N frame line"],
+      "T": ["paper speck overlay"]
+    }
+  },
+  "counts": {
+    "pelican": { "O": 23, "T": 4, "total": 27 },
+    "bike": { "O": 40, "T": 2, "total": 42 },
+    "sea": { "O": 6, "T": 3, "total": 9 },
+    "land": { "O": 24, "T": 6, "total": 30 },
+    "sky": { "O": 8, "T": 2, "total": 10 },
+    "fx": { "O": 1, "T": 0, "total": 1 },
+    "typography_frame": { "O": 9, "T": 1, "total": 10 },
+    "all": 129
+  },
+  "targets": {
+    "gate": "Total ≥ 2.5 × 129 = 323 lines; pelican ≥ 2.0 × 27 = 54; bike ≥ 2.0 × 42 = 84; every other layer ≥ 1.5 × its baseline (fx is exempt from the ratio but must have ≥ 4 lines)",
+    "C13.1 at 8": "Total ≥ 2.5×; pelican and bike ≥ 2.0×; every other layer ≥ 1.5×",
+    "C13.1 at 10": "Total ≥ 3.5× (≥ 452); every layer ≥ 2.0× (fx ≥ 6 lines)"
+  }
+}
