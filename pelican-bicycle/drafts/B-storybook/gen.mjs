@@ -191,7 +191,9 @@ let scene = '';
 // ---- sky ----
 scene += `<g id="L-sky"><rect width="1600" height="480" fill="url(#gSky)"/>
 <rect width="1600" height="480" fill="#FFE3B0" filter="url(#brush)" opacity=".10" style="mix-blend-mode:soft-light"/>
-<rect width="1600" height="480" fill="url(#gSunGlow)"/></g>\n`;
+<rect width="1600" height="480" fill="url(#gSunGlow)"/>
+${(() => { seed = 404; let b = ''; for (let i = 0; i < 38; i++) { const y = rr(20, 450), x = rr(-100, 1600), w = rr(120, 380); const warm = y > 250; b += `<path d="M${P(x, y)} c${f(w * .3)},${f(rr(-5, 5))} ${f(w * .7)},${f(rr(-5, 5))} ${f(w)},${f(rr(-4, 4))}" fill="none" stroke="${warm ? (rnd() < .5 ? '#FFD9A8' : '#F2A48A') : (rnd() < .5 ? '#8C8AC4' : '#5B6FB4')}" stroke-width="${f(rr(6, 16))}" stroke-linecap="round" opacity="${f(rr(.08, .2))}"/>`; } return `<g filter="url(#soft)">${b}</g>`; })()}
+</g>\n`;
 
 // ---- sun ----
 scene += `<g id="L-sunmoon">
@@ -383,7 +385,22 @@ scene += `<g id="L-hills-far" filter="url(#soft)">
     <path d="M-48,-52 Q-8,-92 36,-66 Q-8,-66 -48,-52Z" fill="#F3E3C8" ${S(2)}/>
     <path d="M-48,-52 Q-26,-70 -12,-80 Q-18,-62 -30,-56Z M-4,-82 Q14,-78 36,-66 Q16,-66 4,-64Z" fill="#D8443A"/>
   </g>`;
-  scene += `<g id="L-roadside">${palm(78, 704, 250, 38, 3)}${palm(150, 706, 190, -22, 8)}${sign}${umb}${lamp(1330, 704)}</g>\n`;
+  const perched = `<g transform="translate(1102 646)" filter="url(#wob)">
+    <path d="M-2,0 l-2,5 M4,0 l1,5" stroke="#E08A3A" stroke-width="2"/>
+    <path d="M-16,-8 C-14,-18 4,-20 12,-14 C18,-10 16,-2 8,0 C-2,2 -12,0 -16,-8Z" fill="#FFF6EC" ${S(2)}/>
+    <path d="M-18,-10 C-8,-14 2,-12 8,-8 C2,-4 -8,-4 -18,-10Z" fill="#8C8EA8" ${S(1.6)}/>
+    <path d="M-20,-9 l-6,-2 l2,4Z" fill="#2A2228"/>
+    <circle cx="12" cy="-20" r="7" fill="#FFF6EC" ${S(2)}/><circle cx="14" cy="-21" r="1.4" fill="${C.ink}"/>
+    <path d="M18,-19 l8,1.5 l-8,1.5Z" fill="#F2C040" ${S(1.2)}/>
+  </g>`;
+  const crab = `<g transform="translate(420 640)" filter="url(#wob)">
+    <path d="M-12,4 l-5,4 M-8,6 l-3,5 M8,6 l3,5 M12,4 l5,4" stroke="#C94A3A" stroke-width="2.2" stroke-linecap="round"/>
+    <ellipse cx="0" cy="2" rx="13" ry="8" fill="#E0604A" ${S(2)}/>
+    <path d="M-10,-2 q-8,-8 -4,-14 q4,2 2,6 M10,-2 q8,-8 4,-14 q-4,2 -2,6" fill="#E0604A" ${S(1.8)}/>
+    <circle cx="-4" cy="-6" r="2.4" fill="#FFF" ${S(1.2)}/><circle cx="4" cy="-6" r="2.4" fill="#FFF" ${S(1.2)}/>
+    <path d="M-3,4 q3,2 6,0" fill="none" ${S(1.4)}/>
+  </g>`;
+  scene += `<g id="L-roadside">${perched}${crab}${palm(78, 704, 250, 38, 3)}${palm(150, 706, 190, -22, 8)}${sign}${umb}${lamp(1330, 704)}</g>\n`;
 }
 
 // ---- road ----
@@ -618,9 +635,9 @@ function shankArt(farSide) {
 function footArt(farSide) {
   const k = farSide ? far(C.foot) : C.foot, w = farSide ? far(C.web) : C.web, kd = farSide ? far(C.footDark) : C.footDark;
   // side view of a webbed foot lying on the pedal (sole at y ~ 6 = pedal top), toes to x 48
-  return `<path d="M-7,-3 C-6,-9 4,-9 10,-6 C22,-1 36,-1 46,0 C53,1 55,5 51,8 C46,11 42,8 38,11 C34,14 28,10 23,12 C18,14 12,10 6,11 C0,11 -5,9 -8,6 C-10,3 -10,0 -7,-3Z" fill="${w}" ${S(2.6)}/>
-  <path d="M4,-3 C18,1 34,2 48,3 M6,1 C18,4 30,7 38,10 M4,4 C12,6 18,9 22,11" fill="none" stroke="${kd}" stroke-width="1.7" stroke-linecap="round"/>
-  <path d="M49,3 l6,1.5 M38,10 l5,2.4 M22,11 l3,3" stroke="${C.ink}" stroke-width="2.6" stroke-linecap="round"/>
+  return `<path d="M-7,-3 C-6,-9 4,-9 10,-6 C22,-1 36,-1 46,1 C53,2 57,6 53,9 C49,11 46,9 43,11 C40,13 35,10 32,9 C30,7 28,6 26,6 L-3,6 C-8,5 -10,1 -7,-3Z" fill="${w}" ${S(2.6)}/>
+  <path d="M4,-3 C18,1 34,2 50,4 M8,1 C20,3 32,6 43,10 M12,4 C20,5 28,7 32,9" fill="none" stroke="${kd}" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M52,5 l5,1.6 M43,10.5 l4,2.6 M32,9 l2,3" stroke="${C.ink}" stroke-width="2.6" stroke-linecap="round"/>
   ${farSide ? '' : `<path d="M8,-4 C20,-1 32,-1 42,-1" fill="none" stroke="#FFD8A8" stroke-width="1.8" opacity=".9"/>`}
   <circle r="7.5" fill="${k}" ${S(2.4)}/>`;
 }
@@ -845,7 +862,7 @@ pel.eye = slot('eye', tr(HEAD[0] + 6, HEAD[1] - 7), `
     let s = '';
     for (let i = 0; i < n; i++) {
       const bx = x + rr(-20, 20), hh = h * rr(.6, 1.1), lean = rr(-22, 22);
-      s += `<path d="M${P(bx - 4, y)} Q${P(bx + lean * .3, y - hh * .6)} ${P(bx + lean, y - hh)} Q${P(bx + lean * .2 + 4, y - hh * .5)} ${P(bx + 4, y)}Z" fill="${col[i % col.length]}" ${S(1.8)}/>`;
+      s += `<path d="M${P(bx - 7, y)} Q${P(bx + lean * .3 - 3, y - hh * .6)} ${P(bx + lean, y - hh)} Q${P(bx + lean * .2 + 6, y - hh * .5)} ${P(bx + 7, y)}Z" fill="${col[i % col.length]}" stroke="${C.ink}" stroke-width="1.5" stroke-linejoin="round"/>`;
     }
     return s;
   };
@@ -859,14 +876,19 @@ pel.eye = slot('eye', tr(HEAD[0] + 6, HEAD[1] - 7), `
   };
   const thrift = (x, y, h) => `<path d="M${x},${y} q2,${-h / 2} 0,${-h}" fill="none" stroke="#5E7A44" stroke-width="2.4"/><circle cx="${x}" cy="${y - h}" r="7" fill="#EE8DA8" ${S(1.6)}/><circle cx="${x - 2}" cy="${y - h - 2}" r="2.4" fill="#FFC6D4"/>`;
   const G = ['#6E8E4A', '#86A456', '#5A7A42', '#9CB262'];
-  fg += `<path d="M-20,900 L-20,858 C40,846 120,838 200,848 C260,856 300,868 330,900Z" fill="#6E8A4A" ${S(2.6)}/>`;
-  fg += `<path d="M1620,900 L1620,846 C1560,836 1480,834 1400,846 C1340,856 1300,872 1280,900Z" fill="#6E8A4A" ${S(2.6)}/>`;
-  fg += `<path d="M330,900 C500,888 700,892 900,888 C1050,885 1200,890 1280,900Z" fill="#7F9A52" ${S(2.4)}/>`;
-  fg += tuft(40, 868, 9, 58, G) + tuft(150, 872, 8, 46, G) + tuft(250, 882, 6, 34, G);
-  fg += tuft(1560, 866, 9, 62, G) + tuft(1450, 872, 8, 48, G) + tuft(1350, 884, 5, 32, G);
-  fg += tuft(620, 898, 4, 22, G) + tuft(980, 898, 4, 20, G);
-  fg += thrift(90, 850, 44) + thrift(120, 858, 30) + thrift(200, 862, 36) + thrift(1500, 846, 48) + thrift(1530, 856, 34) + thrift(1420, 860, 28);
-  fg += flower(60, 830, 7, '#FFE08A', '#E08A3A') + flower(170, 846, 6, '#FFFFFF', '#F2B84A') + flower(1580, 826, 7, '#FFE08A', '#E08A3A') + flower(1470, 838, 6, '#FFFFFF', '#F2B84A') + flower(1390, 852, 5, '#FFE08A', '#E08A3A');
+  fg += `<path d="M0,851 C300,848 700,854 1100,849 C1300,847 1500,850 1600,849 L1600,900 L0,900Z" fill="#D8B084" ${S(2.4)}/>`;
+  fg += `<path d="M0,862 C300,858 700,866 1100,860 C1300,858 1500,862 1600,860" fill="none" stroke="#EBCB9C" stroke-width="3" opacity=".8"/>`;
+  seed = 101;
+  for (let i = 0; i < 40; i++) fg += `<ellipse cx="${f(rr(300, 1300))}" cy="${f(rr(866, 896))}" rx="${f(rr(2, 5))}" ry="${f(rr(1.5, 3))}" fill="${rnd() < .5 ? '#B98E68' : '#F0D6AE'}" opacity=".8"/>`;
+  fg += `<path d="M-20,900 L-20,790 C20,778 70,782 110,800 C160,822 200,826 250,838 C300,850 350,866 390,900Z" fill="#6E8A4A" ${S(2.8)}/>`;
+  fg += `<path d="M-20,812 C30,798 80,806 120,822" fill="none" stroke="#9CB262" stroke-width="5" opacity=".8" stroke-linecap="round"/>`;
+  fg += `<path d="M1620,900 L1620,780 C1580,770 1530,774 1490,792 C1440,814 1400,822 1350,836 C1300,850 1250,868 1220,900Z" fill="#6E8A4A" ${S(2.8)}/>`;
+  fg += `<path d="M1620,800 C1570,790 1530,796 1490,812" fill="none" stroke="#9CB262" stroke-width="5" opacity=".8" stroke-linecap="round"/>`;
+  fg += tuft(20, 812, 10, 78, G) + tuft(110, 836, 9, 64, G) + tuft(210, 862, 8, 50, G) + tuft(320, 896, 6, 36, G);
+  fg += tuft(1590, 804, 10, 82, G) + tuft(1490, 826, 9, 66, G) + tuft(1390, 850, 8, 50, G) + tuft(1280, 890, 6, 34, G);
+  fg += tuft(560, 900, 4, 22, G) + tuft(1000, 900, 4, 20, G);
+  fg += thrift(60, 800, 58) + thrift(96, 818, 44) + thrift(160, 836, 40) + thrift(240, 852, 30) + thrift(1540, 796, 60) + thrift(1500, 818, 42) + thrift(1440, 830, 36) + thrift(1360, 852, 30);
+  fg += flower(34, 772, 8, '#FFE08A', '#E08A3A') + flower(130, 800, 7, '#FFFFFF', '#F2B84A') + flower(200, 826, 6, '#FFE08A', '#E08A3A') + flower(1575, 760, 8, '#FFE08A', '#E08A3A') + flower(1470, 790, 7, '#FFFFFF', '#F2B84A') + flower(1410, 818, 6, '#FFE08A', '#E08A3A') + flower(290, 860, 5, '#FFFFFF', '#F2B84A');
   scene += `<g id="L-foreground-pre"></g>`;
   var FOREGROUND = `<g id="L-foreground" filter="url(#wob)">${fg}</g>\n`;
 }
