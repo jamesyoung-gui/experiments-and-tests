@@ -1,0 +1,7 @@
+/* Page shell (lead). UI styles live in src/ui/. */
+:root { color-scheme: dark; --page-bg: #0d0f14; }
+html, body { margin: 0; height: 100%; background: var(--page-bg); overflow: hidden; }
+#stage { position: fixed; inset: 0; display: block; }
+#stage > svg { width: 100%; height: 100%; display: block; cursor: default; }
+#stage #L-rider { cursor: pointer; }
+@media (max-aspect-ratio: 4/3) { #stage > svg { height: 100%; } }
