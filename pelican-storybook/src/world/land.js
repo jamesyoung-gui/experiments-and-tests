@@ -1080,6 +1080,14 @@ export function build(ctx) {
       s += Gz(poly([...top, [X1, 736], [X0, 736]]), v('sandShade'), 0.5); }
     s += F(rect(X0, 636, 1236 - X0, 100) + rect(1290, 636, X1 - 1290, 100) + rect(1236, 700, 54, 36) + rect(1236, 636, 54, 12), 'url(#land-tx-sand)');
     s += F(rect(X0, 636, X1 - X0, 100), 'url(#land-tx-mottle)');
+    // the draft's warm sand wash (sun-bleached by the water, deeper toward the promenade) + painted wind ripples
+    defs += h('linearGradient', { id: 'land-sandG', x1: 0, y1: 640, x2: 0, y2: 736, gradientUnits: 'userSpaceOnUse' },
+      h('stop', { offset: 0, style: `stop-color:${v('rim')};stop-opacity:0.35` }), h('stop', { offset: 0.4, style: `stop-color:${v('rim')};stop-opacity:0` }),
+      h('stop', { offset: 1, style: `stop-color:${v('sandShade')};stop-opacity:0.45` }));
+    s += F(rect(X0, 636, X1 - X0, 100), 'url(#land-sandG)');
+    { let rp = ''; for (let i = 0; i < 90; i++) { const x = L.x0 + (i + nz(i, 3, 1) * 0.4) * W / 90, y = 664 + (hash(i, 61) * 22), w = 18 + hash(i, 62) * 26;
+        rp += `M${f(x)} ${f(y)}q${f(w * 0.25)} -2.2 ${f(w * 0.5)} 0t${f(w * 0.5)} 0`; }
+      s += S(rp, M.SandHi, 1.3, { opacity: 0.7 }) + S(rp.replace(/M(-?[\d.]+) (-?[\d.]+)/g, (a, x, y) => `M${x} ${f(+y + 1.6)}`), M.SandLo, 0.8, { opacity: 0.45 }); }
     // wet sand + foam lace + sheen strokes, as x-keyed pieces (one tagged specimen)
     {
       const n = 110, sw = W / n, fo = [], wet = [], sh = [];
@@ -1470,7 +1478,8 @@ export function build(ctx) {
       let g = Gz(ell(x, y, 18, 3), M.Dark, 0.22) + O(rect(x - 13, y - 5, 26, 5), M.Iron, 1.2) + O(`M${x - 11} ${y - 5}V${y - 80}h22V${y - 5}z`, M.Red, 1.6) + O(`M${x - 13} ${y - 80}h26v-5h-26zM${x - 11.5} ${y - 85}a11.5 8.6 0 0 1 23 0z`, M.Red, 1.4);
       g += O(rrect(x - 7, y - 74, 14, 3, 1.2), M.Dark, 0.6) + O(blob(x, y - 97, 2.2), M.Red, 0.6) + S(`M${x + 7.4} ${y - 70}v58`, M.Rim, 1.3, { opacity: 0.6 }) + Gz(`M${x + 4} ${y - 5}V${y - 80}h7V${y - 5}z`, M.RedLo, 0.5);
       put(DD('mailbox'), g + G(DD('mailbox-lettering'), O(rect(x - 7.5, y - 62, 15, 19), M.Cream, 0.8) + F(gtext('邮', x, y - 51, 10, { anchor: 'middle' }).d + gtext('Post', x, y - 45, 5, { anchor: 'middle' }).d, M.Red)));
-      put(DD('postman'), Gz(ell(326, y, 16, 2.6), M.Dark, 0.22) + at0(326, y, G({ class: 'land-a-postman' }, figure(104, { top: M.Blue, legs: M.BlueLo, hat: M.BlueLo, hair: M.Hair, bag: M.WoodHi, arm: 44, arm2: -10, letter: true, moustache: true, sock: M.BlueLo }))));
+      { const pm = figure(104, { top: M.Blue, legs: M.BlueLo, hat: M.BlueLo, hair: M.Hair, bag: M.WoodHi, arm: 44, arm2: -10, letter: true, moustache: true, sock: M.BlueLo });   // (anim hook: its own sheet)
+        anim.roadside.push(tg => G(RID(tg ? DD('postman') : {}), Gz(ell(326, y, 16, 2.6), M.Dark, 0.22) + at0(326, y, G({ class: 'land-a-postman' }, pm)))); }
     }
     // --- telescope (off to the right in the hero frame; reused by the stream)
     {
@@ -1631,10 +1640,10 @@ export function build(ctx) {
     const GR = [M.Grass, M.GrassHi, M.GrassLo, M.Leaf];
     // a tuft of slender, curving gouache blades (loaded base, tapered tip), each with its own green; a light
     // rib stroke on the lit ones; thin warm ink so the tuft stays soft
-    const tuft = (x, y, n, hh) => { let o = '', rib = ''; for (let i = 0; i < n * 2; i++) { const bx = x + (Rn() - 0.5) * 34, h2 = hh * (0.55 + Rn() * 0.6), lean = (Rn() - 0.5) * 46, bw = 2.2 + Rn() * 1.8;
+    const tuft = (x, y, n, hh) => { const by = ['', '', '', '']; let rib = ''; for (let i = 0; i < n * 2; i++) { const bx = x + (Rn() - 0.5) * 34, h2 = hh * (0.55 + Rn() * 0.6), lean = (Rn() - 0.5) * 46, bw = 2.2 + Rn() * 1.8;
       const tx = bx + lean, ty = y - h2, cx = bx + lean * 0.25, cy = y - h2 * 0.62;
-      o += O(`M${f(bx - bw)} ${f(y)}Q${f(cx - bw * 0.8)} ${f(cy)} ${f(tx)} ${f(ty)}Q${f(cx + bw * 1.1)} ${f(cy + 2)} ${f(bx + bw)} ${f(y)}Z`, GR[i % 4], 0.8);
-      if (i % 3 === 0) rib += `M${f(bx)} ${f(y - 2)}Q${f(cx)} ${f(cy + 3)} ${f(lerp(cx, tx, 0.6))} ${f(lerp(cy, ty, 0.6))}`; } return o + S(rib, M.GrassHi, 0.9, { opacity: 0.8 }); };
+      by[i % 4] += `M${f(bx - bw)} ${f(y)}Q${f(cx - bw * 0.8)} ${f(cy)} ${f(tx)} ${f(ty)}Q${f(cx + bw * 1.1)} ${f(cy + 2)} ${f(bx + bw)} ${f(y)}Z`;
+      if (i % 3 === 0) rib += `M${f(bx)} ${f(y - 2)}Q${f(cx)} ${f(cy + 3)} ${f(lerp(cx, tx, 0.6))} ${f(lerp(cy, ty, 0.6))}`; } return by.map((d, k) => O(d, GR[k], 0.8)).join('') + S(rib, M.GrassHi, 0.9, { opacity: 0.8 }); };
     const bankY = x => { for (const [a, pk, b, top] of banks) if (x > a + 20 && x < b - 20) { const u = x < pk ? (x - a) / (pk - a) : (b - x) / (b - pk); return lerp(900, top + 6, Math.sin(u * Math.PI / 2)); } return 902; };
     { const pts = []; for (let x = 24; x <= 440; x += 16) pts.push([x, bankY(x) + 3]);
       const patch = poly([...pts, [440, 868], [24, 868]]);
@@ -1851,7 +1860,6 @@ export function attach(svg, ctx) {
   };
   return {
     update(fr) {
-      if (globalThis.__landFreeze && globalThis.__landFreeze++ > 2) return; // TEMP-PERF
       const D = fr.distance || 0, t = fr.t || 0, red = fr.reduced || ctx.reduced;
       const baking = !!(fr.bake || (typeof globalThis !== 'undefined' && globalThis.__pbBake));
       if (baking !== bakeMode) { bakeMode = baking; legacy(baking); }

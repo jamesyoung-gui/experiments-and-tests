@@ -11,6 +11,10 @@ import { f, wrap, clamp, sstep, TAU } from './director.js';
 
 export const id = 'weather';
 export const materials = {};
+// Moving strips hoisted to their own composited sheets (src/core/sheets.js): each only ever gets a pure translate, so
+// the rain falling, the clouds and fog veils sliding and the breeze drifting are compositor moves (no repaint).
+const HOIST = ['clouds', 'farRain', 'seaRainMove', 'fogMove', 'wispMove', 'mistMove', 'pudMove', 'windMove', 'rainMove'];
+export const sheets = HOIST.map(k => `[data-ref="wx-${k}"]`);
 export const detailItems = [
   { id: 'sky:T:wx-overcast', layer: 'sky', kind: 'T', what: 'overcast: a mauve-grey gouache glaze with dry-brush streaks that dims the sky as the shower comes' },
   { id: 'sky:O:wx-stormclouds', layer: 'sky', kind: 'O', what: 'dark painted rain clouds: three gouache tones, a darker belly glaze and a pale rim on the tops' },
@@ -78,7 +82,7 @@ function lobePts(cx, cy, w, h, n, R) {
     for (const [lx, r] of lobes) { const d = Math.abs(x - lx); if (d < r) y = Math.max(y, Math.sqrt(r * r - d * d)); }
     top.push([x, cy - Math.max(y, h * 0.12)]);
   }
-  for (let i = 8; i >= 0; i--) bot.push([cx - w / 2 + w * i / 8, cy + h * (0.1 + 0.08 * R())]);
+  for (let i = 6; i >= 0; i--) bot.push([cx - w / 2 + w * (i + (R() - 0.5) * 0.4) / 6, cy + h * (0.07 + 0.13 * R() * Math.sin(Math.PI * i / 6))]);   // a gently sagging belly
   return top.concat(bot);
 }
 // tapered brush ribbon along a centreline (width profile w(u)), as one filled shape
@@ -128,6 +132,15 @@ export function build(ctx) {
     lg('wx-bowFadeG', { x1: 0, y1: 40, x2: 0, y2: 480, gradientUnits: 'userSpaceOnUse' }, `<stop offset="0" stop-color="#fff"/><stop offset=".62" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/>`),
     `<mask id="wx-bowMask" maskUnits="userSpaceOnUse" x="300" y="-100" width="1600" height="600"><rect x="300" y="-100" width="1600" height="600" fill="url(#wx-bowFadeG)"/></mask>`,
   ].join('');
+  // billowy veil top: the envelope of flattened round lobes, periodic in FOG_W (so the slide loops seamlessly)
+  const billow = (y1, y2, n, rMax, flat, x0, x1, step, seed) => {
+    const lobes = [];
+    for (let k = Math.floor(x0 / FOG_W * n) - 1; k <= Math.ceil(x1 / FOG_W * n) + 1; k++) { const j = wrap(k, n);
+      lobes.push([k * FOG_W / n + (hh(j, seed) - 0.5) * FOG_W / n * 0.6, rMax * (0.45 + 0.55 * hh(j, seed + 1))]); }
+    const top = [];
+    for (let x = x0; x <= x1; x += step) { let y = 0; for (const [lx, r] of lobes) { const d = Math.abs(x - lx); if (d < r) y = Math.max(y, Math.sqrt(r * r - d * d)); } top.push([x, y1 - y * flat]); }
+    return { d: cr(top, false) + `L${P(x1, y2)}L${P(x0, y2)}Z`, rim: cr(top.map(([x, y]) => [x, y + 3]), false) };
+  };
   const band = (y1, y2, amp, per, x0, x1, step, seed) => {
     const top = [], bot = [];
     for (let x = x0; x <= x1; x += step) {
@@ -169,10 +182,10 @@ export function build(ctx) {
   // (drawn radiating from the origin; update() puts the origin on the sun, so the light is motivated)
   let sh = '';
   for (let i = 0; i < 7; i++) {
-    const a = (196 + i * 17 + hh(i, 61) * 8) * Math.PI / 180, L = 1500, hw = (0.035 + hh(i, 62) * 0.03);
+    const a = (140 + i * 24 + hh(i, 61) * 10) * Math.PI / 180, L = 1500, hw = (0.05 + hh(i, 62) * 0.05);
     for (const [k, o] of [[1, 0.35], [0.62, 0.45], [0.3, 0.55]]) {   // three nested passes = a soft, feathered shaft
       const w = hw * k, p1 = [Math.cos(a - w) * L, Math.sin(a - w) * L], p2 = [Math.cos(a + w) * L, Math.sin(a + w) * L];
-      sh += F(`M0 0L${P(...p1)}L${P(...p2)}Z`, v('sunGlow'), { opacity: f(o * (0.22 + hh(i, 64) * 0.16)) });
+      sh += F(`M0 0L${P(...p1)}L${P(...p2)}Z`, v('sunGlow'), { opacity: f(o * (0.16 + hh(i, 64) * 0.12)) });
     }
   }
   const beams = G({ ...REF('beams'), ...DD('sky:O:wx-sunbeams') }, G({ 'data-ref': 'wx-beamsAt', mask: 'url(#wx-shaftM)' }, sh));
@@ -190,8 +203,8 @@ export function build(ctx) {
     cLit += cr(lit, true, 1 / 5);
     cRim += cr(lit.slice(2, 40).map(([x, y]) => [x - 1.5, y + 3]), false);
     cBelly += cr(base.map(([x, y]) => [x, bY + (y - bY) * 0.34]), true, 1 / 5);
-    for (let k = 0; k < 7; k++) { const x = cx - w * 0.36 + R() * w * 0.7, y = cy - h * (0.15 + R() * 0.5), l = 14 + R() * 20;
-      cDab += `M${P(x, y)}q${f(l * 0.5)} ${f(-6 - R() * 4)} ${f(l)} 0`; }
+    for (let k = 0; k < 7; k++) { const x = cx - w * 0.36 + R() * w * 0.6, y = cy - h * (0.05 + R() * 0.55), l = 18 + R() * 26;
+      cDab += ribbon([[x, y], [x + l * 0.5, y - 1.5 - R() * 2], [x + l * 1.4, y + 1]], u => Math.sin(Math.PI * u) ** 0.6 * (3 + R() * 2.5)); }
     if (i % 2 === 0) for (let k = 0; k < 6; k++) {   // virga under every other cloud: a soft curtain of long tapered drapes
       const x = cx - w * 0.3 + k * w * 0.12 + R() * 14, y = cy + h * 0.12, L = 90 + R() * 110;
       cVir += ribbon([[x, y], [x - L * 0.12, y + L * 0.5], [x - L * 0.3, y + L]], u => (1 - u) ** 0.8 * (26 + R() * 10));
@@ -199,10 +212,10 @@ export function build(ctx) {
   }
   const clouds = G({ ...REF('clouds') },
     G(DD('sky:O:wx-virga'), F(cVir, v('cloudShade'), { opacity: 0.22 }), F(cVir, v('cloudBank'), { opacity: 0.12, transform: 'translate(10 -4)' })),
-    G(DD('sky:O:wx-stormclouds'), F(cBase, v('line'), { opacity: 0.22, transform: 'translate(0 9)' }), F(cBase, v('cloudBank')), F(cBase, v('line'), { opacity: 0.34 }),
-      F(cMid, v('cloudBank')), F(cMid, v('cloudShade'), { opacity: 0.55 }), F(cBelly, v('line'), { opacity: 0.2 }), F(cBelly, v('line'), { opacity: 0.14, transform: 'translate(0 4)' }), F(cLit, v('cloudShade')), F(cLit, v('cloudMid'), { opacity: 0.45 }),
-      S(cRim, v('cloudLit'), 2.6, { opacity: 0.6 }), S(cBase, v('line'), 1.2, { opacity: 0.18 })),
-    G(DD('sky:T:wx-cloud-dabs'), S(cDab, v('cloudLit'), 3.2, { opacity: 0.3 })));
+    G(DD('sky:O:wx-stormclouds'), F(cBase, v('cloudBank')), F(cBase, v('line'), { opacity: 0.34 }),
+      F(cMid, v('cloudBank')), F(cMid, v('cloudShade'), { opacity: 0.55 }), F(cBelly, v('line'), { opacity: 0.2 }), F(cLit, v('cloudShade')), F(cLit, v('cloudMid'), { opacity: 0.45 }),
+      S(cRim, v('cloudLit'), 2.6, { opacity: 0.6 })),
+    G(DD('sky:T:wx-cloud-dabs'), F(cDab, v('cloudLit'), { opacity: 0.32 })));
 
   // =============================================================== L-atmo: far rain + sea dimples + fog + beam
   let far = '';
@@ -214,7 +227,7 @@ export function build(ctx) {
   for (let rep = -1; rep < 2; rep++) { const R = ctx.rng('wx-dim'); for (let i = 0; i < 70; i++) { const x = rep * SEA_W + R() * SEA_W, y = 482 + R() ** 0.8 * 150, s = 0.5 + (y - 480) / 150;
     if (i % 3) dim += `M${P(x - 7 * s, y)}a${f(7 * s)} ${f(1.8 * s)} 0 1 0 ${f(14 * s)} 0a${f(7 * s)} ${f(1.8 * s)} 0 1 0 ${f(-14 * s)} 0Z`;
     else dimD += `M${P(x - 5 * s, y)}h${f(10 * s)}`; } }
-  const seaRain = G({ ...REF('seaRain'), ...DD('sea:T:wx-searain') }, G({ 'data-ref': 'wx-seaRainMove' }, S(dim, v('foam'), 1.1, { opacity: 0.55 }), S(dimD, v('foam'), 1.6, { opacity: 0.45 })));
+  const seaRain = G({ ...REF('seaRain') }, G({ 'data-ref': 'wx-seaRainMove', ...DD('sea:T:wx-searain') }, S(dim, v('foam'), 1.1, { opacity: 0.55 }), S(dimD, v('foam'), 1.6, { opacity: 0.45 })));
   // fog: three stacked veils; each fades in at its top (gradient) so the edge reads as a wet gouache wash
   const X0 = -FOG_W, X1 = 2 * FOG_W + 800;
   let fb = '';
@@ -223,9 +236,10 @@ export function build(ctx) {
   let wisp = '';
   for (let i = -2; i < 6; i++) { const j = wrap(i, 2), x = i * (FOG_W / 2) + hh(j, 71) * 500, y = 330 + hh(j, 72) * 60, w = 220 + hh(j, 73) * 200;
     wisp += ribbon([[x, y], [x + w * 0.3, y - 8], [x + w * 0.7, y + 4], [x + w, y - 3]], u => Math.sin(Math.PI * u) ** 0.7 * (18 + hh(j, 74) * 12)); }
-  const fog = G({ ...REF('fog'), ...DD('sea:T:wx-fog') }, G({ 'data-ref': 'wx-fogMove' },
-    F(band(330, 480, 18, 6, X0, X1, 60, 1), 'url(#wx-veilG2)'),
-    F(band(372, 500, 14, 9, X0, X1, 60, 2), 'url(#wx-veilG)'),
+  const fb1 = billow(368, 480, 16, 150, 0.32, X0, X1, 24, 11), fb2 = billow(410, 510, 22, 120, 0.3, X0, X1, 24, 17);
+  const fog = G({ ...REF('fog') }, G({ 'data-ref': 'wx-fogMove', ...DD('sea:T:wx-fog') },
+    F(fb1.d, 'url(#wx-veilG2)'), S(fb1.rim, v('cloudRim'), 2, { opacity: 0.4 }),
+    F(fb2.d, 'url(#wx-veilG)'), S(fb2.rim, v('paper'), 1.6, { opacity: 0.35 }),
     S(fb, v('paper'), 5, { opacity: 0.28 }),
     F(band(440, 580, 11, 5, X0, X1, 60, 3), 'url(#wx-veilG)')),
     G({ 'data-ref': 'wx-wispMove', ...DD('sea:O:wx-fogwisp') }, F(wisp, v('paper'), { opacity: 0.4 }), F(wisp, v('paper'), { opacity: 0.3, transform: 'translate(24 -6) scale(1 .7)' })));
@@ -237,7 +251,7 @@ export function build(ctx) {
   // =============================================================== L-shore: low mist
   let mb = '';
   for (let i = 0; i < 48; i++) { const x = (Math.floor(i / 12) - 1) * FOG_W + hh(i % 12, 81) * FOG_W, y = 628 + hh(i % 12, 82) * 50, l = 80 + hh(i % 12, 83) * 140; mb += `M${P(x, y)}c${f(l * 0.3)} -3 ${f(l * 0.7)} 2 ${f(l)} 0`; }
-  const mist = G({ ...REF('mist'), ...DD('land:T:wx-mist') }, G({ 'data-ref': 'wx-mistMove' },
+  const mist = G({ ...REF('mist') }, G({ 'data-ref': 'wx-mistMove', ...DD('land:T:wx-mist') },
     F(band(590, 720, 12, 9, X0, X1, 70, 5), 'url(#wx-veilG3)'), S(mb, v('paper'), 4, { opacity: 0.25 })));
 
   // =============================================================== L-road: wet glaze, sheen, puddles (tile = TILE.road)
@@ -300,8 +314,10 @@ export function build(ctx) {
     const o = hh(xi % 5 + 50, yi % 3) * 104, L = 26 + hh(xi % 4, yi % 2 + 20) * 34;
     if ((xi + yi) % 3) nr += streak(x + o, y + o, L, 0.3, 1.5); else nr2 += streak(x + o, y + o, L * 0.8, 0.3, 1.2);
   }
-  const rain = G({ ...REF('rain'), ...DD('fx:T:wx-rain') }, G({ 'data-ref': 'wx-rainMove' }, F(nr, v('paper'), { opacity: 0.6 }), F(nr2, v('skyWashCool'), { opacity: 0.7 })));
-  const crown = [[-11, -7, 2.2], [-6, -13, 2.6], [0, -16, 2.8], [6, -13, 2.6], [11, -7, 2.2]].map(([x, y, r]) => `M${P(x - r, y)}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`).join('');
+  const rain = G({ ...REF('rain') }, G({ 'data-ref': 'wx-rainMove', ...DD('fx:T:wx-rain') }, F(nr, v('paper'), { opacity: 0.6 }), F(nr2, v('skyWashCool'), { opacity: 0.7 })));
+  const tips = [[-11, -8, 2], [-6, -14, 2.4], [0, -17, 2.6], [6, -14, 2.4], [11, -8, 2]];
+  const crown = tips.map(([x, y, r]) => `M${P(x - r, y)}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`).join('')
+    + tips.map(([x, y, r]) => `M${P(x * 0.45 - 2.4, 0)}L${P(x - r * 0.7, y + r * 0.6)}L${P(x + r * 0.7, y + r * 0.6)}L${P(x * 0.45 + 2.4, 0)}Z`).join('');
   let sp = '';
   for (let i = 0; i < 10; i++) sp += G({ 'data-ref': 'wx-sp' + i },
     F('M-12 1a12 3 0 1 0 24 0a12 3 0 1 0 -24 0Z', v('paper'), { opacity: 0.35 }), S('M-12 1a12 3 0 1 0 24 0a12 3 0 1 0 -24 0Z', v('paper'), 1.1, { opacity: 0.8 }),
@@ -327,9 +343,10 @@ export function attach(svg, ctx) {
   const cache = new WeakMap();
   const set = (el, k, val) => { if (!el) return; let m = cache.get(el); if (!m) cache.set(el, (m = {})); if (m[k] !== val) { m[k] = val; el.setAttribute(k, val); } };
   const op = a => a > 0.97 ? '1' : (Math.round(clamp(a, 0, 1) * 50) / 50).toString();   // steady = opaque group (no offscreen layer)
-  // root groups are detached from the DOM while a weather is absent (most of the ride), re-inserted when it comes
+  // root groups without a hoisted strip inside are detached from the DOM while their weather is absent (most of the
+  // ride) and re-inserted when it comes; the others (whose strips live in their own sheets) toggle visibility
   const slots = new Map();
-  for (const k of ['over', 'beams', 'bow', 'clouds', 'farRain', 'seaRain', 'fog', 'beam', 'mist', 'puddles', 'wind', 'rain', 'splashes']) {
+  for (const k of ['over', 'beams', 'bow', 'beam', 'splashes']) {
     const el = r[k]; if (!el) continue; const ph = document.createComment(k); el.parentNode.insertBefore(ph, el); el.remove(); slots.set(el, ph);
   }
   const showA = (el, a) => {
@@ -345,7 +362,10 @@ export function attach(svg, ctx) {
       // sky
       showA(r.over, w.cloud * 0.85);
       showA(r.bow, w.bow * 0.9);
-      showA(r.beams, w.bow * (1 - w.cloud) * 0.8);
+      // sunbeams radiate from the sun itself (motivated light), only while it is up
+      const sun = fr.sun || { x: 1400, y: 330, elev: 0.3 };
+      showA(r.beams, w.bow * (1 - w.cloud) * 0.85 * sstep(-0.02, 0.12, sun.elev));
+      if (r.beams && r.beams.isConnected) set(r.beamsAt, 'transform', `translate(${f(sun.x)} ${f(sun.y)})`);
       showA(r.clouds, sstep(0.2, 0.7, w.cloud));
       if (w.cloud > 0.2) set(r.clouds, 'transform', `translate(${f(-wrap(D * 0.03 + t * 26, CLOUD_W))} ${f(-70 * (1 - sstep(0.2, 0.8, w.cloud)))})`);
       // rain: soft streaks fall a little slower than C's (a painted drizzle, not a sheet of needles)
