@@ -1,0 +1,17 @@
+/* Page shell (lead). UI styles live in src/ui/. */
+:root { color-scheme: dark; --page-bg: #0d0f14; }
+html, body { margin: 0; height: 100%; background: var(--page-bg); overflow: hidden; }
+#stage { position: fixed; inset: 0; display: block; }
+/* #scene = a stack of <svg> sheets with the same viewBox (src/core/sheets.js). Each sheet is its own compositing layer;
+   moving strips get a CSS translate. The wrapper clips (the sheets overflow so a translated strip keeps its content). */
+#scene { position: absolute; inset: 0; overflow: hidden; cursor: default; }
+#scene > svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; overflow: visible; will-change: transform; pointer-events: none; }
+#scene > svg > * { pointer-events: visiblePainted; }
+#scene [id^="j-"] { cursor: pointer; }
+/* Integrator: an element hidden via the visibility presentation attribute paints nothing, so drop it from the render tree too
+   (identical pixels; hidden pooled particles/eggs no longer cost paint work or swallow hit-tests). */
+#scene [visibility="hidden"] { display: none; }
+/* Perf: the UI card gets its own compositing layer (the scene sheets have theirs, above). */
+#ui { will-change: transform; }
+.vh { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+#perf-hud { position: fixed; left: 8px; top: 8px; z-index: 99; margin: 0; padding: 6px 8px; font: 11px/1.35 ui-monospace, monospace; color: #f4ecd8; background: var(--page-bg); pointer-events: none; }
