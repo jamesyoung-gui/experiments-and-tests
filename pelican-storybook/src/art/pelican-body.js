@@ -257,7 +257,7 @@ function textures(v) {
   const knit = h('pattern', { id: 'pb-knit', patternUnits: 'userSpaceOnUse', width: 4.4, height: 3.6, patternTransform: `rotate(${f(NU_ANG + 90)})` },
     line('M0.4 0.3L2.2 3.1L4 0.3', v('pbScarfLo'), 0.8, { opacity: 0.75 }));
   const blush = h('radialGradient', { id: 'pb-blushG' },
-    h('stop', { offset: 0, 'stop-color': v('pbBlush'), 'stop-opacity': 0.85 }), h('stop', { offset: 0.55, 'stop-color': v('pbBlush'), 'stop-opacity': 0.45 }),
+    h('stop', { offset: 0, 'stop-color': v('pbBlush'), 'stop-opacity': 0.95 }), h('stop', { offset: 0.5, 'stop-color': v('pbBlush'), 'stop-opacity': 0.6 }),
     h('stop', { offset: 1, 'stop-color': v('pbBlush'), 'stop-opacity': 0 }));
   return gouache + pouchTex + knit + blush;
 }
@@ -376,15 +376,15 @@ export function build({ v }) {
     const rows = defs => { let d = '', e = ''; for (const a of defs) { const q = row(...a); d += q.d; e += q.edge; } return { d, e }; };
     {
       const m = rows([[-0.74, 0.34, -0.66, 8, 2.8, 0.08], [-0.55, 0.2, -0.6, 6, 3.1, 0.08], [-0.36, -0.1, -0.5, 3, 3.4, 0.06]]);
-      inner += h('g', { 'data-detail': tag('T', 'mantle-scallops'), 'data-tract': 'mantle' }, h('path', { d: m.d, fill: S }), line(m.e, Dp, 0.7, { opacity: 0.8 }));
+      inner += h('g', { 'data-detail': tag('T', 'mantle-scallops'), 'data-tract': 'mantle' }, h('path', { d: m.d, fill: Dp, opacity: 0.62 }), line(m.e, Dp, 0.75));
     }
     const fl = [[0.3, 0.1, -0.64, 4, 4.8, 0.04], [0.55, -0.04, -0.6, 3, 5.4, 0.02]];
     { const m = rows(fl); inner += h('g', { 'data-detail': tag('T', 'flank-scallops'), 'data-tract': 'flank' }, h('path', { d: m.d, fill: Dp, opacity: 0.75 }), line(m.e, SOFT, 0.8, { opacity: 0.55 })); }
-    { const m = rows([[-0.3, -0.64, -0.92, 3, 2.4, 0.1], [-0.08, -0.62, -0.94, 3, 2.6, 0.1], [0.16, -0.62, -0.9, 3, 2.6, 0.08]]); inner += h('path', { 'data-detail': tag('T', 'rump-scallops'), 'data-tract': 'rump', d: m.d, fill: S }); }
+    { const m = rows([[-0.3, -0.64, -0.92, 3, 2.4, 0.1], [-0.08, -0.62, -0.94, 3, 2.6, 0.1], [0.16, -0.62, -0.9, 3, 2.6, 0.08]]); inner += h('path', { 'data-detail': tag('T', 'rump-scallops'), 'data-tract': 'rump', d: m.d, fill: Dp, opacity: 0.7 }); }
     // breast: the soft buff wash of the breeding breast patch (P. onocrotalus), small warm feathers painted over it
     inner += h('path', { 'data-detail': tag('O', 'breast-buff-wash'), d: smooth(hand([EL(0.62, -0.78), EL(0.9, -0.62), EL(1.04, -0.2), EL(1.02, 0.18), EL(0.9, 0.08), EL(0.78, -0.3), EL(0.6, -0.58)], { k: 2, amp: 1.2, lam: 6, seed: 9 })), fill: O, opacity: 0.4 });
     { const m = rows([[-0.64, 0.96, 0.66, 4, 1.9, 0.04], [-0.47, 0.98, 0.64, 4, 2, 0.04], [-0.3, 0.99, 0.66, 4, 2, 0.03]]); inner += h('path', { 'data-detail': tag('T', 'breast-buff-feathers'), 'data-tract': 'breast', d: m.d, fill: Od, opacity: 0.55 }); }
-    { const m = rows([[-0.12, 0.99, 0.7, 3, 2.1, 0.03], [0.06, 0.98, 0.72, 3, 2.2, 0.02]]); inner += h('path', { 'data-detail': tag('T', 'breast-scallops'), 'data-tract': 'breast', d: m.d, fill: S }); }
+    { const m = rows([[-0.12, 0.99, 0.7, 3, 2.1, 0.03], [0.06, 0.98, 0.72, 3, 2.2, 0.02]]); inner += h('path', { 'data-detail': tag('T', 'breast-scallops'), 'data-tract': 'breast', d: m.d, fill: Dp, opacity: 0.6 }); }
     {
       let d = '';
       for (const a of fl) { const { pts } = row(...a); for (let i = 0; i < pts.length - 1; i++) { const m = lerp2(pts[i], pts[i + 1], 0.5); d += `M${pt(add(m, mul(DOWN, -2)))}L${pt(add(m, add(mul(DOWN, a[4] * 1.1), mul(BACK, a[4] * 0.4))))}`; } }
@@ -570,7 +570,7 @@ export function build({ v }) {
       const chin = [[-8, 3.4], [-1, 5.4], [6, 7], [12, 8.6]];
       let dcl = '';
       const dc = `M-12 3L${pt(chin[0])}` + chin.slice(1).map((c, i) => { const a = chin[i], m = lerp2(a, c, 0.5), n = perp(norm(sub(c, a))), q = add(m, mul(n, 3.4)); dcl += `M${pt(a)}Q${pt(q)} ${pt(c)}`; return `Q${pt(q)} ${pt(c)}`; }).join('') + 'L12 24L-12 24Z';
-      inner += h('g', { 'data-detail': tag('O', 'chin-feathers') }, h('path', { d: dc, fill: P }), line(dcl, SOFT, 1), h('ellipse', { 'data-ref': 'pb-blush', 'data-detail': tag('O', 'cheek-blush'), cx: -4, cy: 7.5, rx: 9, ry: 5.6, transform: 'rotate(-10 -4 7.5)', fill: 'url(#pb-blushG)' }));
+      inner += h('g', { 'data-detail': tag('O', 'chin-feathers') }, h('path', { d: dc, fill: P }), line(dcl, SOFT, 1), h('ellipse', { 'data-ref': 'pb-blush', 'data-detail': tag('O', 'cheek-blush'), cx: -3, cy: 6.8, rx: 10, ry: 6.2, transform: 'rotate(-10 -3 6.8)', fill: 'url(#pb-blushG)' }));
     }
     inner += line('M6 -26.4l-3.6 1.8M12 -24.6l-3.8 1.6M18 -21.6l-3.6 1.4M9 -20.4l-3.4 1.2M15 -18.6l-3 1M-4 -26l-3.4 1.6M-12 -22.6l-3 1.8', Dp, 1, { 'data-detail': tag('T', 'forehead-feather-flecks') });
     inner += line('M-27 8Q-22 12 -16 13M-22 14Q-17 16 -12 16.4', SOFT, 1, { 'data-detail': tag('O', 'nape-edge') });
@@ -912,7 +912,7 @@ export function attach(svg) {
       // expression: content = soft half-lid, focus = flat low lid + brow down, surprise = wide eye + brow up +
       // pupil pop, delight = closed happy arc (cheek pushes the lower lid up)
       const md = face.mood || {}, mC = md.content ?? (pose.face ? 0 : 1), mF = md.focus ?? 0, mS = md.surprise ?? 0, mD = md.delight ?? (squintFB ? 1 : 0);
-      let lidA = clamp((face.lid ?? 0.14) + 0.04 * mC + 0.12 * mF - 0.3 * mS, 0, 1);   // storybook: a wide, kind resting eye
+      let lidA = clamp((face.lid ?? 0.14) + 0.08 * mC + 0.12 * mF - 0.3 * mS, 0, 1);   // storybook: a wide, kind resting eye
       const swallow = gulpTau > 0.95 && gulpTau < 2.3;   // the swallow + savour: eyes screw shut, happy
       const happy = lidA > 0.8 || mD > 0.6 || swallow;
       if (happy) lidA = 1;
@@ -923,7 +923,7 @@ export function attach(svg) {
       const lidR = 6 * mF - 4 * mS;          // focus: lid flattens, front end drops
       const lidXf = `translate(0 ${lidY.toFixed(2)}) rotate(${lidR.toFixed(1)})`;
       set(r.lidSkin, 'transform', lidXf); set(r.lid, 'transform', lidXf);
-      set(r.lowLid, 'transform', `translate(0 ${(-(2.6 * (happy ? 1 : mD) + 1.4 * mF + 0.5 * mC) + 0.8 * mS).toFixed(2)})`);
+      set(r.lowLid, 'transform', `translate(0 ${(-(2.6 * (happy ? 1 : mD) + 1.4 * mF + 1.1 * mC) + 0.8 * mS).toFixed(2)})`);   // content: a smiling lower lid
       const nict = face.nict ?? 0;
       set(r.nictG, 'show', nict > 0.02);
       if (nict > 0.02) set(r.nict, 'transform', `translate(${(12 * (1 - nict)).toFixed(2)} 0)`);
