@@ -135,6 +135,7 @@ function step(dt) {
 }
 
 function render(dt) {
+  const tR0 = modPerf ? performance.now() : 0;
   const dz = dir.pre(dt);
   // coast / pedal markers for the rig (user, director or eggs may flip state.coasting); live play only, so renderAt stays pure
   if (dt > 0 && state.coasting !== lastCoast) state.events.push({ type: state.coasting ? 'coast' : 'pedal', t0: state.t });
@@ -160,7 +161,14 @@ function render(dt) {
     tod: state.tod, sun: pal.sun, moon: pal.moon, night: pal.num.night, pal, pose, cam, toggles: state.toggles,
     quality, reduced, events: state.events, weather: dz.weather, director: dz, headBox,
   };
-  if (modPerf) { let t1 = performance.now(); for (const a of attached) if (a.update) { try { a.update(frame); } catch (e) { console.error(e); a.update = null; } const t2 = performance.now(); modPerf[a.__id] = (modPerf[a.__id] || 0) + t2 - t1; t1 = t2; } ui.update(frame); audio.update(frame); modPerf.ui = (modPerf.ui || 0) + performance.now() - t1; modPerf.n = (modPerf.n || 0) + 1; }
+  if (modPerf) {   // per-module totals, plus the last 600 frames' per-module ms in __pb.modPerf().frames (spike hunting)
+    const fr = { core: performance.now() - tR0 }; let t1 = performance.now();
+    for (const a of attached) if (a.update) { try { a.update(frame); } catch (e) { console.error(e); a.update = null; } const t2 = performance.now(); fr[a.__id] = t2 - t1; t1 = t2; }
+    ui.update(frame); audio.update(frame); sheets.update(cam); fr.ui = performance.now() - t1;
+    for (const k in fr) modPerf[k] = (modPerf[k] || 0) + fr[k];
+    modPerf.n = (modPerf.n || 0) + 1; (modPerf.frames ||= []).push(fr); if (modPerf.frames.length > 600) modPerf.frames.shift();
+    return frame;
+  }
   else { for (const a of attached) if (a.update) try { a.update(frame); } catch (e) { console.error(e); a.update = null; }
   ui.update(frame); audio.update(frame); }
   sheets.update(cam);
@@ -178,7 +186,7 @@ function hud() {
   const a = fpsAcc.slice(-120), dts = a.map(x => x.dt), js = a.map(x => x.js).sort((x, y) => x - y);
   const fps = 1 / (dts.reduce((s, x) => s + x, 0) / dts.length);
   let txt = `fps ${fps.toFixed(1)}  js ${js[js.length >> 1].toFixed(2)} / p95 ${js[Math.floor(js.length * 0.95)].toFixed(2)} ms  dom ${svg.getElementsByTagName('*').length}`;
-  if (modPerf && modPerf.n) txt += '\n' + Object.entries(modPerf).filter(([k]) => k !== 'n').map(([k, v]) => `${k.padEnd(14)}${(v / modPerf.n).toFixed(3)}`).join('\n');
+  if (modPerf && modPerf.n) txt += '\n' + Object.entries(modPerf).filter(([k]) => k !== 'n' && k !== 'frames').map(([k, v]) => `${k.padEnd(14)}${(v / modPerf.n).toFixed(3)}`).join('\n');
   hudEl.textContent = txt;
 }
 function loop(now) {
