@@ -7,6 +7,7 @@
 // only write transforms (and a few visibility flags).
 import { h, refs } from '../core/svg.js';
 import { HORIZON_Y, DIST_PER_REV } from '../contract.js';
+import { LAP, KM, stretchAt, relTo, hash } from './route.js';
 
 export const id = 'sea';
 
@@ -78,7 +79,37 @@ const glyphs = (str, x, y, sc = 1, gap = 8.5) => [...str].map((c, i) => GLYPH[c]
 const HZ = HORIZON_Y;
 const T0 = 3.2, D0 = T0 * DIST_PER_REV;      // hero frame = design coordinates
 const X0 = -420, X1 = 2020;
-const W_H = DIST_PER_REV * 0.05 * 50;         // hills tile: 4712.39 (50 crank turns)
+const W_H = LAP * 0.05;                       // hills: ONE panorama per lap of the route (23 562 u, 250 crank turns)
+// Far landmarks follow the route (route.js): each is at its hero position when the rider is at one of its anchors
+// (road distance within the lap) and slides by depth from there; the nearest anchor wins.
+const ANCH = { cape: [D0, 10.4 * KM], harbour: [D0, 4.35 * KM], rocks: [D0, 14.3 * KM, 17.1 * KM, 20.1 * KM] };
+const routeX = (D, list, d) => { let best = Infinity; for (const A of list) { const x = -relTo(D, A) * d; if (Math.abs(x) < Math.abs(best)) best = x; } return best; };
+// procedural ranges for the rest of the panorama, shaped by the stretch of coast they rise behind
+function routeRanges(R) {
+  const out = [], x1 = W_H - 1300;
+  let x = 4550;
+  while (x < x1) {
+    const Dc = 3.2 * DIST_PER_REV + (x + 600 - 800) / 0.05, key = stretchAt(Dc).key;
+    const tall = { lighthouse: 1, cliffs: 1.25, fort: 0.8, pines: 0.9, railway: 0.75, harbour: 0.7, funfair: 0.5, pier: 0.6, village: 0.8, return: 0.8, dunes: 0.25, bridge: 0.55 }[key] ?? 0.7;
+    const w = Math.min(900 + R() * 900 * (key === 'dunes' ? 1.4 : 1), W_H - 520 - x), n = Math.max(6, Math.round(w / 95));
+    if (w < 420) break;
+    const far = [[x, 472]], foot = [[x + 40, 472]];
+    for (let i = 1; i < n; i++) {
+      const u = i / n, env = Math.sin(Math.PI * u) ** (key === 'cliffs' ? 0.5 : 0.8);
+      const jag = key === 'cliffs' || key === 'lighthouse' ? (i % 2 ? -14 : 8) * R() : (R() - 0.5) * 14;
+      far.push([x + u * w, 472 - env * (40 + 70 * tall) + jag - (key === 'bridge' && Math.abs(u - 0.5) < 0.12 ? -30 : 0)]);
+    }
+    far.push([x + w, 472]);
+    const fn = Math.max(5, Math.round(w / 140));
+    for (let i = 1; i < fn; i++) { const u = i / fn; foot.push([x + 40 + u * (w - 80), 472 - Math.sin(Math.PI * u) * (14 + 12 * tall) + (R() - 0.5) * 6]); }
+    foot.push([x + w - 40, 472]);
+    const g = { far, foot, cyp: [x + w * 0.2, x + w * (key === 'pines' || key === 'railway' ? 0.8 : 0.38)], vil: [x + w * (0.45 + R() * 0.2), key === 'dunes' ? 0 : key === 'harbour' || key === 'village' || key === 'return' ? 12 : 5] };
+    if (key === 'fort' || key === 'cliffs') g.castle = x + w * 0.62; else if (R() < 0.45 && key !== 'dunes') g.chapel = x + w * 0.3;
+    out.push(g);
+    x += w + 60 + R() * 380;
+  }
+  return out;
+}
 // wave-line bands: [depth, tile width (= depth·DIST_PER_REV·k, seamless in whole crank turns)]
 const BANDS = [[0.10, DIST_PER_REV * 0.10 * 13], [0.12, DIST_PER_REV * 0.12 * 11], [0.14, DIST_PER_REV * 0.14 * 10], [0.17, DIST_PER_REV * 0.17 * 8]];
 // single objects: depth, span (wrap), margin
@@ -242,8 +273,10 @@ function buildHills(v, I, rng) {
     { far: [[3300, 472], [3380, 450], [3480, 428], [3600, 420], [3700, 404], [3790, 418], [3900, 432], [4010, 426], [4120, 448], [4250, 472]],
       foot: [[3320, 472], [3440, 458], [3560, 452], [3700, 440], [3840, 452], [3980, 458], [4100, 466], [4200, 472]], cyp: [3620, 3760], vil: [3930, 7], castle: 3700 },
   ];
+  ranges.push(...routeRanges(rng('sea-hills-route')));
   let tile = '';
-  for (const g of ranges) {
+  const heroN = 3, acc = new Map();   // procedural ranges are merged per 3000 u bucket (few nodes, still culled)
+  for (const [gi, g] of ranges.entries()) {
     const far = smooth(g.far, false) + `L${f(g.far[g.far.length - 1][0])} 480L${f(g.far[0][0])} 480Z`;
     const foot = smooth(g.foot, false) + `L${f(g.foot[g.foot.length - 1][0])} 480L${f(g.foot[0][0])} 480Z`;
     // hatch strokes under sunward (descending-to-the-right) ridge segments (the draft's motif)
@@ -290,6 +323,11 @@ function buildHills(v, I, rng) {
       chap = h('g', DD('sea:O:castle-ruin'), F(rect(cx - 16, cy - 10, 32, 10) + rect(cx - 16, cy - 20, 8, 10) + rect(cx + 6, cy - 16, 8, 6) + rect(cx - 16, cy - 23, 2.5, 3) + rect(cx - 11, cy - 23, 2.5, 3) + rect(cx + 6, cy - 19, 2.5, 3) + rect(cx + 11.5, cy - 19, 2.5, 3), v('cloudLit')),
         F(rect(cx - 13, cy - 17, 2, 3) + rect(cx - 3, cy - 7, 4, 7), I('N')));
     }
+    if (gi >= heroN) {
+      const k = Math.floor(g.far[0][0] / 3000); if (!acc.has(k)) acc.set(k, { far: '', hatch: '', foot: '', dots: '', terr: '', cyp: '', walls: '', shade: '', roofs: '', chap: '' });
+      const A = acc.get(k); A.far += far; A.hatch += hatch; A.foot += foot; A.dots += dotsS; A.terr += terr; A.cyp += cyp; A.walls += walls; A.shade += shade; A.roofs += roofs; A.chap += chap;
+      continue;
+    }
     tile += h('g', DD('sea:O:far-ridge'), F(far, v('hillFar'))) +
       h('g', DD('sea:T:ridge-light-hatch'), S(hatch, v('cloudLit'), 1.6)) +
       h('g', DD('sea:O:foothills'), F(foot, v('hillNear'))) +
@@ -298,12 +336,19 @@ function buildHills(v, I, rng) {
       h('g', DD('sea:O:cypresses'), F(cyp, I('N'))) +
       h('g', DD('sea:O:far-village'), F(walls, v('cloudHigh')), F(shade, I('B')), F(roofs, I('R'))) + chap;
   }
+  for (const A of acc.values()) {
+    const bins = new Map();
+    for (const m of A.dots.matchAll(/<path d="([^"]*)" stroke="([^"]*)" stroke-width="([^"]*)"/g)) bins.set(m[2] + '|' + m[3], (bins.get(m[2] + '|' + m[3]) || '') + m[1]);
+    tile += F(A.far, v('hillFar')) + S(A.hatch, v('cloudLit'), 1.6) + F(A.foot, v('hillNear')) +
+      [...bins].map(([k, d]) => { const [st, w] = k.split('|'); return h('path', { d, stroke: st, 'stroke-width': w, 'stroke-linecap': 'round', fill: 'none' }); }).join('') +
+      S(A.terr, v('cloudLit'), 0.9) + F(A.cyp, I('N')) + F(A.walls, v('cloudHigh')) + F(A.shade, I('B')) + F(A.roofs, I('R')) + A.chap.replace(/ data-detail="[^"]*"/g, '');
+  }
   // far islands (one sits in front of the golden-hour sun)
   const island = (x, w, hh) => smooth([[x, 472], [x + w * 0.12, 466 - hh * 0.4], [x + w * 0.35, 470 - hh], [x + w * 0.6, 468 - hh * 0.8], [x + w * 0.85, 468 - hh * 0.3], [x + w, 472]], false) + 'Z';
   for (const [x, w, hh, tx] of [[1372, 96, 12, 1398], [3010, 150, 14, 3080]])
     tile += h('g', DD('sea:O:far-island'), F(island(x, w, hh) + rect(tx, 452, 3.6, 8) + `M${tx - 1} 452L${tx + 1.8} 447L${tx + 4.6} 452Z`, v('hillFar')), S(`M${x + 20} 466h${w * 0.25}`, v('cloudLit'), 1));
   // two real copies (not <use>) so each copy is its own hit-testable geometry
-  const markup = h('g', { 'data-ref': 'sea-hills' }, h('g', {}, tile), h('g', { transform: `translate(${f(W_H)} 0)` }, tile));
+  const markup = h('g', { 'data-ref': 'sea-hills' }, h('g', { id: 'sea-pano' }, tile), h('use', { href: '#sea-pano', x: f(-W_H) }));
   return { markup, defs: '' };
 }
 
@@ -803,6 +848,12 @@ function buildBoats(v, I, rng, lampOn) {
       F(ell(0, -8, 4.6, 3.2), v('cloudLit')), F(ell(0, -10.2, 1.6, 1.1), I('N')), F(circ(-3.4, -12.6, 1) + circ(3.4, -12.6, 1), I('N')),
       S('M2.6 -8.4l7 -1.4M2.6 -7.4l7 0.6M-2.6 -8.4l-7 -1.4M-2.6 -7.4l-7 0.6', I('P'), 0.45))),
     S('M-14 1q7 -3 14 0q7 3 14 0M-20 5q10 -2.6 20 0q10 2.6 20 0', v('foam'), 1.3)));
+  // (journey easter egg) a whale off the old fort: back, flukes and a spout that blows every few seconds
+  m += h('g', { 'data-ref': 'sea-whale', visibility: 'hidden' },
+    F('M-60 0Q-50 -22 -6 -24Q30 -24 44 -6L52 0Z', I('N')) + F('M-44 -8Q-20 -18 20 -16', 'none', { stroke: I('B'), 'stroke-width': 1.6 }) + F('M-30 -21l6 -6l4 5z', I('N')) +
+    F('M70 -4Q76 -22 92 -26Q84 -14 88 -4Q80 -10 70 -4Z', I('N')) + S('M-66 1q30 -4 60 0t60 0t40 0', v('foam'), 1.6) +
+    h('g', { 'data-ref': 'sea-spout', transform: 'translate(-14 -24)' }, S('M0 0V-26M0 -20q-10 -8 -16 -4M0 -20q10 -8 16 -4M0 -12q-8 -4 -12 0M0 -12q8 -4 12 0', v('foam'), 2.2) +
+      F('M-3 -30a3 3 0 0 1 6 0zM-18 -24a2.4 2.4 0 0 1 4.8 0zM13 -24a2.4 2.4 0 0 1 4.8 0z', v('foam'))));
   return { markup: m, defs };
 }
 
@@ -824,8 +875,8 @@ export function attach(svg, ctx) {
       const cam = fr.cam || { fx: 800 };
       const lampOn = fr.pal && fr.pal.num ? fr.pal.num.lampOn : fr.night || 0;
       // ---- far layers
-      set(r.hills, 'transform', `translate(${f(-wrap((D - D0) * 0.05, W_H))} 0)`);
-      const cx = place(t, D, 0, LH.d, 0, LH.M, LH.S);
+      set(r.hills, 'transform', `translate(${f(-(wrap((D - D0) * 0.05 + 2600, W_H) - 2600))} 0)`);
+      const cx = clamp(routeX(D, ANCH.cape, LH.d), -6000, 6000);
       set(r.cape, 'transform', `translate(${f(cx)} 0)`);
       const night = lampOn > 0.02;
       vis(r.lhnight, night); vis(r.keeperlit, night); for (let k = 0; k < 3; k++) vis(r['townlit' + k], night); vis(r.pierglow, night); vis(r['glow-beacon'], night);
@@ -861,10 +912,10 @@ export function attach(svg, ctx) {
         for (let k = 0; k < 3; k++) set(r['mg' + k], 'transform', `translate(${red ? 0 : f(Math.sin(t * (1.1 + k * 0.5) + k) * 4)} 0)`);
       }
       // ---- harbour + rocks
-      const hx = place(t, D, 0, HB.d, 0, HB.M, HB.S);
+      const hx = clamp(routeX(D, ANCH.harbour, HB.d), -6000, 6000);
       set(r.harbour, 'transform', `translate(${f(hx)} 0)`);
       if (hx > -900 && hx < 1700) set(r.millSails, 'transform', `rotate(${f(red ? 20 : wrap(t * 40, 360))})`);
-      const rx = place(t, D, 0, RK.d, 0, RK.M, RK.S);
+      const rx = clamp(routeX(D, ANCH.rocks, RK.d), -6000, 6000);
       set(r.rocks, 'transform', `translate(${f(rx)} -16)`);
       if (!red) {
         set(r.foam, 'transform', `translate(0 ${f(Math.sin(t * 2.1) * 1.4)})`);
@@ -874,6 +925,12 @@ export function attach(svg, ctx) {
       for (const [k, B] of Object.entries(BOATS)) {
         const el = obj[k]; if (!el) continue;
         const d = depthAt(B.y), x = place(t, D, B.x, d, B.vx, B.e + 400, B.S);
+        // each pass of a boat is a different day on the water: seeded by its wrap cycle, thinned by the stretch
+        const cyc = Math.floor((B.x + B.vx * (t - T0) - (D - D0) * d + B.e + 400) / B.S), cyc0 = Math.floor((B.x + B.e + 400) / B.S);
+        const busy = { harbour: 0.05, village: 0.2, return: 0.2, pier: 0.25, funfair: 0.3, cliffs: 0.6, lighthouse: 0.5, dunes: 0.45 }[stretchAt(D).key] ?? 0.4;
+        const here = cyc === cyc0 || hash(cyc, k.length * 7 + B.x) > busy;
+        if (el.__here !== here) { el.__here = here; el.setAttribute('visibility', here ? 'visible' : 'hidden'); }
+        if (!here) continue;
         const w = 0.8 + (B.y - 470) * 0.004, ph = B.x * 0.013;
         const bob = red ? 0 : Math.sin(t * w * 1.6 + ph) * (0.6 + B.s * 1.4);
         const rot = red ? 0 : Math.sin(t * w + ph) * (k === 'near' ? 2.2 : k === 'bell' || k === 'can' ? 4 : 1.4);
@@ -905,9 +962,19 @@ export function attach(svg, ctx) {
           set(r.buoyGull, 'transform', `translate(0 ${f(hy)})`);
         }
       }
+      // whale (journey easter egg, off the old fort)
+      {
+        const wx = routeX(D, [20.5 * KM], 0.12) + 1060, on = wx > -200 && wx < 1800;
+        vis(r.whale, on);
+        if (on) {
+          set(r.whale, 'transform', `translate(${f(wx)} ${f(548 + (red ? 0 : Math.sin(t * 0.8) * 1.5))})`);
+          const ph = wrap(t, 5.2), sp = red ? 0.8 : ph < 1.4 ? Math.sin(ph / 1.4 * Math.PI) : 0;
+          set(r.spout, 'transform', `translate(-14 -24) scale(${f(0.2 + sp)} ${f(sp)})`);
+        }
+      }
       // dolphin leap: every 12 s, 1.3 s arc (one is mid-air in the hero frame)
       {
-        const P = 12, dur = 1.3, ph = wrap(t - (T0 - 0.62), P), up = !red && ph < dur;
+        const P = 12, dur = 1.3, ph = wrap(t - (T0 - 0.62), P), cy = Math.floor((t - (T0 - 0.62)) / P), up = !red && ph < dur && (cy === 0 || hash(cy, 5) < 0.6);
         vis(r.dolph, up);
         if (up) {
           const u = ph / dur, x = (u - 0.5) * 120, y = -58 * Math.sin(Math.PI * u) + 6;

@@ -12,6 +12,7 @@ import { DIST_PER_REV, CADENCE, CAMERAS, BIKE } from '../contract.js';
 import { samplePalette, INK_ROLES } from '../core/palette.js';
 import { LAT, ZH } from '../world/print-glyphs.js';
 import { injectStyles } from './styles.js';
+import { TIMING } from '../rig/solve.js';
 
 export const id = 'ui';
 export const detailItems = [];   // no scene detail quota: the UI lives outside #scene
@@ -45,7 +46,7 @@ export const STRINGS = {
     region: '鹈鹕湾控制卡', odo: '里程表',
     kbBell: '响铃', kbWave: '挥手', kbHop: '蹦跳', kbFeed: '喂鱼', kbCam: '换镜头', kbTod: '换时刻', kbAuto: '自动昼夜',
     kbSlower: '慢一点', kbFaster: '快一点', kbCoast: '滑行', kbSound: '声音', kbPause: '暂停', kbHelp: '帮助', kbLang: '语言',
-    beatTip: '交替敲 ← → 可以踩出你的节拍', printed: '鹈鹕湾印制', plate: '七色套印',
+    aEgg: '发现彩蛋：{x}', beatTip: '交替敲 ← → 可以踩出你的节拍', printed: '鹈鹕湾印制', plate: '七色套印',
   },
   en: {
     docTitle: 'Pelican Bay · a pelican on a bicycle', card: 'Control card', sub: 'Coast road', serial: 'Ticket',
@@ -74,7 +75,7 @@ export const STRINGS = {
     region: 'Pelican Bay control card', odo: 'Odometer',
     kbBell: 'Ring', kbWave: 'Wave', kbHop: 'Hop', kbFeed: 'Feed', kbCam: 'Camera', kbTod: 'Time', kbAuto: 'Auto day',
     kbSlower: 'Slower', kbFaster: 'Faster', kbCoast: 'Coast', kbSound: 'Sound', kbPause: 'Pause', kbHelp: 'Help', kbLang: 'Language',
-    beatTip: 'Tap ← → alternately to pedal to your own beat', printed: 'Printed at Pelican Bay', plate: 'Seven inks',
+    aEgg: 'Easter egg found: {x}', beatTip: 'Tap ← → alternately to pedal to your own beat', printed: 'Printed at Pelican Bay', plate: 'Seven inks',
   },
 };
 
@@ -477,7 +478,7 @@ export function createUI(host, bus, init) {
 
   // ---------- actions ----------
   let lastHopT = -9;
-  const HOP_CD = 0.95;
+  const HOP_CD = TIMING.hop.gap;   // same guard as main.js / the rig
   const simNow = () => S.t;
   const ACT = {
     play() { bus.emit('ui:play', { on: !S.playing }); announce(S.playing ? 'aPlaying' : 'aPaused'); },
@@ -758,6 +759,39 @@ export function createUI(host, bus, init) {
   hud({ distance: S.distance, cadence: S.cadence, coasting: S.coasting });
   placeBody();
   requestAnimationFrame(() => { measure(); dock(true); });
+
+  // ---------- easter-egg counter (feature of src/fx/eggs.js): a tiny stamped ticket stub, hidden until the first find ----------
+  {
+    const css = doc.createElement('style');
+    css.textContent = `.ui-eggs{position:absolute; right:30px; top:30px; pointer-events:none; display:flex; flex-direction:column; align-items:flex-end; gap:6px; font:700 12px/1.2 var(--ui-font)}
+.ui-eggs[hidden]{display:none}
+.ui-eggs-stub{position:relative; display:flex; align-items:center; gap:7px; background:var(--pb-inkP); color:var(--pb-inkN); padding:4px 10px 4px 14px; border:2px solid var(--pb-inkN); box-shadow:3px 3px 0 var(--pb-inkN);
+  background-image:radial-gradient(circle 3.2px at 0 50%,var(--pb-inkN) 3px,transparent 3.4px); background-size:7px 7px; background-repeat:repeat-y; background-position:-1px 0; letter-spacing:.06em}
+.ui-eggs-stub i{display:block; width:12px; height:15px; background:var(--pb-inkO); border:1.5px solid var(--pb-inkN); border-radius:50% 50% 46% 46%/60% 60% 40% 40%; box-shadow:inset 0 -4px 0 var(--pb-inkR)}
+.ui-eggs-stub b{color:var(--pb-inkR); font-size:14px}
+.ui-eggs-stub.pop{animation:ui-egg-pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes ui-egg-pop{0%{transform:scale(.6) rotate(-6deg)}100%{transform:none}}
+.ui-eggs-toast{background:var(--pb-inkN); color:var(--pb-inkP); padding:4px 10px; border:2px solid var(--pb-inkP); outline:2px solid var(--pb-inkN); font-size:11px; opacity:0; transition:opacity .3s; white-space:nowrap}
+.ui-eggs-toast.on{opacity:1}
+@media (max-width:600px){.ui-eggs{right:12px; top:12px}}`;
+    doc.head.appendChild(css);
+    const box = doc.createElement('div');
+    box.className = 'ui-eggs'; box.hidden = true;
+    box.innerHTML = '<div class="ui-eggs-stub" role="status" aria-live="polite"><i aria-hidden="true"></i><span data-egg-lab></span><b data-egg-n></b></div><div class="ui-eggs-toast" aria-hidden="true"></div>';
+    host.appendChild(box);
+    const stub = box.firstChild, lab = box.querySelector('[data-egg-lab]'), num = box.querySelector('[data-egg-n]'), eToast = box.lastChild;
+    let eTimer = 0;
+    bus.on('egg:found', ({ id, zh, en, count, total }) => {
+      box.hidden = false;
+      lab.textContent = lang === 'en' ? 'EGGS' : lang === 'zh' ? '彩蛋' : '彩蛋 EGGS';
+      num.textContent = `${count}/${total}`;
+      if (!id) return;
+      stub.classList.remove('pop'); void stub.offsetWidth; stub.classList.add('pop');
+      eToast.textContent = lang === 'en' ? `Egg found: ${en}` : lang === 'zh' ? `发现彩蛋：${zh}` : `发现彩蛋：${zh} · ${en}`;
+      eToast.classList.add('on'); clearTimeout(eTimer); eTimer = setTimeout(() => eToast.classList.remove('on'), 3200);
+      announce('aEgg', { x: { zh, en } });
+    });
+  }
 
   // ---------- per-frame hook: all DOM work throttled to ≤10 Hz ----------
   let acc = 1;

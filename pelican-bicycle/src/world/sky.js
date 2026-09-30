@@ -5,6 +5,8 @@
 // a speed-line cloud, a biplane towing a fluttering "PELICAN BAY" banner, a far airship and migrating pelicans.
 // Everything is static markup; per frame we only write a handful of transforms / opacities.
 import { h, refs } from '../core/svg.js';
+import { hash } from './route.js';
+import { DIST_PER_REV as DIST_PER_REV_ } from '../contract.js';
 
 export const id = 'sky';
 
@@ -637,10 +639,17 @@ export function attach(svg, ctx) {
         }
       }
       // clouds: parallax (depth .03) + a light wind
-      const off = D * 0.03 + t * 4;
+      // (journey) every pass of a cloud is a new cloud: its wrap cycle seeds a height, a size and whether it is there
+      // at all, so the sky never repeats every 53 s (the hero cycle keeps its composed layout)
+      const off = D * 0.03 + t * 4, off0 = 3.2 * DIST_PER_REV_ * 0.03 + 3.2 * 4;
       for (let i = 0; i < clouds.length; i++) {
-        const [el, ax] = clouds[i], dx = wrap(ax - off + 700, CLOUD_W) - 700 - ax;
-        el.setAttribute('transform', `translate(${f(dx)} 0)`);
+        const [el, ax] = clouds[i], u = ax - off + 700, dx = wrap(u, CLOUD_W) - 700 - ax;
+        const cyc = Math.floor(u / CLOUD_W), cyc0 = Math.floor((ax - off0 + 700) / CLOUD_W);
+        let dy = 0, sc = 1, on = true;
+        if (cyc !== cyc0) { dy = (hash(cyc, i * 3 + 1) - 0.5) * 56; sc = 0.8 + hash(cyc, i * 3 + 2) * 0.4; on = hash(cyc, i * 3 + 3) > 0.22; }
+        const vis = on ? 'visible' : 'hidden';
+        if (el.__vis !== vis) { el.__vis = vis; el.setAttribute('visibility', vis); }
+        el.setAttribute('transform', sc === 1 ? `translate(${f(dx)} ${f(dy)})` : `translate(${f(dx + ax)} ${f(dy)}) scale(${f(sc)}) translate(${f(-ax)} 0)`);
       }
       // airship: far (depth ~.012), drifting +x
       const sx = wrap(290 + 200 + t * 7 - D * 0.012, SHIP_SPAN) - 200;
@@ -649,8 +658,9 @@ export function attach(svg, ctx) {
       const kx = wrap(370 + 300 - t * 9 - D * 0.015, SKEIN_SPAN) - 300;
       r.skein.setAttribute('transform', `translate(${f(kx)} ${f(150 + 4 * Math.sin(t * 0.3))})`);
       // pelican V: flies +x, slower than the rider (net drift -x)
-      const fx = wrap(1175 + 400 + t * 22 - D * 0.02, FLOCK_SPAN) - 400;
-      r.flockG.setAttribute('transform', `translate(${f(fx)} ${f(318 + 5 * Math.sin(t * 0.5))})`);
+      const fu = 1175 + 400 + t * 22 - D * 0.02, fx = wrap(fu, FLOCK_SPAN) - 400, fc = Math.floor(fu / FLOCK_SPAN), fc0 = Math.floor((1175 + 400 + 3.2 * 22 - 3.2 * DIST_PER_REV_ * 0.02) / FLOCK_SPAN);
+      const fdy = fc === fc0 ? 0 : (hash(fc, 71) - 0.5) * 120, fsc = fc === fc0 ? 1 : 0.75 + hash(fc, 72) * 0.45;
+      r.flockG.setAttribute('transform', `translate(${f(fx)} ${f(318 + fdy + 5 * Math.sin(t * 0.5))})${fsc === 1 ? '' : ` scale(${f(fsc)})`}`);
       for (let i = 0; i < birds.length; i++) {
         const ph = wrap(t * 2.6 + i * 0.37, 1); const fr3 = ph < 0.33 ? 0 : ph < 0.55 ? 1 : ph < 0.85 ? 2 : 1;
         if (st.flap[i] !== fr3) { st.flap[i] = fr3; birds[i].setAttribute('href', '#sky-bird' + fr3); }

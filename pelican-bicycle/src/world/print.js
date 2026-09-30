@@ -497,7 +497,7 @@ export function attach(svg, ctx) {
   view.addEventListener('resize', measureV);
 
   // skip the intro on any key / click (deterministic: the skip is pinned to the sim time it happened at)
-  let skipReq = false, skipAt = Infinity, lastT = 0;
+  let skipReq = false, skipAt = Infinity, lastT = 0, lastSig = '';
   const skip = () => { skipReq = true; };
   doc.addEventListener('keydown', skip, true);
   doc.addEventListener('pointerdown', skip, true);
@@ -518,6 +518,13 @@ export function attach(svg, ctx) {
       const reduced = frame.reduced;
       const lb = Math.max(0, cam.letterbox || 0);
       const kc = easeInOut(clamp01((lb - M) / (LB_MAX - M)));      // 0 poster → 1 cinematic bars
+      // integrator perf: after the intro nothing here moves unless the view, letterbox, UI card or (coarse) rider box changes
+      measureUI(frame.dt === 0);
+      const rbQ = riderBox(cam, frame.pose).map(v => Math.round(v / 6));
+      const tiQ = t >= skipAt ? 99 : t;
+      const sig = [V.w, V.h, V.x0, V.y0, f(lb), tiQ >= 4.3 ? 'post' : f(tiQ), reduced ? 1 : 0, rbQ.join(), uiBox ? uiBox.map(Math.round).join() : ''].join('|');
+      if (sig === lastSig) return;
+      lastSig = sig;
 
       // ---- border ----
       const yT = V.y0 + Math.max(M, lb), yB = V.y1 - Math.max(MB, lb), xL = V.x0 + M, xR = V.x1 - M;
@@ -561,7 +568,6 @@ export function attach(svg, ctx) {
       const mix = (a, b) => ({ x: lerp(a.x, b.x, kc), y: lerp(a.y, b.y, kc), r: lerp(a.r, b.r, kc), s: lerp(a.s, b.s, kc) });
       const tp_ = mix(tW, tC), pp = mix(pW, pC);
       // corner choice: bottom-right, else bottom-left, else hidden (never under the UI card or the rider)
-      measureUI(frame.dt === 0);
       const rbE = riderBox(cam, frame.pose);
       const eBox = [pp.x - 4, pp.y - 6, exR + 6, Math.max(tp_.y + (TICKET.h + 12) * tp_.s, eyB + 6)];
       const hit = (a, b) => b && a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
