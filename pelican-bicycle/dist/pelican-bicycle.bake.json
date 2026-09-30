@@ -1,20 +1,23 @@
 {
  "file": "dist/pelican-bicycle.svg",
- "bytes": 1483905,
- "gzip": 298267,
- "sha256": "19b07d3caa70d082b5e11cac4e53234a1f09cb2214e2d4cd1697e471e9aab66d",
- "bakeMs": 9859,
+ "bytes": 1900664,
+ "gzip": 376537,
+ "sha256": "f0628cb129e999c71eb1709e4e3481a7951a8e3f3502846b7d87f84354af1d54",
+ "bakeMs": 11489,
  "opts": {},
  "stats": {
   "period": 4,
   "fps": 60,
   "start": 24,
   "samples": 2220,
-  "tracks": 340,
-  "animated": 312,
-  "anims": 519,
-  "keyframes": 17184,
-  "warnings": [],
+  "tracks": 343,
+  "animated": 294,
+  "anims": 507,
+  "keyframes": 17998,
+  "warnings": [
+   "2 childList mutations while recording (elements created/removed per frame are not baked)",
+   "145 childList mutations while recording (elements created/removed per frame are not baked)"
+  ],
   "nonClosing": [
    "j-wingFarUpper.transform:translate[1] Δ=-0.12",
    "j-wingFarLower.transform:translate[1] Δ=-0.14",
@@ -29,10 +32,15 @@
    "j-billUpper.transform:translate[1] Δ=-0.52",
    "j-head.transform:translate[1] Δ=-0.52",
    "j-eye.transform:translate[1] Δ=-0.52",
+   "j-eye.transform:scale[1] Δ=-0.2",
    "j-crest.transform:translate[1] Δ=-0.52",
    "j-wingNearUpper.transform:translate[1] Δ=-0.13",
    "j-wingNearLower.transform:translate[1] Δ=-0.14",
    "j-wingNearLower.transform:rotate[0] Δ=0.11",
+   "sky-cl2.transform:translate[0] Δ=-242.19",
+   "sky-cl5.transform:translate[0] Δ=-242.19",
+   "sky-cl6.transform:translate[0] Δ=-242.19",
+   "sky-cl8.transform:translate[0] Δ=-242.19",
    "sky-shipG.transform:translate[1] Δ=-2.42",
    "sky-flockG.transform:translate[1] Δ=7.63",
    "sky-plane.transform:translate[1] Δ=-1.44",
@@ -57,8 +65,10 @@
    "sea-w2.transform:translate[1] Δ=0.48",
    "sea-sg1.transform:translate[0] Δ=1.74",
    "sea-sg2.transform:translate[0] Δ=5.49",
+   "sea-harbour.transform:translate[0] Δ=-904.78",
    "sea-foam.transform:translate[1] Δ=0.9",
    "sea-sealHead.transform:rotate[0] Δ=-1.89",
+   "sea-o-steamer.transform:translate[0] Δ=-844.27",
    "sea-o-steamer.transform:translate[1] Δ=0.87",
    "sea-o-steamer.transform:rotate[0] Δ=-0.75",
    "sea-smoke0.transform:translate[1] Δ=-2.66",
@@ -76,68 +86,34 @@
    "sea-smoke4.transform:translate[1] Δ=-3.77",
    "sea-smoke4.transform:scale[0] Δ=0.31",
    "sea-smoke4.transform:scale[1] Δ=0.31",
+   "sea-o-sloop.transform:translate[0] Δ=-769.24",
    "sea-o-sloop.transform:rotate[0] Δ=-2.52",
+   "sea-o-yawl.transform:translate[0] Δ=-802.2",
    "sea-o-yawl.transform:rotate[0] Δ=2.7",
    "sea-o-trawler.transform:rotate[0] Δ=0.76",
    "sea-gA.transform:scale[1] Δ=1",
    "sea-gB.transform:scale[1] Δ=-0.75",
-   "sea-o-near.transform:translate[1] Δ=2.41",
-   "sea-o-near.transform:rotate[0] Δ=-2.69",
-   "sea-ensign.transform:skewY[0] Δ=5.92",
-   "sea-ensign.transform:scale[0] Δ=0.07",
+   "sea-o-can.transform:translate[0] Δ=-1079.71",
    "sea-o-can.transform:translate[1] Δ=0.87",
    "sea-o-can.transform:rotate[0] Δ=-0.41",
+   "sea-o-bell.transform:translate[0] Δ=-1181.49",
    "sea-o-bell.transform:translate[1] Δ=-0.5",
    "sea-o-bell.transform:rotate[0] Δ=-3.95",
-   "sea-o-pots.transform:translate[1] Δ=1.85",
-   "sea-o-pots.transform:rotate[0] Δ=-1.45",
-   "g.transform:rotate[0] Δ=-2.84",
-   "g.transform:rotate[0] Δ=-2.84",
    "g.transform:rotate[0] Δ=-2.84",
    "g.transform:rotate[0] Δ=-0.93",
-   "g.transform:rotate[0] Δ=-0.93",
-   "g.transform:rotate[0] Δ=-0.93",
-   "g.transform:skewX[0] Δ=3.59",
-   "g.transform:skewX[0] Δ=3.59",
    "g.transform:skewX[0] Δ=3.59",
    "g.transform:skewX[0] Δ=-7.85",
-   "g.transform:skewX[0] Δ=-7.85",
-   "g.transform:skewX[0] Δ=-7.85",
    "g.transform:skewX[0] Δ=-17.81",
-   "g.transform:skewX[0] Δ=-17.81",
-   "g.transform:skewX[0] Δ=-17.81",
-   "g.transform:scale[0] Δ=-0.01",
-   "g.transform:scale[1] Δ=0.14",
-   "g.transform:scale[0] Δ=-0.01",
-   "g.transform:scale[1] Δ=0.14",
    "g.transform:scale[0] Δ=-0.01",
    "g.transform:scale[1] Δ=0.14",
    "g.transform:translate[0] Δ=-3.71",
    "g.transform:translate[1] Δ=-2.99",
    "g.transform:rotate[0] Δ=-12.25",
-   "g.transform:translate[0] Δ=-3.71",
-   "g.transform:translate[1] Δ=-2.99",
-   "g.transform:rotate[0] Δ=-12.25",
-   "g.transform:translate[0] Δ=-3.71",
-   "g.transform:translate[1] Δ=-2.99",
-   "g.transform:rotate[0] Δ=-12.25",
-   "g.transform:translate[1] Δ=-1.5",
-   "g.transform:translate[1] Δ=-1.5",
    "g.transform:translate[1] Δ=-1.5",
    "g.transform:rotate[0] Δ=3.96",
-   "g.transform:rotate[0] Δ=3.96",
-   "g.transform:rotate[0] Δ=3.96",
-   "g.transform:rotate[0] Δ=3.22",
-   "g.transform:rotate[0] Δ=3.22",
    "g.transform:rotate[0] Δ=3.22",
    "g.transform:rotate[0] Δ=-4.35",
-   "g.transform:rotate[0] Δ=-4.35",
-   "g.transform:rotate[0] Δ=-4.35",
    "g.transform:rotate[0] Δ=-8.62",
-   "g.transform:rotate[0] Δ=-8.62",
-   "g.transform:rotate[0] Δ=-8.62",
-   "g.transform:rotate[0] Δ=-6.37",
-   "g.transform:rotate[0] Δ=-6.37",
    "g.transform:rotate[0] Δ=-6.37",
    "fx-sh-body.transform:scale[1] Δ=0.01",
    "fx-sh-crest.transform:translate[1] Δ=-0.52",
@@ -197,12 +173,16 @@
    "fx-fea2.transform:translate[0] Δ=589",
    "fx-fea2.transform:translate[1] Δ=-128.9",
    "fx-fea2.transform:rotate[0] Δ=-57.5",
+   "fx-seed0.transform:translate[0] Δ=-504.3",
    "fx-seed0.transform:translate[1] Δ=55.1",
    "fx-seed0.transform:rotate[0] Δ=-27.6",
+   "fx-seed1.transform:translate[0] Δ=-603.2",
    "fx-seed1.transform:translate[1] Δ=-53.3",
    "fx-seed1.transform:rotate[0] Δ=-7.1",
+   "fx-seed2.transform:translate[0] Δ=-509",
    "fx-seed2.transform:translate[1] Δ=-14.8",
    "fx-seed2.transform:rotate[0] Δ=20",
+   "fx-seed3.transform:translate[0] Δ=-568.4",
    "fx-seed3.transform:translate[1] Δ=72.7",
    "fx-seed3.transform:rotate[0] Δ=28.6",
    "fx-bf0.transform:translate[0] Δ=13",
@@ -1065,9 +1045,11 @@
    "pb-shFringe.d[23] Δ=-2.12",
    "pl-Near-prims.transform:rotate[0] Δ=-0.09",
    "pl-Far-prims.transform:rotate[0] Δ=-0.09",
+   "egg-bottle.transform:translate[0] Δ=-467.3",
+   "egg-bottle.transform:translate[1] Δ=-2.3",
+   "egg-bottleB.transform:rotate[0] Δ=-7",
+   "wx-over.opacity[0] Δ=0.1",
    "sea-sg0.transform:translate[0] Δ=-3.75",
-   "sea-burgee.transform:scale[0] Δ=-0.12",
-   "sea-burgee.transform:scale[1] Δ=0.08",
    "sea-spk0.transform:scale[0] Δ=-0.04",
    "sea-spk0.transform:scale[1] Δ=-0.04",
    "fx-dust1.transform:translate[0] Δ=-120.4",
@@ -1077,6 +1059,7 @@
    "fx-grit1.transform:translate[0] Δ=-41.5",
    "fx-grit1.transform:translate[1] Δ=5.7",
    "fx-grit1.transform:rotate[0] Δ=-44.7",
+   "egg-bottleRip.transform:scale[0] Δ=-0.12",
    "fx-grit2.transform:translate[0] Δ=52.8",
    "fx-grit2.transform:translate[1] Δ=7.1",
    "fx-grit2.transform:rotate[0] Δ=90.1",
@@ -1109,16 +1092,27 @@
    "fx-dust7.transform:translate[1] Δ=13.8",
    "fx-dust7.transform:scale[0] Δ=0.46",
    "fx-dust7.transform:scale[1] Δ=0.46",
+   "wx-wind.opacity[0] Δ=0.8",
+   "wx-windMove.transform:translate[0] Δ=1889.6",
+   "wx-windMove.transform:translate[1] Δ=-6",
+   "wx-leaf0.transform:translate[0] Δ=-460",
+   "wx-leaf0.transform:translate[1] Δ=-70.8",
+   "wx-leaf1.transform:translate[0] Δ=-460",
+   "wx-leaf1.transform:translate[1] Δ=36.7",
+   "wx-leaf2.transform:translate[0] Δ=-460",
+   "wx-leaf2.transform:translate[1] Δ=12",
+   "wx-leaf3.transform:translate[0] Δ=-460",
+   "wx-leaf3.transform:translate[1] Δ=-56",
+   "wx-leaf4.transform:translate[0] Δ=1840",
+   "wx-leaf4.transform:translate[1] Δ=-15",
+   "wx-leaf5.transform:translate[0] Δ=-460",
+   "wx-leaf5.transform:translate[1] Δ=78",
    "bike-tailB.transform:rotate[0] Δ=5.2",
    "fx-grit5.transform:translate[0] Δ=76.6",
    "fx-grit5.transform:translate[1] Δ=-1.3",
    "fx-grit5.transform:rotate[0] Δ=-63.9",
    "sea-spk1.transform:scale[0] Δ=-0.52",
    "sea-spk1.transform:scale[1] Δ=-0.52",
-   "g.transform:translate[0] Δ=7",
-   "g.transform:translate[1] Δ=-0.39",
-   "g.transform:translate[0] Δ=7",
-   "g.transform:translate[1] Δ=-0.39",
    "g.transform:translate[0] Δ=7",
    "g.transform:translate[1] Δ=-0.39",
    "fx-dust3.transform:translate[0] Δ=363.3",
@@ -1132,6 +1126,8 @@
    "sea-fish0.transform:translate[0] Δ=14.29",
    "sea-fish0.transform:translate[1] Δ=-1.79",
    "sea-fish0.transform:rotate[0] Δ=47.62",
+   "wx-clouds.transform:translate[0] Δ=435.9",
+   "wx-clouds.transform:translate[1] Δ=4",
    "fx-fea2.opacity[0] Δ=-0.1",
    "bike-tailC.transform:rotate[0] Δ=-4.2",
    "sea-bell.transform:rotate[0] Δ=7",
@@ -1139,13 +1135,12 @@
    "sea-fish1.transform:translate[1] Δ=-6",
    "sea-fish1.transform:rotate[0] Δ=50",
    "pb-nict.transform:translate[0] Δ=11.3",
-   "sea-dolph.transform:translate[0] Δ=58.77",
-   "sea-dolph.transform:translate[1] Δ=4.13",
-   "sea-dolph.transform:rotate[0] Δ=56.62",
+   "egg-puddle.transform:translate[0] Δ=-270.8",
    "sea-spl0.transform:scale[0] Δ=0.19",
    "sea-spl0.transform:scale[1] Δ=0.19",
    "sea-spl1.transform:scale[0] Δ=0.13",
-   "sea-spl1.transform:scale[1] Δ=0.13"
+   "sea-spl1.transform:scale[1] Δ=0.13",
+   "sea-o-sealhead.transform:translate[0] Δ=1424.58"
   ],
   "trends": [
    "j-crankFar.transform:rotate[0] 360 per 1s (W=360)",
@@ -1156,43 +1151,27 @@
    "j-crankNear.transform:rotate[0] 360 per 1s (W=360)",
    "sky-cl0.transform:translate[0] -3200 per 52.8511s (W=3200)",
    "sky-cl1.transform:translate[0] -3200 per 52.8511s (W=3200)",
-   "sky-cl2.transform:translate[0] -3200 per 52.8511s (W=3200)",
    "sky-cl3.transform:translate[0] -3200 per 52.8511s (W=3200)",
    "sky-cl4.transform:translate[0] -3200 per 52.8511s (W=3200)",
-   "sky-cl5.transform:translate[0] -3200 per 52.8511s (W=3200)",
-   "sky-cl6.transform:translate[0] -3200 per 52.8511s (W=3200)",
    "sky-cl7.transform:translate[0] -3200 per 52.8511s (W=3200)",
-   "sky-cl8.transform:translate[0] -3200 per 52.8511s (W=3200)",
    "sky-cl9.transform:translate[0] -3200 per 52.8511s (W=3200)",
    "sky-shipG.transform:translate[0] -2600 per 166.4533s (W=2600)",
    "sky-skein.transform:translate[0] -2600 per 69.7518s (W=2600)",
    "sky-flockG.transform:translate[0] -2600 per 165.6051s (W=2600)",
    "sky-plane.transform:translate[0] 3000 per 125s (W=3000)",
-   "sea-hills.transform:translate[0] -4712.39 per 50.0002s (W=4712.39)",
-   "sea-cape.transform:translate[0] -4486.2 per 33.9999s (W=4486.2)",
+   "sea-hills.transform:translate[0] -23561.94 per 250.0007s (W=23561.94)",
+   "sea-cape.transform:translate[0] -12032.98 per 91.1969s (W=12032.98)",
    "sea-w0.transform:translate[0] -2450.44 per 12.7964s (W=2450.44)",
    "sea-w1.transform:translate[0] -2488.14 per 10.7621s (W=2488.14)",
    "sea-w2.transform:translate[0] -2638.93 per 9.7416s (W=2638.93)",
    "sea-w3.transform:translate[0] -2563.54 per 7.7814s (W=2563.54)",
-   "sea-harbour.transform:translate[0] -5428.67 per 24s (W=5428.67)",
-   "sea-millSails.transform:rotate[0] 360 per 9s (W=360)",
-   "sea-rocks.transform:translate[0] -4486.2 per 14s (W=4486.2)",
-   "sea-o-steamer.transform:translate[0] -4300.005 per 20.3727s (W=4300.005)",
    "sea-smoke0.transform:translate[0] 58 per 3.2s (W=58)",
    "sea-smoke1.transform:translate[0] 58 per 3.2s (W=58)",
    "sea-smoke2.transform:translate[0] 58 per 3.2s (W=58)",
    "sea-smoke3.transform:translate[0] 58 per 3.2s (W=58)",
    "sea-smoke4.transform:translate[0] 58 per 3.2s (W=58)",
-   "sea-o-sloop.transform:translate[0] -3600 per 18.7198s (W=3600)",
-   "sea-o-yawl.transform:translate[0] -4100 per 20.4438s (W=4100)",
    "sea-o-trawler.transform:translate[0] -3900 per 17.0716s (W=3900)",
-   "sea-o-near.transform:translate[0] -3700 per 15.625s (W=3700)",
-   "sea-o-can.transform:translate[0] -3300 per 12.2255s (W=3300)",
-   "sea-o-bell.transform:translate[0] -3500 per 11.8494s (W=3500)",
-   "sea-o-pots.transform:translate[0] -3099.99 per 10.6172s (W=3099.99)",
-   "sea-o-dolphin.transform:translate[0] -3400 per 12.7564s (W=3400)",
-   "sea-o-fish.transform:translate[0] -3000 per 10.1567s (W=3000)",
-   "sea-o-sealhead.transform:translate[0] -3200 per 10.9597s (W=3200)",
+   "sea-o-fish.transform:translate[0] -2999.99 per 10.1566s (W=2999.99)",
    "fx-gfar0.transform:translate[0] -2800 per 24.8337s (W=2800)",
    "fx-gfar1.transform:translate[0] -2800 per 24.8337s (W=2800)",
    "fx-gfar2.transform:translate[0] -2800 per 24.8337s (W=2800)",
@@ -1206,14 +1185,16 @@
    "fx-curl1p1.stroke-dashoffset[0] -2 per 1.7817s (W=2)",
    "fx-curl2p0.stroke-dashoffset[0] -2 per 3.0769s (W=2)",
    "fx-curl2p1.stroke-dashoffset[0] -2 per 2.9412s (W=2)",
-   "fx-seed0.transform:translate[0] -2000 per 15.8636s (W=2000)",
-   "fx-seed1.transform:translate[0] -2000 per 13.2626s (W=2000)",
-   "fx-seed2.transform:translate[0] -2000 per 15.7171s (W=2000)",
-   "fx-seed3.transform:translate[0] -2000 per 14.0746s (W=2000)",
    "fx-flyTrail.stroke-dashoffset[0] -313.16 per 1.8959s (W=313.16)",
    "bike-chainfx.stroke-dashoffset[0] -100 per 2.0833s (W=100)",
    "bike-teeth.transform:rotate[0] 360 per 1s (W=360)",
-   "fx-curl0p0.stroke-dashoffset[0] -2 per 1.6563s (W=2)"
+   "fx-curl0p0.stroke-dashoffset[0] -2 per 1.6563s (W=2)",
+   "wx-leaf0.transform:rotate[0] 360 per 0.8889s (W=360)",
+   "wx-leaf1.transform:rotate[0] 360 per 0.8889s (W=360)",
+   "wx-leaf2.transform:rotate[0] 360 per 0.8889s (W=360)",
+   "wx-leaf3.transform:rotate[0] 360 per 0.8889s (W=360)",
+   "wx-leaf4.transform:rotate[0] 360 per 1s (W=360)",
+   "wx-leaf5.transform:rotate[0] 360 per 0.8889s (W=360)"
   ],
   "subPeriods": {
    "1": 25,
@@ -1221,11 +1202,11 @@
    "0.5": 2,
    "1.333": 1,
    "0.133": 1,
-   "0.1": 2
+   "0.1": 3
   },
   "errMax": {
    "xf": 0.9999999999999994,
-   "opacity": 0.9895833333333307,
+   "opacity": 0.9968827160493794,
    "d": 3.9888888888888614,
    "stroke-dashoffset": 0.9999999999999432
   },
@@ -1254,37 +1235,38 @@
    "slot:billLower": 1095,
    "slot:billUpper": 1099,
    "slot:head": 1110,
-   "slot:eye": 1963,
+   "slot:eye": 2299,
    "slot:crest": 8853,
    "slot:wingNearUpper": 2334,
    "slot:wingNearLower": 47582,
    "slot:wingNearHand": 1061,
-   "L-clouds": 19761,
-   "L-hills-far": 154,
-   "L-lighthouse": 154,
-   "L-sea": 5237,
-   "L-boats": 25909,
-   "L-shore": 16507,
-   "L-roadside": 5591,
-   "L-road": 181,
+   "L-clouds": 23021,
+   "L-hills-far": 157,
+   "L-lighthouse": 152,
+   "L-sea": 8007,
+   "L-boats": 25384,
    "L-foreground": 181,
+   "L-shore": 5627,
+   "L-roadside": 1983,
+   "L-road": 986,
    "L-shadow": 24148,
    "L-gulls-far": 6171,
    "L-fx-back": 6572,
-   "L-fx-front": 86832,
+   "L-fx-front": 88568,
    "slot:chain": 290,
    "slot:neck": 78736,
+   "other": 23172,
    "L-sky": 62496,
    "L-sunmoon": 295,
    "slot:fork": 2424
   },
   "ms": {
-   "record": 1159,
-   "probe": 7762,
-   "analyse": 405,
-   "total": 9621
+   "record": 1296,
+   "probe": 9108,
+   "analyse": 379,
+   "total": 11213
   },
-  "blended": 1130,
+  "blended": 1122,
   "byUnit": [
    [
     "j-wingFarUpper.transform",
@@ -1408,8 +1390,8 @@
    ],
    [
     "j-eye.transform",
-    1316,
-    "21@4,36@4,13@4"
+    1652,
+    "21@4,36@4,13@4,19@4"
    ],
    [
     "j-crest.transform",
@@ -1433,53 +1415,53 @@
    ],
    [
     "sky-cl0.transform",
-    150,
-    "4@52.851"
+    435,
+    "4@52.851,1@4,1@4,1@4"
    ],
    [
     "sky-cl1.transform",
-    156,
-    "4@52.851"
+    440,
+    "4@52.851,1@4,1@4,1@4"
    ],
    [
     "sky-cl2.transform",
-    155,
-    "4@52.851"
+    544,
+    "27@4"
    ],
    [
     "sky-cl3.transform",
-    153,
-    "4@52.851"
+    438,
+    "4@52.851,1@4,1@4,1@4"
    ],
    [
     "sky-cl4.transform",
-    156,
-    "4@52.851"
+    439,
+    "4@52.851,1@4,1@4,1@4"
    ],
    [
     "sky-cl5.transform",
-    156,
-    "4@52.851"
+    544,
+    "27@4"
    ],
    [
     "sky-cl6.transform",
-    156,
-    "4@52.851"
+    544,
+    "27@4"
    ],
    [
     "sky-cl7.transform",
-    154,
-    "4@52.851"
+    438,
+    "4@52.851,1@4,1@4,1@4"
    ],
    [
     "sky-cl8.transform",
-    156,
-    "4@52.851"
+    544,
+    "27@4"
    ],
    [
     "sky-cl9.transform",
-    153,
-    "4@52.851"
+    439,
+    "4@52.851,1@4,1@4,1@4"
    ],
    [
     "sky-shipG.transform",
@@ -1533,13 +1515,13 @@
    ],
    [
     "sea-hills.transform",
-    154,
-    "4@50"
+    157,
+    "4@250.001"
    ],
    [
     "sea-cape.transform",
-    154,
-    "4@34"
+    152,
+    "4@91.197"
    ],
    [
     "sea-w0.transform",
@@ -1578,18 +1560,8 @@
    ],
    [
     "sea-harbour.transform",
-    151,
-    "4@24"
-   ],
-   [
-    "sea-millSails.transform",
-    97,
-    "2@9"
-   ],
-   [
-    "sea-rocks.transform",
-    246,
-    "4@14,1@4"
+    849,
+    "48@4"
    ],
    [
     "sea-foam.transform",
@@ -1603,8 +1575,8 @@
    ],
    [
     "sea-o-steamer.transform",
-    590,
-    "4@20.373,7@4,6@4,1@4"
+    1255,
+    "49@4,6@4,1@4"
    ],
    [
     "sea-smoke0.transform",
@@ -1643,13 +1615,13 @@
    ],
    [
     "sea-o-sloop.transform",
-    520,
-    "4@18.72,3@4,5@4,1@4"
+    1197,
+    "47@4,5@4,1@4"
    ],
    [
     "sea-o-yawl.transform",
-    537,
-    "4@20.444,4@4,5@4,1@4"
+    1236,
+    "47@4,5@4,1@4"
    ],
    [
     "sea-o-trawler.transform",
@@ -1667,34 +1639,14 @@
     "83@4"
    ],
    [
-    "sea-o-near.transform",
-    651,
-    "4@15.625,10@4,7@4,1@4"
-   ],
-   [
-    "sea-ensign.transform",
-    836,
-    "20@4,30@4"
-   ],
-   [
     "sea-o-can.transform",
-    660,
-    "4@12.226,9@4,9@4,1@4"
+    1460,
+    "55@4,9@4,1@4"
    ],
    [
     "sea-o-bell.transform",
-    655,
-    "4@11.849,9@4,9@4,1@4"
-   ],
-   [
-    "sea-o-pots.transform",
-    620,
-    "4@10.617,10@4,5@4,1@4"
-   ],
-   [
-    "sea-o-dolphin.transform",
-    248,
-    "4@12.756,1@4"
+    1486,
+    "57@4,9@4,1@4"
    ],
    [
     "sea-o-fish.transform",
@@ -1702,32 +1654,27 @@
     "4@10.157,1@4"
    ],
    [
-    "sea-o-sealhead.transform",
-    242,
-    "4@10.96,1@4"
-   ],
-   [
     "sea-sealUp.transform",
     131,
     "3@4"
    ],
    [
-    "land-shore.transform",
+    "land-t-fg.transform",
+    181,
+    "6@1"
+   ],
+   [
+    "land-tile-shore.transform",
     187,
     "6@2"
    ],
    [
-    "land-roadside.transform",
+    "land-tile-roadside.transform",
     179,
     "6@1"
    ],
    [
-    "land-road.transform",
-    181,
-    "6@1"
-   ],
-   [
-    "land-fg.transform",
+    "land-tile-road.transform",
     181,
     "6@1"
    ],
@@ -1743,48 +1690,8 @@
    ],
    [
     "g.transform",
-    180,
-    "8@4"
-   ],
-   [
-    "g.transform",
-    180,
-    "8@4"
-   ],
-   [
-    "g.transform",
-    180,
-    "8@4"
-   ],
-   [
-    "g.transform",
-    180,
-    "8@4"
-   ],
-   [
-    "g.transform",
     572,
     "41@4"
-   ],
-   [
-    "g.transform",
-    572,
-    "41@4"
-   ],
-   [
-    "g.transform",
-    572,
-    "41@4"
-   ],
-   [
-    "g.transform",
-    663,
-    "49@4"
-   ],
-   [
-    "g.transform",
-    663,
-    "49@4"
    ],
    [
     "g.transform",
@@ -1798,38 +1705,8 @@
    ],
    [
     "g.transform",
-    741,
-    "56@4"
-   ],
-   [
-    "g.transform",
-    741,
-    "56@4"
-   ],
-   [
-    "g.transform",
     2264,
     "128@4"
-   ],
-   [
-    "g.transform",
-    2264,
-    "128@4"
-   ],
-   [
-    "g.transform",
-    2264,
-    "128@4"
-   ],
-   [
-    "g.transform",
-    460,
-    "9@4,13@4"
-   ],
-   [
-    "g.transform",
-    460,
-    "9@4,13@4"
    ],
    [
     "g.transform",
@@ -1843,38 +1720,8 @@
    ],
    [
     "g.transform",
-    183,
-    "7@4"
-   ],
-   [
-    "g.transform",
-    183,
-    "7@4"
-   ],
-   [
-    "g.transform",
     364,
     "24@4"
-   ],
-   [
-    "g.transform",
-    364,
-    "24@4"
-   ],
-   [
-    "g.transform",
-    364,
-    "24@4"
-   ],
-   [
-    "g.transform",
-    279,
-    "17@4"
-   ],
-   [
-    "g.transform",
-    279,
-    "17@4"
    ],
    [
     "g.transform",
@@ -1889,36 +1736,6 @@
    [
     "g.transform",
     266,
-    "16@4"
-   ],
-   [
-    "g.transform",
-    266,
-    "16@4"
-   ],
-   [
-    "g.transform",
-    266,
-    "16@4"
-   ],
-   [
-    "g.transform",
-    266,
-    "16@4"
-   ],
-   [
-    "g.transform",
-    266,
-    "16@4"
-   ],
-   [
-    "g.transform",
-    269,
-    "16@4"
-   ],
-   [
-    "g.transform",
-    269,
     "16@4"
    ],
    [
@@ -2138,23 +1955,23 @@
    ],
    [
     "fx-seed0.transform",
-    1058,
-    "4@15.864,27@4,19@4,1@4"
+    1438,
+    "51@4,19@4,1@4"
    ],
    [
     "fx-seed1.transform",
-    960,
-    "4@13.263,20@4,18@4,1@4"
+    1492,
+    "52@4,18@4,1@4"
    ],
    [
     "fx-seed2.transform",
-    957,
-    "4@15.717,23@4,15@4,1@4"
+    1427,
+    "49@4,15@4,1@4"
    ],
    [
     "fx-seed3.transform",
-    1062,
-    "4@14.075,25@4,21@4,1@4"
+    1416,
+    "48@4,21@4,1@4"
    ],
    [
     "fx-bf0.transform",
@@ -2397,6 +2214,21 @@
     "28@4"
    ],
    [
+    "egg-bottle.transform",
+    960,
+    "47@4"
+   ],
+   [
+    "egg-bottleB.transform",
+    294,
+    "17@4"
+   ],
+   [
+    "wx-over.opacity",
+    256,
+    "14@4"
+   ],
+   [
     "sky-b0.href",
     845,
     "42@4"
@@ -2410,11 +2242,6 @@
     "sea-sg0.transform",
     208,
     "9@4"
-   ],
-   [
-    "sea-burgee.transform",
-    678,
-    "33@4"
    ],
    [
     "pl-Near-webs.transform",
@@ -2450,6 +2277,11 @@
     "fx-grit1.transform",
     1949,
     "79@4,25@4"
+   ],
+   [
+    "egg-bottleRip.transform",
+    1043,
+    "69@4"
    ],
    [
     "sky-b1.href",
@@ -2662,6 +2494,46 @@
     "8@4"
    ],
    [
+    "wx-wind.opacity",
+    405,
+    "27@4"
+   ],
+   [
+    "wx-windMove.transform",
+    4799,
+    "251@4"
+   ],
+   [
+    "wx-leaf0.transform",
+    2999,
+    "136@4,2@0.889,10@4"
+   ],
+   [
+    "wx-leaf1.transform",
+    2930,
+    "133@4,2@0.889,10@4"
+   ],
+   [
+    "wx-leaf2.transform",
+    2880,
+    "130@4,2@0.889,10@4"
+   ],
+   [
+    "wx-leaf3.transform",
+    2878,
+    "130@4,2@0.889,10@4"
+   ],
+   [
+    "wx-leaf4.transform",
+    2954,
+    "134@4,2@1,14@4"
+   ],
+   [
+    "wx-leaf5.transform",
+    3071,
+    "141@4,2@0.889,10@4"
+   ],
+   [
     "bike-tailB.transform",
     1060,
     "56@4"
@@ -2680,16 +2552,6 @@
     "sea-spk1.transform",
     972,
     "73@4"
-   ],
-   [
-    "g.transform",
-    557,
-    "31@4"
-   ],
-   [
-    "g.transform",
-    557,
-    "31@4"
    ],
    [
     "g.transform",
@@ -2812,14 +2674,19 @@
     "3@4"
    ],
    [
-    "sea-dolph.visibility",
+    "egg-puddle.visibility",
     132,
     "3@4"
    ],
    [
-    "sea-dolph.transform",
-    1019,
-    "32@4,27@4"
+    "egg-puddle.transform",
+    673,
+    "36@4"
+   ],
+   [
+    "egg-bottle.visibility",
+    118,
+    "2@4"
    ],
    [
     "sea-spl0.visibility",
@@ -2845,16 +2712,26 @@
     "fx-gfar1.href",
     209,
     "8@4"
+   ],
+   [
+    "sea-o-sealhead.visibility",
+    118,
+    "2@4"
+   ],
+   [
+    "sea-o-sealhead.transform",
+    111,
+    "2@0.1"
    ]
   ],
   "dots": {
-   "paths": 84,
-   "savedBytes": 185877
+   "paths": 88,
+   "savedBytes": 238969
   },
   "pathBytes": {
-   "before": 867589,
-   "after": 565539
+   "before": 1471700,
+   "after": 902861
   },
-  "bytes": 1483774
+  "bytes": 1900533
  }
 }
