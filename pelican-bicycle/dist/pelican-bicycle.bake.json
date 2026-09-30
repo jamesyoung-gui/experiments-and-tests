@@ -3,7 +3,7 @@
  "bytes": 1483905,
  "gzip": 298267,
  "sha256": "19b07d3caa70d082b5e11cac4e53234a1f09cb2214e2d4cd1697e471e9aab66d",
- "bakeMs": 9555,
+ "bakeMs": 9580,
  "opts": {},
  "stats": {
   "period": 4,
@@ -1279,10 +1279,10 @@
    "slot:fork": 2424
   },
   "ms": {
-   "record": 1130,
-   "probe": 7470,
-   "analyse": 396,
-   "total": 9312
+   "record": 1107,
+   "probe": 7532,
+   "analyse": 413,
+   "total": 9356
   },
   "blended": 1130,
   "byUnit": [

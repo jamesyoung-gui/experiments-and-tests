@@ -5,9 +5,9 @@ export const meta = {
     { title: 'Build', detail: '12 builders, each owning its own files, style C, detail quotas, visual self-check' },
     { title: 'Journey', detail: 'long non-repeating route + easter eggs (new user requirements)' },
     { title: 'Integrate', detail: 'wire modules, zero console errors, dist, bake, perf' },
-    { title: 'Review', detail: 'one fresh judge per rubric dimension + G-DETAIL judge' },
-    { title: 'Fix', detail: 'one fix round per owner' },
-    { title: 'Verify', detail: 'adversarial defect hunt, then final blocker fixes' },
+    { title: 'Review', detail: '4 grouped judges covering all 13 dimensions + G-DETAIL' },
+    { title: 'Fix', detail: '≤ 6 owners with blockers/majors' },
+    { title: 'Verify', detail: 'final fixer + full gate run' },
   ],
 }
 
@@ -247,27 +247,30 @@ const SCORE = {
   },
   required: ['dim', 'score', 'criteria', 'findings'],
 }
-const DIMS = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12', 'D13']
+const GROUPS = [
+  { id: 'J-canon', dims: 'D1 D2 D3 D4', focus: 'benchmark canon and instant readability, bicycle engineering, contact and riding physics, pelican species and anatomy' },
+  { id: 'J-motion', dims: 'D5 D6 D8', focus: 'animation craft, character acting, wow moments, easter eggs (node tools/check-eggs.mjs, docs/EGGS.md), and the director\'s weather and encounters over time' },
+  { id: 'J-art', dims: 'D7 D13', focus: 'art direction, style-C fidelity, light, camera, G-DETAIL (node tools/detail-inventory.mjs --json docs/eval/detail-inventory.json; spot-check 15 items for padding; compare 3× crops with the draft), and the long non-repeating route (renderAt t = 0, 30, 60, 120, 240 s)' },
+  { id: 'J-product', dims: 'D9 D10 D11 D12', focus: 'interaction and accessibility (drive keys and UI with Playwright; desktop and 390px), performance (--perf), the zero-JS baked SVG (check-baked), and engineering rigour and honesty' },
+]
 
 phase('Review')
-const judged = (await parallel(DIMS.map(d => () => agent(`You are a fresh, strict, independent judge for rubric dimension ${d} of "Pelican Bay" (an interactive SVG animation of a great white pelican riding a bicycle, in style C, the retro travel poster: see ${ROOT}/docs/STYLE-C.md and the draft reference ${REF}/keyframe.png). Project: ${ROOT}. Read CONTRACT.md for the tools and the ownership map.
-1. Print your dimension: node ${ROOT}/tools/rubric.mjs ${d} --anchors 2,5,8,10 (and --gates for the gate list).
-2. Produce evidence: node ${ROOT}/tools/build.mjs && node ${ROOT}/tools/shoot.mjs --dist --out shots/judge-${d} --set hero,frames,tods,cams,events,zoom,mobile --sheet. Where your criteria need them, add extra Playwright screenshots, key-press drivers, --perf, check-rig, detail-inventory, the baked SVG in dist/pelican-bicycle.svg, or code reading.
-3. READ the images carefully. Score every criterion against its anchors, citing concrete evidence (file and what you saw). Scores ≥ 9 need exceptional evidence. Be calibrated, not generous: this is judged against the best entries ever made.
-The user has also added two requirements, which every judge must weigh where relevant (D7/D8/D13 especially): ${USERREQ} Check them: render frames far apart in time (renderAt t = 0, 30, 60, 120, 240 s) to look for repetition, and read docs/EGGS.md + run node tools/check-eggs.mjs for the eggs.
-4. Give actionable findings (max 12, most valuable first), each routed to exactly one owner. Owner-to-file map: ${JSON.stringify(OWNER_FILES)}.
-Do NOT edit any files except your own shots folder.`, { label: `judge:${d}`, phase: 'Review', schema: SCORE })).concat([() => agent(`You are the G-DETAIL judge for "Pelican Bay" (style C). The user requires FAR more detail than the draft. Project: ${ROOT}.
-1. node ${ROOT}/tools/build.mjs && node ${ROOT}/tools/detail-inventory.mjs --json docs/eval/detail-inventory.json --verbose
-2. node ${ROOT}/tools/shoot.mjs --dist --out shots/judge-detail --set hero,cams,zoom --sheet. Compare side by side with the draft: ${REF}/keyframe.png and closeup.png, and render the draft at 3× crops yourself (node tools/render.mjs on a copy of keyframe.svg with a viewBox crop) for the same regions.
-3. Audit for padding: pick 25 random data-detail items from the JSON and verify each is a real, visible, distinct detail in style C. Mark padded or invisible ones.
-4. Score D13-style: 0-10 for the detail multiple, legibility at 3×, craft, and honesty. List the gate status (PASS/FAIL, with the multiple after removing padding) and findings routed to owners (the owner-to-file map is in CONTRACT.md; owners are rig, bike, pelican-body, pelican-limbs, sky, sea, land, fx, print, ui, audio, baker, lead). Say which regions of the frame are still too empty.
-Do not edit files except your own shots folder and docs/eval/detail-inventory.json.`, { label: 'judge:G-DETAIL', phase: 'Review', schema: SCORE })]))).filter(Boolean)
-log('scores: ' + judged.map(j => `${j.dim}=${j.score}`).join(' '))
+const judged = (await parallel(GROUPS.map(g => () => agent(`You are a fresh, strict, independent judge for "Pelican Bay" (an interactive SVG animation of a great white pelican riding a bicycle, in style C, the retro travel poster: see ${ROOT}/docs/STYLE-C.md and the draft reference ${REF}/keyframe.png). Project: ${ROOT}. Read CONTRACT.md for tools and ownership. ${USERREQ}
+Your dimensions: ${g.dims}. Focus: ${g.focus}.
+1. Print them: node ${ROOT}/tools/rubric.mjs ${g.dims} --anchors 5,8,10
+2. Evidence: node ${ROOT}/tools/build.mjs && node ${ROOT}/tools/shoot.mjs --dist --out shots/${g.id} --set hero,frames,tods,cams,events,zoom,mobile --sheet, plus whatever your focus needs.
+3. READ the images. Score each dimension (0-10) against the anchors, citing evidence. Be calibrated, not generous. Put the dimension scores in criteria[] (id = the dimension id), and the mean in score.
+4. Give up to 12 actionable findings, most valuable first, each routed to one owner. Owner-to-file map: ${JSON.stringify(OWNER_FILES)}.
+Work efficiently: this is a single review pass. Do NOT edit files except your shots folder (and docs/eval/detail-inventory.json for J-art).`, { label: `judge:${g.id}`, phase: 'Review', schema: SCORE })))).filter(Boolean)
+log('scores: ' + judged.map(j => `${j.dim}=${j.score} [${(j.criteria||[]).map(c => c.id + ':' + c.score).join(' ')}]`).join(' | '))
 
 phase('Fix')
 const byOwner = {}
 for (const j of judged) for (const f of j.findings) if (OWNER_FILES[f.owner]) (byOwner[f.owner] ||= []).push({ dim: j.dim, ...f })
-const owners = Object.keys(byOwner)
+const sev = f => f.severity === 'blocker' ? 3 : f.severity === 'major' ? 1 : 0
+const owners = Object.keys(byOwner).filter(o => byOwner[o].some(f => sev(f) > 0)).sort((x, y) => byOwner[y].reduce((t, f) => t + sev(f), 0) - byOwner[x].reduce((t, f) => t + sev(f), 0)).slice(0, 6)
+const leftovers = Object.keys(byOwner).filter(o => !owners.includes(o)).flatMap(o => byOwner[o].map(f => ({ owner: o, ...f })))
+log(`fixing owners: ${owners.join(', ')}; leftovers to final: ${leftovers.length}`)
 const fixes = (await parallel(owners.map(o => () => agent(`${COMMON.replaceAll('<your-id>', 'fix-' + o)}
 
 YOUR ROLE: fixer for owner "${o}". FILES YOU OWN: ${OWNER_FILES[o]}
@@ -276,13 +279,12 @@ Fix every blocker and major, and the minors where they're cheap. If you disagree
   { label: `fix:${o}`, phase: 'Fix', schema: REPORT })))).filter(Boolean)
 
 phase('Verify')
-const DEFECTS = { type: 'object', properties: { defects: { type: 'array', items: { type: 'object', properties: {
-  severity: { type: 'string', enum: ['blocker', 'major', 'minor'] }, owner: { type: 'string' }, issue: { type: 'string' }, evidence: { type: 'string' }, fix: { type: 'string' } },
-  required: ['severity', 'issue', 'evidence', 'fix'] } } }, required: ['defects'] }
-const hunt = await agent(`You are an adversarial reviewer for "Pelican Bay" at ${ROOT}. Assume there are defects and find AT LEAST 5 real ones, the kind an expert evaluator would dock points for. Look at: a foot leaving a pedal, a limb seam at 3× zoom, a leg bleeding through the frame, a wheel spinning the wrong way, a chain on the wrong side, a pelican feature that is wrong for the species, the title covering the rider, gaps at the edges, a broken time of day, console errors, broken keys, the baked SVG not animating, off-style colours, padded detail, the background repeating within 4 minutes (a user requirement: render t = 0…240 s), an easter egg that doesn't work (node tools/check-eggs.mjs; docs/EGGS.md). Build and shoot everything (node tools/build.mjs && node tools/shoot.mjs --dist --out shots/verify --set hero,frames,tods,cams,events,zoom,mobile --sheet, plus --perf, check-rig, detail-inventory, check-baked), READ the images, and drive the UI with Playwright. Report each defect with evidence and a fix. Do not edit files.`, { label: 'verify:hunt', phase: 'Verify', schema: DEFECTS })
 const final = await agent(`${COMMON.replaceAll('<your-id>', 'final')}
 
-YOUR ROLE: final fixer. You MAY edit any file (keep changes surgical). Fix every blocker and major from this adversarial review, and minors where they're cheap: ${JSON.stringify(hunt)}
-Then run the complete gate set and report the results: check-rig, lint, build, shoot --dist (full sets, 0 errors), detail-inventory (PASS), bake + check-baked, and --perf.`, { label: 'verify:final-fix', phase: 'Verify', schema: REPORT })
-
-return { reports: reports.map(r => ({ owner: r.owner, detail: r.detailCount, summary: r.summary, knownIssues: r.knownIssues })), integ, scores: judged.map(j => ({ dim: j.dim, score: j.score, gatesFailed: j.gatesFailed, top: j.findings.slice(0, 3) })), fixes: fixes.map(f => ({ owner: f.owner, summary: f.summary, knownIssues: f.knownIssues })), hunt, final }
+YOUR ROLE: final fixer and gatekeeper. You MAY edit any file (keep changes surgical). ${USERREQ}
+1. Fix these leftover findings that no fixer took (blockers and majors first; cheap minors too): ${JSON.stringify(leftovers)}
+2. Run the complete gate set and fix whatever fails: check-rig, lint, build, shoot --dist (full sets, 0 errors), detail-inventory (PASS), bake + check-baked, check-eggs, --perf (fps ≥ 58).
+3. Do a quick adversarial look at the final renders (feet on the pedals, limb seams at 3×, the title or UI covering the rider, edge gaps, repetition over 240 s) and fix anything blatant.
+Report the final gate results.`, { label: 'verify:final', phase: 'Verify', schema: REPORT })
+const hunt = null
+return { reports: reports.map(r => ({ owner: r.owner, detail: r.detailCount, summary: r.summary, knownIssues: r.knownIssues })), integ, scores: judged.map(j => ({ group: j.dim, score: j.score, dims: j.criteria, gatesFailed: j.gatesFailed, top: j.findings.slice(0, 3) })), fixes: fixes.map(f => ({ owner: f.owner, summary: f.summary, knownIssues: f.knownIssues })), hunt, final }
