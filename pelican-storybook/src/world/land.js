@@ -77,7 +77,8 @@ const smooth01 = x => { const u = clamp(x, 0, 1); return u * u * (3 - 2 * u); };
 const nz = (x, y, s) => Math.sin(x * 0.19 + y * 0.13 + s * 1.7) * 0.5 + Math.sin(x * 0.047 - y * 0.37 + s * 3.1 + 1) * 0.3 + Math.sin(x * 0.61 + y * 0.53 + s * 0.7 + 2) * 0.2;
 // current layer's ink: colour, width factor, wobble amplitude (set per layer while building)
 let LC = 'var(--pb-line)', LW = 1, WA = 0.8, LAST = [0, 0];
-const pen = (lc, lw, wa) => { LC = lc; LW = lw; WA = wa; };
+// (the wobble is ~2× the draft-C setting: a visible hand-drawn wander, as the draft's feDisplacementMap gave; ink a touch finer)
+const pen = (lc, lw, wa) => { LC = lc; LW = lw * 0.9; WA = wa * 1.9; };
 // wobD: rewrite any path (absolute or relative M L H V C S Q T A Z) so every point is displaced by the noise field and
 // long straight edges are resampled into a gently wandering brush line. Also records the path's size in LAST.
 function wobD(d, amp = WA, s = 0, seg = 11) {
@@ -126,11 +127,24 @@ function wobD(d, amp = WA, s = 0, seg = 11) {
   return out;
 }
 // painted + inked (one element: fill, then the warm-brown line on top). Tiny shapes get a finer line or none.
-const O = (d, fill, w = 1.6, o = {}) => {
-  const dd = wobD(d), sz = Math.max(LAST[0], LAST[1]), k = sz < 5 ? 0 : sz < 14 ? 0.6 : 1;
-  return k ? h('path', { d: dd, fill, stroke: LC, 'stroke-width': f(w * LW * k), 'stroke-linejoin': 'round', ...o }) : h('path', { d: dd, fill, ...o });
+// GOUACHE BODY: every painted shape of a paint token is filled with that paint's own gouache gradient (a lighter,
+// warmer top where the light lands, the pure paint, and a warm mauve-brown shade pooling at the bottom), built from
+// color-mix() of the live palette vars, so it follows the hour. Zero extra nodes. The fill is
+// var(--lf-<token>, url(#land-gg-<token>)): a stream paint swap (SWAP) redefines --lf-<token> on the <use>, so swapped
+// props get the swapped paint's gradient (a gradient's stops resolve in the defs, not in the <use>).
+const GUSED = new Set();
+const GFLAT = new Set(['lDark', 'lWin', 'lGlass', 'lamp', 'lampGlow', 'line', 'lineSoft', 'skyGlow', 'foam', 'lPaper']);
+let GON = true;   // off while painting textures / glazes
+const gf = (fill, sz) => {
+  if (!GON || sz < 7 || typeof fill !== 'string') return fill;
+  const m = /^var\(--pb-([\w]+)\)$/.exec(fill); if (!m || GFLAT.has(m[1])) return fill;
+  GUSED.add(m[1]); return `var(--lf-${m[1]},url(#land-gg-${m[1]}))`;
 };
-const Pw = (d, fill, o) => F(wobD(d), fill, o);                                   // painted, no ink (glazes, stripes)
+const O = (d, fill, w = 1.6, o = {}) => {
+  const dd = wobD(d), sz = Math.max(LAST[0], LAST[1]), k = sz < 5 ? 0 : sz < 14 ? 0.6 : 1, fl = gf(fill, Math.min(sz, LAST[1] * 3));
+  return k ? h('path', { d: dd, fill: fl, stroke: LC, 'stroke-width': f(w * LW * k), 'stroke-linejoin': 'round', ...o }) : h('path', { d: dd, fill: fl, ...o });
+};
+const Pw = (d, fill, o) => { const dd = wobD(d); return F(dd, o && o.opacity ? fill : gf(fill, Math.min(Math.max(LAST[0], LAST[1]), LAST[1] * 3)), o); };   // painted, no ink (stripes)
 const Gz = (d, fill, op) => F(wobD(d), fill, { opacity: op });                    // translucent glaze (light / shade)
 const Ln = (d, w = 1.4, o) => S(wobD(d), LC, f(w * LW), o);                        // ink line
 const Pc = (d, w = 1.6) => S(wobD(d, WA * 1.2, 5), LC, f(w * 0.45 * LW), { opacity: 0.38, transform: 'translate(0.8 0.6)' }); // pencil pass
@@ -169,7 +183,7 @@ function gtext(str, x, y, size, { track = 0, anchor = 'start', sx = 1, wob = 0 }
 }
 const txt = (s, x, y, size, o) => gtext(s, x, y, size, { wob: 0.025, ...o }).d;
 const at0 = (x, y, m) => G({ transform: `translate(${f(x)} ${f(y)})` }, m);
-const F0 = F, O_ = (...a) => O(...a);   // aliases for the set pieces (which shadow F / O locally)
+const F0 = F, S0 = S, O_ = (...a) => O(...a);   // aliases for the set pieces (which shadow F / O locally)
 
 // ---------------------------------------------------------------------------------------------- detail inventory
 // [kind, name, what]. Repeated identical instances are tagged ONCE (one specimen in the hero frame); continuous bands
@@ -218,8 +232,8 @@ const ITEMS = [
   ['T', 'rope-twist', 'twisted-rope texture on the fence swags'],
   ['T', 'post-grain', 'wood-grain strokes and a light edge on the fence posts'],
   ['O', 'verge', 'grassy verge along the fence with tufts and tiny daisies'],
-  ['O', 'pavement', 'cream flagstone footpath with wobbly joints'],
-  ['T', 'pavement-texture', 'mottled gouache dabs and chips on the flagstones'],
+  ['O', 'pavement', 'sandy promenade path of rounded, hand-laid flagstones in three warm tones'],
+  ['T', 'pavement-texture', 'lit brush dabs on each flagstone and a gouache mottle wash over the path'],
   ['O', 'lamp-post', 'storybook iron lamp post: base, fluted post, collar, curly bracket, glass lantern, roof, finial'],
   ['O', 'lamp-flower-basket', 'hanging flower basket with trailing pink and white flowers on the first lamp'],
   ['O', 'lamp-banner', 'little painted sun pennant on the second lamp'],
@@ -256,17 +270,17 @@ const ITEMS = [
   ['O', 'flower-bed', 'wooden planter box of red and yellow flowers'],
   ['O', 'flower-bed-tulips', 'second planter of pink and cream tulips'],
   ['O', 'milestone', 'painted milestone: 鹈鹕湾 2 km'],
-  ['O', 'hedge', 'clipped round hedge with leaf scallops'],
+  ['O', 'hedge', 'round storybook bush: a puff silhouette with leaf dabs in three greens and tiny pink blossoms'],
   ['O', 'icecream-cart', 'pastel ice-cream cart: striped canopy, wheels, cones on top, 冰淇淋 Ices sign'],
   ['O', 'telescope', 'coin-op seafront telescope on a pedestal'],
   ['O', 'lamp-glow', 'night: warm lamp lanterns glow in soft rings (radial gradient)'],
   ['O', 'pavement-pool', 'night: soft light pools on the pavement under the lamps'],
   // road (L-road, depth 1)
-  ['O', 'kerbstones', 'cream kerbstones with a shadow lip and joints'],
+  ['O', 'kerbstones', 'hand-laid rounded kerbstones in three stone tones, each with a lit top dab, on a shadow lip'],
   ['O', 'gutter-drain', 'iron gully grate in the gutter'],
   ['O', 'edge-line', 'painted cream edge line with a brushed, uneven edge'],
-  ['O', 'centre-dashes', 'hand-painted cream centre dashes with rounded ends'],
-  ['T', 'asphalt-gouache', 'road painted in warm mauve with dry-brush drags and speckle'],
+  ['O', 'centre-dashes', 'brushed cream centre dashes: loaded start, dry tapered tail, lighter drag inside'],
+  ['T', 'asphalt-gouache', 'road painted in warm mauve: gouache mottle, long dry-brush drags, speckle and a sun-lit far edge'],
   ['O', 'manhole', 'iron manhole cover with a rim'],
   ['T', 'manhole-pattern', 'star-and-ring relief on the manhole cover'],
   ['O', 'bike-lane-symbol', 'painted cream bicycle pictogram in the lane'],
@@ -278,8 +292,8 @@ const ITEMS = [
   ['O', 'fallen-leaves', 'a few fallen leaves on the road'],
   ['O', 'road-pool', 'night: lamp pools on the road, tracking the lamps'],
   // foreground (L-foreground, depth 1.3)
-  ['O', 'fg-bank', 'grassy bank mounds with a light top edge'],
-  ['O', 'fg-grass-tufts', 'outlined grass tufts in four greens'],
+  ['O', 'fg-bank', 'grassy bank mounds: gouache-lit green, painted blade strokes, mottle and a pencil edge'],
+  ['O', 'fg-grass-tufts', 'tufts of slender curving blades in four greens with lit ribs'],
   ['O', 'fg-daisies', 'white daisies with yellow centres'],
   ['O', 'fg-buttercups', 'yellow buttercups with orange centres'],
   ['O', 'fg-thrift', 'pink sea-thrift pom-poms on stalks'],
@@ -350,7 +364,7 @@ const STEP = { shore: 94, roadside: 178, road: 560, fg: 430 };      // stream pi
 const POOL = { shore: 33, roadside: 19, road: 7, fg: 9 };            // pool slots (> max visible items)
 const PARTS = { shore: 2, roadside: 4, road: 2, fg: 1 };             // <use> per slot
 // paint-swap variants (CSS custom properties inherit into <use> shadow trees): the same prop painted in another colour
-const sw = (a, b) => `--pb-${a}:var(--pb-${b})`;
+const sw = (a, b) => (GUSED.add(b), GUSED.add(a), `--pb-${a}:var(--pb-${b});--lf-${a}:var(--lf-${b},url(#land-gg-${b}))`);
 const SWAP = {
   RT: sw('lRed', 'lTeal'), RB: sw('lRed', 'lBlue'), RO: sw('lRed', 'lOrange'), RP: sw('lRed', 'lPink'),
   TR: sw('lTeal', 'lRed'), TB: sw('lTeal', 'lBlue'), TY: sw('lTeal', 'lYellowLo'), OT: sw('lOrange', 'lTeal'), OR: sw('lOrange', 'lRed'),
@@ -454,11 +468,35 @@ function textures(v) {
     out += pat('land-tx-dab', 56, 48,
       F(tiled(56, 48, (dx, dy) => bl.filter(b => b[4]).map(b => ell(b[0] + dx, b[1] + dy, b[2], b[3])).join('')), v('lPaper'), { opacity: 0.12 }) +
       F(tiled(56, 48, (dx, dy) => bl.filter(b => !b[4]).map(b => ell(b[0] + dx, b[1] + dy, b[2] * 0.8, b[3] * 0.7)).join('')), v('lDark'), { opacity: 0.06 })); }
+  // gouache mottle: big soft blotches of lighter and darker paint (the uneven body of a hand-laid gouache wash),
+  // each blotch a wobbly blob with a paler core, so large flat areas (road, sand, lawns, walls) read as painted
+  { const bl = Array.from({ length: 16 }, (_, i) => [R() * 260, R() * 140, 14 + R() * 30, 5 + R() * 11, i % 2]);
+    const d = (on, k) => tiled(260, 140, (dx, dy) => bl.filter(b => b[4] === on).map((b, i) => blob(b[0] + dx, b[1] + dy, b[2] * k, b[3] * k, 0.22, i)).join(''));
+    out += pat('land-tx-mottle', 260, 140,
+      F(d(1, 1), v('lPaper'), { opacity: 0.075 }) + F(d(1, 0.55), v('lPaper'), { opacity: 0.06 }) +
+      F(d(0, 1), v('mauve'), { opacity: 0.085 }) + F(d(0, 0.5), v('mauve'), { opacity: 0.06 })); }
+  // painted grass: tapered blade strokes in a light and a dark green, varied lean (lawns and banks)
+  { const bl = Array.from({ length: 34 }, () => [R() * 90, R() * 60, 6 + R() * 9, -70 - R() * 40, R() < 0.5, 0.9 + R() * 0.9]);
+    const d = on => tiled(90, 60, (dx, dy) => bl.filter(b => b[4] === on).map(b => dab(b[0] + dx, b[1] + dy, b[2], b[5], b[3])).join(''));
+    out += pat('land-tx-blades', 90, 60, F(d(true), v('lGrassHi'), { opacity: 0.55 }) + F(d(false), v('lGrassLo'), { opacity: 0.45 })); }
+  // road wash: long horizontal dry-brush drags, visibly painted, light and warm-dark
+  { const st = Array.from({ length: 14 }, (_, i) => [R() * 300, (i + R() * 0.7) * 110 / 14, 40 + R() * 90, 0.7 + R() * 1.4, i % 3 === 0, (R() - 0.5) * 1.6]);
+    out += pat('land-tx-drag', 300, 110,
+      F(tiled(300, 110, (dx, dy) => st.filter(q => !q[4]).map(q => dab(q[0] + dx, q[1] + dy, q[2], q[3], q[5])).join('')), v('lPaper'), { opacity: 0.1 }) +
+      F(tiled(300, 110, (dx, dy) => st.filter(q => q[4]).map(q => dab(q[0] + dx, q[1] + dy, q[2], q[3], q[5])).join('')), v('mauve'), { opacity: 0.14 })); }
   // gingham (picnic blanket, awnings in the stream)
   out += pat('land-tx-gingham', 8, 8, F(rect(0, 0, 8, 8), v('lPaper')) + F(rect(0, 0, 4, 8) + rect(0, 0, 8, 4), v('lRed'), { opacity: 0.45 }) + F(rect(0, 0, 4, 4), v('lRed'), { opacity: 0.4 }));
   return out;
 }
 
+function gouacheGrads(v) {
+  let g = '';
+  const mix = (a, b, p) => `color-mix(in srgb, ${v(a)} ${p}%, ${v(b)})`;
+  for (const t of GUSED) g += h('linearGradient', { id: 'land-gg-' + t, x1: 0.32, y1: 0, x2: 0.62, y2: 1 },
+    h('stop', { offset: 0, style: `stop-color:${mix(t, 'rim', 66)}` }) + h('stop', { offset: 0.22, style: `stop-color:${mix(t, 'rim', 86)}` }) +
+    h('stop', { offset: 0.55, style: `stop-color:${v(t)}` }) + h('stop', { offset: 1, style: `stop-color:${mix(t, 'lineSoft', 74)}` }));
+  return g;
+}
 // ---------------------------------------------------------------------------------------------- shared painted props
 // (used by the hero tiles AND the stream symbols; ground at y = gy, drawn with the current pen)
 const M = {};   // paint refs, filled in build(): M.Red = var(--pb-lRed) …
@@ -635,6 +673,14 @@ function setPieces(ctx) {
   // every painted shape is inked and wobbled (the soft far pen on the beach, the full pen on the roadside)
   const F = (d, fill, o = {}) => (String(fill).startsWith('url(') || o.opacity !== undefined || o.class ? F0(wobD(d), fill, o) : O_(d, fill, 1.3, o));
   const Ft = (d, fill, o = {}) => F0(d, fill, o);
+  // every line is a wobbly brush line; the flat-black C "ink" becomes the warm-brown pen, and thick dark members
+  // (iron legs, rims, rails) become painted iron: a warm ink edge with the iron paint and a lit stripe inside
+  const S = (d, stroke, w, o = {}) => {
+    if (stroke !== M.Dark) return S0(wobD(d), stroke, w, o);
+    const dd = wobD(d);
+    if (w < 1.9 || o.opacity !== undefined) return S0(dd, LC, f(w * 0.85), o);
+    return S0(dd, LC, f(w + 1.4), o) + S0(dd, M.Iron, f(w * 0.8), o) + (w >= 3 ? S0(dd, M.IronHi, f(w * 0.25), { ...o, opacity: 0.8, transform: 'translate(-0.6 -0.6)' }) : '');
+  };
   const soft = () => pen(v('lineSoft'), 0.8, 0.6), full = () => pen(v('line'), 1, 0.9);
   soft();
   const Rn = ctx.rng('land-setpieces');
@@ -649,6 +695,38 @@ function setPieces(ctx) {
   const railing = (a, b, y, sp = 22) => { let p = ''; for (let x = a; x <= b; x += sp) p += `M${f(x)} ${y}v-14`; return S(p, N, 1.2) + S(`M${a} ${y - 14}H${b}`, P, 1.8) + S(`M${a} ${y - 7}H${b}`, N, 0.6); };
   const piles = (a, b, y0, y1, sp = 46) => { let p = '', br = ''; for (let x = a; x <= b; x += sp) { p += rect(x - 2.4, y0, 4.8, y1 - y0); if (x + sp <= b) br += `M${f(x)} ${y0 + 2}L${f(x + sp)} ${y1 - 3}M${f(x + sp)} ${y0 + 2}L${f(x)} ${y1 - 3}`; } return S(br, N, 0.8) + F(p, N); };
   const glowC = (x, y, r) => G({ class: 'land-glow', display: 'none' }, F(circ(x, y, r), 'url(#land-glowG)'));
+  // hand-laid masonry: courses of rounded, uneven painted stones in several tones on a dark mortar bed, each with a
+  // lit dab on top; a few chips and a moss tuft. One path per tone (the gouache gradient lights the whole wall).
+  // painted sandstone: soft strata bands (rose, ochre, lilac-grey) laid across a rock body as wobbly brush strokes,
+  // dry-brush crack marks, lit ledges, and moss / sea-pink cushions on the ledges
+  const strata = (x0, x1, y0, y1, n, s0) => {
+    const tone = [M.Rose, M.SandLo, M.StoneDk, M.CreamLo], D = tone.map(() => ''); let ledge = '', crack = '', moss = '', pink = '';
+    for (let i = 0; i < n; i++) { const y = lerp(y0, y1, (i + 0.5) / n), k = i % 4, w = 5 + hash(i, s0) * 9;
+      D[k] += `M${f(x0)} ${f(y)}Q${f(lerp(x0, x1, 0.3))} ${f(y - 8 + hash(i, s0 + 1) * 16)} ${f(lerp(x0, x1, 0.55))} ${f(y + nz(i, 2, s0) * 5)}T${f(x1)} ${f(y - 4 + hash(i, s0 + 2) * 8)}`;
+      if (i % 2) ledge += `M${f(lerp(x0, x1, hash(i, s0 + 3) * 0.6))} ${f(y - w / 2)}h${f(40 + hash(i, s0 + 4) * 80)}`;
+      for (let c = 0; c < 3; c++) { const cx = lerp(x0, x1, hash(i * 3 + c, s0 + 5)), cy = y + hash(i * 3 + c, s0 + 6) * 10; crack += `M${f(cx)} ${f(cy)}l${f(2 + hash(c, i) * 3)} ${f(6 + hash(i, c) * 6)}l-2 5`; }
+      if (i % 3 === 1) { const mx = lerp(x0, x1, hash(i, s0 + 7)); moss += blob(mx, y - w / 2 - 2, 9, 3.6) + blob(mx + 12, y - w / 2 - 1, 6, 2.6); pink += circ(mx - 3, y - w / 2 - 5, 1.6) + circ(mx + 4, y - w / 2 - 5.4, 1.4) + circ(mx + 13, y - w / 2 - 3.6, 1.3); }
+    }
+    let lt = '', dk = ''; const nd = Math.round((x1 - x0) * (y1 - y0) / 1400);
+    for (let i = 0; i < nd; i++) { const x = lerp(x0, x1, hash(i, s0 + 20)), y = lerp(y0, y1, hash(i, s0 + 21)), d = dab(x, y, 14 + hash(i, s0 + 22) * 30, 1.6 + hash(i, s0 + 23) * 2, -8 + hash(i, s0 + 24) * 16);
+      if (hash(i, s0 + 25) < 0.5) lt += d; else dk += d; }
+    return D.map((d, i) => S0(wobD(d), tone[i], 12, { opacity: 0.42 })).join('') + Ft(lt, M.Paper, { opacity: 0.22 }) + Ft(dk, M.WoodLo, { opacity: 0.16 }) + S0(wobD(ledge), M.Paper, 2.2, { opacity: 0.45 }) + S0(crack, LC, 0.9, { opacity: 0.5 }) + F(moss, M.GrassHi) + Ft(pink, M.PinkHi);
+  };
+  const masonry = (x0, x1, y0, y1, bh, bw, tones, s0 = 1, moss = true) => {
+    const T = tones.map(() => ''); let lit = '', chip = '', ms = '';
+    for (let y = y0, r = 0; y < y1 - 3; y += bh, r++) {
+      const hh = Math.min(bh, y1 - y); let x = x0 - (r % 2 ? bw * 0.5 : 0), i = 0;
+      while (x < x1) {
+        const w = bw * (0.65 + hash(i + r * 131, s0) * 0.7), k = Math.floor(hash(i + r * 131, s0 + 1) * T.length), a = Math.max(x, x0), b = Math.min(x + w, x1);
+        if (b - a > 5) { T[k] += rrect(a + 0.9, y + 0.9, b - a - 1.8, hh - 1.8, Math.min(3.4, hh * 0.3)); lit += dab(a + 3, y + 2.6, (b - a) * 0.5, 0.75, 0);
+          if (hash(i + r * 131, s0 + 2) < 0.14) chip += `M${f(a + (b - a) * 0.6)} ${f(y + hh * 0.3)}l3 3l-2 3`;
+          if (moss && r > 0 && hash(i + r * 131, s0 + 3) < 0.05) ms += blob(a + 4, y + 1, 4.4, 2.2) + blob(a + 9, y + 0.6, 3, 1.8); }
+        x += w; i++;
+      }
+    }
+    return Ft(rect(x0, y0, x1 - x0, y1 - y0), M.StoneDk) + T.map((d, i) => F(d, tones[i])).join('') + Ft(lit, M.Paper, { opacity: 0.4 }) +
+      Ft(chip, 'none', { stroke: LC, 'stroke-width': 0.7, opacity: 0.7 }) + (ms ? F(ms, M.Leaf) : '');
+  };
   // ================================================================= THE LONG PIER (shore): piles, deck, lamps, fishermen, pavilion
   {
     const A = -160, Bx = 2700, y = 598;
@@ -669,8 +747,10 @@ function setPieces(ctx) {
     for (const x of [A + 700, A + 1500, A + 2200]) m += F(`M${x - 7} ${y - 22}q7 -9 14 -1.4l6 -1.4l-6 3q-6 4 -14 0z`, P) + S(`M${x - 1} ${y - 19}v3`, O, 1.2) + F(circ(x + 4, y - 26, 1), N);
     // pavilion at the end
     const px = Bx - 220;
-    m += F(rect(px, 528, 210, 70), P) + F(rect(px + 176, 528, 34, 70), K) + F(`M${px - 10} 528h230l-16 -16h-198z`, N) + F(`M${px + 70} 512q35 -48 70 0z`, R) + F(`M${px + 70} 512q35 -48 70 0z`, 'none', { stroke: N, 'stroke-width': 1.2 }) +
-      S(`M${px + 105} 466v-10`, N, 1.2) + F(`M${px + 105} 456l12 4l-12 4z`, R) + F([0, 1, 2, 3, 4].map(i => `M${px + 18 + i * 38} 588v-28a9 9 0 0 1 18 0v28z`).join(''), N) +
+    m += F(rect(px, 528, 210, 70), P) + F(rect(px, 528, 210, 70), 'url(#land-tx-mottle)') + Gz(rect(px + 176, 528, 34, 70), M.WoodLo, 0.2) + F(`M${px - 10} 528h230l-16 -16h-198z`, M.TealLo) + F(`M${px + 70} 512q35 -48 70 0z`, R) +
+      Ft(dab(px + 80, 500, 22, 1.4, -30), M.Paper, { opacity: 0.45 }) + Ft(Array.from({ length: 15 }, (_, i) => `M${px - 8 + i * 15.4} 528a7.7 5 0 0 0 15.4 0z`).join(''), M.Cream) +
+      S(`M${px + 105} 466v-10`, N, 1.2) + F(`M${px + 105} 456l12 4l-12 4z`, R) + F([0, 1, 2, 3, 4].map(i => `M${px + 18 + i * 38} 588v-28a9 9 0 0 1 18 0v28z`).join(''), M.Win) +
+      Ft([0, 1, 2, 3, 4].map(i => `M${px + 20 + i * 38} 572v-12a7 7 0 0 1 14 0v12z`).join(''), M.Glass, { opacity: 0.85 }) +
       S(`M${px} 568H${px + 210}`, R, 3) + Ft(txt('PAVILION', px + 105, 524, 8, { anchor: 'middle', track: 0.8 }), P);
     // fishermen (×1.5; the second one lands a fish when the rider passes: the rod bends, a fish flies up)
     const fish = (x, coat, hat, sit, k) => {
@@ -694,9 +774,12 @@ function setPieces(ctx) {
       F('M30 -86l14 4l-14 4z', R) + S('M44 -12Q70 2 98 -2', v('trunk'), 0.8) + Ft(txt(String(k + 7), -34, -8, 7), P)), { transform: `translate(${x} 648)` });
     m += boat(260, R, P, 0) + boat(760, T, P, 1) + boat(1480, O, P, 2) + boat(2200, B, K, 3);
     // quay wall + coping + courses
-    m += F(rect(A, 654, Bx - A, 50), M.StoneLo) + F(rect(A, 654, Bx - A, 50), 'url(#land-tx-dab)') + F(rect(A, 650, Bx - A, 6), P) + F(rect(A, 656, Bx - A, 3), N, { opacity: 0.5 });
-    let crs = ''; for (let r = 0; r < 4; r++) { const yy = 665 + r * 11; crs += `M${A} ${yy}H${Bx}`; for (let x = A + (r % 2) * 20; x < Bx; x += 40) crs += `M${x} ${yy - 11 + (r ? 0 : 5)}v${r ? 11 : 6}`; }
-    m += S(crs, N, 0.9);
+    // the quay: a warm hand-laid stone wall with a cream coping, weed at the waterline, iron rings and a ladder
+    m += masonry(A, Bx, 655, 704, 12.2, 34, [M.Stone, M.StoneLo, M.CreamLo, M.SandLo], 7) + F(rect(A, 704, Bx - A, 3), M.Leaf) +
+      F(Array.from({ length: 70 }, (_, i) => rrect(A + i * 50 + 1, 649.4, 48, 6.4, 2.6)).join(''), P) + Ft(rect(A, 655.6, Bx - A, 2.2), M.StoneDk, { opacity: 0.6 });
+    { let rg = '', lad = ''; for (let x = A + 60; x < Bx; x += 330) { rg += `M${x} 668m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0`; }
+      for (const x of [A + 780, A + 2020]) lad += `M${x} 652v52M${x + 12} 652v52` + [0, 1, 2, 3, 4].map(i => `M${x} ${662 + i * 9}h12`).join('');
+      m += S(rg, M.IronHi, 1.6) + S(lad, M.Iron, 1.8) + S(lad, M.IronHi, 0.6, { opacity: 0.7 }); }
     let bol = ''; for (let x = A + 100; x < Bx; x += 260) bol += `M${x - 4} 650v-6q0 -3 4 -3q4 0 4 3v6z`; m += F(bol, N);
     // cranes: portal legs, machine house, lattice jib, cable + swaying crate
     const crane = (x, k) => {
@@ -728,13 +811,14 @@ function setPieces(ctx) {
       Ft(txt('游乐栈桥', A + 50, 584, 12.5, { track: 0.5 }), P) + S(`M${A + 21} 545v-10M${A + 161} 545v-10`, N, 0.8) + F(`M${A + 21} 535l7 2.4l-7 2.4zM${A + 161} 535l7 2.4l-7 2.4z`, O);
     // Ferris wheel (rotating rim + counter-rotating gondolas)
     const cx = 560, cy = 470, Rw = 142;
-    m += S(`M${cx - 70} ${y}L${cx} ${cy}L${cx + 70} ${y}M${cx - 52} ${y - 40}H${cx + 52}`, N, 5) + F(rect(cx - 80, y - 8, 160, 8), N);
+    m += S(`M${cx - 70} ${y}L${cx} ${cy}L${cx + 70} ${y}M${cx - 52} ${y - 40}H${cx + 52}`, N, 5) + F(rrect(cx - 80, y - 9, 160, 9, 3), M.WoodLo) + F(rrect(cx - 30, y - 30, 60, 22, 3), M.Cream) +
+      Ft(txt('Big Wheel', cx, y - 14.6, 9.6, { anchor: 'middle' }), M.RedLo);
     let sp = ''; for (let i = 0; i < 24; i++) { const a = i * 15 * D2R; sp += `M${cx} ${cy}L${f(cx + Math.cos(a) * Rw)} ${f(cy + Math.sin(a) * Rw)}`; }
     let bulbs = ''; for (let i = 0; i < 48; i++) { const a = i * 7.5 * D2R; bulbs += circ(cx + Math.cos(a) * (Rw + 4), cy + Math.sin(a) * (Rw + 4), 1.6); }
     const wheel = S(sp, T, 1.1) + S(ell(cx, cy, Rw, Rw), N, 4.2) + S(ell(cx, cy, Rw - 12, Rw - 12), T, 2) + S(ell(cx, cy, 40, 40), T, 2.4) + F(bulbs, P) + F(circ(cx, cy, 11), O) + F(circ(cx, cy, 4), N);
     m += G({ transform: `translate(${cx} ${cy})` }, ref('wheel', G({ transform: `translate(${-cx} ${-cy})` }, wheel)));
     const cols = [R, O, T, P, B, R, O, T, K, B, R, T];
-    for (let i = 0; i < 12; i++) m += ref('gond' + i, F('M-9 3h18v10q0 5 -5 5h-8q-5 0 -5 -5z', cols[i]) + F('M-10 3h20l-3 -4h-14z', N) + F(rect(-6, 6, 12, 5), N) + S('M0 -1V-4', N, 1.4) + F(circ(-2.4, 8.6, 1.5) + circ(2.6, 8.6, 1.5), K));
+    for (let i = 0; i < 12; i++) m += ref('gond' + i, F('M-9 3h18v10q0 5 -5 5h-8q-5 0 -5 -5z', cols[i]) + F('M-10 3Q0 -4 10 3Z', M.Cream) + F(rect(-6, 6, 12, 5), M.Glass) + S('M0 -1V-4', N, 1.4) + Ft(circ(-2.4, 8.6, 1.5) + circ(2.6, 8.6, 1.5), M.Skin) + Ft(circ(-2.4, 7, 1.3) + circ(2.6, 7, 1.3), M.Hair));
     // carousel
     const kx = 1080, top = 548;
     let can = ''; for (let i = 0; i < 10; i++) can += F(`M${kx} ${top}L${kx - 100 + i * 20} 590L${kx - 80 + i * 20} 590Z`, i % 2 ? P : R);
@@ -760,7 +844,11 @@ function setPieces(ctx) {
   // ================================================================= COAST RAILWAY (shore): embankment, track, poles, halt; + the train
   {
     const Lr = 3 * KM * 0.6 + 400, y = 652;
-    let m = F(rect(-200, 654, Lr + 400, 50), v('grassFar')) + F(rect(-200, 654, Lr + 400, 50), 'url(#land-tx-grass)') + F(rect(-200, y - 4, Lr + 400, 8), B) +
+    let wf = '', wf2 = '', gr = '';
+    for (let x = -200; x < Lr + 200; x += 26) { const k = hash(x | 0, 77); if (k < 0.3) wf += circ(x + k * 20, 668 + k * 30, 2); else if (k < 0.5) wf2 += circ(x + k * 20, 672 + k * 26, 1.8) + circ(x + k * 20 + 3, 671 + k * 26, 1.6); }
+    for (let x = -200; x < Lr + 200; x += 9) gr += circ(x + hash(x | 0, 5) * 6, 652 + hash(x | 0, 6) * 5, 1 + hash(x | 0, 7) * 1.1);
+    let m = F(rect(-200, 654, Lr + 400, 50), v('grassFar')) + F(rect(-200, 654, Lr + 400, 50), 'url(#land-tx-blades)') + F(rect(-200, 654, Lr + 400, 50), 'url(#land-tx-mottle)') +
+      Ft(wf, M.Red, { opacity: 0.85 }) + Ft(wf2, M.Paper, { opacity: 0.9 }) + F(rect(-200, y - 3, Lr + 400, 11), M.StoneLo) + Ft(gr, M.StoneDk, { opacity: 0.6 }) +
       F(rect(-200, y - 4, Lr + 400, 6), 'url(#land-sleepers)') + S(`M-200 ${y - 5}H${Lr + 200}`, N, 2.2) + S(`M-200 ${y - 6}H${Lr + 200}`, P, 0.7) +
       F(rect(-200, 560, Lr + 400, 94), 'url(#land-poles)') + S(`M-200 568H${Lr + 200}M-200 575H${Lr + 200}`, N, 0.5);
     // the halt: platform, canopy, sign 海滨铁路, clock, bench, luggage
@@ -799,7 +887,9 @@ function setPieces(ctx) {
   {
     const hl = [[-560, 700], [-470, 640], [-360, 600], [-240, 572], [-120, 560], [60, 552], [220, 556], [340, 578], [460, 616], [560, 652], [640, 700]];
     const top = smooth(hl, false) + 'Z';
-    let m = F(top, M.Grass) + F(top, 'url(#land-tx-grass)') + F('M220 556Q300 560 340 578Q400 596 460 616Q520 630 560 652L640 700H300Q330 640 220 556Z', M.StoneLo) + F('M220 556Q300 560 340 578Q400 596 460 616Q520 630 560 652L640 700H300Q330 640 220 556Z', 'url(#land-tx-dab)');
+    const face = 'M220 556Q300 560 340 578Q400 596 460 616Q520 630 560 652L640 700H300Q330 640 220 556Z';
+    let m = F(top, M.Grass) + F(top, 'url(#land-tx-blades)') + F(top, 'url(#land-tx-mottle)') + Pc(top, 1.6) + F(face, M.SandLo) + F(face, 'url(#land-tx-mottle)') +
+      S0(wobD('M250 580Q380 600 470 640M280 610Q400 628 520 668M300 646Q420 660 560 690'), M.Rose, 10, { opacity: 0.35 }) + Gz('M300 700Q330 640 220 556L260 560Q360 640 360 700Z', M.WoodLo, 0.25);
     m += F('M-240 572Q-120 556 60 548Q180 548 220 556L224 566Q120 558 -118 568Q-200 574 -250 584Z', M.GrassHi) + S('M-360 604q60 -20 120 -30M-430 640q80 -30 150 -40', M.GrassHi, 2.4) + S('M300 600q40 10 80 30', M.StoneDk, 1.3) +
       S('M-300 620l30 -6M-200 600l40 -4M100 600l50 6M-120 620h60M260 640l40 8', N, 1);
     // tower
@@ -826,9 +916,9 @@ function setPieces(ctx) {
   {
     const outer = 'M-360 700L-350 560Q-330 480 -260 462L-140 452Q0 430 150 444L270 456Q360 470 380 560L400 700Z';
     const hole = 'M-150 700L-146 612Q-128 548 -40 540Q60 536 100 580Q124 610 126 660L128 700Z';
-    let m = F(outer + hole, M.Stone, { 'fill-rule': 'evenodd' }) + F(outer + hole, 'url(#land-tx-dab)', { 'fill-rule': 'evenodd' }) + F('M270 456Q360 470 380 560L400 700H300Q320 600 270 456Z', M.StoneLo) + S('M120 650Q116 590 60 550', M.StoneDk, 6);
-    let str = ''; for (let i = 0; i < 9; i++) { const yy = 480 + i * 22; str += `M${-340 + i * 2} ${yy}q120 ${-6 + (i % 3) * 3} 240 -2q140 4 250 -6`; }
-    m += G({ 'clip-path': 'url(#land-archClip)' }, S(str, M.StoneDk, 0.9, { opacity: 0.7 })) + F('M-260 462L-140 452Q0 430 150 444L270 456Q200 452 150 454Q0 442 -140 462Z', M.Grass) +
+    let m = F(outer + hole, M.SandLo, { 'fill-rule': 'evenodd' }) + F(outer + hole, 'url(#land-tx-mottle)', { 'fill-rule': 'evenodd' }) + Gz('M270 456Q360 470 380 560L400 700H300Q320 600 270 456Z', M.WoodLo, 0.28) + S('M120 650Q116 590 60 550', M.StoneDk, 6, { opacity: 0.5 });
+    m += G({ 'clip-path': 'url(#land-archClip)' }, strata(-370, 410, 470, 700, 11, 3)) + F('M-260 462L-140 452Q0 430 150 444L270 456Q200 452 150 454Q0 442 -140 462Z', M.Grass) +
+      Pc(outer, 1.6) + S('M-330 540Q-320 486 -262 468', M.Rim, 2.4, { opacity: 0.7 }) +
       S('M-250 466q60 -10 110 -12M20 440q60 0 110 8', P, 1.6) + F('M-150 700q10 -10 24 -4q14 -8 28 0q14 -6 26 2q12 -6 26 0q14 -6 28 2q14 -4 24 0l2 0z', P) +
       S('M-200 520l3 -2l3 2M-60 470l3 -2l3 2M200 490l3 -2l3 2M40 480l3 -2l3 2', N, 0.9) + F('M-60 440l6 -4l6 4l-3 1l-3 -1.6l-3 1.6zM90 434l6 -4l6 4l-3 1l-3 -1.6l-3 1.6z', P);
     // the serpent: humps loop through the water under the arch (easter egg)
@@ -845,10 +935,14 @@ function setPieces(ctx) {
   {
     const outer = 'M-470 760L-460 330Q-450 140 -320 84Q0 20 320 84Q450 140 460 330L470 760Z';
     const hole = 'M-270 760L-270 400Q-262 196 0 176Q262 196 270 400L270 760Z';
-    let m = F(outer + hole, M.Stone, { 'fill-rule': 'evenodd' }) + F(outer + hole, 'url(#land-tx-dab)', { 'fill-rule': 'evenodd' }) + F('M340 100Q450 140 460 330L470 760H372L366 330Q362 180 340 100Z', M.StoneLo) +
-      S('M262 360Q256 214 70 180', M.StoneDk, 9, { opacity: 0.6 }) + F('M-470 760L-460 330Q-456 250 -430 200L-420 760Z', M.StoneLo);
-    let str = ''; for (let i = 0; i < 12; i++) { const yy = 150 + i * 50; str += `M-470 ${yy}q120 -14 200 -4M270 ${yy + 8}q100 -10 200 4`; }
-    m += S(str, M.StoneDk, 1.2, { opacity: 0.6 }) + S('M-440 300q-10 -120 110 -200M-10 44q180 -14 300 44', M.Rim, 2.6, { opacity: 0.8 }) + S('M-250 420Q-250 230 -40 196', M.Rim, 1.6, { opacity: 0.7 });
+    let m = F(outer + hole, M.SandLo, { 'fill-rule': 'evenodd' }) + F(outer + hole, 'url(#land-tx-mottle)', { 'fill-rule': 'evenodd' }) + Gz('M340 100Q450 140 460 330L470 760H372L366 330Q362 180 340 100Z', M.WoodLo, 0.28) +
+      S('M262 360Q256 214 70 180', M.StoneDk, 9, { opacity: 0.35 }) + Gz('M-470 760L-460 330Q-456 250 -430 200L-420 760Z', M.WoodLo, 0.22);
+    m += G({ 'clip-path': 'url(#land-roadArchClip)' }, strata(-480, 480, 60, 760, 16, 11));
+    m += Pc(outer + hole, 2) + S('M-440 300q-10 -120 110 -200M-10 44q180 -14 300 44', M.Rim, 3, { opacity: 0.75 }) + S('M-250 420Q-250 230 -40 196', M.Rim, 1.8, { opacity: 0.6 });
+    // a gull's nest with two chicks on a ledge, and a pair of puffins
+    m += F('M-392 404q18 8 40 0q-4 8 -20 9q-16 -1 -20 -9z', M.WoodHi) + S('M-390 405l10 3M-372 409l12 -3M-384 402l8 6', M.WoodLo, 0.9) + F(blob(-381, 398, 6, 5) + blob(-366, 399, 5.4, 4.6), M.Cream) +
+      F('M-376 396l5 1l-5 1.4zM-361 397l5 1l-5 1.4z', M.Orange) + Ft(circ(-379, 396, 0.9) + circ(-364, 397, 0.9), N);
+    for (const [x, y] of [[330, 290], [352, 292]]) m += F(`M${x - 5} ${y}q-2 -14 5 -16q7 1 6 16z`, N === M.Dark ? M.Iron : N) + F(`M${x - 2} ${y}q-1 -9 3 -10q3 1 3 10z`, P) + F(blob(x + 1, y - 17, 4.4, 4), M.Iron) + F(`M${x + 4} ${y - 18}l6 1.6l-6 2.2z`, M.Orange) + Ft(circ(x + 2, y - 18, 0.9), P);
     let vine = ''; for (let i = 0; i < 9; i++) { const x = -200 + i * 50 + (i % 2) * 12, l = 40 + (i * 37) % 60; vine += `M${x} ${f(190 + Math.abs(x) * 0.18)}q${i % 2 ? 6 : -6} ${l / 2} 0 ${l}`; }
     m += S(vine, M.Leaf, 2.2) + F(vine.replace(/M(-?[\d.]+) (-?[\d.]+)q(-?[\d.]+) (-?[\d.]+) 0 (-?[\d.]+)/g, (a, x, y, dx, hy, l) => blob(+x, +y + +l, 3.4, 2.4) + blob(+x + +dx, +y + +l * 0.5, 3, 2.2)), M.Leaf) + F('M-470 90q60 -40 120 -30q70 -44 140 -30q80 -30 160 -10q90 -20 150 20q50 0 70 30l0 -10q-240 -60 -640 30z', M.Grass);
     m += F(rect(-30, 172, 60, 30), P) + S(rect(-30, 172, 60, 30), N, 1.2) + Ft(txt('断崖', -24, 194, 16, { track: 2 }), N);
@@ -867,14 +961,35 @@ function setPieces(ctx) {
     m += S(rd, T, 1.6) + F(Array.from({ length: 8 }, (_, i) => rect((i < 4 ? -958 : 902) + (i % 4) * 16, 640 + (i % 3) * 6, 3, 12)).join(''), O);
     add('shore', 'river', -1010, 1010, m);
     full();
-    // roadside truss (depth 0.9): portal frames, Warren truss, rivets, name plate
-    const A = -880, Bx = 880, y0 = 700, y1 = 560, n = 16, sw = (Bx - A) / n;
-    let tr = `M${A} ${y0}H${Bx}M${A + sw} ${y1}H${Bx - sw}M${A} ${y0}L${A + sw} ${y1}M${Bx} ${y0}L${Bx - sw} ${y1}`;
-    for (let i = 1; i < n - 1; i++) { const x = A + i * sw; tr += `M${x} ${y0}L${x + sw} ${y1}M${x + sw} ${y0}V${y1}`; }
-    let rv = ''; for (let i = 0; i <= n; i++) rv += circ(A + i * sw, y0 - 3, 2) + (i && i < n ? circ(A + i * sw, y1 + 3, 2) : '');
-    let mR = S(tr, N, 9) + S(tr, R, 5.4) + F(rv, P);
-    for (const x of [A, Bx]) mR += F(rect(x - 16, y1 - 20, 32, 232), N) + F(rect(x - 20, y1 - 26, 40, 8), N) + F(rect(x - 11, y1 - 12, 22, 190), R) + F(rect(x - 11, y1 - 12, 6, 190), O);
-    mR += F(rect(-70, y1 - 44, 140, 30), N) + F(rect(-66, y1 - 40, 132, 22), P) + Ft(txt('河口桥', -60, y1 - 22.5, 16, { track: 1 }), N) + Ft(txt('1931', 34, y1 - 23, 9), R);
+    // roadside: a storybook stone bridge parapet (depth 0.9): a cream balustrade of turned balusters between stone
+    // piers with pier caps and ball finials, two iron lamps, flower boxes, a gull, and the name plaque 河口桥 · 1931;
+    // the river shows between the balusters
+    const A = -880, Bx = 880, pw = 36, np = 9, sp = (Bx - A) / (np - 1);
+    let mR = '';
+    // bottom rail (masonry) and coping
+    mR += masonry(A, Bx, 718, 752, 11.4, 30, [M.Stone, M.CreamLo, M.StoneLo], 19, false);
+    let bal = '', balS = '';
+    for (let x = A + 10; x < Bx - 6; x += 15) {
+      if (((x - A) % sp) < pw / 2 + 8 || ((x - A) % sp) > sp - pw / 2 - 8) continue;
+      bal += `M${f(x - 3.4)} 718C${f(x - 5.6)} 710 ${f(x - 1.6)} 706 ${f(x - 2)} 700C${f(x - 5.6)} 694 ${f(x - 4.6)} 684 ${f(x - 2.4)} 680L${f(x + 2.4)} 680C${f(x + 4.6)} 684 ${f(x + 5.6)} 694 ${f(x + 2)} 700C${f(x + 1.6)} 706 ${f(x + 5.6)} 710 ${f(x + 3.4)} 718Z`;
+      balS += dab(x - 2.6, 709, 8, 0.7, -80);
+    }
+    mR += F(bal, P) + Ft(balS, M.Paper, { opacity: 0.6 }) + F(rrect(A, 670, Bx - A, 10, 3), K) + Ft(dab(A + 10, 672.4, Bx - A - 20, 1.2, 0), M.Paper, { opacity: 0.45 }) + Ft(rect(A, 680, Bx - A, 2.4), M.StoneDk, { opacity: 0.5 });
+    // piers
+    for (let i = 0; i < np; i++) {
+      const x = A + i * sp, end = i === 0 || i === np - 1, top = end ? 612 : 650;
+      mR += masonry(x - pw / 2, x + pw / 2, top, 752, 13, 18, [M.Stone, M.CreamLo, M.StoneLo], 29 + i, false);
+      mR += F(rrect(x - pw / 2 - 5, top - 9, pw + 10, 10, 3), K) + F(rrect(x - pw / 2 - 2, top - 14, pw + 4, 6, 2.4), P) + F(blob(x, top - 22, 8.4, 8), P) + Ft(dab(x - 6, top - 26, 7, 1.4, -40), M.Paper, { opacity: 0.8 }) +
+        Ft(rect(x + pw / 2 - 7, top, 7, 752 - top), M.StoneDk, { opacity: 0.18 });
+      if (i === 2 || i === 6) mR += S(`M${x} ${top - 30}V${top - 110}`, N, 3.2) + S(`M${x} ${top - 96}q12 -2 14 -14`, N, 1.4) + F(rrect(x - 9, top - 138, 18, 26, 3), v('lamp')) +
+        F(`M${x - 12} ${top - 137}L${x} ${top - 150}L${x + 12} ${top - 137}Z`, M.Iron) + S(`M${x - 9} ${top - 125}h18M${x} ${top - 138}v26`, M.Iron, 1) + F(blob(x, top - 153, 2.6), M.Iron) + glowC(x, top - 125, 30);
+      if (i === 1 || i === 4 || i === 7) mR += F(rrect(x - 22, 676, 44, 12, 2.4), M.Wood) + F(blob(x - 12, 672, 8, 6) + blob(x + 2, 670, 9, 7) + blob(x + 14, 673, 7, 5), v('foliage')) +
+        Ft([0, 1, 2, 3, 4, 5].map(k => circ(x - 16 + k * 6.4, 668 + (k % 2) * 4, 2.2)).join(''), i === 4 ? M.Yellow : M.Red) + Ft([0, 1, 2, 3, 4, 5].map(k => circ(x - 16 + k * 6.4, 668 + (k % 2) * 4, 0.8)).join(''), M.Paper);
+    }
+    // a gull on the fourth finial
+    { const x = A + 3 * sp, y = 650 - 30; mR += F(`M${x - 11} ${y}q4 -10 14 -8l8 -2l-6 5q-2 6 -16 5z`, P) + F(`M${x - 8} ${y - 3}q6 -2 12 1`, M.StoneLo) + F(`M${x + 11} ${y - 10}l7 1.4l-7 1.4z`, O) + Ft(circ(x + 7, y - 10, 0.9), N) + S(`M${x - 2} ${y + 1}v5M${x + 2} ${y + 1}v5`, O, 1); }
+    // the name plaque on the centre span
+    { const cx = A + 3.5 * sp + 30; mR += F(rrect(cx - 72, 688, 144, 28, 5), M.CreamLo) + F(rrect(cx - 68, 691, 136, 22, 4), P) + Ft(txt('河口桥', cx - 60, 709, 15, { track: 1 }), M.WoodLo) + Ft(txt('1931', cx + 28, 708, 9), M.RedLo) + F(circ(cx - 66, 702, 1.6) + circ(cx + 66, 702, 1.6), M.Iron); }
     add('roadside', 'bridge', A - 30, Bx + 30, mR);
   }
   soft();
@@ -882,13 +997,21 @@ function setPieces(ctx) {
   {
     let m = F('M-290 700L-270 560H-130L-110 700Z', M.Stone) + F('M-170 560H-130L-110 700H-150Z', M.StoneLo) + F('M-290 700L-270 560H-130L-110 700Z', 'url(#land-tx-dab)');
     let crs = ''; for (let i = 1; i < 7; i++) { const yy = 560 + i * 20, dx = i * 2.9; crs += `M${f(-270 - dx)} ${yy}H${f(-130 + dx)}`; for (let x = -266 - dx + (i % 2) * 12; x < -130 + dx; x += 24) crs += `M${f(x)} ${yy}v-20`; }
-    m += S(crs, M.StoneDk, 0.8) + F(rect(-276, 548, 152, 12) + [0, 1, 2, 3, 4, 5].map(i => rect(-276 + i * 28, 538, 16, 10)).join(''), M.Stone) + S('M-276 560H-124', N, 1.4) +
+    m += masonry(-268, -132, 562, 700, 13, 22, [M.Stone, M.StoneLo, M.CreamLo, M.SandLo], 41) + F(rect(-276, 548, 152, 12) + [0, 1, 2, 3, 4, 5].map(i => rect(-276 + i * 28, 538, 16, 10)).join(''), M.Stone) + S('M-276 560H-124', N, 1.4) +
       F('M-206 700v-30a10 10 0 0 1 20 0v30z' + rect(-240, 600, 10, 16) + rect(-168, 600, 10, 16), N) + S('M-120 552l30 -8', N, 5) + F(circ(-122, 553, 5), N) +
       S('M-200 538V476', N, 1.4) + ref('fortflag', F('M-200 476q14 -4 28 2q-14 4 -28 10z', R));
     // the lido: deco bathhouse with a tower, speed lines, pool with lanes, diving tower + diver
-    m += F(rect(40, 610, 330, 90), P) + F(rect(300, 610, 70, 90), K) + F(rect(170, 540, 70, 70), P) + F(`M166 540h78v-8h-78z` + rect(36, 604, 338, 6), N) +
-      S('M40 628H370M40 636H370M40 644H370', R, 2.2) + F([0, 1, 2, 3, 4, 5].map(i => circ(70 + i * 44 + (i > 2 ? 44 : 0), 668, 9)).join(''), N) + F(rect(190, 650, 30, 50), N) +
-      Ft(txt('浴场', 184, 574, 20, { track: 1 }), R) + Ft(txt('LIDO', 205, 597, 9, { anchor: 'middle', track: 1 }), N) + S('M205 532V500', N, 1.2) + F('M205 500l14 4l-14 4z', T);
+    m += F(rect(40, 610, 330, 90), P) + F(rect(40, 610, 330, 90), 'url(#land-tx-mottle)') + Gz(rect(300, 610, 70, 90), M.WoodLo, 0.18) + F(rect(170, 540, 70, 70), P) + Gz(rect(214, 540, 26, 70), M.WoodLo, 0.16) +
+      F(rrect(164, 530, 82, 11, 3), M.Teal) + F(rrect(34, 602, 342, 9, 3), M.Teal) + Ft(dab(40, 604, 320, 1.4, 0), M.TealHi, { opacity: 0.7 });
+    // scalloped red/cream awning over the windows
+    { let a = '', b = ''; for (let i = 0; i < 22; i++) { const x = 44 + i * 15, d = `M${x} 612h15v10a7.5 6 0 0 1 -15 0z`; if (i % 2) a += d; else b += d; } m += F(a, R) + F(b, P); }
+    // portholes: teal rims, warm glass, a sparkle
+    m += F([0, 1, 2, 3, 4, 5].map(i => circ(70 + i * 44 + (i > 2 ? 44 : 0), 668, 10)).join(''), T) + F([0, 1, 2, 3, 4, 5].map(i => circ(70 + i * 44 + (i > 2 ? 44 : 0), 668, 6.6)).join(''), M.Glass) +
+      Ft([0, 1, 2, 3, 4, 5].map(i => dab(66 + i * 44 + (i > 2 ? 44 : 0), 665, 5, 1, -40)).join(''), M.Paper, { opacity: 0.9 }) +
+      F('M190 700v-40a15 15 0 0 1 30 0v40z', M.Win) + F('M192 660a13 13 0 0 1 26 0z', M.Glass) + S('M205 647v13M195 652l10 8M215 652l-10 8', LC, 0.8) + F(circ(214, 682, 1.4), M.Yellow) +
+      F(rrect(52, 686, 28, 14, 3) + rrect(330, 686, 28, 14, 3), M.Wood) + F(blob(60, 684, 7, 5) + blob(72, 683, 7, 6) + blob(338, 684, 7, 5) + blob(350, 683, 7, 6), v('foliage')) +
+      Ft(circ(58, 680, 2) + circ(70, 679, 2) + circ(76, 684, 1.8) + circ(340, 680, 2) + circ(352, 679, 2), M.Pink) +
+      Ft(txt('浴场', 184, 574, 20, { track: 1 }), M.RedLo) + Ft(txt('LIDO', 205, 597, 9, { anchor: 'middle', track: 1 }), M.TealLo) + S('M205 530V500', N, 1.2) + F('M205 500l14 4l-14 4z', T);
     m += F(rect(380, 664, 260, 36), T) + S('M380 674H640M380 684H640M380 694H640', P, 0.8, { 'stroke-dasharray': '4 5' }) + F(rect(376, 660, 268, 5), P);
     m += S('M620 700V560M650 700V560M620 600H650M620 640H650M620 560L650 600M650 560L620 600', N, 1.8) + F(rect(600, 556, 56, 5), N) + S('M600 556l-22 2', P, 2.4);
     m += ref('diver', F('M-3 -8q3 -4 6 0v8h-6z', R) + F(circ(0, -11, 2.8), K) + S('M-2 0l-1 7M2 0l1 7M-3 -7l-5 -6M3 -7l5 -6', K, 1.4), { transform: 'translate(586 548)' });
@@ -956,6 +1079,7 @@ export function build(ctx) {
     { const top = []; for (let x = X0; x <= X1 + 40; x += 40) top.push([Math.min(x, X1), 690 + Math.sin(x * 0.0041) * 5 + Math.sin(x * 0.013 + 1) * 3]);
       s += Gz(poly([...top, [X1, 736], [X0, 736]]), v('sandShade'), 0.5); }
     s += F(rect(X0, 636, 1236 - X0, 100) + rect(1290, 636, X1 - 1290, 100) + rect(1236, 700, 54, 36) + rect(1236, 636, 54, 12), 'url(#land-tx-sand)');
+    s += F(rect(X0, 636, X1 - X0, 100), 'url(#land-tx-mottle)');
     // wet sand + foam lace + sheen strokes, as x-keyed pieces (one tagged specimen)
     {
       const n = 110, sw = W / n, fo = [], wet = [], sh = [];
@@ -1167,7 +1291,7 @@ export function build(ctx) {
       const tufts = [], daisies = [];
       for (let i = 0; i < 160; i++) { const x = L.x0 + (i + 0.5) * W / 160 + nz(i, 1, 2) * 3, hh = 5 + (nz(i, 3, 1) + 1) * 3; tufts.push([x, `M${f(x - 2)} 741q1 ${f(-hh * 0.6)} ${f(-2)} ${f(-hh)}M${f(x)} 741q0 ${f(-hh * 0.7)} ${f(2)} ${f(-hh * 1.1)}M${f(x + 2)} 741q1 ${f(-hh * 0.5)} ${f(4)} ${f(-hh * 0.8)}`]); if (i % 5 === 2) daisies.push([x, circ(x + 3, 735 + nz(i, 7, 3) * 2, 1.3)]); }
       s += band(X0, X1, DD('verge'), (a, b) => S(pick(tufts, a, b), M.GrassLo, 1.1) + F(pick(daisies, a, b), M.Paper), [372, 452]);
-      s = O(verge, M.Grass, 1.2) + F(verge, 'url(#land-tx-grass)') + s;
+      s = O(verge, M.Grass, 1) + F(verge, 'url(#land-tx-blades)') + F(verge, 'url(#land-tx-mottle)') + s;
       // fence: posts every W/16 with two rope swags
       const sp = W / 16, posts = []; for (let i = -1; i <= 16; i++) posts.push(L.x0 + i * sp + sp / 2);
       const postD = x => `M${f(x - 4.2)} 742V705Q${f(x)} 698 ${f(x + 4.2)} 705V742Z`;
@@ -1178,17 +1302,31 @@ export function build(ctx) {
           F(px.map(x => circ(x, 712, 1) + circ(x, 728, 1)).join(''), M.Dark); };
       s += fence(-1e9, 1270, false) + G(DD('fence'), fence(1270, 1390, true)) + fence(1390, 1e9, false);
       // footpath flagstones
-      const stones = []; { let x = L.x0 - 20, i = 0; while (x < L.x1 + 20) { const w = 34 + (nz(i, 2, 6) + 1) * 12; stones.push([x, rrect(x + 0.8, 742.6, w - 1.6, 9.6, 2.2)]); x += w; i++; } }
-      const pave = (a, b, tg) => F(rect(a, 741, b - a, 12.5), M.StoneLo) + O(pick(stones, a, b), M.Stone, 0.7) + G(tg ? DD('pavement-texture') : {}, F(rect(a, 741, b - a, 12.5), 'url(#land-tx-dab)'));
+      // a sandy promenade path of hand-laid, rounded flagstones in three warm tones (sand showing in the joints)
+      const stones = [], stones2 = [], stones3 = [], slit = [];
+      { let x = L.x0 - 20, i = 0; while (x < L.x1 + 20) { const w = 22 + (nz(i, 2, 6) + 1) * 10, k = hash(i, 57), row = i % 2;
+        const y0 = 742.4 + (row ? 0.6 : 0), d = smooth([[x + 1.6, 752.6], [x + 0.8, y0 + 3], [x + 3.4, y0 + nz(i, 1, 3) * 0.6], [x + w * 0.5, y0 - 0.4 + nz(i, 4, 1) * 0.8], [x + w - 2.6, y0 + 0.3], [x + w - 0.8, y0 + 4], [x + w - 1.8, 752.6]], true, 0.14);
+        (k < 0.45 ? stones : k < 0.78 ? stones2 : stones3).push([x, d]); if (k < 0.7) slit.push([x, dab(x + 4, y0 + 2, w * 0.5, 0.8, 0)]); x += w; i++; } }
+      const pave = (a, b, tg) => F(rect(a, 741, b - a, 12.5), M.SandLo) + O(pick(stones, a, b), M.Stone, 0.7) + O(pick(stones2, a, b), M.CreamLo, 0.7) + O(pick(stones3, a, b), M.Rose, 0.7) +
+        G(tg ? DD('pavement-texture') : {}, F(pick(slit, a, b), M.Paper, { opacity: 0.5 }) + F(rect(a, 741, b - a, 12.5), 'url(#land-tx-mottle)'));
       s += pave(X0, 372) + G(DD('pavement'), pave(372, 452, true)) + pave(452, X1);
     }
     base.roadside = s;
     // --- hedges
+    // a round storybook bush: a cloud of overlapping painted leaf-puffs (lit on top), leaf dabs in three greens,
+    // a few tiny blossoms; the silhouette is one wobbly puff outline
     const hedge = (x, w, hh, tagged) => {
-      const y = BASE; let sc = '', lt = '';
-      for (let r = 0; r < 3; r++) for (let c = 0; c < w / 9 - 1; c++) { const xx = x + 7 + c * 9 + (r % 2 ? 4.5 : 0), yy = y - hh + 9 + r * (hh - 12) / 3; if (xx < x + w - 6) { sc += `M${f(xx - 3.6)} ${f(yy)}a3.6 3.2 0 0 0 7.2 0`; if (r === 0 && c % 2) lt += dab(xx - 3, yy - 3, 6, 1, -10); } }
-      const body = `M${x} ${y}V${y - hh + 8}Q${x} ${y - hh} ${x + 10} ${y - hh}H${x + w - 10}Q${x + w} ${y - hh} ${x + w} ${y - hh + 8}V${y}Z`;
-      return G(tagged ? DD('hedge') : {}, Gz(ell(x + w / 2, y, w * 0.55, 3.4), M.Dark, 0.2) + O(body, v('foliage'), 1.6) + S(sc, M.LeafDk, 1.1) + F(lt, M.GrassHi, { opacity: 0.8 }) + Gz(rect(x, y - 7, w, 7), M.LeafDk, 0.5));
+      const y = BASE, n = Math.max(4, Math.round(w / 20)), pts = [];
+      for (let i = 0; i <= n * 3; i++) { const u = i / (n * 3), a = Math.PI * (1 - u), bump = 1 + (i % 3 === 1 ? 0.1 : 0) + nz(x + i * 5, y, 3) * 0.05;
+        pts.push([x + w / 2 + Math.cos(a) * w / 2 * bump, y - 3 - Math.sin(a) * (hh - 3) * bump]); }
+      pts.push([x + w - 2, y], [x + 2, y]);
+      const body = smooth(pts, true, 0.16);
+      let lo = '', hi = '', mid = '', bl = '';
+      for (let i = 0; i < w * hh / 34; i++) { const u = hash(i, x | 0), q = hash(i, 17 + x | 0), px = x + 6 + u * (w - 12), py = y - 4 - q * (hh - 8), top = q > 0.55;
+        const dd = dab(px, py, 5 + hash(i, 5) * 3, 1.5, -30 + hash(i, 9) * 60); if (top && hash(i, 3) < 0.7) hi += dd; else if (q < 0.3) lo += dd; else mid += dd; }
+      for (let i = 0; i < w / 22; i++) bl += blob(x + 10 + hash(i, 31 + x | 0) * (w - 20), y - hh * (0.35 + hash(i, 7) * 0.5), 1.6);
+      return G(tagged ? DD('hedge') : {}, Gz(ell(x + w / 2, y, w * 0.56, 3.4), M.Dark, 0.2) + O(body, v('foliage'), 1.3) + F(lo, M.LeafDk, { opacity: 0.7 }) + F(mid, M.Leaf, { opacity: 0.8 }) +
+        F(hi, M.GrassHi, { opacity: 0.85 }) + Gz(`M${x + 4} ${y}Q${x + w / 2} ${y - 9} ${x + w - 4} ${y}Z`, M.LeafDk, 0.45) + F(bl, M.PinkHi) + Pc(body, 1.3));
     };
     s += hedge(452, 96, 26, true) + hedge(690, 92, 24) + hedge(860, 96, 26);
     SYM += G({ id: 'land-y-hedge0' }, hedge(-48, 96, 26)) + G({ id: 'land-y-hedge1' }, hedge(-62, 124, 34));
@@ -1413,13 +1551,22 @@ export function build(ctx) {
     defs += h('linearGradient', { id: 'land-roadG', x1: 0, y1: 752, x2: 0, y2: 870, gradientUnits: 'userSpaceOnUse' },
       h('stop', { offset: 0, style: `stop-color:${v('lPaper')};stop-opacity:0.1` }), h('stop', { offset: 0.35, style: `stop-color:${v('lPaper')};stop-opacity:0` }),
       h('stop', { offset: 1, style: `stop-color:${v('lDark')};stop-opacity:0.2` }));
-    s += F(rect(X0, 752, X1 - X0, 118), v('road')) + F(rect(X0, 752, X1 - X0, 118), 'url(#land-roadG)');
+    s += F(rect(X0, 752, X1 - X0, 118), v('road')) + F(rect(X0, 752, X1 - X0, 118), 'url(#land-roadG)') +
+      F(rect(X0, 752, X1 - X0, 118), 'url(#land-tx-mottle)') + F(rect(X0, 766, X1 - X0, 96), 'url(#land-tx-drag)');
+    // a warm lit brush line along the far edge of the tarmac (the draft's sun-caught road edge)
+    { const e = []; for (let x = X0; x <= X1 + 50; x += 50) e.push([Math.min(x, X1), 766.4 + nz(x, 2, 3) * 0.9]);
+      s += S(line(e), v('rim'), 3.2, { opacity: 0.55 }); }
     // soft warm sheen of the low sun along the far lane
     s += F(line([[X0, 780], [X1, 780]]) + `L${X1} 800L${X0} 800Z`, v('rim'), { opacity: 0.1 });
     s += band(X0, X1, DD('asphalt-gouache'), (a, b) => F(rect(a, 764, b - a, 104), 'url(#land-tx-road)') + F(rect(a, 764, b - a, 104), 'url(#land-tx-brush)'), [1106, 1180]);
     // kerb: individual painted stones on a shadow lip
-    const kerbs = []; { let x = L.x0 - 40, i = 0; while (x < L.x1 + 40) { const w = W / 24; kerbs.push([x, rrect(x + 0.8, 752, w - 1.6, 9.4, 1.8)]); x += w; i++; } }
-    s += band(X0, X1, DD('kerbstones'), (a, b) => F(rect(a, 760.5, b - a, 4), M.Dark, { opacity: 0.25 }) + O(pick(kerbs, a, b), M.Stone, 0.9) + F(rect(a, 752.5, b - a, 1.6), M.Paper, { opacity: 0.45 }));
+    // hand-laid kerb: rounded, slightly uneven painted stones of three tones, each with a lit top dab
+    const kerbs = [], kerbs2 = [], kerbs3 = [], klit = [];
+    { let x = L.x0 - 40, i = 0; while (x < L.x1 + 40) { const w = W / 24 / 2, hh = 9 + nz(i, 3, 2) * 1.2, k = hash(i, 71);
+      const d = smooth([[x + 1.4, 761.6], [x + 0.8, 754.6 + nz(i, 1, 1) * 0.8], [x + 3, 752.2 + (1 - hh / 9) * 2], [x + w * 0.5, 751.6 + nz(i, 5, 2)], [x + w - 3, 752.4], [x + w - 0.8, 755], [x + w - 1.2, 761.6]], true, 0.14);
+      (k < 0.5 ? kerbs : k < 0.8 ? kerbs2 : kerbs3).push([x, d]); klit.push([x, dab(x + 4, 753.6, w * 0.55, 0.8, 0)]); x += w; i++; } }
+    s += band(X0, X1, DD('kerbstones'), (a, b) => F(rect(a, 760.5, b - a, 4), M.Dark, { opacity: 0.22 }) + O(pick(kerbs, a, b), M.Stone, 0.8) + O(pick(kerbs2, a, b), M.StoneLo, 0.8) +
+      O(pick(kerbs3, a, b), M.CreamLo, 0.8) + F(pick(klit, a, b), M.Paper, { opacity: 0.55 }));
     const drain = x => O(rrect(x, 764.6, 34, 6.4, 1.4), M.Iron, 0.9) + S(Array.from({ length: 7 }, (_, i) => `M${x + 4 + i * 4} 765.8v4`).join(''), M.IronHi, 1);
     put(DD('gutter-drain'), drain(360)); s += drain(1440);
     // edge line + centre dashes: painted cream with brushed ends
@@ -1427,7 +1574,10 @@ export function build(ctx) {
       s += bandArr(seg, DD('edge-line'), d => Pw(d, v('roadLine'), { opacity: 0.95 })); }
     {
       const dx = i => L.x0 + 40 + i * 157.08;
-      const dash = i => O(rrect(dx(i), 823.4, 78.54, 6.6, 3.2), v('roadLine'), 0.6) + Pw(dab(dx(i) + 6, 825, 36, 0.8, 0), M.Paper, { opacity: 0.5 });
+      // a brushed dash: loaded start, dry tapered tail, a lighter drag inside (no ink: it is paint on the road)
+      const dash = i => { const x = dx(i), y = 826.6 + nz(i, 3, 3) * 0.8;
+        return F(`M${f(x + 2)} ${f(y - 3.4)}Q${f(x + 30)} ${f(y - 4.6)} ${f(x + 72)} ${f(y - 2.6)}Q${f(x + 80)} ${f(y - 1.2)} ${f(x + 79)} ${f(y + 0.2)}Q${f(x + 60)} ${f(y + 2.8)} ${f(x + 34)} ${f(y + 3.2)}Q${f(x + 6)} ${f(y + 3.8)} ${f(x + 1)} ${f(y + 1.6)}Q${f(x - 1.4)} ${f(y - 1.6)} ${f(x + 2)} ${f(y - 3.4)}Z`, v('roadLine'), { opacity: 0.93 }) +
+          F(dab(x + 5, y - 1.2, 44, 0.9, -0.6) + dab(x + 50, y + 1.2, 24, 0.6, 0.4), M.Paper, { opacity: 0.55 }) + F(dab(x + 20, y + 1.6, 50, 0.6, 0), v('road'), { opacity: 0.35 }); };
       let d = ''; for (let i = 0; i < 12; i++) if (i !== 7) d += dash(i);
       s += d; put(DD('centre-dashes'), dash(7));
     }
@@ -1476,15 +1626,20 @@ export function build(ctx) {
     const banks = [[-400, -60, 520, 778], [1180, 1560, 1860, 792], [860, 990, 1120, 858], [1880, 2020, 2140, 842]];
     const bankD = ([a, pk, b, top]) => `M${a} 905C${f(a + (pk - a) * 0.3)} ${f(top + 30)} ${f(pk - (pk - a) * 0.4)} ${top} ${pk} ${top}C${f(pk + (b - pk) * 0.4)} ${top} ${f(b - (b - pk) * 0.4)} ${f(890)} ${b} 905Z`;
     const light = ([a, pk, b, top]) => `M${f(a + (pk - a) * 0.35)} ${f(top + 20)}Q${f(pk - (pk - a) * 0.2)} ${f(top + 4)} ${f(pk + (b - pk) * 0.2)} ${f(top + 8)}`;
-    s += O(banks.slice(1).map(bankD).join(''), M.Grass, 2.4) + F(banks.slice(1).map(bankD).join(''), 'url(#land-tx-grass)') + S(banks.slice(1).map(light).join(''), M.GrassHi, 5, { opacity: 0.8 });
+    s += O(banks.slice(1).map(bankD).join(''), M.Grass, 1.8) + F(banks.slice(1).map(bankD).join(''), 'url(#land-tx-blades)') + F(banks.slice(1).map(bankD).join(''), 'url(#land-tx-mottle)') + S(banks.slice(1).map(light).join(''), M.GrassHi, 5, { opacity: 0.6 }) + Pc(banks.slice(1).map(bankD).join(''), 2);
         // outlined grass tufts in four greens
     const GR = [M.Grass, M.GrassHi, M.GrassLo, M.Leaf];
-    const tuft = (x, y, n, hh) => { let o = ''; for (let i = 0; i < n; i++) { const bx = x + (Rn() - 0.5) * 36, h2 = hh * (0.6 + Rn() * 0.5), lean = (Rn() - 0.5) * 40; o += O(`M${f(bx - 6)} ${f(y)}Q${f(bx + lean * 0.3 - 3)} ${f(y - h2 * 0.6)} ${f(bx + lean)} ${f(y - h2)}Q${f(bx + lean * 0.2 + 5)} ${f(y - h2 * 0.5)} ${f(bx + 6)} ${f(y)}Z`, GR[i % 4], 1.4); } return o; };
+    // a tuft of slender, curving gouache blades (loaded base, tapered tip), each with its own green; a light
+    // rib stroke on the lit ones; thin warm ink so the tuft stays soft
+    const tuft = (x, y, n, hh) => { let o = '', rib = ''; for (let i = 0; i < n * 2; i++) { const bx = x + (Rn() - 0.5) * 34, h2 = hh * (0.55 + Rn() * 0.6), lean = (Rn() - 0.5) * 46, bw = 2.2 + Rn() * 1.8;
+      const tx = bx + lean, ty = y - h2, cx = bx + lean * 0.25, cy = y - h2 * 0.62;
+      o += O(`M${f(bx - bw)} ${f(y)}Q${f(cx - bw * 0.8)} ${f(cy)} ${f(tx)} ${f(ty)}Q${f(cx + bw * 1.1)} ${f(cy + 2)} ${f(bx + bw)} ${f(y)}Z`, GR[i % 4], 0.8);
+      if (i % 3 === 0) rib += `M${f(bx)} ${f(y - 2)}Q${f(cx)} ${f(cy + 3)} ${f(lerp(cx, tx, 0.6))} ${f(lerp(cy, ty, 0.6))}`; } return o + S(rib, M.GrassHi, 0.9, { opacity: 0.8 }); };
     const bankY = x => { for (const [a, pk, b, top] of banks) if (x > a + 20 && x < b - 20) { const u = x < pk ? (x - a) / (pk - a) : (b - x) / (b - pk); return lerp(900, top + 6, Math.sin(u * Math.PI / 2)); } return 902; };
     { const pts = []; for (let x = 24; x <= 440; x += 16) pts.push([x, bankY(x) + 3]);
       const patch = poly([...pts, [440, 868], [24, 868]]);
-      s += O(bankD(banks[0]), M.Grass, 2.4) + F(bankD(banks[0]), 'url(#land-tx-grass)');
-      put(DD('fg-bank'), F(patch, M.Grass) + F(patch, 'url(#land-tx-grass)') + S(light(banks[0]), M.GrassHi, 5, { opacity: 0.8 })); }
+      s += O(bankD(banks[0]), M.Grass, 1.8) + F(bankD(banks[0]), 'url(#land-tx-blades)') + F(bankD(banks[0]), 'url(#land-tx-mottle)') + Pc(bankD(banks[0]), 2);
+      put(DD('fg-bank'), F(patch, 'url(#land-tx-blades)') + S(light(banks[0]), M.GrassHi, 5, { opacity: 0.6 })); }
     let tf = ''; for (let x = L.x0 + 30; x < L.x1 - 20; x += 70 + Rn() * 70) { if ((x > 1020 && x < 1120) || (x > -40 && x < 440)) continue; const y = bankY(x); tf += tuft(x, y + 4, y < 880 ? 6 : 3, y < 880 ? 60 : 30); }
     s += tf;
     // flowers
@@ -1517,7 +1672,7 @@ export function build(ctx) {
     s += cup(1470, 796, 7).join('') + poppy(1420, 822, 7.4);
     // a nearer row below the frame (seen on tall phone screens)
     { let d = ''; for (let x = L.x0; x < L.x1; x += 90 + Rn() * 50) { const w = 110 + Rn() * 60, hh = 40 + Rn() * 30; d += `M${f(x - w / 2)} 1012Q${f(x - w / 2)} ${f(1012 - hh)} ${f(x)} ${f(1012 - hh)}Q${f(x + w / 2)} ${f(1012 - hh)} ${f(x + w / 2)} 1012Z`; }
-      s += O(d, M.Leaf, 2) + F(d, 'url(#land-tx-grass)'); }
+      s += O(d, M.Leaf, 2) + F(d, 'url(#land-tx-blades)'); }
     return s;
   })();
 
@@ -1526,6 +1681,7 @@ export function build(ctx) {
   defs += h('pattern', { id: 'land-sleepers', x: 0, y: 646, width: 13, height: 8, patternUnits: 'userSpaceOnUse' }, F(rect(2, 2, 7, 6), M.WoodLo) + F(rect(2, 2, 7, 1.2), M.WoodHi));
   defs += h('pattern', { id: 'land-poles', x: 0, y: 560, width: 520, height: 94, patternUnits: 'userSpaceOnUse' },
     F(rect(258, 6, 4, 88) + rect(246, 6, 28, 3), M.WoodLo) + F(circ(248, 5, 1.8) + circ(260, 5, 1.8) + circ(272, 5, 1.8), M.Cream));
+  defs += h('clipPath', { id: 'land-roadArchClip' }, h('path', { d: 'M-470 760L-460 330Q-450 140 -320 84Q0 20 320 84Q450 140 460 330L470 760ZM-270 760L-270 400Q-262 196 0 176Q262 196 270 400L270 760Z', 'clip-rule': 'evenodd' }));
   defs += h('clipPath', { id: 'land-archClip' }, h('path', { d: 'M-360 700L-350 560Q-330 480 -260 462L-140 452Q0 430 150 444L270 456Q360 470 380 560L400 700ZM-150 700L-146 612Q-128 548 -40 540Q60 536 100 580Q124 610 126 660L128 700Z', 'clip-rule': 'evenodd' }));
   defs += mergePaths(J.defs + SYM);
   const strip = m => m.replace(/ data-detail="[^"]*"| data-size-m="[^"]*"| id="land-v-[^"]*"/g, '');
@@ -1540,7 +1696,11 @@ export function build(ctx) {
     defs += G({ id: 'land-base-' + key }, strip(chunkPaths(mergePaths(base[key]))) + (baseAnim[key] ? strip(baseAnim[key](false)) : ''));
     return G({ 'data-ref': 'land-' + key },
       [0, 1, 2].map(k => h('use', { 'data-ref': `land-b${key}${k}`, href: '#land-base-' + key })).join(''),
-      G({ id: 'land-tile-' + key, 'data-ref': 'land-full' + key }, content, anim0),
+      G({ id: 'land-tile-' + key, 'data-ref': 'land-full' + key }, content),
+      // the animated hooks of the hero tile live on their OWN small sheet (same translate as the tile), so their
+      // per-frame transforms re-raster only themselves, not the whole painted tile; the ±W copies serve the bake loop
+      G({ 'data-ref': 'land-fanim' + key }, G({ id: 'land-fanimc-' + key }, anim0),
+        [0, 1].map(i => h('use', { href: '#land-fanimc-' + key, x: f(i ? W : -W), 'data-ref': `land-fau${key}${i}`, display: 'none' })).join('')),
       spMarkup(key), streamMarkup(key), key === 'roadside' ? fixedMarkup() : '');
   };
   // set pieces are mounted lazily by attach (one or two at a time: they are kilometres apart) to keep the DOM small
@@ -1560,6 +1720,7 @@ export function build(ctx) {
     'L-foreground': tile('fg', fg),
   };
   defs += G({ id: 'land-y-none' });
+  defs += gouacheGrads(v);
   return { defs, layers };
 }
 
@@ -1603,7 +1764,7 @@ const spAt = sp => SP_AT[SPK[sp.key] || sp.key];
 // each one as its own compositor layer instead of repainting it instead of repainting it. The stream / set-piece / sign hosts are strips too: they scroll with their
 // layer (translate −(D·d mod 16384)) and their props sit in layer coordinates, so a prop is only rewritten when it is
 // re-seated (and every ~8 s when the offset wraps), not every frame.
-export const sheets = ['shore', 'roadside', 'road'].flatMap(k => [0, 1, 2].map(c => `[data-ref="land-b${k}${c}"]`).concat(`[data-ref="land-full${k}"]`))
+export const sheets = ['shore', 'roadside', 'road'].flatMap(k => [0, 1, 2].map(c => `[data-ref="land-b${k}${c}"]`).concat(`[data-ref="land-full${k}"]`, `[data-ref="land-fanim${k}"]`))
   .concat('[data-ref="land-t-fg"]', ...['shore', 'roadside', 'road', 'fg'].flatMap(k => [`[data-ref="land-sphost-${k}"]`, `[data-ref="land-pool-${k}"]`]), '[data-ref="land-fixed"]');
 const HOST_WRAP = 16384;   // host scroll offset wraps here (layer units): bounded coordinates, a rare full re-seat
 export function attach(svg, ctx) {
@@ -1680,6 +1841,7 @@ export function attach(svg, ctx) {
   let bakeMode = null;
   const legacy = on => {   // bake: the classic seamless loop (the hero tile + two copies), no stream / set pieces
     for (const k of ['shore', 'roadside', 'road']) for (let c = 0; c < 3; c++) { const u = r[`b${k}${c}`]; if (u) { u.setAttribute('href', on ? '#land-tile-' + k : '#land-base-' + k); u.__lv = undefined; } }
+    for (const k of ['shore', 'roadside', 'road']) for (let c = 0; c < 2; c++) { const u = r[`fau${k}${c}`]; if (u) u.setAttribute('display', on ? 'inline' : 'none'); }
     for (const L of Object.keys(pools)) for (const s of pools[L]) { disp(s.el, false); s.j = null; }
     // hosts: no scroll offset in the baked file (their props are hidden there); live writes start afresh
     for (const L of Object.keys(DEP)) for (const el of [r['pool-' + L], r['sphost-' + L]]) if (el) { el.removeAttribute('transform'); el.__lv = undefined; }
@@ -1689,6 +1851,7 @@ export function attach(svg, ctx) {
   };
   return {
     update(fr) {
+      if (globalThis.__landFreeze && globalThis.__landFreeze++ > 2) return; // TEMP-PERF
       const D = fr.distance || 0, t = fr.t || 0, red = fr.reduced || ctx.reduced;
       const baking = !!(fr.bake || (typeof globalThis !== 'undefined' && globalThis.__pbBake));
       if (baking !== bakeMode) { bakeMode = baking; legacy(baking); }
@@ -1698,7 +1861,7 @@ export function attach(svg, ctx) {
         const L = LAY[k], W = L.W, full = r['full' + k];
         if (baking) {
           const u = tileU(D, L);
-          set(full, 'transform', `translate(${f(-u)} 0)`); disp(full, true);
+          set(full, 'transform', `translate(${f(-u)} 0)`); disp(full, true); set(r['fanim' + k], 'transform', `translate(${f(-u)} 0)`); disp(r['fanim' + k], true);
           set(r[`b${k}0`], 'transform', `translate(${f(-W)} 0)`); set(r[`b${k}1`], 'transform', 'translate(0 0)'); disp(r[`b${k}1`], false); set(r[`b${k}2`], 'transform', `translate(${f(W)} 0)`);
           disp(r[`b${k}0`], true); disp(r[`b${k}2`], true);
           continue;
@@ -1708,11 +1871,11 @@ export function attach(svg, ctx) {
         for (let c = 0; c < 3; c++) {
           const n = nc + c - 1, el = r[`b${k}${c}`];
           const isHero = ((n % HL) + HL) % HL === 0;
-          if (isHero) { heroOn = true; set(full, 'transform', `translate(${f((n - q) * W)} 0)`); }
+          if (isHero) { heroOn = true; set(full, 'transform', `translate(${f((n - q) * W)} 0)`); set(r['fanim' + k], 'transform', `translate(${f((n - q) * W)} 0)`); }
           disp(el, !isHero);
           if (!isHero) set(el, 'transform', `translate(${f((n - q) * W)} 0)`);
         }
-        disp(full, heroOn);
+        disp(full, heroOn); disp(r['fanim' + k], heroOn);
       }
       // host scroll offsets per layer (layer units): props below are placed at x + off[L]
       // only while the runtime has split the scene into sheets (svg.__pbSplit): unsplit (the baker, ?nosheets) the props

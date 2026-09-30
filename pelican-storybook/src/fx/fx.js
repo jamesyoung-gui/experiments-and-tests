@@ -95,16 +95,6 @@ function bubble(rx, ry, n, R) {
   }
   return d + 'Z';
 }
-// gouache puff (the draft's puff(): bumps on a flat-ish base), centred on the origin
-function puffD(R, w, hh, n) {
-  const pts = [];
-  for (let i = 0; i <= n; i++) { const t = i / n; pts.push([-w / 2 + w * t, -(Math.sin(Math.PI * t) ** 0.8) * hh * (0.72 + 0.42 * R())]); }
-  pts.push([w / 2 + hh * 0.18, hh * 0.1]);
-  for (let i = n; i >= 0; i -= 2) pts.push([-w / 2 + w * i / n, hh * (0.14 + 0.14 * R())]);
-  pts.push([-w / 2 - hh * 0.18, hh * 0.08]);
-  return { d: smooth(pts), top: pts.slice(1, n) };
-}
-
 // fly loop around the basket (rider-local): centre + half extents
 const FLY_C = [198, -326], FLY_A = [54, 24];
 // speed-stroke anchors (rider-local, just behind the trailing silhouette): scarf, back, tail, rear tyre
@@ -346,16 +336,23 @@ export function build(ctx) {
       h('path', { d: 'M8 -3Q9 -6.4 11 -7M6.6 -3.4Q6.6 -6.6 8 -7.8M-7 0.4L-9 1.2', fill: 'none', stroke: LINE, 'stroke-width': 0.7, 'stroke-linecap': 'round' })));
 
   // ============================================== dust + grit + landing (L-fx-front)
+  // soft gouache dust puff: a round cluster of overlapping lobes (no flat base, it is airborne), a warm sand
+  // under-glaze peeking out below, a paper highlight dab and a broken,
+  // faint brown line over the top lobes only — a picture-book "poof", not a heap.
   const Rd = rng('fx-dust');
-  const puffV = [0, 1, 2].map(() => puffD(Rd, 17, 10, 5));
+  const LOBES = [[0, -1.5, 6.2], [-6.4, 0.6, 4.8], [6.2, 0.8, 5], [-2.4, 3.4, 4.2], [3, -5.6, 4.1], [-4.2, -4.4, 3.4]];
+  const puffV = [0, 1, 2].map(() => LOBES.map(([x, y, rr]) => [x + (Rd() - 0.5) * 2.2, y + (Rd() - 0.5) * 1.8, rr * (0.85 + 0.3 * Rd())]));
+  const lobeArc = ([x, y, rr], a0, a1) => { const p = a => [x + rr * Math.cos(a * D2R), y + rr * Math.sin(a * D2R)]; const s = p(a0), e = p(a1); return `M${f(s[0])} ${f(s[1])}A${f(rr)} ${f(rr)} 0 0 1 ${f(e[0])} ${f(e[1])}`; };
   const puff = (ref, key, vi) => {
-    const p = puffV[vi % 3];
+    const lb = puffV[vi % 3];
+    const body = lb.map(([x, y, rr]) => circ(x, y, rr)).join('');
+    const shade = lb.filter(l => l[1] > -1).map(([x, y, rr]) => circ(x + 0.6, y + 1.8, rr * 0.96)).join('');
+    const tagT = key === 'fx:O:dust-puff' && vi === 0 ? DD('fx:T:dust-drybrush') : {};
     return h('g', { 'data-ref': ref, visibility: 'hidden', ...DD(key) },
-      h('path', { d: p.d, fill: M('fxDust') }),
-      h('path', { d: 'M-8.8 1.4Q0 5.6 9.4 0.8Q8.6 3 5 3.6Q0 5.4 -5 4Q-7.8 3.4 -8.8 1.4Z', fill: M('fxDustShade'), opacity: 0.8 }),
-      h('g', key === 'fx:O:dust-puff' && vi === 0 ? DD('fx:T:dust-drybrush') : {},
-        h('path', { d: smooth(p.top.slice(1, 4), false), fill: 'none', stroke: SOFT, 'stroke-width': 0.8, 'stroke-linecap': 'round', opacity: 0.8 }),
-        h('path', { d: brush([-4.4, -2.4], [1.6, -4.6], 1.2, -0.4), fill: PAPER, opacity: 0.9 })));
+      h('path', { d: shade, fill: M('fxDustShade'), opacity: 0.55 }),
+      h('path', { d: body, fill: M('fxDust'), opacity: 0.92 }),
+      h('path', { d: lobeArc(lb[4], 200, 300) + lobeArc(lb[0], 250, 330) + lobeArc(lb[2], 280, 350), fill: 'none', stroke: SOFT, 'stroke-width': 0.7, 'stroke-linecap': 'round', opacity: 0.55, ...tagT }),
+      h('path', { d: brush([lb[4][0] - 2.4, lb[4][1] - 0.4], [lb[4][0] + 1.4, lb[4][1] - 2.4], 1.3, -0.4) + brush([lb[1][0] - 2, lb[1][1] - 1.2], [lb[1][0] + 0.8, lb[1][1] - 2.6], 1, -0.3), fill: PAPER, opacity: 0.9 }));
   };
   const NDUST = 10, NGRIT = 10, NBURST = 8;
   L.front += h('g', {}, Array.from({ length: NDUST }, (_, i) => puff('fx-dust' + i, 'fx:O:dust-puff', i)));
@@ -701,7 +698,7 @@ export function attach(svg, ctx) {
         const s = (0.6 + 1.1 * Math.sqrt(u)) * (0.75 + 0.45 * Math.min(1.4, sN)) * (0.8 + 0.4 * hash(k, 5));
         // soft gouache puff: swells, thins out and dissolves (opacity), shrinking a little as it goes
         set(el, 'transform', `translate(${f1(x)} ${f1(y)}) scale(${f(s * (1 - 0.35 * sstep(0.55, 1, u)))})`);
-        set(el, 'opacity', f(0.95 * sstep(0, 0.08, u) * (1 - sstep(0.4, 1, u))));
+        set(el, 'opacity', f(0.82 * sstep(0, 0.08, u) * (1 - sstep(0.35, 1, u))));
       }
       const gdens = clamp(-0.1 + 0.6 * sN, 0, 1) * (reduced ? 0.3 : 1) * (lift > 0.05 ? 0 : 1);
       const GDT = 0.05;
