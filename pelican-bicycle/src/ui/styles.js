@@ -263,7 +263,7 @@ export const CSS = String.raw`
 @media (max-width:600px), (max-aspect-ratio:4/5){
   #ui{--ui-inset:8px!important}
   .ui-card, .ui-card[data-dock]{left:8px; right:8px; bottom:calc(8px + env(safe-area-inset-bottom)); top:auto; width:auto; max-width:none}
-  .ui-plate{max-height:max(16rem, calc(var(--ui-room) - 8px)); padding:4px 6px 10px}
+  .ui-plate{max-height:min(38dvh, max(14rem, calc(var(--ui-room) - 8px))); padding:4px 6px 10px}   /* short sheet: the rider stays visible above it; the body scrolls */
   .ui-card[data-open="true"] .ui-odo{display:none}
   .ui-quick .ui-btn .ico{width:16px; height:16px}
   #ui .ui-quick .ui-btn .en{letter-spacing:0; font-size:.58rem}
@@ -284,7 +284,7 @@ export const CSS = String.raw`
   .ui-foot{display:none}
 }
 @media (max-width:600px) and (pointer:coarse), (pointer:coarse){
-  .ui-btn{min-height:44px; min-width:44px}
+  .ui-btn, .ui-tabs .ui-btn{min-height:44px; min-width:44px}
   .ui-range{height:44px}
   .ui-range::-webkit-slider-thumb{width:24px; height:28px; margin-top:-11px}
 }

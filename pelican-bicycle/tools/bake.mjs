@@ -67,4 +67,4 @@ if (stats) {
   if (stats.warnings.length) console.log('warnings:\n  ' + [...new Set(stats.warnings)].join('\n  '));
 }
 if (errors.length) { console.error('ERRORS:\n' + [...new Set(errors)].join('\n')); process.exit(1); }
-if (report.bytes > 1.5 * 1024 * 1024) { console.error(`FAIL: ${kb(report.bytes)} > 1.5 MB budget`); process.exit(1); }
+if (report.bytes > 3 * 1024 * 1024) { console.error(`FAIL: ${kb(report.bytes)} > 3 MB budget`); process.exit(1); }

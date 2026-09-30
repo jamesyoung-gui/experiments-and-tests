@@ -1,5 +1,8 @@
 // Screenshot harness. Renders deterministic frames via window.__pb.renderAt and fails on console errors.
-// usage: node tools/shoot.mjs [--dist] [--out shots/lead] [--set hero,frames,tods,cams,mobile,events] [--query "solo=bike"] [--perf] [--sheet]
+// usage: node tools/shoot.mjs [--dist] [--out shots/lead] [--set hero,frames,tods,cams,mobile,events,zoom,strip] [--query "solo=bike"] [--perf] [--sheet]
+//   --set strip : real-time filmstrips, 30 consecutive 60 fps frames (renderAt(t0 + i/60), ?nofx=1) per event
+//                 (bell, wave, hop, gulp, coast start, cadence jump) -> strip-<event>.png contact sheets
+//   --perf      : 5 s live run; exits non-zero when tools/budgets.json perf budgets are missed
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,7 +19,9 @@ let srv, base;
 if (arg('dist', false)) base = pathToFileURL(path.join(ROOT, 'dist/index.html')).href;
 else { const s = await serve(0); srv = s.srv; base = `http://127.0.0.1:${s.port}/src/index.dev.html`; }
 
-const browser = await chromium.launch();
+// Raster threads = core count (as desktop Chrome does); headless defaults to fewer and the scene is raster-bound.
+const browser = await chromium.launch({ args: [`--num-raster-threads=${Math.min(4, (await import('node:os')).cpus().length)}`] });
+const BUDGET = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/budgets.json'), 'utf8'));
 const errors = [];
 async function open(w, h, extra = '') {
   const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
@@ -64,9 +69,28 @@ if (sets.includes('mobile')) {
   await shot(m, 'mobile-portrait', { t: 3, tod: 0.7, cam: 'wide' });
   await m.close();
 }
+if (sets.includes('strip')) {
+  const sp = await open(800, 450, 'nofx=1&nohud');
+  const STRIPS = [['bell', 6, { events: [{ type: 'bell', t0: 6 }] }], ['wave', 6.1, { events: [{ type: 'wave', t0: 6 }] }],
+    ['hop', 6.1, { events: [{ type: 'hop', t0: 6 }] }], ['gulp', 6.1, { events: [{ type: 'gulp', t0: 6 }] }],
+    ['coast', 6, { events: [{ type: 'coast', t0: 6 }] }], ['cadence', 6, { cadence: 90 }]];
+  for (const [n, t0, o] of STRIPS) {
+    const cells = [];
+    for (let i = 0; i < 30; i++) {
+      await sp.evaluate(a => window.__pb.renderAt(a.t, a), { ...o, t: t0 + i / 60, tod: 0.7, cam: 'close' });
+      cells.push((await sp.screenshot()).toString('base64'));
+    }
+    const cp = await browser.newPage({ viewport: { width: 6 * 324 + 8, height: 200 } });
+    await cp.setContent(`<body style="margin:0;background:#15171c;color:#ddd;font:11px system-ui"><div style="display:grid;grid-template-columns:repeat(6,320px);gap:4px;padding:4px">${cells.map((c, i) => `<figure style="margin:0"><img style="width:320px;display:block" src="data:image/png;base64,${c}"><figcaption>${n} +${i}/60 s</figcaption></figure>`).join('')}</div></body>`);
+    const file = path.join(out, `strip-${n}.png`);
+    await cp.screenshot({ path: file, fullPage: true }); await cp.close();
+    console.log('strip', file);
+  }
+  await sp.close();
+}
 let perf = null;
 if (arg('perf', false)) {
-  const p = await open(1600, 900, 'perf=1');
+  const p = await open(1600, 900, 'perf=quiet');
   await p.evaluate(() => { window.__pb.renderAt(0, {}); window.__pb.play(); });
   await p.waitForTimeout(5000);
   perf = await p.evaluate(() => {
@@ -75,6 +99,11 @@ if (arg('perf', false)) {
     return { frames: a.length, fps: +(1 / (dts.reduce((s, x) => s + x, 0) / dts.length)).toFixed(1), p95dtMs: +(q(dts, 0.95) * 1000).toFixed(1), jsMedMs: +q(js, 0.5).toFixed(2), jsP95Ms: +q(js, 0.95).toFixed(2), nodes: document.querySelectorAll('#scene *').length };
   });
   console.log('perf', JSON.stringify(perf));
+  const B = BUDGET.perf, miss = [];
+  if (perf.fps < B.fpsMin) miss.push(`fps ${perf.fps} < ${B.fpsMin}`);
+  if (perf.jsP95Ms > B.jsP95MaxMs) miss.push(`JS p95 ${perf.jsP95Ms} ms > ${B.jsP95MaxMs}`);
+  if (perf.nodes > B.domMax) miss.push(`DOM ${perf.nodes} > ${B.domMax}`);
+  if (miss.length) errors.push('PERF BUDGET MISSED: ' + miss.join('; '));
 }
 if (arg('sheet', false) && shots.length > 1) {
   const sp = await browser.newPage({ viewport: { width: 4 * 416 + 16, height: 400 } });

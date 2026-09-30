@@ -296,7 +296,7 @@ export function build({ v }) {
     const vg = VALVE_GAPS[rear ? 0 : 5].ang;              // different valve phase front / rear
     const refl = LACING.find(s => s.side === 'near' && Math.abs(((s.ah - (rear ? 200 : 40)) % 360 + 360) % 360) < 11.3) || LACING[3];
     const [r0, r1] = spokeEnds(refl), rp = lerp2(r0, r1, 0.62), ra = angOf(sub(r1, r0));
-    const ghosts = side => [0, 1, 2].map(i => h('use', { href: `#bike-spk-${side}`, 'data-ref': `${W}-${side}${i}` }));
+    const ghosts = side => [h('use', { href: `#bike-spk-${side}` })];   // one opaque copy: no alpha ghosts (no grey moire)
     return h('g', {},
       h('g', { 'data-ref': `${W}-spk`, ...tag('spokes-far') }, ...ghosts('far')),
       h('g', {}, ...arcPieces([0, 0], 91, 98.9, -90, 270, 6).map(d => G('tyre', Fp(d, N))),
@@ -831,15 +831,9 @@ export function attach(svg) {
       set(r.teeth, 'transform', `translate(0 -80) rotate(${((p.crank ?? 0) % 360).toFixed(2)})`);
       const toothOp = (1 - 0.55 * sstep(34, 58, cad)).toFixed(2);
       set(r.teeth, 'opacity', toothOp); set(r.cogTeeth, 'opacity', toothOp);
-      // wheels: spoke haze (3 ghosts over a 180° shutter), fine periodic detail fade, tread -> blur ring
-      const blur = p.spokeBlur ?? 0, degPerS = ((fr.speed ?? 0) / BIKE.R) * R2D, smear = Math.min(14, degPerS / 120);
-      const A = 1 - 0.6 * blur, g = smear > 0.4 ? [A * 0.62, A * 0.42, A * 0.26] : [A, 0, 0];
+      // wheels: spokes stay opaque single-ink (no alpha haze); fine periodic detail fades, tread -> blur ring
+      const blur = p.spokeBlur ?? 0;
       for (const w of W) {
-        for (const side of ['near', 'far']) for (let i = 0; i < 3; i++) {
-          const el = r[`${w}-${side}${i}`];
-          set(el, 'opacity', g[i].toFixed(2));
-          set(el, 'transform', i ? `rotate(${(-smear * i / 2).toFixed(2)})` : '');
-        }
         set(r[`${w}-fine`], 'opacity', (1 - 0.55 * blur).toFixed(2));
         set(r[`${w}-heads`], 'opacity', (1 - 0.6 * blur).toFixed(2));
         set(r[`${w}-tread`], 'opacity', (1 - blur).toFixed(2));

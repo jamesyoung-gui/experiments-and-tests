@@ -286,7 +286,9 @@ export function build(ctx) {
       h('path', { d: 'M-16 -8H6C8 -8 8 -4 6 -4H-16C-18 -4 -18 -8 -16 -8Z', fill: P }),
       h('path', { d: 'M-6 -9V-3', stroke: R, 'stroke-width': 1.6 }),
       h('path', { d: 'M-20 -11H0', stroke: P, 'stroke-width': 1.4, 'stroke-linecap': 'round' }),
-      h('path', { d: 'M28 -4.5H34V-7.5H28Z', fill: O, stroke: N, 'stroke-width': 1.2 })));
+      h('path', { d: 'M28 -4.5H34V-7.5H28Z', fill: O, stroke: N, 'stroke-width': 1.2 }),
+      // visible clue: a four-point glint winks on the glass every ~22 s
+      h('path', { 'data-ref': 'egg-bottleGlint', visibility: 'hidden', d: 'M-12 -30L-9.6 -13.4L6 -11L-9.6 -8.6L-12 8L-14.4 -8.6L-30 -11L-14.4 -13.4Z', fill: P, stroke: N, 'stroke-width': 0.8, 'stroke-linejoin': 'round' })));
   const nw = 380, nh = 164;
   L.sea += h('g', { 'data-ref': 'egg-note', visibility: 'hidden' },
     h('g', { 'data-ref': 'egg-noteIn' },
@@ -566,6 +568,9 @@ export function attach(svg, ctx) {
           set(r.bottle, 'transform', `translate(${f(bx)} ${f(BOTTLE.y + 2.5 * Math.sin(t * 2.1))})`);
           set(r.bottleB, 'transform', `rotate(${f(-8 + 7 * Math.sin(t * 2.1 + 0.6))})`);
           set(r.bottleRip, 'transform', `scale(${f2(1 + 0.12 * Math.sin(t * 2.1))} 1)`);
+          const gp = t % 22, gOn = !fr.reduced && gp < 0.9;
+          vis(r.bottleGlint, gOn);
+          if (gOn) set(r.bottleGlint, 'transform', `translate(-12 -11) scale(${f2(0.25 + Math.sin(Math.PI * gp / 0.9))}) translate(12 11)`);
         }
         const u = tau('bottle', t), on = u >= 0 && u < DUR.bottle;
         vis(r.note, on);
@@ -771,8 +776,13 @@ export function connect({ bus, state, svg }) {
     const e = EGGS.find(x => x.id === id);
     bus.emit('egg:found', { id, zh: e.zh, en: e.en, count: A.found.size, total: EGGS.length });
   };
-  A.onFound(emitFound);
+  // the rider reacts to a discovery (live play only; screenshot mode stays deterministic)
+  const REACT = { km: ['ui:bell', 250], fortytwo: ['ui:wave', 400], bottle: ['ui:wave', 900], wish: ['ui:bell', 300], sunwink: ['ui:wave', 300] };
+  const live = !new URLSearchParams(win.location.search).has('freeze');
+  A.onFound(id => { emitFound(id); const rc = live && REACT[id]; if (rc) win.setTimeout(() => bus.emit(rc[0], {}), rc[1]); });
   if (A.found.size) queueMicrotask(() => bus.emit('egg:found', { id: null, count: A.found.size, total: EGGS.length }));
+  // clue tier: after a minute of riding, show the empty tally so players know there is something to find
+  else if (!new URLSearchParams(win.location.search).has('freeze')) win.setTimeout(() => { if (!A.found.size) bus.emit('egg:found', { id: null, count: 0, total: EGGS.length }); }, 60000);
 
   // keys: Konami + typed words (never steals keys: the ride shortcuts still fire; side effects are undone on success)
   const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];

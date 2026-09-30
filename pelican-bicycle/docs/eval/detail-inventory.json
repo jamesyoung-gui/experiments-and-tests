@@ -1,0 +1,3941 @@
+{
+ "baseline": {
+  "pelican": {
+   "O": 23,
+   "T": 4,
+   "total": 27
+  },
+  "bike": {
+   "O": 40,
+   "T": 2,
+   "total": 42
+  },
+  "sea": {
+   "O": 6,
+   "T": 3,
+   "total": 9
+  },
+  "land": {
+   "O": 24,
+   "T": 6,
+   "total": 30
+  },
+  "sky": {
+   "O": 8,
+   "T": 2,
+   "total": 10
+  },
+  "fx": {
+   "O": 1,
+   "T": 0,
+   "total": 1
+  },
+  "typography_frame": {
+   "O": 9,
+   "T": 1,
+   "total": 10
+  },
+  "all": 129
+ },
+ "counts": {
+  "pelican": {
+   "O": 62,
+   "T": 21,
+   "total": 83,
+   "rejected": [
+    "pelican:O:far-scapular-cape",
+    "pelican:O:far-tertials",
+    "pelican:O:far-primaries-trailing",
+    "pelican:O:far-secondaries-fringe",
+    "pelican:O:far-covert-panel",
+    "pelican:O:far-greater-coverts",
+    "pelican:O:far-primary-fingers",
+    "pelican:O:far-primary-coverts",
+    "pelican:O:far-carpal-bend",
+    "pelican:O:far-alula",
+    "pelican:O:far-totipalmate-webs",
+    "pelican:O:far-hallux-web",
+    "pelican:O:far-toes",
+    "pelican:O:far-claws",
+    "pelican:O:far-ankle-joint",
+    "pelican:O:far-tarsus",
+    "pelican:T:far-tarsus-scutes",
+    "pelican:O:far-thigh-trousers",
+    "pelican:O:neck-nape-shade",
+    "pelican:T:tail-rachis-lines",
+    "pelican:O:tail-upper-coverts",
+    "pelican:O:scarf-far-tail",
+    "pelican:T:belly-halftone-band",
+    "pelican:T:belly-halftone-dots",
+    "pelican:T:mantle-scallops",
+    "pelican:T:flank-scallops",
+    "pelican:T:breast-buff-feathers",
+    "pelican:T:feather-shaft-ticks",
+    "pelican:O:rim-light",
+    "pelican:O:collar-ruff",
+    "pelican:T:scarf-knit-rib",
+    "pelican:T:scarf-shade-hatching",
+    "pelican:O:scarf-hanging-end",
+    "pelican:O:scarf-fringe-cream",
+    "pelican:T:tarsus-reticulate-scales",
+    "pelican:T:tarsus-highlight",
+    "pelican:O:hallux-web",
+    "pelican:T:toe-scutes",
+    "pelican:O:pouch-edge-line",
+    "pelican:T:pouch-stretch-lines",
+    "pelican:T:pouch-throat-wrinkles",
+    "pelican:O:pouch-highlight",
+    "pelican:O:pouch-rim-folds",
+    "pelican:O:bill-lower",
+    "pelican:O:mandible-ramus-line",
+    "pelican:O:ramus-sheen",
+    "pelican:O:maxillary-groove",
+    "pelican:O:culmen-ridge",
+    "pelican:O:bill-tip-shadow",
+    "pelican:O:facial-skin",
+    "pelican:O:goggle-strap",
+    "pelican:O:crest-shadow",
+    "pelican:O:nape-tuft",
+    "pelican:T:crest-shaft-lines",
+    "pelican:O:tertials",
+    "pelican:T:tertial-shafts",
+    "pelican:T:scapular-scallops",
+    "pelican:T:humeral-covert-scallops",
+    "pelican:O:primaries-trailing",
+    "pelican:T:secondary-pale-edges",
+    "pelican:T:secondary-rachis",
+    "pelican:T:finger-rachis"
+   ]
+  },
+  "bike": {
+   "O": 76,
+   "T": 18,
+   "total": 94,
+   "rejected": [
+    "bike:O:pedal-far",
+    "bike:O:crank-far",
+    "bike:O:spokes-far",
+    "bike:O:tyre",
+    "bike:T:tyre-tread",
+    "bike:T:tyre-bead-line",
+    "bike:T:tyre-sidewall-lettering",
+    "bike:O:rim",
+    "bike:T:rim-brake-track",
+    "bike:T:rim-eyelets",
+    "bike:O:spoke-nipples",
+    "bike:O:spoke-reflector-rear",
+    "bike:O:hub-front",
+    "bike:T:hub-spoke-heads",
+    "bike:T:wheel-motion-swooshes",
+    "bike:O:fender-stays",
+    "bike:O:kickstand-plate",
+    "bike:O:chainguard-stays",
+    "bike:O:seat-stay",
+    "bike:O:pump-hose",
+    "bike:O:pump-pegs",
+    "bike:O:brake-bridge",
+    "bike:O:head-tube",
+    "bike:O:lug-head-bottom",
+    "bike:O:bb-lug-points",
+    "bike:O:bottle-cage",
+    "bike:O:dropout-rear",
+    "bike:O:brake-housing-rear",
+    "bike:O:lamp-wire",
+    "bike:O:saddle-rails",
+    "bike:O:saddle",
+    "bike:T:saddle-sheen",
+    "bike:T:saddle-stitching",
+    "bike:O:saddle-rivets",
+    "bike:O:headset-cups",
+    "bike:O:fork-crown",
+    "bike:O:newspaper-liner",
+    "bike:T:newspaper-print",
+    "bike:O:fish-mackerel",
+    "bike:T:fish-mackerel-stripes",
+    "bike:O:fish-fins",
+    "bike:T:fish-lateral-line",
+    "bike:O:fish-snapper",
+    "bike:T:fish-scales",
+    "bike:O:fish-sardine",
+    "bike:O:basket-corner-posts",
+    "bike:O:grip-far",
+    "bike:O:brake-lever-far",
+    "bike:O:stem",
+    "bike:O:stem-bolts",
+    "bike:O:grip-near",
+    "bike:T:grip-ribs",
+    "bike:O:bar-end-plug",
+    "bike:O:brake-lever-near",
+    "bike:O:bell",
+    "bike:T:bell-rings",
+    "bike:O:bell-lever",
+    "bike:O:cog",
+    "bike:O:cog-lockring",
+    "bike:O:chainring-teeth",
+    "bike:O:chain",
+    "bike:T:chain-inner-plates",
+    "bike:T:chain-outer-plates",
+    "bike:T:chain-rollers",
+    "bike:O:chain-master-link",
+    "bike:O:chainring",
+    "bike:T:chainring-pinstripe",
+    "bike:O:spider",
+    "bike:O:chainring-bolts",
+    "bike:O:crank-near",
+    "bike:O:crank-dust-cap"
+   ]
+  },
+  "sea": {
+   "O": 53,
+   "T": 3,
+   "total": 56,
+   "rejected": [
+    "sea:O:far-ridge",
+    "sea:T:ridge-light-hatch",
+    "sea:O:foothills",
+    "sea:T:ridge-halftone",
+    "sea:T:terraced-fields",
+    "sea:O:cypresses",
+    "sea:O:far-island",
+    "sea:T:cliff-strata",
+    "sea:T:cape-halftone",
+    "sea:O:cape-path",
+    "sea:O:band-deep",
+    "sea:T:swell-halftone",
+    "sea:O:band-far",
+    "sea:O:horizon-line",
+    "sea:T:ripple-ticks",
+    "sea:T:wave-ticks-mid",
+    "sea:T:wave-lines",
+    "sea:O:whitecaps",
+    "sea:O:glitter-sparkles",
+    "sea:O:town-hill",
+    "sea:T:town-hill-halftone",
+    "sea:O:windmill-sails",
+    "sea:O:town-trees",
+    "sea:O:houses-cubes",
+    "sea:O:town-windows",
+    "sea:O:chimneys",
+    "sea:O:fish-market",
+    "sea:O:quay-wall",
+    "sea:T:quay-masonry",
+    "sea:O:pier-lamps",
+    "sea:O:rocks",
+    "sea:O:rock-rim-light",
+    "sea:O:red-sail-yawl",
+    "sea:O:boat-wake",
+    "sea:T:sail-seams"
+   ]
+  },
+  "land": {
+   "O": 67,
+   "T": 6,
+   "total": 73,
+   "rejected": [
+    "land:T:tideline-hatch",
+    "land:T:footprints",
+    "land:O:shells",
+    "land:O:rocks",
+    "land:O:beach-ball",
+    "land:O:crab",
+    "land:T:palm-trunk-rings",
+    "land:O:manhole",
+    "land:T:manhole-pattern",
+    "land:O:bike-lane-arrow",
+    "land:O:road-crack",
+    "land:O:fg-grass-navy",
+    "land:O:fg-grass-teal",
+    "land:O:fg-poppies",
+    "land:O:fg-marigolds",
+    "land:O:fg-rocks",
+    "land:O:fg-agave"
+   ]
+  },
+  "sky": {
+   "O": 24,
+   "T": 8,
+   "total": 32,
+   "rejected": [
+    "sky:O:band-zenith",
+    "sky:O:band-lower",
+    "sky:O:band-horizon",
+    "sky:O:sunburst-wedges",
+    "sky:T:sunburst-halftone",
+    "sky:T:band-halftone-seams",
+    "sky:T:zenith-halftone",
+    "sky:O:horizon-hairlines",
+    "sky:T:sun-misregister",
+    "sky:O:sun-glow-rings",
+    "sky:T:sun-glow-halftone",
+    "sky:O:sun-dotted-ring",
+    "sky:O:sun-deco-ring",
+    "sky:O:sun-corona-teeth",
+    "sky:O:halo-22",
+    "sky:O:sun-dogs",
+    "sky:T:airship-ribs",
+    "sky:O:cirrus-hooks",
+    "sky:O:horizon-bank",
+    "sky:O:banner-streamers",
+    "sky:O:biplane",
+    "sky:O:biplane-struts",
+    "sky:O:biplane-pilot",
+    "sky:O:biplane-prop"
+   ]
+  },
+  "fx": {
+   "O": 19,
+   "T": 4,
+   "total": 23,
+   "rejected": [
+    "fx:O:shadow-cast-pelican",
+    "fx:T:dragonfly-venation"
+   ]
+  },
+  "typography_frame": {
+   "O": 25,
+   "T": 4,
+   "total": 29,
+   "rejected": [
+    "typography_frame:O:stamp-vignette",
+    "typography_frame:T:stamp-engraving",
+    "typography_frame:T:title-hatch-shadow",
+    "typography_frame:O:title-stepped-shadow"
+   ]
+  }
+ },
+ "total": 390,
+ "ratio": 3.0232558139534884,
+ "fails": [],
+ "items": {
+  "sky:O:band-zenith": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:band-mid": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sky:O:band-lower": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:band-horizon": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:sunburst-wedges": {
+   "views": [],
+   "ok": false
+  },
+  "sky:T:sunburst-halftone": {
+   "views": [],
+   "ok": false
+  },
+  "sky:T:band-halftone-seams": {
+   "views": [],
+   "ok": false
+  },
+  "sky:T:zenith-halftone": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:horizon-hairlines": {
+   "views": [],
+   "ok": false
+  },
+  "sky:T:sun-misregister": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:sun-disc": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:sun-glow-rings": {
+   "views": [],
+   "ok": false
+  },
+  "sky:T:sun-grooves": {
+   "views": [
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:T:sun-glow-halftone": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:sun-dotted-ring": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:sun-deco-ring": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:sun-corona-teeth": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:sun-bars": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:halo-22": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:sun-dogs": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:airship-pennant": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:airship-fins": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:airship": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:T:airship-ribs": {
+   "views": [],
+   "ok": false
+  },
+  "sky:T:airship-shade": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:airship-engines": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:airship-gondola": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:bird-skein": {
+   "views": [
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:cirrus-hooks": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:horizon-bank": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:cumulus-large": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:T:cloud-shade-halftone": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:T:cloud-creases": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:T:cloud-rim-light": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:cloud-base-bars": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:stratus-streaks": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sky:O:speed-cloud": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:T:mackerel-sky": {
+   "views": [
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:lenticular": {
+   "views": [
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:pelican-v-formation": {
+   "views": [
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:tow-rope": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sky:O:banner": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:banner-grommets": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:banner-lettering": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:banner-streamers": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:banner-spreader": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sky:O:biplane-speedlines": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sky:O:biplane-exhaust": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sky:O:biplane-gear": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sky:O:biplane": {
+   "views": [],
+   "ok": false
+  },
+  "sky:T:biplane-wing-ribs": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sky:T:biplane-rudder-stripes": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sky:O:biplane-roundel": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sky:O:biplane-struts": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:biplane-pilot": {
+   "views": [],
+   "ok": false
+  },
+  "sky:O:biplane-prop": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:far-ridge": {
+   "views": [],
+   "ok": false
+  },
+  "sea:T:ridge-light-hatch": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:foothills": {
+   "views": [],
+   "ok": false
+  },
+  "sea:T:ridge-halftone": {
+   "views": [],
+   "ok": false
+  },
+  "sea:T:terraced-fields": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:cypresses": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:far-village": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:hill-chapel": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:far-island": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:cape": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:T:cliff-strata": {
+   "views": [],
+   "ok": false
+  },
+  "sea:T:cape-halftone": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:cape-path": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:cape-fence": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:keeper-house": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:signal-mast": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:lighthouse-tower": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:lighthouse-stripes": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:lighthouse-windows": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:lighthouse-gallery": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:lighthouse-lantern": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:lighthouse-dome": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:band-deep": {
+   "views": [],
+   "ok": false
+  },
+  "sea:T:swell-halftone": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:band-far": {
+   "views": [],
+   "ok": false
+  },
+  "sea:T:band-halftone": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:horizon-line": {
+   "views": [],
+   "ok": false
+  },
+  "sea:T:ripple-ticks": {
+   "views": [],
+   "ok": false
+  },
+  "sea:T:wave-ticks-mid": {
+   "views": [],
+   "ok": false
+  },
+  "sea:T:wave-lines": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:whitecaps": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:sun-glitter": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:glitter-sparkles": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:town-hill": {
+   "views": [],
+   "ok": false
+  },
+  "sea:T:town-hill-halftone": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:windmill": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:windmill-sails": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:town-trees": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:houses-cubes": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:town-windows": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:houses-gabled": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:chimneys": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:houses-tiled": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:balconies": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:fish-market": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:church": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:church-clock": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:quay-wall": {
+   "views": [],
+   "ok": false
+  },
+  "sea:T:quay-masonry": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:harbour-mole": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:harbour-beacon": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:moored-boats": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:pier-pilings": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:pier-deck": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:pier-lamps": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:pier-bunting": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:pier-pavilion": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:T:harbour-reflections": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:rocks": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:sea-stack": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:rock-rim-light": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:seal-basking": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:cormorants": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:rock-foam": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:steamer-smoke": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:steamer": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:steamer-funnels": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:steamer-lifeboats": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:steamer-bunting": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:far-sloop": {
+   "views": [
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:red-sail-yawl": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:trawler": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:T:fishing-net": {
+   "views": [
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:fisherman": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:net-gulls": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:boat-wake": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:sailboat-hull": {
+   "views": [
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:lifebuoy": {
+   "views": [
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:sailboat-jib": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:sailboat-mainsail": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:T:sail-seams": {
+   "views": [],
+   "ok": false
+  },
+  "sea:O:sailboat-rigging": {
+   "views": [
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:sailboat-flags": {
+   "views": [
+    "wide",
+    "wide",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:sailboat-crew": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:can-buoy": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:bell-buoy": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:buoy-gull": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:pot-floats": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:dolphin": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "sea:O:jumping-fish": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "sea:O:seal-head": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:gull-far": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:T:sand-halftone": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:surf-foam": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:T:tideline-hatch": {
+   "views": [],
+   "ok": false
+  },
+  "land:T:footprints": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:starfish": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:shells": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:rocks": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:seaweed": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:T:rock-halftone": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:sandpipers": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:driftwood": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:hut-open-door": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:hut-plain": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:hut-towel-line": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:bunting": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:hut-number-plates": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:hut-roof-finials": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:surfboard": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:parasol-orange": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:parasol-teal": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:deckchair-red": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:deckchair-blue": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:sandcastle": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:bucket-spade": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:beach-ball": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:lifeguard-tower": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:lifeguard-cross-flag": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:life-ring": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:crab": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:kite": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:T:plinth-halftone": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:balustrade": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:balustrade-piers": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:pavement": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:hedge": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:T:hedge-texture": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:palm-tall": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:T:palm-trunk-rings": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:palm-medium": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:flower-bed": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:flower-bed-tulips": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:poster-wall": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:vintage-poster": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:bus-shelter": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:bus-timetable": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:litter-bin": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:bus-stop-sign": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:bench": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:cat": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:lamp-post": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:lamp-flower-basket": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:lamp-banner": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:mailbox": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:mailbox-lettering": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:telescope": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:fish-stand": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:price-board": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:fish-awning": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:fish-sign": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:fish-counter": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:fish-crates": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:fish-scale": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:signpost": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:sign-lettering-cn": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:sign-lettering-latin": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:sign-distance": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:milestone": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:coconuts": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:hanging-fish": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:T:asphalt-halftone": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:kerbstones": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:gutter-drain": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:edge-line": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:centre-dashes": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:cats-eyes": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:manhole": {
+   "views": [],
+   "ok": false
+  },
+  "land:T:manhole-pattern": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:bike-lane-symbol": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:bike-lane-arrow": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:tar-patch": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:road-crack": {
+   "views": [],
+   "ok": false
+  },
+  "fx:O:shadow-cast-bike": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "fx:O:shadow-cast-pelican": {
+   "views": [],
+   "ok": false
+  },
+  "fx:T:shadow-penumbra": {
+   "views": [
+    "wide",
+    "wide"
+   ],
+   "ok": true
+  },
+  "fx:O:shadow-contact": {
+   "views": [
+    "wide",
+    "wide"
+   ],
+   "ok": true
+  },
+  "fx:O:gull-escort": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:gull-beak": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:gull-eye": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:T:gull-wingtip-mirrors": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:wind-curl": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "pelican:O:far-scapular-cape": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-tertials": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-primaries-trailing": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-secondaries-fringe": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-covert-panel": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-greater-coverts": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-primary-fingers": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-primary-coverts": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-carpal-bend": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-alula": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:pedal-far": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-totipalmate-webs": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-hallux-web": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-toes": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-claws": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-ankle-joint": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-tarsus": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:far-tarsus-scutes": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:far-thigh-trousers": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:crank-far": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:spokes-far": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:tyre": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:tyre-tread": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:tyre-bead-line": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:tyre-sidewall-lettering": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:rim": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:rim-brake-track": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:rim-eyelets": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:spoke-nipples": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:spokes-near": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "bike:O:valve": {
+   "views": [
+    "wide",
+    "wide",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:rim-decal": {
+   "views": [
+    "wide",
+    "wide",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:spoke-reflector-rear": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:hub-front": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:hub-spoke-heads": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:spoke-reflector-front": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:wheel-motion-swooshes": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:fender-rear": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:fender-pinstripe": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:fender-front": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:fender-mascot": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:fender-reflector-front": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:fender-emblem-rear": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:fender-stays": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:fender-bolts": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:rear-reflector": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:mud-flap": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:mud-flap-emblem": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:kickstand-plate": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:kickstand": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:chainguard-stays": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:rack-struts": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:rack": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:rack-spring-clip": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:towel": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:towel-stripes": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:towel-spiral": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:towel-fringe": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:towel-straps": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:license-plate": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:plate-text-cn": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:plate-number": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:plate-bolts": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:rear-light": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:chainstay": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:seat-stay": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:pump": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:pump-grip": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:pump-hose": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:pump-pegs": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:brake-bridge": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:brake-pads": {
+   "views": [
+    "wide",
+    "wide",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:calliper-rear": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:seat-tube": {
+   "views": [
+    "wide",
+    "wide",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:down-tube": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:top-tube": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:frame-highlight": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:frame-rim-light": {
+   "views": [
+    "wide",
+    "wide",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:frame-pinstripe-bands": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:head-tube": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:lug-seat": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:lug-lining": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:lug-head-top": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:lug-head-bottom": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:bb-lug-points": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:seat-stay-caps": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:seat-binder-bolt": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:head-badge": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:head-badge-pelican": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:head-badge-rivets": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:decal-latin": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:decal-cn": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:decal-flourish": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:bottle": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:bottle-label": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:bottle-cap": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:bottle-cage": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:dropout-rear": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:brake-housing-rear": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:cable-clips": {
+   "views": [
+    "wide",
+    "wide",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:cable-ferrules": {
+   "views": [
+    "wide",
+    "wide",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:lamp-wire": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:seatpost": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:saddle-rails": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:saddle-springs": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:seat-clamp": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:saddle": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:saddle-sheen": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:saddle-stitching": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:saddle-cantle-plate": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:saddle-rivets": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:saddle-bag-loops": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:headset-cups": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:headset-knurl": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:fork-blade": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:fork-crown": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:fork-end": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:axle-nut-front": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:dynamo-bracket": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:dynamo": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:dynamo-roller": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:calliper-front": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:basket-stays": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:newspaper-liner": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:newspaper-print": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:fish-mackerel": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:fish-mackerel-stripes": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:fish-fins": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:fish-lateral-line": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:fish-gills": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:fish-mouths": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:fish-eyes": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:fish-tails": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:fish-snapper": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:fish-scales": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:fish-sardine": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:fish-sardine-spots": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:basket": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:basket-weave": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:basket-corner-posts": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:basket-rim": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:basket-base": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:seaweed": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:basket-tag": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:basket-straps": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:headlamp-bracket": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:headlamp": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:lamp-switch": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:headlamp-lens": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:grip-far": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:brake-lever-far": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:stem": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:stem-bolts": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:handlebar": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:grip-near": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:grip-ribs": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:bar-end-plug": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:brake-lever-near": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:brake-housing-front": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:bell": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:bell-rings": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:bell-lever": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:cog": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:cog-lockring": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:chainring-teeth": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:chain": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:chain-inner-plates": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:chain-outer-plates": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:chain-rollers": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:chain-master-link": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:chainguard": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:chainguard-lettering": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:chain-tensioner": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:axle-nut-rear": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:chainring": {
+   "views": [],
+   "ok": false
+  },
+  "bike:T:chainring-pinstripe": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:spider": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:chainring-bolts": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:crank-near": {
+   "views": [],
+   "ok": false
+  },
+  "bike:O:crank-dust-cap": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:neck": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:neck-rim-light": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:neck-nape-shade": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:neck-feather-flow": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:neck-feather-flow-fine": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:neck-throat-crease": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:tail-rectrices": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:tail-rachis-lines": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:tail-upper-coverts": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:undertail-coverts": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:scarf-far-tail": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:body": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:belly-halftone-band": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:belly-halftone-dots": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:rump-halftone-band": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:mantle-scallops": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:flank-scallops": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:rump-scallops": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:breast-buff-feathers": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:breast-scallops": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:feather-shaft-ticks": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:saddle-compression-crease": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:vent-fluff": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:rim-light": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:collar-ruff": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:scarf-trailing-end": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:scarf-stripes": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:scarf-knit-rib": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:scarf-fringe": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:scarf-wrap": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:scarf-shade-hatching": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:scarf-hanging-end": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:scarf-fringe-cream": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:scarf-knot": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:pedal-near": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:T:pedal-treads": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "bike:O:pedal-reflector": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:tarsus": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:intertarsal-heel-pad": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:tarsus-shade-band": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:tarsus-reticulate-scales": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:tarsus-highlight": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:tarsus-scutes": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:totipalmate-webs": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:hallux-web": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:toes": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:toe-pads": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:toe-highlights": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:toe-scutes": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:claws": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:ankle-joint": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:metatarsal-pad": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:ankle-creases": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:thigh-trousers": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:knee-feather-cuff": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:cuff-feather-shafts": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:trouser-feather-scallops": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:trouser-rear-hatching": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:flank-plume-curls": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:pouch": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:pouch-edge-line": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:pouch-stretch-lines": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:pouch-throat-wrinkles": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:pouch-sag-folds": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:pouch-highlight": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:pouch-rim-folds": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:bill-lower": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:mandible-ramus-line": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:ramus-sheen": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:bill-upper": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:tomium-line": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:maxillary-groove": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:bill-growth-ridges": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:culmen-ridge": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:culmen-highlight": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:nostril-slit": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:bill-tip-shadow": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:nail-hook": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:nail-highlight": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:nail-under-hook": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:head": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:facial-skin": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:cheek-feather-edge": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:chin-feathers": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:forehead-feather-flecks": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:nape-edge": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:forehead-feather-point": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:gape-smile-line": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:smile-crease": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:goggle-strap": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:goggle-buckle": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:goggle-lens": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:goggle-glint": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:iris": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:pupil": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:eye-highlight": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:eye-glint-secondary": {
+   "views": [
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:upper-lid-skin": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:upper-eyelid": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:lid-corner-crinkle": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:lower-lid-skin": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:lower-eyelid": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:crest-shadow": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:nape-tuft": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:crest-long-strands": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:crest-shaft-lines": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:crest-short-spikes": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:scapular-cape": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:tertials": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:tertial-shafts": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:scapular-scallops": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:humeral-covert-scallops": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:primaries-trailing": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:secondaries-fringe": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:secondary-pale-edges": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:T:secondary-rachis": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:covert-panel": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:greater-coverts": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:greater-covert-shafts": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:lesser-covert-rows": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:median-covert-row": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:marginal-coverts": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:wing-rim-light": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:wing-leading-edge": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:primary-fingers": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:finger-rachis": {
+   "views": [],
+   "ok": false
+  },
+  "pelican:O:primary-coverts": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:carpal-bend": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:T:carpal-covert-scallops": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "pelican:O:alula": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:dust-puff": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:dust-grit": {
+   "views": [
+    "wide",
+    "wide",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:feather-contour": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "fx:O:feather-down": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:seed-dandelion": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:butterfly-monarch": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:T:butterfly-monarch-veins": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:butterfly-white": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:dragonfly": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:T:dragonfly-venation": {
+   "views": [],
+   "ok": false
+  },
+  "fx:O:leaf-tumble": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:T:fly-dotted-trail": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:basket-fly": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:glint-bell": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "fx:O:glint-rim": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "land:O:fg-bushes": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:T:bush-halftone": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:fg-grass-navy": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:fg-grass-teal": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:fg-poppies": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:fg-marigolds": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:fg-dandelions": {
+   "views": [
+    "wide"
+   ],
+   "ok": true
+  },
+  "land:O:fg-rocks": {
+   "views": [],
+   "ok": false
+  },
+  "land:O:fg-agave": {
+   "views": [],
+   "ok": false
+  },
+  "typography_frame:O:paper-margin": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:frame-hairline": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:frame-keyline": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:corner-sunburst": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:crop-marks": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:edge-diamond": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:registration-mark": {
+   "views": [
+    "wide",
+    "wide",
+    "wide",
+    "close",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:imprint": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:edition-number": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:colour-bar": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:T:tint-ramp": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:ticket-card": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:T:ticket-guilloche": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:ticket-route": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:ticket-serial": {
+   "views": [
+    "wide",
+    "wide",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:ticket-perforation": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:ticket-punch": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:ticket-stub": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:stamp-vignette": {
+   "views": [],
+   "ok": false
+  },
+  "typography_frame:T:stamp-engraving": {
+   "views": [],
+   "ok": false
+  },
+  "typography_frame:O:stamp-perforated": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:stamp-value": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:stamp-legend": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:T:postmark-cancel": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:postmark-ring": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:postmark-date": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:T:title-hatch-shadow": {
+   "views": [],
+   "ok": false
+  },
+  "typography_frame:O:title-stepped-shadow": {
+   "views": [],
+   "ok": false
+  },
+  "typography_frame:O:title-face": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:T:title-inline": {
+   "views": [
+    "wide",
+    "wide",
+    "close",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:title-label": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:subtitle-band": {
+   "views": [
+    "wide",
+    "close"
+   ],
+   "ok": true
+  },
+  "typography_frame:O:band-ornament": {
+   "views": [
+    "wide",
+    "wide",
+    "close",
+    "close"
+   ],
+   "ok": true
+  }
+ }
+}

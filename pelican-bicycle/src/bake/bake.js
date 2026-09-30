@@ -26,13 +26,20 @@
 
 export const BAKE_DEFAULTS = {
   period: 4,           // seconds in the master loop (whole crank turns at `cadence`); 24 = the rig's full story loop
-  start: 24,           // live sim time that maps to baked t = 0 (past the one-shot poster intro; ≡ 0 mod 24)
+  start: 250,          // live sim time that maps to baked t = 0: lap 2 km 0 (village, town, lighthouse, banner in full)
+  // the world (sky, sea, shore, roadside, road, foreground) is recorded as ONE long own-loop band, so the background
+  // runs a real journey (village → pier → harbour → funfair → railway) instead of repeating with the 4 s rider loop.
+  // Set pieces that the land module mounts / unmounts on the way are baked as presence (display) animations.
+  band: { P: 96, fps: 30, layers: ['L-hills-far', 'L-lighthouse', 'L-sea', 'L-boats', 'L-shore', 'L-roadside', 'L-road', 'L-foreground'] },
+  // easter-egg cameos on long prime periods (the combined cycle is 4·96·41·53·67 s): [egg id, subtree, period, at]
+  cameos: [['sunwink', '[data-ref="egg-sunFace"]', 41, 9], ['chorus', '[data-ref="egg-chorus"]', 53, 31], ['flight', '[data-ref="egg-flight"]', 67, 18]],
+  reducedMotion: true, // prefers-reduced-motion: every animated attribute is frozen at its t0 value by CSS (!important)
   fps: 60,             // samples per second for the master loop
   cadence: 60, tod: 0.70, cam: 'wide',
   story: [],           // optional baked events [{type:'wave'|'bell'|'hop'|'gulp', t0: seconds into the loop}]
   toggles: { skeleton: false },
   probe: { horizon: 480, step: 0.25 },   // long horizon to find the wrap width of slow, non-closing layers
-  tol: { len: 0.12, ang: 0.08, scale: 0.0015, d: 0.3, opacity: 0.008, dash: 0.05, num: 0.05 },          // rider (u, °)
+  tol: { len: 0.12, ang: 0.08, scale: 0.0015, d: 0.45, opacity: 0.008, dash: 0.05, num: 0.05 },          // rider (u, °)
   tolWorld: { len: 0.3, ang: 0.3, scale: 0.004, d: 0.35, opacity: 0.012, dash: 0.1, num: 0.1 },       // everything else
   blend: 1,            // seconds of seam cross-fade for channels that don't close within the loop
   dGap: 3,             // path-data keyframes at most every 2nd sample (30 Hz); SMIL interpolates in between
@@ -85,30 +92,55 @@ function* bakeGen(svg, opts) {
   try {
     // ---- 1. base frame: the static fallback of the baked file is the t0 pose (a proper hero pose, not a collapsed rig)
     render(cfg.start); render(cfg.start);
+    // mark the long band and the cameo subtrees (removed again in finally)
+    const marked = [];
+    const mark = (el, P, f) => { if (!el || el.hasAttribute('data-bake-period')) return; el.setAttribute('data-bake-period', P); if (f) el.setAttribute('data-bake-fps', f); marked.push(el); };
+    const cameos = [];
+    if (pb.eggs && cfg.cameos) for (const [egg, sel, P, at] of cfg.cameos) { const el = svg.querySelector(sel); if (el && P > 0 && Math.abs(P - T) > 1e-6) { mark(el, P, Math.min(fps, 30)); cameos.push({ egg, P, at }); } }
+    const band = cfg.band && cfg.band.P > T ? cfg.band : null;
+    if (band) for (const id of band.layers) { const L = svg.querySelector('#' + id); if (L) for (const c of L.children) mark(c, band.P, band.fps); }
+    stats.__marked = marked;
+    // far layers that only drift (no wrap inside one loop): remember where each piece starts, to cull what never shows
+    const farRects = new Map();
+    for (const e of svg.querySelectorAll('#L-hills-far path, #L-hills-far use, #L-hills-far polygon')) farRects.set(e, e.getBoundingClientRect());
+    stats.__farRects = farRects;
     const clone = svg.cloneNode(true);
     const origEls = [...svg.querySelectorAll('*')], cloneEls = [...clone.querySelectorAll('*')];
     const indexOf = new Map(origEls.map((e, i) => [e, i]));
 
     // ---- 2. record: master loop + one pass per data-bake-period subtree
     const ownerP = el => { const h = el.closest('[data-bake-static],[data-bake-period]'); if (!h) return T; if (h.hasAttribute('data-bake-static')) return 0; return +h.getAttribute('data-bake-period') || T; };
-    // the master pass starts `blend` seconds early: a channel that doesn't close is cross-faded over the last `blend`
-    // seconds into its own motion one loop earlier, so the seam is continuous in value AND velocity
-    const M = Math.max(0, Math.min(Math.round(cfg.blend * fps), N >> 1));
-    const main = yield* recordPass(svg, render, cfg.start - M / fps, N + M, 1 / fps, stats);
-    const groups = [{ P: T, step: 1 / fps, n: N, M, tracks: [...main.tracks.values()].filter(tr => ownerP(tr.el) === T) }];
-    const periods = [...new Set([...svg.querySelectorAll('[data-bake-period]')].map(e => +e.getAttribute('data-bake-period')).filter(p => p > 0 && Math.abs(p - T) > 1e-6))];
+    const liveToSnap = new Map();
+    const ctxR = { ownerP, known: indexOf, liveToSnap };
+    const groups = [];
+    const presOf = (pass, P, M) => [...pass.pres.values()].filter(e => e.P === P).map(e => ({ ...e, M }));
+    // own-period passes FIRST: the band pass starts from the base frame's DOM, so the set pieces mounted in the base
+    // frame are the very nodes of the clone (their motion is recorded onto them, their unmounting becomes presence)
+    const periods = [...new Set([...svg.querySelectorAll('[data-bake-period]')].map(e => +e.getAttribute('data-bake-period')).filter(p => p > 0 && Math.abs(p - T) > 1e-6))].sort((a, b) => b - a);
     for (const P of periods) {
       const host = svg.querySelector(`[data-bake-period="${P}"]`);
       const f = +(host && host.getAttribute('data-bake-fps')) || Math.min(fps, Math.max(4, 1440 / P));
-      const n = Math.max(8, Math.round(P * f));
-      const pass = yield* recordPass(svg, render, cfg.start, n, P / n, stats);
-      groups.push({ P, step: P / n, n, M: 0, tracks: [...pass.tracks.values()].filter(tr => ownerP(tr.el) === P) });
+      const n = Math.max(8, Math.round(P * f)), step = P / n;
+      const hooks = cameos.filter(c => c.P === P).map(c => ({ i: Math.round(c.at / step), fn: () => { try { pb.eggs.trigger(c.egg); } catch (e) { stats.warnings.push('cameo ' + c.egg + ': ' + e.message); } } }));
+      const pass = yield* recordPass(svg, render, cfg.start, n, step, stats, null, { ...ctxR, hooks });
+      if (hooks.length && pb.eggs.stopAll) pb.eggs.stopAll();
+      const isBand = !!band && P === band.P;
+      groups.push({ P, step, n, M: 0, cut: isBand, cameo: hooks.length > 0, tracks: [...pass.tracks.values()].filter(tr => tr.P === P), pres: presOf(pass, P, 0) });
     }
+    // the master pass starts `blend` seconds early: a channel that doesn't close is cross-faded over the last `blend`
+    // seconds into its own motion one loop earlier, so the seam is continuous in value AND velocity
+    const M = Math.max(0, Math.min(Math.round(cfg.blend * fps), N >> 1));
+    const main = yield* recordPass(svg, render, cfg.start - M / fps, N + M, 1 / fps, stats, null, ctxR);
+    groups.unshift({ P: T, step: 1 / fps, n: N, M, tracks: [...main.tracks.values()].filter(tr => tr.P === T), pres: presOf(main, T, M) });
+    stats.cameos = cameos.map(c => `${c.egg} every ${c.P}s (at ${c.at}s)`);
+    stats.band = band ? { P: band.P, fps: band.fps, layers: band.layers.length } : null;
     stats.ms.record = Math.round(now() - t0);
 
     // ---- 3. expand + parse; find non-closing, never-wrapping channels that need a long-horizon probe
     const units = [];
     for (const g of groups) for (const tr of g.tracks) {
+      // a cameo's attributes are first written when it starts: before that (hidden) they hold their first value
+      if (g.cameo && tr.init == null && tr.changes.length) tr.init = tr.changes[0][1];
       const vals = expand(tr, g.n + g.M + 1);
       if (tr.attr === 'style') { for (const [prop, pv] of splitStyle(vals)) units.push(makeUnit(tr.el, 'style:' + prop, pv, g, cfg)); }
       else units.push(makeUnit(tr.el, tr.attr, vals, g, cfg, tr.ns));
@@ -119,7 +151,7 @@ function* bakeGen(svg, opts) {
     for (const u of live) for (const c of u.chans || []) if (c.wrapKind === 'tile' && !c.closes && !c.W) needProbe.push([u, c]);
     if (needProbe.length) {
       const H = cfg.probe.horizon, step = cfg.probe.step, n = Math.round(H / step);
-      const probe = yield* recordPass(svg, render, cfg.start, n, step, stats, new Set(needProbe.map(([u]) => u.el)));
+      const probe = yield* recordPass(svg, render, cfg.start, n, step, stats, new Set(needProbe.map(([u]) => u.el)), { ownerP, known: indexOf, probe: true });
       for (const [u, c] of needProbe) {
         const tr = findTrack(probe.tracks, u.el, u.attr);
         if (!tr) continue;
@@ -134,13 +166,46 @@ function* bakeGen(svg, opts) {
     // ---- 4. analyse + emit
     const cssRules = [];
     let k = 0;
+    // attributes that change while recording but hold one value over the whole loop (an egg's placement, written
+    // only while it runs): that value becomes the base attribute, or the cameo would play at the origin
+    for (const u of units) {
+      if (!u || !u.constant || u.attr.startsWith('style:') || u.value == null) continue;
+      const tg = indexOf.has(u.el) ? cloneEls[indexOf.get(u.el)] : liveToSnap.get(u.el);
+      if (tg && tg.getAttribute(u.attr) !== u.value) { if (u.ns) tg.setAttributeNS(u.ns, u.attr, u.value); else tg.setAttribute(u.attr, u.value); }
+    }
     for (const u of live) {
       const anims = analyseUnit(u, cfg, Tc, stats);
-      const target = cloneEls[indexOf.get(u.el)];
+      const target = indexOf.has(u.el) ? cloneEls[indexOf.get(u.el)] : liveToSnap.get(u.el);
       if (!target || !anims.length) continue;
       emit(target, u, anims, cfg, stats, cssRules);
       if (++k % 40 === 0) yield { phase: 'emit', done: k, of: live.length };
     }
+    // presence: nodes mounted / unmounted while recording (set pieces) get a wrapper <g> with a discrete display loop
+    const cloneOf = el => (indexOf.has(el) ? cloneEls[indexOf.get(el)] : liveToSnap.get(el));
+    const NSV = 'http://www.w3.org/2000/svg';
+    let presN = 0;
+    for (const g of groups) for (const e of g.pres || []) {
+      const node = cloneOf(e.node), parent = cloneOf(e.parent);
+      if (!node || (!e.base && !parent)) continue;
+      const strs = [];
+      let on = e.init, j = 0;
+      for (let i = 0; i <= g.n + g.M; i++) { while (j < e.ev.length && e.ev[j][0] === i) { on = e.ev[j][1]; j++; } if (i >= g.M) strs.push(on ? 'inline' : 'none'); }
+      if (strs.every(v => v === 'none')) { if (!e.base) continue; if (node.parentNode) node.parentNode.removeChild(node); continue; }
+      const w = clone.ownerDocument.createElementNS(NSV, 'g');
+      if (e.base) { if (!node.parentNode) continue; node.parentNode.insertBefore(w, node); }
+      else { const nx = e.next && cloneOf(e.next); if (nx && nx.parentNode === parent) parent.insertBefore(w, nx); else parent.appendChild(w); }
+      w.appendChild(node);
+      if (strs.every(v => v === 'inline')) continue;
+      w.setAttribute('display', strs[0]);
+      const a = discreteAnim(strs, g.P, g.step, stats);
+      const an = clone.ownerDocument.createElementNS(NSV, 'animate');
+      an.setAttribute('attributeName', 'display'); an.setAttribute('values', a.values.join(';'));
+      if (a.values.length > 1) an.setAttribute('keyTimes', ktStr(a.keyTimes, 6));
+      an.setAttribute('calcMode', 'discrete'); an.setAttribute('dur', durStr(a.dur)); an.setAttribute('repeatCount', 'indefinite');
+      w.appendChild(an); stats.anims++; presN++;
+      (stats.__rm ||= []).push([w, 'display']);
+    }
+    stats.presence = presN;
     stats.ms.analyse = Math.round(now() - t0 - stats.ms.record - stats.ms.probe);
 
     // ---- 5. finish the document: resolve inks, strip, title/desc, serialise
@@ -152,6 +217,9 @@ function* bakeGen(svg, opts) {
     if (typeof window !== 'undefined') window.__pbBakeStats = stats;
     return out;
   } finally {
+    for (const el of stats.__marked || []) { el.removeAttribute('data-bake-period'); el.removeAttribute('data-bake-fps'); }
+    delete stats.__marked;
+    if (pb.eggs && pb.eggs.stopAll) try { pb.eggs.stopAll(); } catch (e) { /* ignore */ }
     if (saved) restoreState(pb, st, saved);
   }
 }
@@ -169,32 +237,57 @@ function restoreState(pb, s, v) {
 // ------------------------------------------------------------------------------------------------ recording
 // Render n+1 samples t = start + i·step and log every attribute change. Returns Map key -> track
 // {el, attr, ns, init (value before the first change), changes: [[i, value]]}.
-function* recordPass(svg, render, start, n, step, stats, only) {
+function* recordPass(svg, render, start, n, step, stats, only, rc = {}) {
   render(start); render(start);
   const mo = new MutationObserver(() => {});
   mo.observe(svg, { attributes: true, attributeOldValue: true, subtree: true, childList: true });
   mo.takeRecords();
-  const tracks = new Map();
+  const tracks = new Map(), pres = new Map();
+  const hooks = rc.hooks || [];
+  const ownerP = rc.ownerP || (() => 0);
   let child = 0;
   for (let i = 1; i <= n; i++) {
     render(start + i * step);
     stats.samples++;
     for (const r of mo.takeRecords()) {
-      if (r.type !== 'attributes') { child++; continue; }
+      if (r.type !== 'attributes') {
+        child++;
+        if (rc.probe || !rc.liveToSnap) continue;
+        // presence of mounted / unmounted subtrees (element nodes only; the owner period is the parent's)
+        for (const nd of r.removedNodes) {
+          if (nd.nodeType !== 1) continue;
+          let e = pres.get(nd);
+          if (!e) pres.set(nd, e = { node: nd, parent: r.target, P: ownerP(r.target), base: rc.known.has(nd), init: true, ev: [] });
+          e.ev.push([i, false]);
+        }
+        for (const nd of r.addedNodes) {
+          if (nd.nodeType !== 1) continue;
+          let e = pres.get(nd);
+          if (!e) {
+            const base = rc.known.has(nd) || rc.liveToSnap.has(nd);
+            pres.set(nd, e = { node: nd, parent: r.target, next: r.nextSibling, P: ownerP(r.target), base: rc.known.has(nd), init: false, ev: [] });
+            if (!base) { const snap = nd.cloneNode(true), L = [nd, ...nd.querySelectorAll('*')], S = [snap, ...snap.querySelectorAll('*')]; L.forEach((x, k) => rc.liveToSnap.set(x, S[k])); }
+          }
+          e.ev.push([i, true]);
+        }
+        continue;
+      }
       const el = r.target;
       if (el === svg || (only && !only.has(el))) continue;
       const key = keyOf(el, r.attributeName, r.attributeNamespace);
       let tr = tracks.get(key);
-      if (!tr) tracks.set(key, tr = { el, attr: r.attributeName, ns: r.attributeNamespace, init: r.oldValue, changes: [], lastI: -1 });
+      if (!tr) tracks.set(key, tr = { el, attr: r.attributeName, ns: r.attributeNamespace, init: r.oldValue, changes: [], lastI: -1, P: ownerP(el) });
       if (tr.lastI === i) continue;
       tr.lastI = i;
       tr.changes.push([i, r.attributeNamespace ? el.getAttributeNS(r.attributeNamespace, r.attributeName) : el.getAttribute(r.attributeName)]);
     }
+    for (const hk of hooks) if (hk.i === i) hk.fn();
     if (i % 30 === 0) yield { phase: 'record', done: i, of: n };
   }
   mo.disconnect();
-  if (child) stats.warnings.push(`${child} childList mutations while recording (elements created/removed per frame are not baked)`);
-  return { tracks };
+  if (child && !rc.liveToSnap && !rc.probe) stats.warnings.push(`${child} childList mutations while recording (not baked)`);
+  if (child && rc.liveToSnap) (stats.childList ||= []).push(`${child} mutations → ${pres.size} presence nodes`);
+  return { tracks, pres };
 }
 const elKeys = new WeakMap();
 let elSeq = 0;
@@ -223,8 +316,8 @@ function splitStyle(vals) {
 // unit = { el, attr, kind: 'xf'|'num'|'discrete'|'d', comps?, chans?, strings?, n, P, step, constant }
 function makeUnit(el, attr, vals, g, cfg, ns) {
   const M = g.M || 0, main = M ? vals.slice(M) : vals;
-  const n = main.length, base = { el, attr, ns, n, P: g.P, step: g.step, M };
-  if (main.every(v => v === main[0])) return { ...base, constant: true };
+  const n = main.length, base = { el, attr, ns, n, P: g.P, step: g.step, M, cut: !!g.cut };
+  if (main.every(v => v === main[0])) return { ...base, constant: true, value: main[0] };
   const tol = el.closest('#L-rider') ? cfg.tol : cfg.tolWorld;   // the rider is held tighter than the world
   const prop = attr.startsWith('style:') ? attr.slice(6) : attr;
   if (prop === 'transform' && !attr.startsWith('style:')) {
@@ -347,6 +440,12 @@ function parseTransforms(vals) {
     canon = seqs.reduce((a, s) => (s.length > a.length ? s : a), []).map(c => c.t);
     if (!seqs.every(s => isSubseq(s, canon))) canon = null;
   }
+  // pure vertical shear matrices (the banner's travelling skew wave): translate + skewY exactly, so each keyframe
+  // interpolates the shear itself instead of a rotate/skew/scale factorisation that tears the panels apart
+  if (hasMatrix && seqs.every(s => s.length === 1 && s[0].t === 'matrix' && Math.abs(s[0].a[0] - 1) < 1e-6 && Math.abs(s[0].a[2]) < 1e-6 && Math.abs(s[0].a[3] - 1) < 1e-6)) {
+    seqs = seqs.map(s => [{ t: 'translate', a: [s[0].a[4], s[0].a[5]] }, { t: 'skewY', a: [Math.atan(s[0].a[1]) * R2D] }]);
+    canon = ['translate', 'skewY'];
+  }
   if (!canon) { seqs = seqs.map(s => decompose(s)); canon = ['translate', 'rotate', 'skewX', 'scale']; }
   const len = vals.length;
   const comps = canon.map(t => ({ t, series: [] }));
@@ -450,6 +549,9 @@ function analyseGroup(chans, type, P, step, n, Tc, cfg, stats, u) {
       : resMax / Math.abs(r) <= 0.05;
     if (!ok) { res[ci] = c.u.slice(); return; }
     const D = pickTrendPeriod(r, W, P, Tc, step);
+    // an own-period trend (not a divisor of P) only for PURE drift: with a residual (item jitter, hrefs swapped on P)
+    // the two loops would slide against each other and props would swap on screen after the first loop
+    if (!angleLike && Math.abs(P / D - Math.round(P / D)) > 1e-6 && resMax > c.tol) { res[ci] = c.u.slice(); return; }
     const turns = Math.round((r * D) / W) || Math.sign(r);
     const amp = turns * W;
     trends.push({ ci, r, D, W, amp, start: c.u[0], tile: !angleLike, lo: c.lo, hi: c.hi });
@@ -488,9 +590,21 @@ function analyseGroup(chans, type, P, step, n, Tc, cfg, stats, u) {
   }
   // (c) closure: sample n must equal sample 0 (drift is spread linearly over the loop, and reported)
   let jumpEnd = false;
+  // one closure mode per unit: if any channel needs the cross-fade, all of them get it (a shear's translate and skew
+  // must stay coherent, or the banner panels tear apart near the seam)
+  const bigDrift = (u.kind === 'xf' && u.comps.some(c => c.t === 'skewY' && !c.constant)) || sig.some((s, ci) => { const c = chans[ci], e = s[n] - s[0]; if (c.wrapKind === 'tile' && !trended.has(ci) && c.W && Math.abs(e - Math.round(e / c.W) * c.W) <= c.tol) return false; return Math.abs(e) > 12 * c.tol; });
   sig.forEach((s, ci) => {
     const e = s[n] - s[0], W = chans[ci].wrapKind === 'tile' && !trended.has(ci) ? chans[ci].W : null;
     if (W && Math.abs(e - Math.round(e / W) * W) <= chans[ci].tol) { s[n] = s[0]; return; }   // closes modulo the tile
+    if (u.cut) return;   // long band: the journey restarts at the seam (one cut per band loop), nothing is bent
+    if (Math.abs(e) > chans[ci].tol && !bigDrift && !trended.has(ci)) {
+      // small drift (the rider's 24 s breathing seen through a 4 s loop): spread it evenly, centred, so the error is
+      // ±e/2 everywhere and the velocity error is a constant e/P (no concentrated seam correction)
+      stats.nonClosing.push(`${label}[${ci}] Δ=${fmtN(e, 3)} (spread)`);
+      for (let i = 0; i <= n; i++) s[i] -= e * (i / n - 0.5);
+      s[n] = s[0];
+      return;
+    }
     if (Math.abs(e) > chans[ci].tol) {
       const nd = neighbourDelta(s, n);
       if (Math.abs(e) > 6 * Math.max(nd, chans[ci].tol)) jumpEnd = true;
@@ -607,7 +721,7 @@ function decimateWithBreaks(sig, chans, m, step, stats, u) {
   segs.push([a, m]);
   let errMax = 0;
   segs.forEach(([s0, s1], si) => {
-    const keep = rdp(sig, chans, s0, s1, u.kind === 'd' ? cfg_minGapD : 1);
+    const keep = rdp(sig, chans, s0, s1, u.kind === 'd' && u.step < 1 / 45 ? cfg_minGapD : 1);   // the gap cap only at the 60 fps master rate
     errMax = Math.max(errMax, keep.err);
     for (const i of keep.idx) kf.push({ t: i * step, v: sig.map(s => s[i]) });
     if (si < segs.length - 1) {
@@ -620,6 +734,7 @@ function decimateWithBreaks(sig, chans, m, step, stats, u) {
   });
   const k = u.kind === 'xf' ? 'xf' : u.attr;
   stats.errMax[k] = Math.max(stats.errMax[k] || 0, errMax);
+  if (errMax > 1.5) (stats.errOver ||= []).push(`${labelOf(u)} ${fmtN(errMax, 2)}×`);
   return kf;
 }
 // gap > 1: keyframes only on every gap-th sample (a temporal cap for heavy path data); the reported error is still
@@ -817,6 +932,7 @@ function emit(target, u, anims, cfg, stats, cssRules) {
       bytes += 90 + a.values.join(';').length + (a.keyTimes ? a.keyTimes.length * 7 : 0);
     });
   }
+  if (!viaCss) (stats.__rm ||= []).push([target, attr]);
   stats.bytesByGroup[group] = (stats.bytesByGroup[group] || 0) + bytes;
   (stats.byUnit ||= []).push([labelOf(u), bytes, anims.map(a => a.values.length + '@' + fmtN(a.dur, 3)).join(',')]);
 }
@@ -917,6 +1033,72 @@ function finish(svg, clone, cfg, stats, cssRules, origOf) {
     p.setAttribute('d', d1);
   }
   stats.pathBytes = { before: dBefore, after: dAfter };
+  // integrator: drop subtrees that stay hidden for the whole loop (pooled particles, dormant eggs / encounters / set pieces):
+  // statically hidden, nothing animated inside, nothing inside referenced by url()/href or a CSS rule
+  const cssText = cssRules.join('\n');
+  let pruned = 0;
+  for (const el of [...clone.querySelectorAll('[visibility="hidden"],[display="none"]')]) {
+    if (!clone.contains(el) || el.closest('defs,symbol,clipPath,mask,pattern')) continue;
+    const selfAnim = [...el.children].some(c => /^(animate|set)$/.test(c.localName) && /^(visibility|display)$/.test(c.getAttribute('attributeName')));
+    if (selfAnim) continue;
+    // display:none hides the whole subtree; visibility:hidden can be overridden by a descendant set/animated to visible
+    if (el.getAttribute('display') !== 'none' && (el.querySelector('[visibility="visible"]') || [...el.querySelectorAll('animate,set')].some(c => c.getAttribute('attributeName') === 'visibility'))) continue;
+    const ids = [el, ...el.querySelectorAll('[id]')].map(e => e.id).filter(Boolean);
+    if (ids.some(i => refd.has(i) || cssText.includes('#' + i))) continue;
+    if ((el.getAttribute('class') || '') && cssText.includes('.' + el.getAttribute('class').split(/\s+/)[0])) continue;
+    pruned += el.querySelectorAll('*').length + 1; el.remove();
+  }
+  stats.prunedHidden = pruned;
+  // cull far-layer pieces that are off-screen on the same side at both ends of the loop (linear drift ⇒ never visible)
+  const farRects = stats.__farRects; delete stats.__farRects;
+  let culled = 0;
+  if (farRects) {
+    const vw = innerWidth, vh = innerHeight, mg = 60;
+    const side = r => r.right < -mg ? -1 : r.left > vw + mg ? 1 : r.bottom < -mg ? -2 : r.top > vh + mg ? 2 : 0;
+    for (const el of clone.querySelectorAll('#L-hills-far path, #L-hills-far use, #L-hills-far polygon')) {
+      const o = origOf.get(el), r0 = o && farRects.get(o); if (!r0) continue;
+      const s0 = side(r0); if (!s0 || s0 !== side(o.getBoundingClientRect())) continue;
+      if (el.querySelector('animate,animateTransform,set') || (el.id && refd.has(el.id))) continue;
+      el.remove(); culled++;
+    }
+  }
+  stats.culledOffscreen = culled;
+  // prefers-reduced-motion: freeze every animated attribute at its t0 (base) value with !important CSS, which beats
+  // SMIL in the cascade; the file then shows the static t0 poster (verified by tools/check-baked.mjs)
+  const rm = stats.__rm; delete stats.__rm;
+  if (cfg.reducedMotion !== false && rm) {
+    const GEO = /^(x|y|cx|cy|r|rx|ry|width|height|stroke-width|stroke-dashoffset)$/;
+    const CSSP = /^(opacity|display|visibility|fill|stroke|fill-opacity|stroke-opacity|stop-color|stop-opacity|color)$/;
+    const scratch = clone.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const byEl = new Map();
+    for (const [el, a] of rm) { if (!clone.contains(el)) continue; if (!byEl.has(el)) byEl.set(el, new Set()); byEl.get(el).add(a); }
+    const rules = []; let idn = 0, skipped = 0;
+    for (const [el, attrs] of byEl) {
+      const decl = [];
+      for (const a of attrs) {
+        const v = el.getAttribute(a);
+        if (a === 'transform') {
+          let m = null;
+          if (v) { scratch.setAttribute('transform', v); const c = scratch.transform.baseVal.consolidate(); m = c && c.matrix; }
+          decl.push(m ? `transform:matrix(${[m.a, m.b, m.c, m.d, m.e, m.f].map(x => short(fmtN(x, 4))).join(',')})` : 'transform:none');
+        } else if (a === 'd') { if (v) decl.push(`d:path("${v}")`); }
+        else if (GEO.test(a)) { if (v && isFinite(+v)) decl.push(`${a}:${v}px`); }
+        else if (CSSP.test(a)) { const x = v ?? DEFAULTS[a]; if (x != null && x !== '') decl.push(`${a}:${resolve(x)}`); }
+        else if (a === 'href' && el.localName === 'use' && el.parentNode) {
+          // href is not a CSS property: a static twin with the t0 href is shown instead, the animated <use> hidden
+          const q = el.cloneNode(false); q.removeAttribute('id'); q.setAttribute('display', 'none'); q.id = 'm' + (++idn).toString(36);
+          el.parentNode.insertBefore(q, el.nextSibling); refd.add(q.id);
+          rules.push(`#${q.id}{display:inline!important}`); decl.push('visibility:hidden');
+        } else skipped++;
+      }
+      if (!decl.length) continue;
+      if (!el.id) el.id = 'm' + (++idn).toString(36);
+      refd.add(el.id);
+      rules.push(`#${el.id}{${decl.join('!important;')}!important}`);
+    }
+    cssRules.push(`@media (prefers-reduced-motion:reduce){${rules.join('')}*{animation:none!important}}`);
+    stats.reducedMotion = { frozen: rules.length, notFreezable: skipped };
+  }
   if (cfg.strip) {
     for (const el of all) {
       for (const a of [...el.attributes]) if (a.name.startsWith('data-') || /^on/i.test(a.name)) el.removeAttribute(a.name);
@@ -930,8 +1112,9 @@ function finish(svg, clone, cfg, stats, cssRules, origOf) {
   clone.setAttribute('width', cfg.width); clone.setAttribute('height', cfg.height);
   const title = clone.querySelector('title'), desc = clone.querySelector('desc');
   if (title) title.textContent = cfg.title;
-  if (desc) desc.textContent = cfg.desc || `一只大白鹈鹕在黄金时刻沿鹈鹕湾的海滨公路骑车。零 JavaScript 的 SVG：${stats.period} 秒无缝循环（60 rpm 下 ${Math.round(stats.period * cfg.cadence / 60)} 圈曲柄），由实时骨架逐帧烘焙为 SMIL。 `
-    + `A great white pelican rides a bicycle along the seaside road at Pelican Bay. Zero-JavaScript SVG: a seamless ${stats.period} s SMIL loop (${Math.round(stats.period * cfg.cadence / 60)} crank turns at ${cfg.cadence} rpm) baked frame by frame from the live rig.`;
+  const bandP = stats.band ? stats.band.P : null;
+  if (desc) desc.textContent = cfg.desc || `一只大白鹈鹕在黄金时刻沿鹈鹕湾的海滨公路骑车。零 JavaScript 的 SVG：骑手 ${stats.period} 秒无缝循环（60 rpm 下 ${Math.round(stats.period * cfg.cadence / 60)} 圈曲柄）${bandP ? `，海岸风景是 ${bandP} 秒的旅程（渔村、长堤、渔港、游乐栈桥、海滨铁路），还有几个彩蛋按各自的周期出现` : ''}，由实时骨架逐帧烘焙为 SMIL。 `
+    + `A great white pelican rides a bicycle along the seaside road at Pelican Bay. Zero-JavaScript SVG: the rider is a seamless ${stats.period} s SMIL loop (${Math.round(stats.period * cfg.cadence / 60)} crank turns at ${cfg.cadence} rpm)${bandP ? `; the coast is a ${bandP} s journey (village, long pier, fishing harbour, pleasure pier, coast railway) and a few easter eggs drop in on their own long cycles` : ''}; baked frame by frame from the live rig.`;
   if (cssRules.length) {
     const st = clone.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'style');
     st.textContent = cssRules.join('\n');
@@ -940,6 +1123,6 @@ function finish(svg, clone, cfg, stats, cssRules, origOf) {
   let out = new XMLSerializer().serializeToString(clone);
   if (out.includes('var(')) out = resolve(out);
   out = out.replace(/>\s*\n\s*</g, '><');
-  const head = `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Pelican Bay · 鹈鹕湾 — zero-JS baked loop: ${stats.period}s @ ${cfg.cadence} rpm, ${stats.anims} animations, ${stats.keyframes} keyframes. Generated by src/bake/bake.js -->\n`;
+  const head = `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Pelican Bay · 鹈鹕湾 — zero-JS baked loop: ${stats.period}s @ ${cfg.cadence} rpm${bandP ? `, world band ${bandP}s` : ''}, ${stats.anims} animations, ${stats.keyframes} keyframes. Generated by src/bake/bake.js -->\n`;
   return head + out;
 }

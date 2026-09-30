@@ -652,10 +652,17 @@ export function attach(svg, ctx) {
         el.setAttribute('transform', sc === 1 ? `translate(${f(dx)} ${f(dy)})` : `translate(${f(dx + ax)} ${f(dy)}) scale(${f(sc)}) translate(${f(-ax)} 0)`);
       }
       // airship: far (depth ~.012), drifting +x
-      const sx = wrap(290 + 200 + t * 7 - D * 0.012, SHIP_SPAN) - 200;
-      r.shipG.setAttribute('transform', `translate(${f(sx)} ${f(250 + 3 * Math.sin(t * 0.4))})`);
+      // (journey) flyovers are scheduled, not looped: each wrap cycle is seeded on/off (the hero cycle always shows), so the
+      // biplane, the airship and the skein come by once every few minutes with gaps, and rarely together
+      const D0 = 3.2 * DIST_PER_REV_;
+      const flyOn = (el, u, u0, span, seed, p) => { const c = Math.floor(u / span), on = c === Math.floor(u0 / span) || hash(c, seed) < p; const vis = on ? 'visible' : 'hidden'; if (el.__vis !== vis) { el.__vis = vis; el.setAttribute('visibility', vis); } return c; };
+      const su = 290 + 200 + t * 7 - D * 0.012, sx = wrap(su, SHIP_SPAN) - 200;
+      const su0 = 490 + 3.2 * 7 - D0 * 0.012, sc2 = flyOn(r.shipG, su, su0, SHIP_SPAN, 91, 0.4);
+      const sdy = sc2 === Math.floor(su0 / SHIP_SPAN) ? 0 : (hash(sc2, 92) - 0.5) * 60;
+      r.shipG.setAttribute('transform', `translate(${f(sx)} ${f(250 + sdy + 3 * Math.sin(t * 0.4))})`);
       // skein of far birds (drifting -x)
-      const kx = wrap(370 + 300 - t * 9 - D * 0.015, SKEIN_SPAN) - 300;
+      const ku = 370 + 300 - t * 9 - D * 0.015, kx = wrap(ku, SKEIN_SPAN) - 300;
+      flyOn(r.skein, ku, 670 - 3.2 * 9 - D0 * 0.015, SKEIN_SPAN, 93, 0.55);
       r.skein.setAttribute('transform', `translate(${f(kx)} ${f(150 + 4 * Math.sin(t * 0.3))})`);
       // pelican V: flies +x, slower than the rider (net drift -x)
       const fu = 1175 + 400 + t * 22 - D * 0.02, fx = wrap(fu, FLOCK_SPAN) - 400, fc = Math.floor(fu / FLOCK_SPAN), fc0 = Math.floor((1175 + 400 + 3.2 * 22 - 3.2 * DIST_PER_REV_ * 0.02) / FLOCK_SPAN);
@@ -666,7 +673,9 @@ export function attach(svg, ctx) {
         if (st.flap[i] !== fr3) { st.flap[i] = fr3; birds[i].setAttribute('href', '#sky-bird' + fr3); }
       }
       // biplane loop (+x, screen speed PLANE_V) with a gentle bob; banner flutter = travelling skew wave
-      const px = wrap(1270 + 700 + t * PLANE_V, PLANE_SPAN) - 700;
+      const pu = 1270 + 700 + t * PLANE_V, px = wrap(pu, PLANE_SPAN) - 700;
+      flyOn(r.plane, pu, 1970 + 3.2 * PLANE_V, PLANE_SPAN, 94, 0.38);
+      if (r.plane.__vis === 'hidden') return;   // last block: nothing else to update this frame
       const py = 104 + 5 * Math.sin(t * 0.55), pr = 1.2 * Math.cos(t * 0.55);
       r.plane.setAttribute('transform', `translate(${f(px)} ${f(py)}) rotate(${f(pr)})`);
       let yy = 0; const amp = reduced ? 0.3 : 1;

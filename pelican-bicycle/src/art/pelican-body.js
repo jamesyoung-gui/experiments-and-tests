@@ -203,28 +203,35 @@ export function build({ v }) {
   );
 
   // ================================================================ TAIL (tail-local: pivot at the rump, feathers along −x)
+  // A short, square pelican tail: 5 tight rectrices with blunt, grey (B) tipped ends, rooted inside the rump (the body
+  // slot draws over the roots, so the tail grows out of the contour) and angled a little down.
   {
-    const fan = [[-2, 44, -3], [3, 49, 1], [8, 51, 5], [13, 50, 9], [18, 46, 12], [23, 40, 14]];
-    let feathers = '', shafts = '';
-    for (const [ang, L, yb] of fan) {
-      const dir = rot([-1, 0], ang), nr = perp(dir), b = [2, yb * 0.35];
-      const tip = add(b, mul(dir, L)), w = 5.6;
-      const o = [add(b, mul(nr, -w * 0.7)), add(add(b, mul(dir, L * 0.55)), mul(nr, -w)), add(add(b, mul(dir, L * 0.93)), mul(nr, -w * 0.72)), add(tip, mul(dir, 1.4)),
-        add(add(b, mul(dir, L * 0.93)), mul(nr, w * 0.72)), add(add(b, mul(dir, L * 0.55)), mul(nr, w)), add(b, mul(nr, w * 0.7))];
-      feathers += h('path', { d: smooth(o), fill: P, stroke: Bk, 'stroke-width': 1.6, 'stroke-linejoin': 'round' });
-      shafts += `M${pt(add(b, mul(dir, L * 0.6)))}L${pt(add(b, mul(dir, L * 0.9)))}`;
+    const TILT = -17;                                   // slot adds tailRot +8°: net ≈ 9° tip-down
+    const fan = [[-7, 38, -6], [-3, 41, -3], [1, 42, 0], [5, 41, 3], [9, 38, 6]];
+    let feathers = '', tips = '', shafts = '';
+    for (const [ang0, L, yb] of fan) {
+      const ang = ang0 + TILT, dir = rot([-1, 0], ang), nr = perp(dir), b = [8, yb];
+      const at = (u, w) => add(add(b, mul(dir, u)), mul(nr, w)), w = 4.4;
+      const o = [at(0, -w), at(L * 0.5, -w * 1.02), at(L - 1.6, -w * 0.96), at(L, -w * 0.55), at(L + 0.3, 0), at(L, w * 0.55), at(L - 1.6, w * 0.96), at(L * 0.5, w * 1.02), at(0, w)];
+      feathers += h('path', { d: smooth(o, true, 1 / 9), fill: P, stroke: Bk, 'stroke-width': 1.5, 'stroke-linejoin': 'round' });
+      tips += `M${pt(at(L - 5, -w * 0.9))}L${pt(at(L - 1.6, -w * 0.9))}Q${pt(at(L + 0.3, -w * 0.5))} ${pt(at(L + 0.3, 0))}Q${pt(at(L + 0.3, w * 0.5))} ${pt(at(L - 1.6, w * 0.9))}L${pt(at(L - 5, w * 0.9))}Q${pt(at(L - 3.8, 0))} ${pt(at(L - 5, -w * 0.9))}Z`;
+      shafts += `M${pt(at(L * 0.45, 0))}L${pt(at(L - 5.5, 0))}`;
     }
-    // upper tail coverts: three rounded feathers overlapping the fan, clear of the body
+    // upper tail coverts: two short rounded feathers overlapping the tail base right at the rump line
     let cv = '';
-    for (const [x, y, L, w] of [[-8, -6, 17, 6.5], [-13, -1, 16, 6.5], [-10, 5, 14, 6]]) {
-      const d = smooth([[x + 4, y - w * 0.8], [x - L * 0.5, y - w * 0.8], [x - L, y + 0.5], [x - L * 0.5, y + w * 0.75], [x + 4, y + w * 0.8]]);
-      cv += h('path', { d, fill: P, stroke: Bk, 'stroke-width': 1.5, 'stroke-linejoin': 'round' });
+    for (const [x, y, L, w] of [[2, -7, 16, 5.4], [0, -1.5, 14, 5.2]]) {
+      const q = p => add([x, y], rot(p, TILT));
+      const d = smooth([q([2, -w * 0.8]), q([-L * 0.5, -w * 0.8]), q([-L, 0.3]), q([-L * 0.5, w * 0.75]), q([2, w * 0.8])]);
+      cv += h('path', { d, fill: P, stroke: Bk, 'stroke-width': 1.4, 'stroke-linejoin': 'round' });
     }
-    const ut = smooth([[2, 9], [-8, 13], [-18, 18], [-28, 19], [-24, 14], [-30, 12.5], [-19, 8], [-6, 5]]);
-    s.tail = h('g', { 'data-detail': tag('O', 'tail-rectrices') }, feathers, line(shafts, Bk, 0.8, { 'data-detail': tag('T', 'tail-rachis-lines') }),
+    const uq = p => rot(p, TILT);
+    const ut = smooth([[12, 8], [2, 11], [-8, 13.5], [-14, 12], [-9, 9], [2, 6]].map(uq));
+    s.tail = h('g', { 'data-detail': tag('O', 'tail-rectrices') }, feathers,
+      h('path', { 'data-detail': tag('O', 'tail-grey-tips'), d: tips, fill: Bk }),
+      line(shafts, Bk, 0.8, { 'data-detail': tag('T', 'tail-rachis-lines') }),
       h('g', { 'data-detail': tag('O', 'tail-upper-coverts') }, cv),
-      h('g', { 'data-detail': tag('O', 'undertail-coverts') }, h('path', { d: ut, fill: P, stroke: Bk, 'stroke-width': 1.5, 'stroke-linejoin': 'round' }),
-        line('M-9 10.5Q-15 13 -19 16M-13 8Q-19 10.4 -23 12.6', Bk, 0.9)));
+      h('g', { 'data-detail': tag('O', 'undertail-coverts') }, h('path', { d: ut, fill: P, stroke: Bk, 'stroke-width': 1.4, 'stroke-linejoin': 'round' }),
+        line(`M${pt(uq([0, 9.5]))}Q${pt(uq([-5, 11]))} ${pt(uq([-9, 11.4]))}`, Bk, 0.9)));
   }
 
   // ================================================================ BODY (pelvis-local) + SCARF
@@ -295,6 +302,21 @@ export function build({ v }) {
       h('g', { 'clip-path': 'url(#pb-bodyclip)' }, inner),
       line(splitQ(resample(frR, 2)), RIM, 2.2, { 'data-ref': 'pb-rimF', 'data-detail': tag('O', 'rim-light'), style: 'opacity:var(--pb-n-rimAlpha)' }),
       line(splitQ(resample(bkR, 2)), RIM, 2.2, { 'data-ref': 'pb-rimB', style: 'opacity:var(--pb-n-rimAlpha);display:none' }));
+    // --- belly-on-saddle compression: along the saddle (rider x −101…−23 -> body-local −56…22) the belly arc is pushed
+    // down onto the saddle top (y 13) and spreads a touch, so the weight visibly rests on it. Drawn over the key line.
+    {
+      const arc = [];
+      for (let d = 60; d <= 175; d += 2.5) { const t = d * D2R, e = rot([98 * Math.cos(t), 58 * Math.sin(t)], -18), q = [32 + e[0], -50 + e[1]]; if (q[1] > 6 && q[0] > -42 && q[0] < 24) arc.push(q); }
+      arc.sort((a, c) => a[0] - c[0]);
+      const x0 = arc[0][0], x1 = arc[arc.length - 1][0];
+      const low = arc.map(([x, y]) => { const u = (x - x0) / (x1 - x0), wgt = Math.sin(Math.PI * u) ** 0.6; return [x, lerp(y, 13.6, 0.85 * wgt)]; });
+      const top = arc.map(([x, y]) => [x, y - 2.2]).reverse();
+      const dB = 'M' + low.map(pt).join('L') + 'L' + top.map(pt).join('L') + 'Z';
+      const ends = [low[Math.round(low.length * 0.1)], low[Math.round(low.length * 0.9)]];
+      b += h('g', { 'data-detail': tag('O', 'belly-saddle-bulge') },
+        h('path', { d: dB, fill: P }), line(qline(low), Bk, KW),
+        line(`M${pt(add(ends[0], [4, -2.6]))}q-2.6 0.4 -4.6 3.2q-0.8 -2.6 -3.2 -3.4M${pt(add(ends[1], [-4, -2.2]))}q2.6 0.4 4.4 3q0.8 -2.4 3 -3.2`, Bk, 1.1, { 'data-detail': tag('O', 'belly-splay-tufts') }));
+    }
     // --- scarf (canonical frame, placed by update): cast shadow + collar ruff | near tail | wrap | hanging end | knot
     const wrapPts = [W_(-21, 10), W_(-8, 13.5), W_(8, 13.5), W_(21, 10), W_(24, 1), W_(21, -9), W_(8, -13), W_(-8, -13), W_(-21, -9), W_(-24, 1)];
     const wrap = smooth(wrapPts);
@@ -446,12 +468,22 @@ export function build({ v }) {
     h('clipPath', { id: 'pb-eyeclip' }, h('circle', { r: 5.7 })),
     h('g', { 'clip-path': 'url(#pb-eyeclip)', 'data-ref': 'pb-nictG', style: 'display:none' },
       h('g', { 'data-ref': 'pb-nict', 'data-detail': tag('O', 'nictitating-membrane') }, h('path', { d: 'M-6.4 -6.5Q-8.4 0 -6.4 6.5L9 6.5L9 -6.5Z', fill: P }), line('M-6.4 -6.5Q-8.4 0 -6.4 6.5', Bk, 0.9))),
+    // expression lids: the upper lid skin slides down over the eye (clipped to the orbit), the lower lid rises
+    // (cheek push: delight / focus). update() drives both from pose.face (lid, brow, mood).
+    h('clipPath', { id: 'pb-orbitclip' }, h('circle', { r: 6.3 })),
+    h('g', { 'clip-path': 'url(#pb-orbitclip)' },
+      h('g', { 'data-ref': 'pb-lidSkin' }, h('path', { 'data-detail': tag('O', 'upper-lid-skin'), d: 'M-8 -2.4Q0 -7.6 8 -3L8 -20L-8 -20Z', fill: Ks })),
+      h('g', { 'data-ref': 'pb-lowLid' }, h('path', { 'data-detail': tag('O', 'lower-lid-skin'), d: 'M-7 6.4Q0 4.2 7 5.4L7 14L-7 14Z', fill: Ks }),
+        line('M-5.4 6.2Q0 4.2 5.6 5.4', Re, 1.2, { 'data-detail': tag('O', 'lower-eyelid') }))),
     h('g', { 'data-ref': 'pb-lid' },
-      h('path', { 'data-detail': tag('O', 'upper-lid-skin'), d: 'M-6.6 -2.6Q0 -7.6 7 -3.2L7.4 -8.6L-6.8 -8.6Z', fill: Ks }),
       h('path', { 'data-detail': tag('O', 'upper-eyelid'), d: 'M-7.2 -1.8Q-1 -8.8 7.6 -3.6Q8.6 -2.6 8.2 -1.6Q0.4 -6.4 -7.2 -1.8Z', fill: N }),
       line('M7.6 -3.4Q9.4 -3.2 10.2 -1.6', N, 1.1, { 'data-detail': tag('O', 'lid-corner-crinkle') })),
-    h('path', { 'data-detail': tag('O', 'lower-lid-skin'), d: 'M-5.4 6.2Q0 4.2 5.6 5.4L5.8 7.8L-5.6 7.8Z', fill: Ks }),
-    line('M-5.4 6.2Q0 4.2 5.6 5.4', Re, 1.2, { 'data-detail': tag('O', 'lower-eyelid') }));
+    // happy closed eye (swallow / delight): an upturned lid arc with a cheek crinkle, drawn in eye space
+    h('g', { 'data-ref': 'pb-happy', style: 'display:none' }, line('M-6.6 2Q0 -5.4 7 1.4', N, 2.1, { 'data-detail': tag('O', 'happy-closed-lid') }),
+      line('M-4.4 5.6Q0 7.4 4.6 5.4M8 1.2l2.4 -1.4', Re, 1, { 'data-detail': tag('O', 'happy-cheek-crinkle') })),
+    // brow ridge: the feathered supraorbital edge; lowers + tilts for focus, lifts for surprise
+    h('g', { 'data-ref': 'pb-brow' }, line('M-6.8 -9.4Q0.6 -13.4 9.8 -9.8', N, 1.6, { 'data-detail': tag('O', 'brow-ridge') }),
+      line('M-3.4 -11.4l-1.2 -2M1 -12.2l-0.7 -2.2M5.4 -11.8l-0.2 -2.2', N, 0.9, { 'data-detail': tag('T', 'brow-feather-tips') })));
 
   // ================================================================ CREST (crest-local: +x back along the nape, +y up)
   {
@@ -534,9 +566,10 @@ export const detailItems = [
   ['neck-feather-flow-fine', 'T', 'second, finer staggered lane of neck flow scallops'],
   ['neck-throat-crease', 'O', 'fore-neck crease line continuing the pouch skin down the throat'],
   ['neck-rim-light', 'O', 'rim line on the sun/moon side of the neck (flips with the light)'],
-  ['tail-rectrices', 'O', '6 separate fanned tail feathers'],
+  ['tail-rectrices', 'O', '5 short, square-ended rectrices rooted in the rump, angled slightly down'],
+  ['tail-grey-tips', 'O', 'B grey edge band on each blunt tail tip'],
   ['tail-rachis-lines', 'T', 'feather shafts on each rectrix'],
-  ['tail-upper-coverts', 'O', '3 rounded coverts overlapping the tail base'],
+  ['tail-upper-coverts', 'O', '2 rounded coverts overlapping the tail base'],
   ['undertail-coverts', 'O', 'fluffy undertail lobe with fold lines'],
   ['scarf-far-tail', 'O', 'far scarf end in flat far inks behind the body'],
   ['body', 'O', 'deep-chested teardrop body mass in paper-white P'],
@@ -549,6 +582,8 @@ export const detailItems = [
   ['rump-scallops', 'T', 'rump feather rows by the tail'],
   ['feather-shaft-ticks', 'T', 'shaft ticks inside flank feathers'],
   ['breast-buff-feathers', 'T', 'O breast feather rows: the yellowish breeding breast patch of P. onocrotalus'],
+  ['belly-saddle-bulge', 'O', 'underbelly contour flattened and spread onto the saddle top (weight on the seat)'],
+  ['belly-splay-tufts', 'O', 'feather tufts splaying where the belly spreads over the saddle edges'],
   ['saddle-compression-crease', 'O', 'feathers compressed where the belly sits on the saddle'],
   ['vent-fluff', 'O', 'vent fluff lines under the tail'],
   ['rim-light', 'O', 'body rim light on the sun/moon side'],
@@ -605,7 +640,11 @@ export const detailItems = [
   ['upper-eyelid', 'O', 'thick N upper eyelid line'],
   ['lid-corner-crinkle', 'O', 'smile crinkle at the outer eye corner'],
   ['lower-lid-skin', 'O', 'cheek skin pushing the lower lid up (smiling eye)'],
-  ['lower-eyelid', 'O', 'R lower lid line'],
+  ['lower-eyelid', 'O', 'R lower lid line (rises with the cheek: delight / focus)'],
+  ['happy-closed-lid', 'O', 'upturned closed-lid arc for the swallow / delight beat (not in the still count)'],
+  ['happy-cheek-crinkle', 'O', 'cheek crinkles under the happy closed eye (not in the still count)'],
+  ['brow-ridge', 'O', 'feathered supraorbital brow edge: lowers for sprint focus, lifts for hop surprise'],
+  ['brow-feather-tips', 'T', 'three feather tips along the brow ridge'],
   ['crest-shadow', 'O', 'B shadow under the crest'],
   ['nape-tuft', 'O', 'fluffy tuft under the crest'],
   ['crest-short-spikes', 'O', '4 short spiky crest feathers (second design)'],
@@ -686,13 +725,27 @@ export function attach(svg) {
       const face = pose.face || {};
       const eyeSy = J.eye?.sy ?? pose.blink ?? 1;
       const squintFB = gulpTau > 0.55 && gulpTau < 1.25 && !pose.face;
-      set(r.lidClosed, 'show', eyeSy < 0.4 || squintFB);
+      // expression: content = soft half-lid, focus = flat low lid + brow down, surprise = wide eye + brow up +
+      // pupil pop, delight = closed happy arc (cheek pushes the lower lid up)
+      const md = face.mood || {}, mC = md.content ?? (pose.face ? 0 : 1), mF = md.focus ?? 0, mS = md.surprise ?? 0, mD = md.delight ?? (squintFB ? 1 : 0);
+      let lidA = clamp((face.lid ?? 0.14) + 0.22 * mC + 0.12 * mF - 0.3 * mS, 0, 1);
+      const swallow = gulpTau > 0.95 && gulpTau < 2.3;   // the swallow + savour: eyes screw shut, happy
+      const happy = lidA > 0.8 || mD > 0.6 || swallow;
+      if (happy) lidA = 1;
+      set(r.lid, 'show', !happy);
+      set(r.lidClosed, 'show', (eyeSy < 0.4 || squintFB) && !happy); set(r.happy, 'show', happy);
+      if (happy) set(r.happy, 'transform', `scale(1 ${(1 / Math.max(0.3, eyeSy)).toFixed(2)})`);   // keep the arc's curve when the slot squashes
+      const lidY = lerp(-0.6, 10.5, lidA) - 1.6 * mS;
+      const lidR = 6 * mF - 4 * mS;          // focus: lid flattens, front end drops
+      const lidXf = `translate(0 ${lidY.toFixed(2)}) rotate(${lidR.toFixed(1)})`;
+      set(r.lidSkin, 'transform', lidXf); set(r.lid, 'transform', lidXf);
+      set(r.lowLid, 'transform', `translate(0 ${(-(2.6 * (happy ? 1 : mD) + 1.4 * mF + 0.5 * mC) + 0.8 * mS).toFixed(2)})`);
       const nict = face.nict ?? 0;
       set(r.nictG, 'show', nict > 0.02);
       if (nict > 0.02) set(r.nict, 'transform', `translate(${(12 * (1 - nict)).toFixed(2)} 0)`);
       const smile = face.smile ?? 0.4, brow = face.brow ?? 0.1;
       set(r.smile, 'transform', `rotate(${(-16 * (smile - 0.4)).toFixed(1)} 2.6 -1.4)`);
-      set(r.lid, 'transform', `translate(0 ${(-1.2 * brow).toFixed(2)}) rotate(${(-5 * brow).toFixed(1)})`);
+      set(r.brow, 'transform', `translate(0 ${(-2.6 * brow + 1.2 * mF).toFixed(2)}) rotate(${(-7 * brow + 5 * mF).toFixed(1)} 1 -12)`);
       let px, py;
       if (pose.gaze && Number.isFinite(pose.gaze.x)) { px = -0.6 + 2.2 * pose.gaze.x; py = 1.5 * pose.gaze.y; }
       else {

@@ -1,7 +1,7 @@
 // Node-only rig validation (spec §5.2 + rubric D3/D5/D6 intents). Exit 1 on any failure.
 //   node tools/check-rig.mjs            all checks
 //   node tools/check-rig.mjs --verbose  also print the phase-lag table and event timings
-import { solvePose, TIMING, G, gazeAt, blinkAt } from '../src/rig/solve.js';
+import { solvePose, TIMING, G, gazeAt, blinkAt, encounterLook } from '../src/rig/solve.js';
 import { SKEL, BIKE, DIST_PER_REV } from '../src/contract.js';
 const verbose = process.argv.includes('--verbose');
 const fails = [], info = [];
@@ -289,6 +289,47 @@ eventScan('hop', TIMING.hop.dur);
   if (dRate < 0.05 || dRate > 0.25) fail(`double-blink rate ${(dRate * 100).toFixed(0)}%`);
   if (Math.max(...durs) > 0.15) fail('saccade longer than 150 ms');
   if (Math.min(...holds) < 0.5) fail('gaze hold shorter than 500 ms');
+}
+
+// ---------------------------------------------------------------- 7. encounter gaze (director, judges' D5/D6/D8)
+// One lap at 60 rpm, night-ish tod so the fireworks play: the rider must look at every tracked encounter kind,
+// the eye must saccade 50–150 ms before the head moves, every head shift over 15° gets a lid blink, and the head
+// must stay smooth (no per-sample whip).
+{
+  const U = DIST_PER_REV, dt = 1 / 240, seen = new Set(), leads = [];
+  let eyeT = null, bigShifts = 0, maxHeadStep = 0;
+  let eyeRest = 1, headRest = 1, pe = null;
+  for (let t = 0; t < 560; t += dt) {
+    const e = encounterLook(t * U, U, 0.9);
+    if (e && e.we > 0.5) seen.add(e.kind);
+    // effective (weighted) eye and head offsets from the resting 'ahead' gaze
+    const v = e ? { ex: (e.x - 0.6) * e.we, ey: (e.y - 0.05) * e.we, hp: e.pitch * e.w, ht: e.turn * e.w } : { ex: 0, ey: 0, hp: 0, ht: 0 };
+    if (pe) {
+      const eyeMove = Math.hypot(v.ex - pe.ex, v.ey - pe.ey) > 2e-4, headMove = Math.abs(v.hp - pe.hp) + 20 * Math.abs(v.ht - pe.ht) > 2e-3;
+      eyeRest = eyeMove ? 0 : eyeRest + dt; headRest = headMove ? 0 : headRest + dt;
+      if (eyeMove && eyeT === null && headRest > 0.15) eyeT = t;
+      if (headMove && eyeT !== null) { if (t - eyeT < 0.4) leads.push(t - eyeT); eyeT = null; }
+      if (eyeT !== null && t - eyeT > 0.4) eyeT = null;
+      maxHeadStep = Math.max(maxHeadStep, Math.abs(v.hp - pe.hp));
+    }
+    pe = v;
+  }
+  // big shifts from the pose: head-slot rotation change > 15° within 0.5 s, must see lid > 0.9 around it
+  let lid = [], hr = [];
+  for (let t = 0; t < 560; t += 1 / 60) { const p = solvePose(t, { crank: t * 2 * Math.PI, cadence: 60, speed: U, distance: t * U, events: [], tod: 0.9 }); lid.push(p.face.lid); hr.push(p.joints.head.rot); if (p.gaze.target && !['ahead', 'road', 'sea', 'sky', 'basket', 'camera'].includes(p.gaze.target)) seen.add('pose:' + p.gaze.target); }
+  let unblinked = 0;
+  const blinked = lid.filter((v, i) => v > 0.9 && !(lid[i - 1] > 0.9)).length;
+  for (let i = 30; i < hr.length; i += 30) if (Math.abs(hr[i] - hr[i - 30]) > 15) { bigShifts++; if (!lid.slice(i - 45, i + 15).some(v => v > 0.9)) { unblinked++; if (verbose) console.log('unblinked head shift at t', (i / 60).toFixed(2), (hr[i] - hr[i - 30]).toFixed(1)); } }
+  const kinds = ['cyclist', 'cat', 'keeper', 'gulls', 'kites', 'friend', 'fireworks'];
+  const miss = kinds.filter(k => !seen.has(k) || !seen.has('pose:' + k));
+  leads.sort((p, q) => p - q);
+  const lo = leads[Math.floor(leads.length * 0.1)], hi = leads[Math.floor(leads.length * 0.9)];   // p10–p90 (the head's ease-in makes a tiny move's onset fuzzy)
+  info.push(`encounter gaze: looks at ${kinds.filter(k => !miss.includes(k)).join(' ')}; eye leads head ${(lo * 1000).toFixed(0)}–${(hi * 1000).toFixed(0)} ms (p10–p90) over ${leads.length} fixations; ${(blinked / 560 * 60).toFixed(1)} full lid blinks/min on the journey; ${bigShifts} head shifts >15°/0.5 s, ${unblinked} without a blink; max head pitch step ${maxHeadStep.toFixed(2)}°/sample`);
+  if (miss.length) fail(`rider never looks at: ${miss.join(', ')}`);
+  if (!leads.length || lo < 0.05 || hi > 0.15) fail(`eye→head lead out of 50–150 ms (${(lo * 1000).toFixed(0)}–${(hi * 1000).toFixed(0)})`);
+  if (blinked / 560 * 60 > 30) fail(`blinking too often on the journey (${(blinked / 560 * 60).toFixed(1)}/min)`);
+  if (unblinked) fail(`${unblinked} head turns over 15° without a blink`);
+  if (maxHeadStep > 0.6) fail(`encounter head pitch whip ${maxHeadStep.toFixed(2)}° per 240 Hz sample`);
 }
 
 console.log(info.join('\n'));

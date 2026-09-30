@@ -20,9 +20,12 @@
 import { BIKE, SKEL, DIST_PER_REV } from '../contract.js';
 import { DEG, TAU, smoothstep, clamp, wrap, rot, add, lerp } from '../core/math.js';
 import { ik2 } from './ik.js';
+import { lapScript } from '../world/director.js';
+import { LAP, KM, lapOf } from '../world/route.js';
 import { phasor, child, evalPh, impulse, impulseSoft, track, hermite, follow, hash01, cellOf, cellKey, gust, smooth01 } from './secondary.js';
 
 const R2D = DEG, D2R = 1 / DEG;
+const U60 = DIST_PER_REV;                             // u per second at 60 rpm
 const at = (F, off) => add(F.p, rot(off, F.r));
 const softMax = (a, x, k) => a + k * Math.log1p(Math.exp((x - a) / k));   // smooth floor (belly never leaves the saddle)
 
@@ -160,6 +163,104 @@ export function blinkAt(t, loopT, gz) {
   return { lid, nict };
 }
 
+// ---------------------------------- encounter gaze (director) ----------------------------------
+// The rider looks at what the director puts beside the road. Pure in (distance, speed, tod): the encounters are
+// the director's seeded schedule keyed by road distance, so renderAt(t) and live play agree. Each kind has a look
+// window in u (seconds at 60 rpm since its mark) and a target point in rider-origin coordinates (world − (RIDER_X,
+// GROUND_Y); every encounter the rider tracks lives on a depth-1 layer or is placed relative to the rider).
+// The eye saccades first (80 ms), the head follows ~110 ms later over ~350 ms; a turn over 15° gets a lid blink.
+const HEAD0 = [120, -520];
+const encTarget = {
+  cyclist: (dx) => ({ win: [-3.2, 1.4], p: [40 + dx * 1.35, -275] }),
+  cat: (dx) => ({ win: [-3, 0.9], p: [dx + 60, -70] }),
+  keeper: (dx) => ({ win: [-3.4, 1.2], p: [dx + 40, -200] }),
+  puddle: (dx) => ({ win: [-2.4, -0.45], p: [dx + 30, 0] }),
+  pothole: (dx) => ({ win: [-2.4, -0.45], p: [dx + 30, 0] }),
+  gulls: (dx, u) => ({ win: [-1.6, 2.4], p: u < -0.2 ? [180 + lerp(520, 40, smooth01((u + 1.8) / 1.6)), -300 + lerp(-360, -70, smooth01((u + 1.8) / 1.6))]
+    : u < 0.9 ? [220, -370] : [180 + lerp(40, -700, smooth01((u - 0.9) / 1.9)), -300 + lerp(-70, -520, smooth01((u - 0.9) / 1.9))] }),
+  fish: () => ({ win: [-1.1, -0.15], p: [330, 575 - 790] }),
+  kites: (dx, u) => ({ win: [0.6, 4.2], p: [260 - u * 34 + [150, 700, 1260][clamp(Math.floor((u - 0.6) / 1.3), 0, 2)] - 680, 140 - 790] }),   // sky-layer kites: the dragon, then the others
+  friend: (dx, u) => ({ win: [-4.6, -2.3], p: [-900 + (u + 6) * 190 - 680, 330 - 790] }),
+};
+const encCache = new Map();
+const lapEnc = L => { let a = encCache.get(L); if (!a) { a = lapScript(L).enc.map(e => ({ kind: e.kind, D: L * LAP + e.km * KM })); encCache.set(L, a); if (encCache.size > 6) encCache.delete(encCache.keys().next().value); } return a; };
+const dirNear = D => { const L = lapOf(D), out = []; for (const l of [L - 1, L, L + 1]) if (l >= 0) for (const e of lapEnc(l)) if (e.D - D < 8 * U60 && D - e.D < 64 * U60) out.push(e); return out; };
+let DIR = dirNear, dirOff = typeof location !== 'undefined' && /[?&]nodirector\b/.test(location.search || '');
+export function setEncounterSource(fn) { DIR = fn === undefined ? dirNear : fn; }   // (D) → [{ kind, D }]; null disables
+function dirToGaze(p) {
+  const dx = p[0] - HEAD0[0], dy = p[1] - HEAD0[1], L = Math.hypot(dx, dy) || 1, h = dx / L, v = dy / L;
+  const elev = Math.asin(clamp(v, -1, 1)) * R2D;             // + = below the eye line
+  return {
+    x: clamp(0.36 + 0.34 * h, 0, 0.72), y: clamp(v * 1.1, -0.85, 0.9),
+    turn: h < 0 ? 0.85 * -h : 0.1 * v, pitch: clamp(elev * (h < 0 ? 0.25 : 0.45), -16, 15),
+  };
+}
+// Fixations: like a real bird the rider does not track smoothly; inside a look window it fixates the target every
+// `step` (u) — the eye saccades there in 80 ms, the head follows 110 ms later over 350 ms — so a passing cyclist is
+// followed in a few readable glances instead of a whip. Road passers are never looked at behind the head (no
+// owl turn); flyers from behind (friend, fleeing gulls) get an over-the-shoulder look toward the near side.
+const FIX = { cyclist: 0.95, cat: 0.8, keeper: 1.1, puddle: 0.9, pothole: 0.9, gulls: 0.7, fish: 0.5, kites: 1.3, friend: 1.1, fireworks: 0.8 };
+const BEHIND = { gulls: 1, friend: 1, fireworks: 1 };
+// → { w (head weight), we (eye weight), x, y, turn, pitch (head, eased), kind, lid } or null
+export function encounterLook(D, speed, tod, base = GAZE.ahead) {
+  if (!DIR || dirOff) return null;
+  const sp = Math.max(40, speed), toS = U60 / sp;              // u → real seconds
+  const cands = [];
+  const night = tod !== undefined && (tod > 0.845 || tod < 0.21);
+  for (const e of DIR(D)) {
+    const u = (D - e.D) / U60;
+    let tgt;
+    if (e.kind === 'fireworks') {
+      if (!night || u < 0 || u > 60) continue;
+      const k = Math.floor(u / 7);                                // a 2.4 s glance up every 7 s of the show
+      tgt = { win: [7 * k + 0.4, 7 * k + 2.8], at: () => [220 + hash01(k, 5) * 1200 - 680, 130 + 180 * hash01(k, 6) - 790] };
+    } else if (encTarget[e.kind]) { const T0 = encTarget[e.kind](0, 0); tgt = { win: T0.win, at: uu => encTarget[e.kind]((u - uu) * U60 + e.D - D, uu).p }; }
+    else continue;
+    const [a, b] = tgt.win;
+    if (u < a - 0.8 || u > b + 1.2) continue;
+    const lead = 0.11 / toS;                                    // eye leads the head by 110 ms
+    const rE = 0.08 / toS, hIn = a - rE + lead;                // eye starts at a − 80 ms, head 110 ms after it
+    const we = smooth01((u - a + rE) / rE) * (1 - smooth01((u - b) / rE));
+    const w = smooth01((u - hIn) / (0.35 / toS)) * (1 - smooth01((u - b - lead) / (0.4 / toS)));
+    if (w <= 0 && we <= 0) continue;
+    const step = Math.max(FIX[e.kind] || 1, 0.55 / toS), fixG = k => {
+      const uk = Math.min(b, a + k * step);
+      const p = tgt.at(Math.min(b, uk + 0.25));                 // aim slightly ahead of where it will be
+      if (!BEHIND[e.kind]) p[0] = Math.max(p[0], HEAD0[0] + 70);
+      return { uk, g: dirToGaze(p) };
+    };
+    const k = clamp(Math.floor((u - a) / step), 0, Math.ceil((b - a) / step));
+    const cur = fixG(k), prv = k > 0 ? fixG(k - 1) : { uk: a - 1, g: cur.g };
+    const since = (u - cur.uk) * toS;                           // real seconds since this fixation began
+    const se = smooth01(since / 0.08), sh = smooth01((since - 0.11) / 0.35);
+    const E = (key, s) => lerp(prv.g[key], cur.g[key], s);
+    const A = GAZE.ahead, G0 = prv.g, G1 = cur.g;
+    const bigShift = k > 0 && (Math.abs(G1.pitch - G0.pitch) > 11 || Math.abs(G1.turn - G0.turn) > 0.4);
+    const bigIn = Math.abs(cur.g.pitch - base.pitch) > 11 || Math.abs(cur.g.turn - base.turn) > 0.4;
+    const sIn = (u - hIn) * toS, sOut = (u - b - lead) * toS;
+    cands.push({
+      start: hIn - u, w, we, kind: e.kind, x: E('x', se), y: E('y', se), turn: E('turn', sh), pitch: E('pitch', sh),
+      lid: Math.max(bigShift ? lidCurve(since - 0.1) : 0, bigIn ? Math.max(lidCurve(sIn), lidCurve(sOut)) : 0),
+    });
+  }
+  if (!cands.length) return null;
+  // overlapping encounters: the one that started later is laid over the earlier one by its own weights (continuous)
+  cands.sort((p, q) => p.start - q.start);
+  const A = GAZE.ahead, o = { w: 0, we: 0, x: A.x, y: A.y, turn: 0, pitch: 0, kind: null, lid: 0 };
+  let kw = -1;
+  for (const c of cands) {
+    o.x = lerp(o.x, c.x, c.we); o.y = lerp(o.y, c.y, c.we);
+    o.turn = lerp(o.turn, c.turn, c.w); o.pitch = lerp(o.pitch, c.pitch, c.w);
+    o.w = 1 - (1 - o.w) * (1 - c.w); o.we = 1 - (1 - o.we) * (1 - c.we);
+    o.lid = Math.max(o.lid, c.lid);
+    if (c.we >= kw * 0.999) { kw = c.we; o.kind = c.kind; }
+  }
+  // o.* are already blended against 'ahead' (0 pitch / turn): renormalise so the caller's lerp by w lands on o
+  if (o.w > 1e-6) { o.turn /= o.w; o.pitch /= o.w; } else { o.turn = 0; o.pitch = 0; }
+  if (o.we > 1e-6) { o.x = A.x + (o.x - A.x) / o.we; o.y = A.y + (o.y - A.y) / o.we; }
+  return o;
+}
+
 // ---------------------------------- helpers ----------------------------------
 function hopCrankOffset(tau, phi, omega) {
   // Cranks swing to level before takeoff, stay level in the air, then re-engage. Display = phiA + S(τ);
@@ -276,6 +377,9 @@ export function solvePose(t, s = {}) {
 
   // Non-periodic head drive (events + gaze), pure in time → followers can sample its past.
   const gz0 = gazeAt(t, loopT);
+  // director encounters (live / renderAt only: the baked loop keeps its exact 24 s periodicity)
+  const encAt = tt => (loopT || s.director === false ? null : encounterLook(distance - (t - tt) * speed, speed, s.tod));
+  const enc0 = loopT || s.director === false ? null : encounterLook(distance, speed, s.tod, gz0);
   const lookW = Math.max(wv.look, gl.look);
   const headDrive = tt => {
     let dx = 0, dy = 0, r = 0;
@@ -291,8 +395,10 @@ export function solvePose(t, s = {}) {
     }
     const g = tt === t ? gz0 : gazeAt(tt, loopT);
     const lw = tt === t ? lookW : 0;
-    r += g.pitch * (1 - lw) * (1 - 0.6 * sprint);
-    return { dx, dy, r, turn: g.turn };
+    const E = tt === t ? enc0 : encAt(tt);
+    const ew = E ? E.w : 0;
+    r += lerp(g.pitch, E ? E.pitch : 0, ew) * (1 - lw) * (1 - 0.6 * sprint);
+    return { dx, dy, r, turn: lerp(g.turn, E ? E.turn : 0, ew) };
   };
   const memo = new Map();
   const HD = tt => { let v = memo.get(tt); if (!v) { v = headDrive(tt); memo.set(tt, v); } return v; };
@@ -303,12 +409,20 @@ export function solvePose(t, s = {}) {
   // ---------------- 3. gaze, face ----------------
   let gz = { ...gz0 };
   const over = (target, w) => { if (w <= 0) return; const T = GAZE[target]; gz.x = lerp(gz.x, T.x, w); gz.y = lerp(gz.y, T.y, w); gz.turn = lerp(gz.turn, T.turn, w); };
+  if (enc0) { gz.x = lerp(gz.x, enc0.x, enc0.we); gz.y = lerp(gz.y, enc0.y, enc0.we); gz.turn = lerp(gz.turn, enc0.turn, enc0.w); if (enc0.we > 0.5) gz0.target = enc0.kind; }
   over('ahead', 0.6 * sprint);
   over('camera', wv.look);
   over('basket', gl.look);
   if (gl.tau > 0.6 && gl.tau < 1.4) over('sky', smooth01((gl.tau - 0.6) / 0.25) * (1 - smooth01((gl.tau - 1.2) / 0.2)));
   if (airborne) over('road', 0.6 * surprise);
   const bl = blinkAt(t, loopT, gz0);
+  // Birds blink through a fast head turn: the lid closes with the rate of the combined gaze-driven head move
+  // (base schedule + encounters) over the last 120 ms, so any turn over ~15° gets a full blink and small ones none.
+  if (enc0 || encAt(t - 0.3)) {
+    const gh = tt => { const g = gazeAt(tt, loopT), E = tt === t ? enc0 : encAt(tt), w = E ? E.w : 0; return [lerp(g.pitch, E ? E.pitch : 0, w), lerp(g.turn, E ? E.turn : 0, w)]; };
+    const [p1, u1] = gh(t), [p0, u0] = gh(t - 0.12);
+    bl.lid = Math.max(bl.lid, smooth01((Math.max(Math.abs(p1 - p0), 16 * Math.abs(u1 - u0)) - 3.2) / 2.8));
+  }
   const breath = Math.sin((TAU * 7 * t) / 24);             // 17.5 breaths / min, loop-exact
   const delight = gl.delight;
   const focus = sprint * (1 - delight);
@@ -320,6 +434,7 @@ export function solvePose(t, s = {}) {
     smile: clamp(0.35 * content + 0.1 * focus + 1.0 * delight + 0.6 * wv.look + 0.3 * squint, 0, 1),
     mood: { content, focus, surprise, delight }, pupil: 1 + 0.18 * surprise - 0.1 * focus,
   };
+  if (enc0) { face.brow = clamp(face.brow + 0.3 * enc0.we, -1, 1); face.pupil += 0.08 * enc0.we; }   // interest: brow up, pupil wide
 
   // ---------------- 4a. body on the saddle ----------------
   const bobA = (0.8 + 0.6 * smoothstep(30, 90, cadence)) * pedalling;

@@ -43,7 +43,8 @@ export function build(ctx) {
   const v = ctx.v, I = r => v('ink' + r);
   // halftone screens as tiled patterns (one filled shape each; cheaper than thousands of dot segments)
   const pat = (id, s, r, ink) => `<pattern id="${id}" width="${s}" height="${f(s * 1.732)}" patternUnits="userSpaceOnUse"><path d="${circ(0, 0, r) + circ(s, 0, r) + circ(s / 2, s * 0.866, r) + circ(0, s * 1.732, r) + circ(s, s * 1.732, r)}" fill="${ink}"/></pattern>`;
-  const defs = `<clipPath id="wx-skyclip"><rect x="-500" y="-400" width="2600" height="872"/></clipPath>` + pat('wx-htP', 8, 1.5, I('P')) + pat('wx-htP7', 7, 1.3, I('P'));
+  const defs = `<clipPath id="wx-skyclip"><rect x="-500" y="-400" width="2600" height="872"/></clipPath>` + pat('wx-htP', 8, 1.5, I('P')) + pat('wx-htP7', 7, 1.3, I('P'))
+    + pat('wx-htF1', 5, 2.3, I('P')) + pat('wx-htF2', 6, 1.9, I('P')) + pat('wx-htF3', 7, 1.5, I('P'));   // in-ink fog veils: far ~77%, mid ~45%, near ~25% paper coverage
   const band = (y1, y2, amp, per, x0, x1, step) => {
     let a = '', b = '';
     for (let x = x0; x <= x1; x += step) { const w = amp * Math.sin(x / FOG_W * TAU * per); a += `${x === x0 ? 'M' : 'L'}${x} ${f(y1 + w)}`; b = `L${x} ${f(y2 + w)}` + b; }
@@ -70,9 +71,10 @@ export function build(ctx) {
   const farRain = G({ ...REF('farRain'), ...DD('fx:T:wx-rain') }, S(far, I('B'), 1.5, { 'stroke-linecap': 'butt' }));
   let fogTop = '';
   for (let x = -FOG_W; x <= 2 * FOG_W + 800; x += 40) fogTop += `${x === -FOG_W ? 'M' : 'L'}${x} ${f(360 + 16 * Math.sin(x / FOG_W * TAU * 6) + 9 * Math.sin(x / FOG_W * TAU * 17))}`;
-  const fogBody = fogTop + `L${2 * FOG_W + 800} 780L${-FOG_W} 780Z`;
+  const fogBody = fogTop + `L${2 * FOG_W + 800} 470L${-FOG_W} 470Z`;   // far layer: dense paper screen; mid band below it is sparser
   const fogDots = F(band(318, 362, 16, 6, -FOG_W, 2 * FOG_W + 800, 40), 'url(#wx-htP)');
-  const fog = G({ ...REF('fog'), ...DD('sea:T:wx-fog') }, G({ 'data-ref': 'wx-fogMove' }, F(fogBody, I('P'), { opacity: 0.72 }), fogDots,
+  const fog = G({ ...REF('fog'), ...DD('sea:T:wx-fog') }, G({ 'data-ref': 'wx-fogMove' }, F(fogBody, 'url(#wx-htF1)'),
+    F(band(470, 560, 10, 5, -FOG_W, 2 * FOG_W + 800, 40), 'url(#wx-htF2)'), fogDots,
     S(fogTop.replace(/L(-?\d+) (\d+(\.\d)?)/g, (m, a, b) => `L${a} ${f(+b + 60)}`).replace(/^M(-?\d+) (\d+(\.\d)?)/, (m, a, b) => `M${a} ${f(+b + 60)}`), I('P'), 6, { opacity: 0.6 })));
   const beam = G({ ...REF('beam'), ...DD('sea:O:wx-fogbeam') },
     G({ 'data-ref': 'wx-beamRot' }, F('M0 -4L1000 -70L1000 70L0 4Z', v('beacon'), { opacity: 0.35 }), F('M0 -2L1000 -26L1000 26L0 2Z', v('beacon'), { opacity: 0.55 })),
@@ -80,7 +82,7 @@ export function build(ctx) {
   // ---- L-shore: low mist
   let mTop = '';
   for (let x = -FOG_W; x <= 2 * FOG_W + 800; x += 50) mTop += `${x === -FOG_W ? 'M' : 'L'}${x} ${f(610 + 12 * Math.sin(x / FOG_W * TAU * 9))}`;
-  const mist = G({ ...REF('mist'), ...DD('land:T:wx-mist') }, G({ 'data-ref': 'wx-mistMove' }, F(mTop + `L${2 * FOG_W + 800} 740L${-FOG_W} 740Z`, I('P'), { opacity: 0.55 }),
+  const mist = G({ ...REF('mist'), ...DD('land:T:wx-mist') }, G({ 'data-ref': 'wx-mistMove' }, F(mTop + `L${2 * FOG_W + 800} 700L${-FOG_W} 700Z`, 'url(#wx-htF3)'),
     F(band(586, 610, 12, 9, -FOG_W, 2 * FOG_W + 800, 50), 'url(#wx-htP7)')));
   // ---- L-road: puddles (tile = TILE.road so they loop with the road)
   let pd = '', pr = '', ph = '';
@@ -92,14 +94,14 @@ export function build(ctx) {
     G({ 'data-ref': 'wx-ripple' }, S(pr, I('P'), 0.9, { opacity: 0.8 }))));
   // ---- L-fx-back: wind curls + leaves
   let wd = '';
-  for (let i = 0; i < 7; i++) {
-    const x = i * (WIND_W / 7) + hh(i, 21) * 200, y = 180 + hh(i, 22) * 480, L = 160 + hh(i, 23) * 160;
+  for (let rep = 0; rep < 2; rep++) for (let i = 0; i < 7; i++) {   // two tiles (the curve points are absolute, so draw the copy, don't regex-shift it)
+    const x = rep * WIND_W + i * (WIND_W / 7) + hh(i, 21) * 200, y = 180 + hh(i, 22) * 480, L = 160 + hh(i, 23) * 160;
     wd += `M${f(x)} ${f(y)}C${f(x + L * 0.3)} ${f(y - 14)} ${f(x + L * 0.7)} ${f(y + 14)} ${f(x + L)} ${f(y)}c18 -2 22 -22 6 -24c-10 -1 -14 10 -6 14`;
   }
   const leaf = 'M0 0C4 -6 12 -6 16 0C12 6 4 6 0 0Z';
   let leaves = '';
   for (let i = 0; i < 6; i++) leaves += G({ 'data-ref': 'wx-leaf' + i }, F(leaf, i % 2 ? I('T') : I('O'), { stroke: I('N'), 'stroke-width': 0.8 }), S('M1 0H15', I('N'), 0.6));
-  const wind = G({ ...REF('wind'), ...DD('fx:O:wx-wind') }, G({ 'data-ref': 'wx-windMove' }, S(wd + wd.replace(/M(-?[\d.]+) /g, (m, a) => `M${f(+a + WIND_W)} `), I('P'), 3, { opacity: 0.85 })), leaves);
+  const wind = G({ ...REF('wind'), ...DD('fx:O:wx-wind') }, G({ 'data-ref': 'wx-windMove' }, S(wd, I('P'), 3, { opacity: 0.85 })), leaves);
   // ---- L-fx-front: near rain + splashes
   let nr = '';
   for (let xi = 0, x = -288; x < 1850 + 192; xi++, x += 48) for (let yi = 0, y = -390; y < 920 + 260; yi++, y += 130) { const o = hh(xi % 4 + 50, yi % 2) * 110, L = 24 + hh(xi % 4, yi % 2 + 20) * 30; nr += `M${f(x + o)} ${f(y + o)}l${f(-L * 0.34)} ${f(L)}`; }
@@ -170,7 +172,7 @@ export function attach(svg, ctx) {
         set(r.ripple, 'transform', `translate(0 ${GROUND_Y + 30}) scale(${f(0.6 + rp * 0.5)} 1) translate(0 ${-GROUND_Y - 30})`);
       }
       // fog: rolls in (translation) unless reduced
-      showA(r.fog, w.fog); showA(r.mist, w.fog * 0.9);
+      showA(r.fog, sstep(0, 0.4, w.fog)); showA(r.mist, sstep(0.1, 0.5, w.fog));   // opaque screens on the plateau: no alpha greys
       if (w.fog > 0.01) {
         set(r.fogMove, 'transform', `translate(${f(-wrap(red ? 800 : D * 0.2 + t * 14, FOG_W))} ${f(40 * (1 - sstep(0, 0.8, w.fog)))})`);
         set(r.mistMove, 'transform', `translate(${f(-wrap(red ? 500 : D * 0.6 + t * 22, FOG_W))} 0)`);

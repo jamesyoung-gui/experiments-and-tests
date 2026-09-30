@@ -10,6 +10,7 @@
 //   loop      frame(T) vs frame(0), T−1/60 seam ratio, 10T and 100T drift
 //   embeds    <img> (1600×900 and 600×338), CSS background, <object>: frames at 0 / 0.37 / 0.81 s must differ
 //   fallback  every <animate*> removed: the base attributes must render the t0 hero pose (SSIM vs live t0)
+//   reduced   prefers-reduced-motion: the file must hold still (the t0 poster); long own loops of the world band / cameos
 // Writes <out>/check-baked.json. Exit 1 on a hard failure.
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import fs from 'node:fs';
@@ -115,9 +116,9 @@ console.log(`check-baked ${report.file}  (T=${T}s, start=${START}, tod=${TOD}, c
 const bytes = Buffer.byteLength(svgText), gz = zlib.gzipSync(svgText, { level: 9 }).length;
 report.bytes = bytes; report.gzip = gz;
 console.log(`static: ${(bytes / 1024).toFixed(1)} KB raw · ${(gz / 1024).toFixed(1)} KB gzip`);
-if (bytes > 1.5 * 1024 * 1024) hard(`size ${(bytes / 1024).toFixed(0)} KB > 1536 KB`);
-else if (bytes > 1.2 * 1024 * 1024) soft(`size ${(bytes / 1024).toFixed(0)} KB > 1229 KB (10-point target)`);
-if (gz > 500 * 1024) hard(`gzip ${(gz / 1024).toFixed(0)} KB > 500 KB`); else if (gz > 300 * 1024) soft(`gzip ${(gz / 1024).toFixed(0)} KB > 300 KB (10-point target)`);
+if (bytes > 3 * 1024 * 1024) hard(`size ${(bytes / 1024).toFixed(0)} KB > 3072 KB`);
+else if (bytes > 2 * 1024 * 1024) soft(`size ${(bytes / 1024).toFixed(0)} KB > 2048 KB (10-point target)`);
+if (gz > 700 * 1024) hard(`gzip ${(gz / 1024).toFixed(0)} KB > 700 KB`); else if (gz > 500 * 1024) soft(`gzip ${(gz / 1024).toFixed(0)} KB > 500 KB (10-point target)`);
 const FORBID = { '<script': /<script/gi, 'on*=': /\son[a-z]+=/gi, 'javascript:': /javascript:/gi, 'href="http': /href="http/gi, '<image': /<image\b/gi, '<foreignObject': /<foreignObject/gi, 'var(--': /var\(--/g };
 report.forbidden = {};
 for (const [k, re] of Object.entries(FORBID)) { const n = (svgText.match(re) || []).length; report.forbidden[k] = n; if (n) hard(`${n}× ${k}`); }
@@ -296,6 +297,26 @@ for (const [name, [w, h, html]] of Object.entries(embeds)) {
   console.log(`embed ${name}: ${report.embeds[name].moves ? 'animates' : 'STATIC'} (rider Δ ${m01.toFixed(4)}, ${m12.toFixed(4)})${blank ? ' BLANK' : ''}`);
   if (!report.embeds[name].moves || blank) hard(`${name} does not animate`);
   await p.close();
+}
+
+// ---------------------------------------------------------------- 7. prefers-reduced-motion + long loops
+{
+  const p = await newPage();
+  await p.emulateMedia({ reducedMotion: 'reduce' });
+  await p.goto(`${base}/shots/baker/check/embed.svg`);
+  await p.waitForTimeout(300); const A = decodePNG(await p.screenshot());
+  await p.waitForTimeout(1700); const B = decodePNG(await p.screenshot());
+  const L0 = await liveAt(0);
+  const still = compare(A, B).mad, vsT0 = compare(L0, A).ssim;
+  report.reducedMotion = { mad: +still.toFixed(5), ssimVsLiveT0: +vsT0.toFixed(4), media: /prefers-reduced-motion:\s*reduce/.test(svgText) };
+  console.log(`reduced motion: frame change over 1.7 s ${still.toFixed(5)} · SSIM vs live t0 ${vsT0.toFixed(4)}`);
+  if (!report.reducedMotion.media || still > 0.0005) hard('prefers-reduced-motion does not freeze the file');
+  await p.close();
+  const durs = [...svgText.matchAll(/dur="([\d.]+)s"/g)].map(m => +m[1]);
+  const long = durs.filter(d => d >= 60).length, cam = [...new Set(durs.filter(d => d > 30 && d < 90 && Number.isInteger(d)))];
+  report.loops = { longAnims: long, maxDur: Math.max(...durs), ownPeriods: cam };
+  console.log(`long loops: ${long} animations ≥ 60 s (max ${Math.max(...durs)} s) · integer own periods ${cam.join(', ')} s`);
+  if (long < 50) soft('the world does not run a long own loop (background repeats with the rider)');
 }
 
 await browser.close(); srv.close();

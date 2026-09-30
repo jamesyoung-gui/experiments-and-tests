@@ -100,6 +100,9 @@ export const KEYMAP = [
 const KEY_TO = new Map(KEYMAP.flatMap(k => k.keys.map(key => [key, k])));
 const ariaKeys = act => KEYMAP.find(k => k.act === act)?.aria || '';
 const capOf = act => KEYMAP.find(k => k.act === act)?.cap || '';
+// short keycap labels (the legend keeps the full words): a 3.7rem cap fits ~5 caps letters
+const CAPSHORT = { en: { kbAuto: 'Auto', kbLang: 'Lang', kbCam: 'Cam', kbSlower: 'Slow', kbFaster: 'Fast', kbSound: 'Sound' }, zh: { kbAuto: '自动', kbTod: '时刻', kbCam: '镜头', kbSlower: '慢', kbFaster: '快' } };
+const capLab = (lang, k) => CAPSHORT[lang][k] || STRINGS[lang][k];
 
 // ------------------------------------------------------------------ units
 const M_PER_UNIT = 0.34 / BIKE.R;                                  // wheel R = 100 units ≈ a 0.34 m 700c wheel
@@ -341,7 +344,7 @@ export function createUI(host, bus, init) {
   const capHTML = key => {
     const k = KEY_TO.get(key);
     const face = key === '?' ? '?' : key.toUpperCase();
-    return `<span class="ui-cap${k ? '' : ' dim'}${key === '?' ? ' q' : ''}" data-cap="${esc(key)}"><span class="face">${esc(face)}</span>${k ? `<small class="zh" lang="zh-CN">${esc(STRINGS.zh[k.label])}</small><small class="en" lang="en">${esc(STRINGS.en[k.label])}</small>` : ''}</span>`;
+    return `<span class="ui-cap${k ? '' : ' dim'}${key === '?' ? ' q' : ''}" data-cap="${esc(key)}"><span class="face">${esc(face)}</span>${k ? `<small class="zh" lang="zh-CN">${esc(capLab('zh', k.label))}</small><small class="en" lang="en">${esc(capLab('en', k.label))}</small>` : ''}</span>`;
   };
   dlg.innerHTML = `
 <h2 id="ui-help-h">${bi('helpTitle')}</h2>

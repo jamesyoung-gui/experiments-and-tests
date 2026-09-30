@@ -1,0 +1,4 @@
+{
+  "perf": { "fpsMin": 58, "jsP95MaxMs": 2, "domMax": 6000 },
+  "distKBMax": 1200
+}

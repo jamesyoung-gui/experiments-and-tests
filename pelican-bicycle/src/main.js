@@ -5,7 +5,7 @@ import { rng, clamp, wrap } from './core/math.js';
 import { mount, xf, h } from './core/svg.js';
 import { createBus } from './core/bus.js';
 import { samplePalette, applyPalette, v } from './core/palette.js';
-import { createCamera, layerTransform } from './core/camera.js';
+import { createCamera, layerTransform, fitAspect } from './core/camera.js';
 import { solvePose, TIMING } from './rig/solve.js';
 import { buildSceneMarkup, checkIds } from './scene.js';
 import * as bike from './art/bike.js';
@@ -45,7 +45,8 @@ const ctx = { C, rng: salt => rng('pelican-bay:' + salt), v, h, quality, reduced
 
 // ---------- build scene ----------
 const stage = document.getElementById('stage');
-const mods = solo ? ART.filter(m => m.id === solo || ['sky'].includes(m.id) && solo === 'world') : ART;
+const drop = (params.get('drop') || '').split(',');   // ?drop=a,b: leave modules out (perf bisection)
+const mods = (solo ? ART.filter(m => m.id === solo || ['sky'].includes(m.id) && solo === 'world') : ART).filter(m => !drop.includes(m.id));
 const { markup, problems } = buildSceneMarkup(mods, ctx);
 problems.forEach(p => console.error('[scene] ' + p));
 stage.innerHTML = '';
@@ -63,6 +64,10 @@ const layerEls = LAYERS.map(([id, depth]) => [svg.querySelector('#' + id), depth
 const riderEl = svg.querySelector('#rider');
 const slotEls = SLOTS.map(s => [s, svg.querySelector('#j-' + s)]);
 const lbTop = svg.querySelector('#lead-lb-top'), lbBot = svg.querySelector('#lead-lb-bot');
+// dirty-checked attribute writes: an unchanged transform string costs no style / paint invalidation
+const lastAttr = new WeakMap();
+const setA = (el, k, val) => { let m = lastAttr.get(el); if (!m) lastAttr.set(el, m = {}); if (m[k] !== val) { m[k] = val; el.setAttribute(k, val); } };
+let insetVB = 0;   // bottom sheet height (viewBox units), reported by the UI on portrait screens
 
 const extraMaterials = Object.assign({}, ...ART.map(m => m.materials || {}));
 const modPerf = params.has('modperf') ? {} : null;   // ?modperf: per-module update() ms totals in __pb.modPerf
@@ -72,6 +77,7 @@ const camera = createCamera(state.cam);
 camera.snap(state.cam);
 
 // ---------- UI / audio ----------
+bus.on('ui:inset', ({ bottom }) => { insetVB = (bottom / Math.max(1, innerHeight)) * 900; });
 const ui = createUI(document.getElementById('ui'), bus, { state, reduced, bakeAvailable: true });
 const audio = createAudio(bus);
 const eggsApi = mods.includes(eggs) ? eggs.connect({ bus, state, svg }) : null;   // easter eggs (owner: eggs)
@@ -91,7 +97,12 @@ bus.on('ui:play', ({ on }) => { state.playing = on ?? !state.playing; last = per
 bus.on('ui:sound', async ({ on }) => { state.toggles.sound = on; if (on) await audio.enable(); else audio.disable(); });
 bus.on('ui:download', ({ kind }) => download(kind));
 for (const ev of ['ui:tod', 'ui:camera', 'ui:toggle', 'ui:speed']) bus.on(ev, () => { if (!state.playing && !freeze) requestAnimationFrame(() => render(0)); });
-svg.querySelector('#L-rider').addEventListener('click', () => bus.emit('ui:gulp', {}));
+// click-to-feed: any hit on the rider, or a near miss (within 12 px of the bird's body, neck, head or bill boxes), on every camera
+const birdParts = ['j-body', 'j-neck', 'j-head', 'j-billUpper', 'j-pouch'].map(id => svg.querySelector('#' + id)).filter(Boolean);
+svg.addEventListener('click', e => {
+  if (e.target.closest && e.target.closest('#L-rider')) { bus.emit('ui:gulp', {}); return; }
+  for (const el of birdParts) { const b = el.getBoundingClientRect(), m = 12; if (e.clientX > b.left - m && e.clientX < b.right + m && e.clientY > b.top - m && e.clientY < b.bottom + m) { bus.emit('ui:gulp', {}); return; } }
+});
 
 // ---------- frame ----------
 let pal = samplePalette(state.tod, extraMaterials), palDirty = true, palT = 0;
@@ -119,26 +130,25 @@ function render(dt) {
   if (dt > 0 && state.coasting !== lastCoast) state.events.push({ type: state.coasting ? 'coast' : 'pedal', t0: state.t });
   lastCoast = state.coasting;
   const pose = solvePose(state.t, { crank: state.crank, distance: state.distance, cadence: state.cadence, speed: state.speed, coasting: state.coasting, events: state.events, tod: state.tod, loopT: state.loopT });
-  const cam = camera.update(dt, state.t, reduced);
-  // portrait / narrow screens: the slice-fit viewBox crops the sides, so pan toward the rider
-  const aspect = innerWidth / Math.max(1, innerHeight);
-  if (aspect < 1.5 && cam.mode !== 'close') {
-    const k = Math.min(1, (1.5 - aspect) / 0.9);
-    cam.fx += (RIDER_X + 24 - cam.fx) * k;
-    cam.fy += (GROUND_Y - 300 - cam.fy) * k * 0.7;
-    cam.zoom *= 1 - 0.2 * Math.min(1, (1.2 - aspect) / 0.6) * (aspect < 1.2 ? 1 : 0);   // fit the whole bike on phones
-  }
+  // portrait / narrow screens: fit the rider bbox (wheel to wheel + margin) above the bottom sheet
+  const cam = fitAspect(camera.update(dt, state.t, reduced, state.events), innerWidth / Math.max(1, innerHeight), insetVB);
   palT += dt;
   if (palDirty && (palT > 0.1 || dt === 0)) { pal = samplePalette(state.tod, extraMaterials); applyPalette(svg, pal); palDirty = false; palT = 0; }
-  for (const [el, d] of layerEls) if (el && d !== null) el.setAttribute('transform', layerTransform(cam, d));
-  lbTop.setAttribute('height', cam.letterbox + 10); lbBot.setAttribute('y', 900 - cam.letterbox); lbBot.setAttribute('height', cam.letterbox + 10);
+  for (const [el, d] of layerEls) if (el && d !== null) setA(el, 'transform', layerTransform(cam, d));
+  const lb = cam.letterbox.toFixed(2);
+  setA(lbTop, 'height', +lb + 10); setA(lbBot, 'y', 900 - lb); setA(lbBot, 'height', +lb + 10);
   const [rcx, rcy] = BIKE.rearContact;
-  riderEl.setAttribute('transform', `translate(${RIDER_X} ${(GROUND_Y + pose.riderY).toFixed(2)}) rotate(${pose.bikePitch.toFixed(3)} ${rcx} ${rcy})`);
-  for (const [s, el] of slotEls) { const j = pose.joints[s]; if (j && el) el.setAttribute('transform', xf(j)); }
+  setA(riderEl, 'transform', `translate(${RIDER_X} ${(GROUND_Y + pose.riderY).toFixed(2)}) rotate(${pose.bikePitch.toFixed(3)} ${rcx} ${rcy})`);
+  for (const [s, el] of slotEls) { const j = pose.joints[s]; if (j && el) setA(el, 'transform', xf(j)); }
+  // head focus in viewBox coords (depth-1 layers): sky / fx props should keep out of this circle (no-overlap zone)
+  const hj = pose.joints.head, pr = (pose.bikePitch * Math.PI) / 180;
+  const hx = hj ? hj.x - rcx : 0, hy = hj ? hj.y - rcy : 0;
+  const hwx = RIDER_X + rcx + hx * Math.cos(pr) - hy * Math.sin(pr), hwy = GROUND_Y + pose.riderY + rcy + hx * Math.sin(pr) + hy * Math.cos(pr);
+  const headBox = { x: 800 + (hwx + 40 - cam.fx) * cam.zoom, y: 450 + (hwy - 30 - cam.fy) * cam.zoom, r: 150 * cam.zoom };
   const frame = {
     t: state.t, dt, distance: state.distance, speed: state.speed, cadence: state.cadence, coasting: state.coasting,
     tod: state.tod, sun: pal.sun, moon: pal.moon, night: pal.num.night, pal, pose, cam, toggles: state.toggles,
-    quality, reduced, events: state.events, weather: dz.weather, director: dz,
+    quality, reduced, events: state.events, weather: dz.weather, director: dz, headBox,
   };
   if (modPerf) { let t1 = performance.now(); for (const a of attached) if (a.update) { try { a.update(frame); } catch (e) { console.error(e); a.update = null; } const t2 = performance.now(); modPerf[a.__id] = (modPerf[a.__id] || 0) + t2 - t1; t1 = t2; } ui.update(frame); audio.update(frame); modPerf.ui = (modPerf.ui || 0) + performance.now() - t1; modPerf.n = (modPerf.n || 0) + 1; }
   else { for (const a of attached) if (a.update) try { a.update(frame); } catch (e) { console.error(e); a.update = null; }
@@ -148,9 +158,21 @@ function render(dt) {
 
 // ---------- loop ----------
 let last = performance.now(), fpsAcc = [];
+// ?perf HUD: fps, JS ms (median / p95), DOM nodes, and with ?modperf the per-module update() ms
+const perfOn = params.has('perf');
+const hudEl = perfOn && params.get('perf') !== 'quiet' ? document.body.appendChild(Object.assign(document.createElement('pre'), { id: 'perf-hud' })) : null;
+let hudN = 0;
+function hud() {
+  if (!hudEl || ++hudN % 30) return;
+  const a = fpsAcc.slice(-120), dts = a.map(x => x.dt), js = a.map(x => x.js).sort((x, y) => x - y);
+  const fps = 1 / (dts.reduce((s, x) => s + x, 0) / dts.length);
+  let txt = `fps ${fps.toFixed(1)}  js ${js[js.length >> 1].toFixed(2)} / p95 ${js[Math.floor(js.length * 0.95)].toFixed(2)} ms  dom ${svg.getElementsByTagName('*').length}`;
+  if (modPerf && modPerf.n) txt += '\n' + Object.entries(modPerf).filter(([k]) => k !== 'n').map(([k, v]) => `${k.padEnd(14)}${(v / modPerf.n).toFixed(3)}`).join('\n');
+  hudEl.textContent = txt;
+}
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  if (state.playing) { const t0 = performance.now(); step(dt); render(dt); if (params.has('perf')) fpsAcc.push({ dt, js: performance.now() - t0 }); }
+  if (state.playing) { const t0 = performance.now(); step(dt); render(dt); if (perfOn) { fpsAcc.push({ dt, js: performance.now() - t0 }); if (fpsAcc.length > 3600) fpsAcc.splice(0, 1800); hud(); } }
   requestAnimationFrame(loop);
 }
 render(0);
@@ -181,6 +203,7 @@ window.__pb = {
     state.loopT = o.loopT;
     if (o.tod !== undefined) state.tod = o.tod;
     if (o.cam) { state.cam = o.cam; camera.snap(o.cam, t); }
+    camera.preroll(t, state.events);
     if (o.toggles) Object.assign(state.toggles, o.toggles);
     palDirty = true;
     return render(0);

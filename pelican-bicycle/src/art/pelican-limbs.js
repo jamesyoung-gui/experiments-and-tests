@@ -29,7 +29,8 @@ import { SKEL } from '../contract.js';
 import { h, refs } from '../core/svg.js';
 
 export const id = 'pelican-limbs';
-export const materials = {};
+// far leg prints in its own inks so it separates from the navy sea: B thigh, R tarsus/foot, P rim line
+export const materials = { limbFarSkin: 'R', limbFarRim: 'P' };
 
 // ---------------------------------------------------------------- helpers (pure)
 const D2R = Math.PI / 180;
@@ -303,6 +304,9 @@ function thigh(I, far) {
       scallops(rowPts([100, -9.6], [102, 10], 3), u, 2.2) + scallops(rowPts([124, -8.6], [124, 9.6], 3), u, 2), I.B, 1.25, { 'data-detail': tag('T', 'trouser-feather-scallops'), 'data-tract': 'leg' }));
     kids.push(line('M62 6.4q9 2.4 18 2.6M90 8.2q9 1.6 16 1.4M112 8.6q6 1 11 0.4', I.B, 0.85, { 'data-detail': tag('T', 'trouser-rear-hatching') }));
     kids.push(line('M24 -21q5 3 4 8M35 -20.4q4.6 3.2 3.4 8.2M28 1.6q3.4 -2 7.2 -0.8', I.B, 1.1, { 'data-detail': tag('O', 'flank-plume-curls') }));
+  } else {
+    kids.push(line(curve([[60, -16.4], [86, -12.4], [112, -9.8], [136, -9.2]]), I.rim, 1, { 'data-detail': tag('O', 'far-thigh-rim') }));
+    kids.push(line(scallops(rowPts([80, -11], [82, 9], 3), [1, 0.1], 2.4) + scallops(rowPts([112, -9], [112, 9.6], 3), [1, 0.1], 2), I.B, 1.1, { 'data-detail': tag('T', 'far-trouser-scallops') }));
   }
   return G('thigh-trousers', 'O', far, kids);
 }
@@ -312,10 +316,13 @@ function shank(I, far) {
   const hw = x => lerp(6.8, 5, x / L);               // half width 13.6 -> 10
   const outline = `M0 ${f(-hw(0))}C40 ${f(-hw(40))} 90 ${f(-hw(90))} ${L} ${f(-hw(L))}A5 5 0 0 1 ${L} ${f(hw(L))}` +
     `C92 ${f(hw(92))} 36 ${f(hw(36) + 0.4)} 29 ${f(hw(29) + 0.6)}C26 ${f(hw(26) + 3.6)} 20 ${f(hw(20) + 3.8)} 16 ${f(hw(16) + 1.2)}C10 ${f(hw(10))} 4 ${f(hw(0))} 0 ${f(hw(0))}Z`;
-  const kids = [fill(outline, far ? I.N : I.O)];
+  // intertarsal knuckle: the joint bulges forward just below the cuff and the tarsus leaves it at a slight angle
+  const knuckle = 'M13 -6.4C16 -10.6 25 -11 30 -7.6C33 -5.6 34 -3 33 0L14 0Z';
+  const kids = [fill(outline, I.O), fill(knuckle, I.O)];
   if (!far) {
     // intertarsal heel pad: the bird's "backward knee" just below the feather cuff
     kids.push(line('M17 7.6Q21 11.4 23.4 10.6Q27 9.6 29.5 7.4M19.5 5.2q3.6 2.4 7.2 0', I.R, 1.3, { 'data-detail': tag('O', 'intertarsal-heel-pad') }));
+    kids.push(line('M15.6 -7.8Q23 -11.6 30.4 -7.2M18 -3.6Q23 -1.2 28.6 -3.8M31.6 -5.4Q34.6 -1 31.4 3.2', I.R, 1.1, { 'data-detail': tag('O', 'intertarsal-knuckle') }));
     // rear shade band (R) keeps the tarsus round; reticulate rear scales sit on it
     let rt = '';
     for (let x = 34, k = 0; x <= 124; x += 4.6, k++) { const w = hw(x), y = w * (k % 2 ? 0.62 : 0.3); rt += `M${f(x)} ${f(y)}q1.6 -1.3 3.2 0q-1.6 1.3 -3.2 0`; }
@@ -330,8 +337,10 @@ function shank(I, far) {
     kids.push(line(sc, I.R, 1.1, { 'data-detail': tag('T', 'tarsus-scutes') }));
   } else {
     let sc = '';
-    for (let x = 26; x <= 126; x += 9) { const w = hw(x); sc += `M${f(x)} ${f(-w + 0.4)}q2.4 ${f(w * 0.6)} 0.6 ${f(w * 1.2)}`; }
+    for (let x = 36; x <= 126; x += 9) { const w = hw(x); sc += `M${f(x)} ${f(-w + 0.4)}q2.4 ${f(w * 0.6)} 0.6 ${f(w * 1.2)}`; }
     kids.push(line(sc, I.B, 0.9, { 'data-detail': tag('T', 'far-tarsus-scutes') }));
+    kids.push(line(`M${f(16)} -9.6Q24 -11.8 31 -7.8M34 ${f(-hw(34) - 0.2)}C70 ${f(-hw(70) - 0.2)} 100 ${f(-hw(100) - 0.2)} ${L - 2} ${f(-hw(L - 2) - 0.2)}`, I.rim, 1, { 'data-detail': tag('O', 'far-tarsus-rim') }));
+    kids.push(line('M17 7.6Q21 11.4 23.4 10.6Q27 9.6 29.5 7.4M15.6 -7.8Q23 -11.6 30.4 -7.2', I.B, 1, { 'data-detail': tag('O', 'far-intertarsal-knuckle') }));
   }
   return G('tarsus', 'O', far, kids);
 }
@@ -341,10 +350,10 @@ function shank(I, far) {
 // fans them so every web is visible).
 const SOLE = 6, EDGE = 30;
 const TOES = [
-  { n: 'IV', root: [8, 4.3], mid: [EDGE + 1, 4.6], tip: [50, 12.6], w: 3.6 },
-  { n: 'III', root: [8, 2.5], mid: [EDGE + 1, 2.3], tip: [49.5, 5.2], w: 3.2 },
-  { n: 'II', root: [7, 0.7], mid: [EDGE - 2, -0.9], tip: [44.5, -1.8], w: 2.9 },
-  { n: 'I', root: [-2.5, -0.4], mid: [11, -5.6], tip: [24.5, -10], w: 2.6 },
+  { n: 'IV', root: [8, 4.3], mid: [EDGE - 1, 4.8], tip: [40.5, 12.4], w: 3.6 },
+  { n: 'III', root: [8, 2.5], mid: [EDGE - 1, 2.4], tip: [41, 6.6], w: 3.2 },
+  { n: 'II', root: [7, 0.7], mid: [EDGE - 4, -0.8], tip: [38, -0.6], w: 2.9 },
+  { n: 'I', root: [-2.5, -0.4], mid: [9, -5], tip: [20.5, -8.6], w: 2.6 },
 ];
 function toeD(t) {
   const a = t.root, b = t.mid, c = t.tip, w = t.w / 2;
@@ -365,8 +374,8 @@ function foot(I, far, side) {
     const A = T[i], B = T[i + 1];
     for (const k of [0.33, 0.66]) { const r = lerp2(A.root, B.root, k), m = lerp2(lerp2(A.mid, A.tip, 0.5), lerp2(B.mid, B.tip, 0.5), k); pleats.push(`M${pt(lerp2(r, m, 0.3))}L${pt(lerp2(r, m, 0.92))}`); }
   }
-  const W = far ? I.N : I.OW, Tc = far ? I.N : I.O, Ln = far ? I.B : I.R;
-  const st = far ? {} : { stroke: Ln, 'stroke-width': 0.8, 'stroke-linejoin': 'round' };
+  const W = I.OW, Tc = I.O, Ln = far ? I.B : I.R;
+  const st = far ? { stroke: I.rim, 'stroke-width': 0.8, 'stroke-linejoin': 'round' } : { stroke: Ln, 'stroke-width': 0.8, 'stroke-linejoin': 'round' };
   const ankle = G('ankle-joint', 'O', far, [fill(`M-5.4 -3.2C-6.4 -8 5.4 -8.6 6.8 -3.4C8.6 0.6 13 1.6 18 2.4L18 ${SOLE}L-3 ${SOLE}C-6 ${SOLE - 0.6} -7.4 3 -5.4 -3.2Z`, Tc),
     far ? '' : fill(`M-3.8 ${SOLE - 2.2}Q4 ${SOLE - 3.2} 12 ${SOLE - 1.6}L12 ${SOLE}L-3 ${SOLE}Z`, I.R, { 'data-detail': tag('O', 'metatarsal-pad') }),
     far ? '' : line('M-4.4 -1.2Q-1 1.8 3.8 0.2M-3.4 3.2Q0 4.8 4.6 3.4', I.R, 0.9, { 'data-detail': tag('T', 'ankle-creases') })]);
@@ -386,7 +395,7 @@ function foot(I, far, side) {
     toeKids.push(line(sc, I.R, 0.7, { 'data-detail': tag('T', 'toe-scutes') }));
   }
   const claws = T.map(t => { const u = norm(sub(t.tip, t.mid)), nn = perp(u), c = t.tip; return `M${pt(add(c, mul(nn, -t.w * 0.4)))}Q${pt(add(add(c, mul(u, 3.4)), mul(nn, -0.2)))} ${pt(add(add(c, mul(u, 3.3)), mul(nn, 2.6)))}Q${pt(add(c, mul(u, 1.4)))} ${pt(add(c, mul(nn, t.w * 0.45)))}Z`; }).join('');
-  toeKids.push(fill(claws, far ? I.B : I.N, { 'data-detail': tag('O', far ? 'far-claws' : 'claws') }));
+  toeKids.push(fill(claws, I.N, { 'data-detail': tag('O', far ? 'far-claws' : 'claws') }));
   // the webbed foot: hallux + its web (farthest), the other two webs with pleats, then the toes
   const foot = G('totipalmate-webs', 'O', far, [
     G('hallux-web', 'O', far, [fill(webs[2], W, st), fill(toeD(T[3]), Tc, st)]),
@@ -402,12 +411,15 @@ export function build({ v }) {
   const near = { P: v('plume'), B: v('plumeShade'), N: v('flight'), O: v('foot'), OW: v('web'), R: v('billNail'), K: v('skin') };
   const Bf = v('plumeShade', { far: true }), Nf = v('flight', { far: true });
   const farI = { P: Bf, B: Bf, N: Nf, O: Nf, OW: Nf, R: Bf, K: Bf };
+  // far leg: lighter than the sea band (B thigh, R skin) with a thin P rim so it reads at every crank phase
+  const farLeg = { ...farI, P: v('plume', { far: true }), B: Nf, O: v('limbFarSkin'), OW: v('limbFarSkin'), R: Nf, K: v('limbFarRim'), rim: v('limbFarRim') };
   const s = {};
   for (const side of ['Near', 'Far']) {
     const far = side === 'Far', I = far ? farI : near;
-    s['thigh' + side] = thigh(I, far);
-    s['shank' + side] = shank(I, far);
-    s['foot' + side] = foot(I, far, side);
+    const IL = far ? farLeg : I;
+    s['thigh' + side] = thigh(IL, far);
+    s['shank' + side] = shank(IL, far);
+    s['foot' + side] = foot(IL, far, side);
     s['wing' + side + 'Upper'] = wingUpper(I, far);
     s['wing' + side + 'Lower'] = wingLower(I, far, side);
     s['wing' + side + 'Hand'] = wingHand(I, far, side);
@@ -539,5 +551,10 @@ export const detailItems = [
   ['ankle-joint', 'O', 'ankle knob capping the tarsus'],
   ['ankle-creases', 'T', 'skin creases at the ankle'],
   ['metatarsal-pad', 'O', 'R metatarsal pad on the pedal'],
+  ['intertarsal-knuckle', 'O', 'knuckle and crease rings of the intertarsal joint; the tarsus leaves it at a slight angle'],
+  ['far-thigh-rim', 'O', 'P rim line along the far thigh so it separates from the sea'],
+  ['far-trouser-scallops', 'T', 'N scallops on the far trousers'],
+  ['far-tarsus-rim', 'O', 'P rim line down the front of the far (R) tarsus'],
+  ['far-intertarsal-knuckle', 'O', 'far intertarsal joint knuckle + heel pad lines'],
   ['far-*', 'O', 'far wing and leg: the same anatomy in flat B/N (tagged far-…; counted only where visible)'],
 ].map(([name, kind, what]) => ({ id: tag(kind, name), layer: 'pelican', kind, what }));
