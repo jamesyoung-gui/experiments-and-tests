@@ -20,7 +20,7 @@ export const AUDIO = {
   pawls: 18,                 // freehub engagement points (coast tick rate = wheel rev/s × pawls)
   teeth: BIKE.ringT,         // chain whirr AM rate = crank rev/s × chainring teeth
   lookahead: 0.12, interval: 25,
-  fadeIn: 0.6, fadeOut: 0.45, pauseFade: 0.4, hideFade: 0.1, hideSuspendMs: 130,
+  fadeIn: 0.6, fadeOut: 0.45, pauseFade: 0.4, hideFade: 0.08, hideSuspendMs: 100,
   bellStrikes: [TIMING.bell.strike, TIMING.bell.strike + 0.105],
 };
 
@@ -100,8 +100,10 @@ export function createAudio(bus, opts = {}) {
       for (let i = 0; i < n; i++) {
         const t = i / sr, k = 0.15 + 0.8 * Math.min(1, t / sec);
         lp += (R() * 2 - 1 - lp) * (1 - k);
-        d[i] = t < 0.014 + c * 0.003 ? 0 : lp * Math.exp(-t / 0.55) * 0.5;
+        d[i] = t < 0.014 + c * 0.003 ? 0 : lp * Math.exp(-t / 0.55);
       }
+      let e = 0; for (let i = 0; i < n; i++) e += d[i] * d[i];
+      const k = 1 / Math.sqrt(e || 1); for (let i = 0; i < n; i++) d[i] *= k;             // unit-energy IR (0 dB wet gain)
     }
     return buf;
   }
@@ -117,17 +119,17 @@ export function createAudio(bus, opts = {}) {
 
   // ------------------------------------------------------------------ graph
   function build() {
-    const out = G(0.94);                                                     // trim after the limiter: peaks ≤ −1.5 dBFS
+    const out = G(1.0);                                                      // trim after the limiter: peaks ≤ −1.5 dBFS
     const lim = ac.createDynamicsCompressor();
     lim.threshold.value = -3; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.09;
     const comp = ac.createDynamicsCompressor();
     comp.threshold.value = -20; comp.knee.value = 10; comp.ratio.value = 3; comp.attack.value = 0.006; comp.release.value = 0.25;
-    const master = G(0);
-    wire(master, comp, lim, out, ac.destination);
+    const master = G(0), hpf = F('highpass', 42, 0.6);                    // keep sub-rumble out of laptop speakers
+    wire(master, hpf, comp, lim, out, ac.destination);
     const B = n => { const g = G(solo && !solo.has(n) ? 0 : 1); g.connect(master); return g; };
     const amb = B('amb'), mech = B('mech'), fx = B('fx'), far = B('far');
     const verb = ac.createConvolver(); verb.normalize = false; verb.buffer = plate(2.4);
-    const verbRet = G(0.55); wire(verb, verbRet, master);
+    const verbRet = G(0.8); wire(verb, verbRet, master);
     const vin = {}; for (const b of ['amb', 'mech', 'fx', 'far']) { vin[b] = G(solo && !solo.has(b) ? 0 : 1); vin[b].connect(verb); }
     const duck = G(1); duck.connect(amb);                                   // bell ducks wind + road
 
@@ -138,7 +140,7 @@ export function createAudio(bus, opts = {}) {
     const whisBp = F('bandpass', 1300, 9), whisG = G(0);
     wire(windSrc, whisBp, whisG, duck);
     // road: tyre rumble + grit (gated off while airborne)
-    const roadSrc = bufSrc(brownB, true, 1.13), roadLp = F('lowpass', 260, 0.9), roadG = G(0), tyreGate = G(1);
+    const roadSrc = bufSrc(pinkB, true, 1.13), roadLp = F('bandpass', 300, 0.8), roadG = G(0), tyreGate = G(1);
     wire(roadSrc, roadLp, roadG, tyreGate, duck);
     const gritSrc = bufSrc(whiteB, true, 0.91), gritHp = F('highpass', 3200, 0.7), gritG = G(0);
     wire(gritSrc, gritHp, gritG, tyreGate);
@@ -273,7 +275,7 @@ export function createAudio(bus, opts = {}) {
     wire(s, g, N.tickBus); s.start(at); reap(s, [s, g]);
   }
   function swell(at) {
-    const D = rr(5.5, 9.5), peak = rr(0.09, 0.16), pan = rr(-0.65, 0.65), crest = rr(0.4, 0.5);
+    const D = rr(5.5, 9.5), peak = rr(0.14, 0.22), pan = rr(-0.65, 0.65), crest = rr(0.4, 0.5);
     const s = bufSrc(N.pinkB, true), lp = F('lowpass', 220, 0.6), g = G(0), pn = Pan(pan);
     lp.frequency.setValueAtTime(220, at); lp.frequency.exponentialRampToValueAtTime(rr(900, 1600), at + D * crest); lp.frequency.exponentialRampToValueAtTime(260, at + D);
     g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(peak, at + D * crest); g.gain.linearRampToValueAtTime(peak * 0.35, at + D * 0.72); g.gain.linearRampToValueAtTime(0, at + D);
@@ -303,7 +305,7 @@ export function createAudio(bus, opts = {}) {
     let pan = screenPan(near ? '[data-ref^="fx-esc"]' : '[data-ref^="fx-gfar"]', true);
     if (pan == null) pan = rr(-0.8, 0.8);
     const panV = (2 * (170 - 0.15 * speedN * V_MAX)) / 1600 * (near ? 0.3 : 1);    // far gulls drift with their layer
-    const dist = near ? 0.15 : rr(0.5, 0.85), amp = (near ? 0.09 : 0.05) * rr(0.8, 1.1);
+    const dist = near ? 0.15 : rr(0.45, 0.8), amp = (near ? 0.24 : 0.16) * rr(0.8, 1.1);
     const kind = R(), f0 = rr(820, 1080);
     let t = at, p = pan;
     if (kind < 0.45) { const n = 2 + Math.floor(R() * 3); for (let i = 0; i < n; i++) { const d = rr(0.2, 0.3); gullNote(t, f0 * (1 - 0.03 * i), d, p, panV, amp, dist); t += d + rr(0.07, 0.14); p += panV * (d + 0.1); } }
@@ -324,8 +326,8 @@ export function createAudio(bus, opts = {}) {
   }
   function fogHorn(at) {
     const pan = screenPan('[data-ref="sea-lantern"]') ?? 0.45;
-    hornBlast(at, 163, 2.6, 0.2, pan, 520, 0.9);
-    if (R() < 0.5) hornBlast(at + 4.2, 163, 2.6, 0.17, pan, 480, 0.9);
+    hornBlast(at, 163, 2.6, 0.042, pan, 520, 0.7);
+    if (R() < 0.5) hornBlast(at + 4.2, 163, 2.6, 0.036, pan, 480, 0.7);
     logCue('horn', at, { pan }); caption('horn');
   }
   function boatHorn(at) {
@@ -336,7 +338,7 @@ export function createAudio(bus, opts = {}) {
   function cricket(at, f, n, pan) {
     const o = O('sine', f), g = G(0), pn = Pan(pan); wire(o, g, pn, N.far);
     let t = at;
-    for (let i = 0; i < n; i++) { for (let k = 0; k < 3; k++) { const s = t + k * 0.034; g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(0.018, s + 0.004); g.gain.linearRampToValueAtTime(0, s + 0.016); } t += rr(0.38, 0.46); }
+    for (let i = 0; i < n; i++) { for (let k = 0; k < 3; k++) { const s = t + k * 0.034; g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(0.03, s + 0.004); g.gain.linearRampToValueAtTime(0, s + 0.016); } t += rr(0.38, 0.46); }
     o.start(at); o.stop(t + 0.05); reap(o, [o, g, pn]);
     return t - at;
   }
@@ -404,18 +406,18 @@ export function createAudio(bus, opts = {}) {
     gustV += (R() - 0.5) * 0.09 - (gust - 1) * 0.05; gustV *= 0.92; gust = clamp(gust + gustV, 0.55, 1.7);
     const hold = hops.some(h0 => fr.t - h0 >= HOP.hold0 && fr.t - h0 < HOP.hold1);
     const pedal = !fr.coasting && !hold && fr.cadence > 1;
-    glide(N.windG.gain, (0.035 + 0.62 * s * s) * gust, t, 0.3);
+    glide(N.windG.gain, (0.07 + 1.05 * s * s) * gust, t, 0.3);
     glide(N.windBp.frequency, 280 + 950 * s + 260 * (gust - 1), t, 0.3);
     glide(N.whisG.gain, 0.05 * Math.max(0, gust - 1.08) * s, t, 0.35);
     glide(N.whisBp.frequency, 1100 + 500 * s + 400 * (gust - 1), t, 0.4);
-    glide(N.roadG.gain, 0.36 * s, t, 0.2); glide(N.roadLp.frequency, 180 + 420 * s, t, 0.3);
+    glide(N.roadG.gain, 0.3 * s, t, 0.2); glide(N.roadLp.frequency, 220 + 520 * s, t, 0.3);
     glide(N.gritG.gain, 0.035 * s, t, 0.2);
-    glide(N.chG.gain, pedal ? 0.05 * (0.45 + s) : 0, t, 0.05);
-    glide(N.humG.gain, pedal ? 0.04 * (0.3 + s) : 0, t, 0.05);
+    glide(N.chG.gain, pedal ? 0.13 * (0.45 + s) : 0, t, 0.05);
+    glide(N.humG.gain, pedal ? 0.09 * (0.3 + s) : 0, t, 0.05);
     glide(N.chOsc.frequency, Math.max(1, (fr.cadence / 60) * AUDIO.teeth), t, 0.05);
     glide(N.humOsc.frequency, Math.max(0.5, (fr.cadence / 60) * 2), t, 0.05);         // two pedal strokes per turn
     glide(N.chBp.frequency, 2300 + 900 * s, t, 0.1);
-    glide(N.tickBus.gain, 0.3 * (0.6 + 0.5 * Math.min(1, s)), t, 0.1);
+    glide(N.tickBus.gain, 0.5 * (0.6 + 0.5 * Math.min(1, s)), t, 0.1);
     glide(N.seaG.gain, 0.09 + 0.03 * night, t, 1);
     for (const src of [N.windSrc, N.roadSrc]) glide(src.playbackRate, 0.92 + 0.16 * R(), t, 1.5);   // no audible loop
     night = fr.night || 0;
