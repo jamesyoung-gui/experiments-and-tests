@@ -332,6 +332,25 @@ eventScan('hop', TIMING.hop.dur);
   if (maxHeadStep > 0.6) fail(`encounter head pitch whip ${maxHeadStep.toFixed(2)}° per 240 Hz sample`);
 }
 
+// ---------------------------------------------------------------- 8. storybook motion (edition B tuning)
+// happy head tilt after a gaze arrives (bounded, eased, relaxes), 4φ "plop" keeps the pelvis in its travel cap
+// (section 1), and the scarf's slow float stays calm (never faster per frame than edition C's 9.3°, gusts included).
+{
+  let tMax = 0, tStep = 0, prev = null, tailStep = 0, pt = null;
+  for (let t = 0; t < 120; t += 1 / 240) {
+    const g = gazeAt(t);
+    tMax = Math.max(tMax, Math.abs(g.tilt)); if (prev !== null) tStep = Math.max(tStep, Math.abs(g.tilt - prev)); prev = g.tilt;
+    if (Math.round(t * 240) % 4 === 0) {
+      const p = solvePose(t, state(t, 60, t * 2 * Math.PI, { wind: 0 }));
+      const a = p.scarf.tails[0].a[5]; if (pt !== null) tailStep = Math.max(tailStep, Math.abs(angDiff(a, pt))); pt = a;
+    }
+  }
+  info.push(`storybook: happy head tilt ≤ ${tMax.toFixed(1)}° (max ${tStep.toFixed(3)}°/240 Hz sample), scarf tip ≤ ${tailStep.toFixed(2)}°/60 Hz frame`);
+  if (tMax < 1 || tMax > 4) fail(`happy head tilt ${tMax.toFixed(2)}° outside 1–4°`);
+  if (tStep > 0.1) fail(`head tilt snaps (${tStep.toFixed(3)}° per sample)`);
+  if (tailStep > 10) fail(`scarf tip faster than edition C (calm-wind rule) (${tailStep.toFixed(2)}°/frame)`);
+}
+
 console.log(info.join('\n'));
 console.log(`rig: foot err ${worstFoot.toFixed(4)}, hand err ${worstHand.toFixed(4)}, max jump ${maxJump.toFixed(3)}°, ${fails.length} failures`);
 if (fails.length) { console.error([...new Set(fails)].slice(0, 30).join('\n')); process.exit(1); }

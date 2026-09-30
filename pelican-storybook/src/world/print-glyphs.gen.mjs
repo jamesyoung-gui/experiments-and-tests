@@ -3,7 +3,7 @@
 // STYLE-B §4: Latin = DejaVu Serif (Bold for the hand-lettered title, the chapter plate, page numbers; Book for the story
 // captions and running heads; Bitstream Vera / DejaVu licence, outlines may be embedded). CJK = WenQuanYi Zen Hei
 // (GPL v2 + font embedding exception). Units: em = 1000, y down, baseline at y = 0, pen origin at x = 0.
-// The CJK set is harvested from print.js itself (every Han character in its source), so a new caption can never miss
+// The CJK set is harvested from print.js and route.js (every Han character in its source), so a new caption can never miss
 // a glyph: edit the text, rerun this script.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,7 +19,7 @@ const ZHF = `${FONTS}/wqy/wqy-zenhei.ttc`;
 const ASCII = Array.from({ length: 94 }, (_, i) => String.fromCharCode(33 + i)).join('');
 const EXTRA = '·—’“”→№…';
 // Han characters + CJK punctuation used anywhere in print.js (captions, headers, numerals) + what ui.js borrows
-const src = fs.readFileSync(path.join(here, 'print.js'), 'utf8');
+const src = ['print.js', 'route.js'].map(n => fs.readFileSync(path.join(here, n), 'utf8')).join('\n');   // + the stretch names (route.js)
 const han = new Set((src.match(/[　-〿一-鿿＀-￯]/g) || []));
 for (const ch of '鹈鹕湾零一二三四五六七八九十') han.add(ch);
 const ZH_CHARS = [...han].sort().join('');

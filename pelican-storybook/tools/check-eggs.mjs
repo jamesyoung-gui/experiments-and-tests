@@ -1,5 +1,6 @@
 // Easter-egg check: triggers every egg deterministically (window.__pb.eggs.trigger) and shoots it into shots/eggs/,
-// then exercises the live detectors (Konami keys, typed words, clicks on the sun / moon / bottle, bell spam, gulp at night).
+// then exercises the live detectors (Konami keys, typed words, clicks on the sun / moon / bottle / page corner, bell spam,
+// gulp at night, 30 s of coasting at night).
 // usage: node tools/check-eggs.mjs [--out shots/eggs] [--sheet]      exits 1 on any console error or failed check
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import fs from 'node:fs';
@@ -48,6 +49,9 @@ const plan = {
   bottle:   { T: 4, tod: 0.7, at: [1.0] },
   wish:     { T: 4, tod: 0.93, at: [0.4], clip: { x: 1030, y: 60, width: 300, height: 200 } },
   flight:   { T: 5, tod: 0.7, at: [4.5] },
+  pageturn: { T: 4, tod: 0.7, at: [0.3, 0.62, 0.95], todAt: dt => 0.7 + 0.065 * Math.min(1, dt / 1.3) },   // live, the new light follows the curl
+  theend:   { T: 5, tod: 0.7, at: [2.4, 4.8] },
+  bedtime:  { T: 6, tod: 0.93, at: [0.9, 2.2, 4.2] },
 };
 const page = await open();
 const list = await page.evaluate(() => window.__pb.eggs.list.map(e => e.id));
@@ -60,7 +64,7 @@ for (const id of list) {
   await render(page, p.T, { ...o, events: p.events ? p.events(p.T) : [] });
   await page.evaluate(id => { window.__pb.eggs.stopAll(); window.__pb.eggs.trigger(id); }, id);
   for (const [i, dt] of p.at.entries()) {
-    await render(page, p.T + dt, { ...o, events: p.events ? p.events(p.T) : [] });
+    await render(page, p.T + dt, { ...o, ...(p.todAt ? { tod: p.todAt(dt) } : {}), events: p.events ? p.events(p.T) : [] });
     await snap(page, p.at.length > 1 ? `${id}-${i}` : id, p.clip);
   }
 }
@@ -87,8 +91,15 @@ await live.mouse.click(moon.x, moon.y);
 await live.evaluate(() => { for (let i = 0; i < 7; i++) window.__pb.bus.emit('rig:event', { type: 'bell', t0: 4 + i * 0.3 }); });
 await live.evaluate(() => window.__pb.bus.emit('rig:event', { type: 'gulp', t0: 4 }));
 await render(live, 4.5, { tod: 0.93, cam: 'wide' });
+// the page corner (bottom right of the picture) turns the page; 30 s of coasting at night is bedtime
+await live.mouse.click(1600 - 22, 900 - 22);
+await live.evaluate(() => window.__pb.bus.emit('ui:coast', { on: true }));
+await render(live, 5, { tod: 0.93, cam: 'wide' });
+await render(live, 36, { tod: 0.93, cam: 'wide' });
+await live.evaluate(() => window.__pb.bus.emit('ui:coast', { on: false }));
+await render(live, 36.2, { tod: 0.93, cam: 'wide' });
 const liveFound = await live.evaluate(() => window.__pb.eggs.found());
-for (const id of ['brown', 'velo', 'flight', 'sunwink', 'bottle', 'moonwink', 'chorus', 'ufo']) if (!liveFound.includes(id)) fails.push(`live detector did not find "${id}"`);
+for (const id of ['brown', 'velo', 'flight', 'sunwink', 'bottle', 'moonwink', 'chorus', 'ufo', 'pageturn', 'bedtime']) if (!liveFound.includes(id)) fails.push(`live detector did not find "${id}"`);
 const st = await live.evaluate(() => ({ auto: window.__pb.state.todAuto, sound: window.__pb.state.toggles.sound }));
 if (st.auto || st.sound) fails.push('Konami / GIMINI left a side effect: ' + JSON.stringify(st));
 await snap(live, 'live-counter');

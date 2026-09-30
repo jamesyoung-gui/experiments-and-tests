@@ -115,6 +115,7 @@ export const GAZE = {
   basket: { x: 0.3, y: 0.85, turn: 0.1, pitch: 14 },
   camera: { x: -0.05, y: 0.1, turn: 1, pitch: 2 },
 };
+const GAZE_TILT = { sea: -2.6, sky: -2.2, camera: -3.2, basket: 1.8 };
 const GAZE_BAG = [['ahead', 0.3], ['sea', 0.2], ['road', 0.08], ['sky', 0.12], ['basket', 0.15], ['camera', 0.15]];
 const GAZE_CELL = 2.6, BLINK_CELL = 5.0;
 function gazeName(key) {
@@ -135,7 +136,12 @@ export function gazeAt(t, loopT) {
   const A = GAZE[prev.name], B = GAZE[cur.name];
   const eye = smooth01(since / 0.07);                    // saccade: 70 ms
   const head = smooth01((since - 0.08) / 0.34);          // head follows 80 ms later, 340 ms move
+  // storybook: once the head arrives it gives a happy little cock of the head toward what it likes, held a
+  // beat and relaxed (degrees, − = bill up). Rides the head drive, so crest / pouch / neck follow it.
+  const tiltOf = (n, u) => (GAZE_TILT[n] || 0) * smooth01((u - 0.3) / 0.45) * (1 - smooth01((u - 1.5) / 0.7));
+  const tilt = tiltOf(cur.name, since) + tiltOf(prev.name, cur.time - prev.time + since) * (1 - head);   // the old tilt hands over
   return {
+    tilt,
     x: lerp(A.x, B.x, eye), y: lerp(A.y, B.y, eye),
     pitch: lerp(A.pitch, B.pitch, head), turn: lerp(A.turn, B.turn, head),
     target: cur.name, from: prev.name, since, big: Math.abs(A.pitch - B.pitch) > 14 || Math.abs(A.turn - B.turn) > 0.6, changeT: cur.time,
@@ -397,7 +403,7 @@ export function solvePose(t, s = {}) {
     const lw = tt === t ? lookW : 0;
     const E = tt === t ? enc0 : encAt(tt);
     const ew = E ? E.w : 0;
-    r += lerp(g.pitch, E ? E.pitch : 0, ew) * (1 - lw) * (1 - 0.6 * sprint);
+    r += lerp(g.pitch + g.tilt, E ? E.pitch : 0, ew) * (1 - lw) * (1 - 0.6 * sprint);
     return { dx, dy, r, turn: lerp(g.turn, E ? E.turn : 0, ew) };
   };
   const memo = new Map();
@@ -446,7 +452,8 @@ export function solvePose(t, s = {}) {
   const rock = 1.1 * (0.6 + 0.6 * sprint) * pedalling * Math.cos(phi - 10 * D2R);   // hip rocks toward the pushing leg
   const bodyRot = lean + rock;
   const sq = stretch, bodySy = (1 + 0.045 * sq) * (1 + 0.011 * breath), bodySx = (1 - 0.045 * sq) * (1 + 0.005 * breath);
-  const depth = softMax(0.6, FIT.sit + evalPh(bobP, phi2) + sitEv + 0.35 * sprint, 0.35);
+  const plop = 0.16 * bobA * Math.cos(2 * (phi2 - th0));       // storybook bounce: rounder top, softer landing
+  const depth = softMax(0.6, FIT.sit + evalPh(bobP, phi2) + plop + sitEv + 0.35 * sprint, 0.35);
   const low = bellyLow(bodyRot, bodySx, bodySy);
   const pelvisY = BIKE.saddleTop[1] + depth - low.y;
   const pelvis = { p: [SKEL.pelvis[0] + FIT.dx - 1.5 * cadN, pelvisY], r: bodyRot };
@@ -532,9 +539,10 @@ export function solvePose(t, s = {}) {
   }
 
   // ---------------- 5. head, face slots ----------------
-  const headBob = child(phasor(0.25 * bobA, th0), w2, TAU * 1.8, 0.6);          // stabilised head: 25% of the bob, lagged
+  const headBob = child(phasor(0.3 * bobA, th0), w2, TAU * 1.6, 0.52);         // stabilised head: 30% of the bob, softer spring
   const headP = add(FIT.head, [hd.dx + 10 * cadN - 4 * coastW, hd.dy + evalPh(headBob, phi2) + 7 * cadN - 0.6 * breath]);
-  const headR = hd.r - 0.5 * rock + 2 * cadN - 2 * coastW + 2 * delight * Math.sin(TAU * 0.9 * (gl.tau - 1.7)) * (gl.tau > 1.7 ? 1 : 0);
+  const sway = 0.9 * (1 - sprint) * (1 - coastW * 0.5) * Math.sin((TAU * 3 * t) / 24);   // contented 8 s head sway, loop-exact
+  const headR = hd.r + sway - 0.5 * rock + 2 * cadN - 2 * coastW + 2 * delight * Math.sin(TAU * 0.9 * (gl.tau - 1.7)) * (gl.tau > 1.7 ? 1 : 0);
   const head = { p: headP, r: headR };
   J.head = { x: headP[0], y: headP[1], rot: headR };
   const eyeP = at(head, SKEL.eye);
@@ -613,16 +621,17 @@ export function solvePose(t, s = {}) {
     let prevLag = scarfPh;
     for (let i = 0; i < n; i++) {
       const f = i / (n - 1);
-      prevLag = i === 0 ? prevLag : child(prevLag, w2, TAU * 3.5, 0.45, 1.12);
+      prevLag = i === 0 ? prevLag : child(prevLag, w2, TAU * 3.1, 0.42, 1.1);   // storybook: softer, floatier links
       const baseA = lerp(droop - 7 * i, base + 2 * i, stream);
       const flut = (0.8 + 2.4 * f) * wind * Math.sin(3 * psiD - 0.9 * i + ph0) + (0.4 + 1.6 * f) * wind * Math.sin(8 * psiD - 1.4 * i + salt)
-        + gS * (6 + 10 * f) * Math.sin((TAU * 75 * t) / 24 - 1.1 * i + salt);
+        + gS * (6 + 10 * f) * Math.sin((TAU * 75 * t) / 24 - 1.1 * i + salt)
+        + (1.2 + 4.5 * f) * (1 - 0.5 * stream) * Math.sin((TAU * 4 * t) / 24 - 0.8 * i + salt);   // slow buoyant float (6 s, loop-exact)
       const lift = liftV * (0.35 + 0.65 * f) - 8 * landKickSlow * f + 6 * gS * f;
       a.push(baseA + evalPh(prevLag, phi2) * (0.4 + f) + flut + lift - 3 * coastW * f);
     }
     return { a, len };
   };
-  const tA = mkTail(6, 19, 184, 118, 0, 0.3), tB = mkTail(4, 15, 160, 100, 1.9, 2.1);
+  const tA = mkTail(6, 19, 184, 123, 0, 0.3), tB = mkTail(4, 15, 160, 104, 1.9, 2.1);
   const scarf = {
     x: kn[0], y: kn[1], neckAng: tan * R2D, wrapW: 2 * wK,
     tails: [

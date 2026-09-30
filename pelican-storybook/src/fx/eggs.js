@@ -46,7 +46,7 @@ export const materials = {
   eggUnder: '#D9C3A8',
   // Konami: a California brown pelican in breeding plumage
   eggBrBody: '#8F8378', eggBrShade: '#665850', eggBrDeep: '#3F3436', eggBrNeck: '#6E3524', eggBrCrown: '#F2CF6E',
-  eggBrWhite: '#FFF3E2', eggBrPouch: '#4E3F3C', eggBrPouchRed: '#B8433A', eggBrBill: '#CDB7A0', eggBrFoot: '#3A2F31',
+  eggBrWhite: '#FFF3E2', eggBrPouch: '#4E3F3C', eggBrPouchRed: '#B8433A', eggBrBill: '#B3A7A2', eggBrFoot: '#3A2F31',
 };
 
 // ------------------------------------------------------------------------------------------------ list (bilingual)
@@ -74,9 +74,9 @@ const TODS = [0.27, 0.5, 0.7, 0.765, 0.84, 0.93];   // dawn · noon · golden ·
 export const nextTod = tod => TODS.find(x => x > tod + 0.012) ?? TODS[0];
 const MARATHON = 42.195;           // km
 
-// the dog-eared corner is always on the page (a visible clue); the rest only appear once found
+// the dog-ear and the props the eggs hang on are on the page (visible clues); the rest only appear once found
 export const detailItems = [
-  { id: 'typography_frame:O:page-dog-ear', layer: 'typography_frame', kind: 'O', what: 'the dog-eared page corner (lifts now and then; click it to turn the page)' },
+  { id: 'typography_frame:O:page-dog-ear', layer: 'typography_frame', kind: 'O', what: 'the dog-eared page corner (lifts every 12 s; click it to turn the page to the next hour)' },
   { id: 'sea:O:message-bottle', layer: 'sea', kind: 'O', what: 'a green message-in-a-bottle with a rolled letter, bobbing in the bay (glints every 22 s)' },
   { id: 'land:O:cat-bench', layer: 'land', kind: 'O', what: 'a painted wooden bench with iron scrolls, a folded newspaper and a ginger tabby' },
   { id: 'land:O:road-puddle', layer: 'land', kind: 'O', what: 'a road puddle with sky reflections and a floating leaf' },
@@ -263,7 +263,7 @@ function pop(ref, word, sub, rx, ry, seed, tint) {
     const a = (i / 10) * 360 + seed * 17, r0 = 1.16 + 0.05 * hash(seed, i), c = Math.cos(a * D2R), s = Math.sin(a * D2R);
     const d = dab(c * rx * r0, s * ry * r0, (i % 2 ? 16 : 24) * (0.8 + 0.3 * hash(seed, i + 9)), 3.2, a);
     if (i % 2) fl += d; else fl2 += d;
-    if (i % 3 === 0) tw += `M0 0` && h('path', { d: twinkle(6, 1.6), transform: `translate(${f(Math.cos((a + 18) * D2R) * rx * 1.42)} ${f(Math.sin((a + 18) * D2R) * ry * 1.42)})`, fill: V('eggGold'), stroke: INK, 'stroke-width': 0.8 });
+    if (i % 3 === 0) tw += h('path', { d: twinkle(6, 1.6), transform: `translate(${f(Math.cos((a + 18) * D2R) * rx * 1.42)} ${f(Math.sin((a + 18) * D2R) * ry * 1.42)})`, fill: V('eggGold'), stroke: INK, 'stroke-width': 0.8 });
   }
   const bd = puffD(rx, ry, 9, seed);
   return h('g', { 'data-ref': 'egg-' + ref, visibility: 'hidden' },
@@ -342,44 +342,54 @@ function fish(len = 34, pfx) {
     Ln(`M${f(L * 0.4)} -6C${f(L * 0.26)} -2 ${f(L * 0.26)} 2 ${f(L * 0.4)} 5`, 1),
     F(circ(L * 0.62, -2, 3), V('paper'), { stroke: INK, 'stroke-width': 0.8 }), F(circ(L * 0.66, -1.8, 1.6), INK), F(circ(L * 0.7, -2.6, 0.6), V('paper')));
 }
-// a gull in glide (facing +x, origin = body); the wings are separate flapping groups
-function gull(pfx) {
+// a gull in glide (facing +x, origin = body): painted once as symbols (far wing / body / jaw / near wing); each gull
+// of the chorus is four <use>s, its wings flap by transform
+function gullParts() {
   SEED = 19;
   const P = V('paper'), G = V('eggGull');
-  return h('g', {},
-    h('g', { 'data-ref': pfx + 'WingF' }, O('M-6 -4C-12 -14 -18 -24 -24 -30L-40 -36C-32 -24 -26 -14 -20 -8Z', V('eggGull', { far: true }), 1.1)),
-    O('M-26 2L-38 -4L-36 6Z', P, 1.1),
-    O('M-28 2C-18 -6 4 -8 14 -4C20 -2 22 4 16 7C4 10 -16 9 -28 2Z', P, 1.4),
-    Gz('M-24 4C-12 8 4 9 14 6C4 10 -14 9 -24 4Z', V('plumeShade'), 0.9),
-    O('M12 -8C18 -12 26 -10 26 -4C26 0 20 2 14 1Z', P, 1.3),
-    h('g', { 'data-ref': pfx + 'Beak' }, O('M25 -5L35 -3L25 -1Z', V('eggGold'), 0.9), F('M31 -3.5L33 -3.2L31.5 -2Z', V('eggRed'))),
-    h('g', { 'data-ref': pfx + 'Jaw', visibility: 'hidden' }, O('M25 -1L33 5L24 1Z', V('eggGold'), 0.9)),
-    F(circ(20, -6, 1.6), INK), F(circ(20.5, -6.6, 0.55), P), F(blob(19, -2, 2.4, 1.6), V('eggRose'), { opacity: 0.55 }),
-    h('g', { 'data-ref': pfx + 'Wing' },
-      O('M-8 -2C-14 -16 -22 -30 -38 -44C-26 -44 -8 -30 6 -6Z', G, 1.4),
-      Gz('M-6 -4C-10 -14 -16 -24 -26 -34C-16 -30 -6 -20 2 -6Z', P, 0.35),
-      F('M-26 -34L-38 -44C-32 -44 -26 -41 -20 -36Z', V('eggGullTip')),
-      F(circ(-33, -41, 1.4), P)));
+  return {
+    WF: O('M-6 -4C-12 -14 -18 -24 -24 -30L-40 -36C-32 -24 -26 -14 -20 -8Z', V('eggGull', { far: true }), 1.1),
+    B: O('M-26 2L-38 -4L-36 6Z', P, 1.1)
+      + O('M-28 2C-18 -6 4 -8 14 -4C20 -2 22 4 16 7C4 10 -16 9 -28 2Z', P, 1.4)
+      + Gz('M-24 4C-12 8 4 9 14 6C4 10 -14 9 -24 4Z', V('plumeShade'), 0.9)
+      + O('M12 -8C18 -12 26 -10 26 -4C26 0 20 2 14 1Z', P, 1.3)
+      + O('M25 -5L35 -3L25 -1Z', V('eggGold'), 0.9) + F('M31 -3.5L33 -3.2L31.5 -2Z', V('eggRed'))
+      + F(circ(20, -6, 1.6), INK) + F(circ(20.5, -6.6, 0.55), P) + F(blob(19, -2, 2.4, 1.6), V('eggRose'), { opacity: 0.55 }),
+    J: O('M25 -1L33 5L24 1Z', V('eggGold'), 0.9),
+    W: O('M-8 -2C-14 -16 -22 -30 -38 -44C-26 -44 -8 -30 6 -6Z', G, 1.4)
+      + Gz('M-6 -4C-10 -14 -16 -24 -26 -34C-16 -30 -6 -20 2 -6Z', P, 0.35)
+      + F('M-26 -34L-38 -44C-32 -44 -26 -41 -20 -36Z', V('eggGullTip')) + F(circ(-33, -41, 1.4), P),
+  };
 }
-// great white pelican in flight (facing +x, neck folded; origin = body)
-function pelFly(pfx) {
+const use = id => h('use', { href: '#' + id });
+function gull(pfx) {
+  return h('g', {},
+    h('g', { 'data-ref': pfx + 'WingF' }, use('egg-gWF')), use('egg-gB'),
+    h('g', { 'data-ref': pfx + 'Jaw', visibility: 'hidden' }, use('egg-gJ')),
+    h('g', { 'data-ref': pfx + 'Wing' }, use('egg-gW')));
+}
+// great white pelican in flight (facing +x, neck folded; origin = body), as symbols like the gulls
+function pelFlyParts() {
   SEED = 23;
   const P = V('plume'), S = V('plumeShade'), N = V('flight');
   let fingers = ''; for (let i = 0; i < 4; i++) fingers += dab(-30 + i * 3, -48 + i * 3, 20 - i * 2, 2.6, -150 + i * 12);
-  return h('g', {},
-    h('g', { 'data-ref': pfx + 'WingF' }, F('M-2 -4C-12 -24 -28 -40 -52 -48C-44 -30 -26 -12 -12 -2Z', V('flight', { far: true }))),
-    O('M-36 0C-26 -12 4 -14 20 -9C30 -6 32 4 24 8C8 13 -22 11 -36 0Z', P, 1.5),
-    Gz('M-30 3C-16 9 10 10 22 6C12 12 -14 12 -30 3Z', S, 0.95),
-    O('M-36 0L-46 -5L-45 4Z', P, 1.1),
-    O('M20 -4C24 -14 32 -18 40 -14C46 -10 42 -3 34 0Z', P, 1.3),
-    O('M40 -13L78 -3L41 -5Z', V('bill'), 1),
-    O('M41 -5L74 -2C62 7 48 7 39 1Z', V('pouch'), 1),
-    F(circ(77, -3, 1.6), V('billNail')), F(circ(37, -11, 1.4), INK), F(blob(36, -8, 2.2, 1.5), V('eggRose'), { opacity: 0.6 }),
-    F('M-14 8L-24 14L-17 15L-9 10Z', V('foot')),
-    h('g', { 'data-ref': pfx + 'Wing' },
-      O('M-4 -6C-10 -26 -22 -44 -46 -58C-26 -58 0 -34 12 -8Z', P, 1.4),
-      Gz('M-2 -8C-8 -22 -16 -34 -30 -46C-16 -40 -4 -26 6 -10Z', S, 0.6),
-      F(fingers, N), Ln('M-8 -16C-14 -26 -22 -34 -30 -42', 0.9, { opacity: 0.6 })));
+  return {
+    WF: F('M-2 -4C-12 -24 -28 -40 -52 -48C-44 -30 -26 -12 -12 -2Z', V('flight', { far: true })),
+    B: O('M-36 0C-26 -12 4 -14 20 -9C30 -6 32 4 24 8C8 13 -22 11 -36 0Z', P, 1.5)
+      + Gz('M-30 3C-16 9 10 10 22 6C12 12 -14 12 -30 3Z', S, 0.95)
+      + O('M-36 0L-46 -5L-45 4Z', P, 1.1)
+      + O('M20 -4C24 -14 32 -18 40 -14C46 -10 42 -3 34 0Z', P, 1.3)
+      + O('M40 -13L78 -3L41 -5Z', V('bill'), 1)
+      + O('M41 -5L74 -2C62 7 48 7 39 1Z', V('pouch'), 1)
+      + F(circ(77, -3, 1.6), V('billNail')) + F(circ(37, -11, 1.4), INK) + F(blob(36, -8, 2.2, 1.5), V('eggRose'), { opacity: 0.6 })
+      + F('M-14 8L-24 14L-17 15L-9 10Z', V('foot')),
+    W: O('M-4 -6C-10 -26 -22 -44 -46 -58C-26 -58 0 -34 12 -8Z', P, 1.4)
+      + Gz('M-2 -8C-8 -22 -16 -34 -30 -46C-16 -40 -4 -26 6 -10Z', S, 0.6)
+      + F(fingers, N) + Ln('M-8 -16C-14 -26 -22 -34 -30 -42', 0.9, { opacity: 0.6 }),
+  };
+}
+function pelFly(pfx) {
+  return h('g', {}, h('g', { 'data-ref': pfx + 'WingF' }, use('egg-pfWF')), use('egg-pfB'), h('g', { 'data-ref': pfx + 'Wing' }, use('egg-pfW')));
 }
 // a striped nightcap with a pompom (head-local: head centre (0,0), bill toward +x, drooping back)
 function nightcap(s = 1) {
@@ -416,6 +426,12 @@ export function build(ctx) {
     for (let i = 0; i < 12; i++) fb += `M${f(3 + 34 * hash(i, 81))} ${f(3 + 34 * hash(i, 82))}l${f(2 + 4 * hash(i, 83))} ${f(-1.5 + 3 * hash(i, 84))}`;
     defs += h('pattern', { id: 'egg-fibre', patternUnits: 'userSpaceOnUse', width: 40, height: 40 }, h('path', { d: fb, stroke: v('lineSoft'), 'stroke-width': 0.6, opacity: 0.3, 'stroke-linecap': 'round' }));
     defs += h('radialGradient', { id: 'egg-glow' }, h('stop', { offset: 0, style: 'stop-color:var(--pb-lamp);stop-opacity:.8' }), h('stop', { offset: 0.5, style: 'stop-color:var(--pb-lampGlow);stop-opacity:.25' }), h('stop', { offset: 1, style: 'stop-color:var(--pb-lampGlow);stop-opacity:0' }));
+    // the back of the turning page: the story on the other side bleeds through (mirrored lines of text)
+    let bl = ''; for (let row = 0; row < 3; row++) { let x = 6; while (x < 150) { const w = 6 + 22 * hash(row * 31 + x, 91); if (x + w > 150) break; bl += `M${f(x)} ${f(14 + row * 22)}h${f(w)}`; x += w + 6; } }
+    defs += h('pattern', { id: 'egg-bleed', patternUnits: 'userSpaceOnUse', width: 160, height: 66, patternTransform: 'rotate(-24)' }, h('path', { d: bl, stroke: v('lineSoft'), 'stroke-width': 4, 'stroke-linecap': 'round', opacity: 0.1 }));
+    defs += h('linearGradient', { id: 'egg-turnG', 'data-ref': 'egg-turnG', gradientUnits: 'userSpaceOnUse', x1: 0, y1: 0, x2: 1, y2: 0 },
+      h('stop', { offset: 0, style: 'stop-color:var(--pb-line);stop-opacity:.32' }), h('stop', { offset: 0.06, style: 'stop-color:var(--pb-mauve);stop-opacity:.3' }),
+      h('stop', { offset: 0.2, style: 'stop-color:var(--pb-paper);stop-opacity:0' }), h('stop', { offset: 0.55, style: 'stop-color:var(--pb-mauve);stop-opacity:0' }), h('stop', { offset: 1, style: 'stop-color:var(--pb-mauve);stop-opacity:.26' }));
     defs += h('linearGradient', { id: 'egg-beam', x1: 0, y1: 0, x2: 0, y2: 1 }, h('stop', { offset: 0, style: 'stop-color:var(--pb-lamp);stop-opacity:.7' }), h('stop', { offset: 1, style: 'stop-color:var(--pb-lampGlow);stop-opacity:0' }));
   }
 
@@ -437,6 +453,8 @@ export function build(ctx) {
     + `${slotSel(['footNear', 'footFar', 'shankNear', 'shankFar'])}{${set(feet)}}`
     + `</style>`;
   defs += h('symbol', { id: 'egg-catsit', overflow: 'visible' }, catSit('egg-cs'));
+  const sym = (id2, mk) => h('symbol', { id: id2, overflow: 'visible' }, mk);
+  { const g = gullParts(), q = pelFlyParts(); defs += sym('egg-gWF', g.WF) + sym('egg-gB', g.B) + sym('egg-gJ', g.J) + sym('egg-gW', g.W) + sym('egg-pfWF', q.WF) + sym('egg-pfB', q.B) + sym('egg-pfW', q.W); }
 
   // ---- caption slips (screen-ish, upper left): brown / velo
   const card = (ref, l1, l2, l3, doodle, seed) => {
@@ -609,7 +627,7 @@ export function build(ctx) {
         O('M-18 0H18L12 18H-12Z', v('eggPot'), 1.3), O(rrect(-20, -4, 40, 6, 2), v('eggPot'), 1.1),
         Ln('M-8 -4C-10 -12 -6 -18 -4 -22M4 -4C6 -14 2 -20 6 -26M0 -4V-18', 1.1, { stroke: v('eggLeaf') }),
         F(blob(-4, -24, 6, 5) + blob(7, -28, 6, 5) + blob(0, -18, 5, 4), v('eggPetal'), { stroke: INK, 'stroke-width': 0.8 }), F(circ(-4, -24, 1.5) + circ(7, -28, 1.5), Gd))
-      + ink('Oh no, not again.', 10, 70, -96, v('eggCream')) + h('path', { d: 'M-128 -86C-60 -76 60 -76 128 -86', fill: 'none', stroke: 'none' });
+      + ink('Oh no, not again.', 10, 44, -90, v('eggCream')) + h('path', { d: 'M-128 -86C-60 -76 60 -76 128 -86', fill: 'none', stroke: 'none' });
     L.front += plate('poster42', '42!', "别慌 · Don't panic", 'So long, and thanks for all the fish · 4.2 km', scene42, 95);
     let conf = '';
     const CI = [R, Gd, Tl, v('eggPetal'), P, v('eggLeaf')];
@@ -633,7 +651,7 @@ export function build(ctx) {
   for (let i = 0; i < 8; i++) links += h('path', { 'data-ref': 'egg-lk' + i, d: rrect(-5.5, -2.8, 11, 5.6, 2.6), fill: v('steel'), stroke: INK, 'stroke-width': 1.1 });
   SEED = 101;
   let zz = '';
-  for (let i = 0; i < 3; i++) zz += h('g', { 'data-ref': 'egg-bedZ' + i }, letter('Z', 30 - i * 5, 0, 0, v('eggCream'), { seed: 101 + i }));
+  for (let i = 0; i < 3; i++) zz += h('g', { 'data-ref': 'egg-bedZ' + i }, letter('Z', 40 - i * 7, 0, 0, v('moon'), { seed: 101 + i }));
   L.front += h('g', { 'data-ref': 'egg-riderF' },
     h('g', { 'data-ref': 'egg-velo', visibility: 'hidden' },
       h('g', { 'data-ref': 'egg-veloChain' },
@@ -646,7 +664,7 @@ export function build(ctx) {
       h('g', { 'data-ref': 'egg-veloQ', transform: 'translate(-30 -515)' }, letter('?!', 62, 0, 0, R, { seed: 7 }))),
     h('g', { 'data-ref': 'egg-ufoFish', visibility: 'hidden' }, fish(32)),
     h('g', { 'data-ref': 'egg-bed', visibility: 'hidden' },
-      h('g', { 'data-ref': 'egg-bedCap' }, h('g', { 'data-ref': 'egg-bedCapIn' }, nightcap())),
+      h('g', { 'data-ref': 'egg-bedCap' }, h('g', { 'data-ref': 'egg-bedCapIn' }, h('g', { transform: 'translate(2 4) scale(1.3)' }, nightcap()))),
       zz,
       h('g', { 'data-ref': 'egg-bedYawn' }, (() => { SEED = 103; const bd = puffD(70, 34, 8, 103); return F(bd, v('mauve'), { opacity: 0.35, transform: 'translate(3 5)' }) + F(bd, P) + F(bd, 'url(#egg-gouache)') + h('path', { d: bd, fill: 'none', stroke: INK, 'stroke-width': 1.8 }) + O('M-40 26L-58 46L-26 30Z', P, 1.6) + letter('哈欠…', 22, 0, 0, v('eggNavy'), { seed: 104 }) + ink('Yaaawn…', 14, 0, 20, INK); })())));
   L.front += pop('popSnap', 'SNAP!', '啪！', 74, 42, 21, R);
@@ -680,10 +698,10 @@ export function build(ctx) {
     let ch = '';
     for (let i = 0; i < 5; i++) {
       SEED = 120 + i; const bd = puffD(34, 20, 6, 40 + i);
+      if (i < 2) defs += sym('egg-kaw' + i, F(bd, P) + h('path', { d: bd, fill: 'none', stroke: INK, 'stroke-width': 1.4 }) + O('M-14 15L-22 30L-4 18Z', P, 1.2)
+        + letter(i % 2 ? '嘎！' : 'KAW!', i % 2 ? 17 : 15, 0, 6, i % 2 ? Nv : R, { seed: 40 + i }));
       ch += h('g', { 'data-ref': 'egg-g' + i }, gull('egg-g' + i),
-        h('g', { 'data-ref': `egg-g${i}Kaw`, visibility: 'hidden', transform: 'translate(48 -32)' },
-          F(bd, P), h('path', { d: bd, fill: 'none', stroke: INK, 'stroke-width': 1.4 }), O('M-18 14L-28 26L-8 17Z', P, 1.2),
-          letter(i % 2 ? '嘎！' : 'KAW!', i % 2 ? 17 : 15, 0, 6, i % 2 ? Nv : R, { seed: 40 + i })));
+        h('g', { 'data-ref': `egg-g${i}Kaw`, visibility: 'hidden', transform: 'translate(40 -50)' }, use('egg-kaw' + (i % 2))));
     }
     SEED = 131;
     L.front += h('g', { 'data-ref': 'egg-chorus', visibility: 'hidden' }, ch,
@@ -695,6 +713,7 @@ export function build(ctx) {
   {
     SEED = 141; WA = 0.6;
     const S = 58;
+    // the visible clue (print.js keeps this group above its paper margin); hidden if print paints a curl of its own
     L.page += h('g', { 'data-ref': 'egg-corner', ...DD('typography_frame:O:page-dog-ear') },
       h('g', { 'data-ref': 'egg-cornerIn' },
         F(`M0 0L${-S} 0L0 ${-S}Z`, v('eggUnder')), F(`M0 0L${-S} 0L0 ${-S}Z`, 'url(#egg-gouache)'),
@@ -710,7 +729,9 @@ export function build(ctx) {
       h('path', { 'data-ref': 'egg-turnShadow', d: '', fill: INK, opacity: 0.2 }),
       h('path', { 'data-ref': 'egg-turnFlap', d: '', fill: P }),
       h('path', { 'data-ref': 'egg-turnTex', d: '', fill: 'url(#egg-fibre)' }),
-      h('path', { 'data-ref': 'egg-turnShade', d: '', fill: v('mauve'), opacity: 0.35 }),
+      h('path', { 'data-ref': 'egg-turnBleed', d: '', fill: 'url(#egg-bleed)' }),
+      h('path', { 'data-ref': 'egg-turnGrad', d: '', fill: 'url(#egg-turnG)' }),
+      h('path', { 'data-ref': 'egg-turnShade', d: '', fill: v('mauve'), opacity: 0.2 }),
       h('path', { 'data-ref': 'egg-turnLine', d: '', fill: 'none', stroke: INK, 'stroke-width': 1.6, 'stroke-linejoin': 'round' }));
     // The End: a paper iris closing on the rider, with the title lettered on the page
     const hole = blob(0, 0, 900, 900, 0.012, 5);
@@ -725,7 +746,8 @@ export function build(ctx) {
         Ln('M560 120C590 96 620 140 650 114M1040 120C1010 96 980 140 950 114', 2),
         h('path', { d: twinkle(10, 2.4), fill: Gd, stroke: INK, 'stroke-width': 0.9, transform: 'translate(540 128)' }),
         h('path', { d: twinkle(10, 2.4), fill: Gd, stroke: INK, 'stroke-width': 0.9, transform: 'translate(1060 128)' }),
-        h('g', { 'data-ref': 'egg-endQ' }, letter('?', 84, 0, 0, Gd, { seed: 155 })),
+        h('g', { 'data-ref': 'egg-endQ' }, letter('?', 84, 0, 0, Gd, { seed: 155 }))),
+      h('g', { 'data-ref': 'egg-endBot' },
         h('g', { 'data-ref': 'egg-endB1' }, ink('马拉松 · 42.195 km · a whole marathon!', 24, 800, 842, INK)),
         h('g', { 'data-ref': 'egg-endB2' }, letter('…or is it?  未完待续', 28, 800, 846, Nv, { seed: 157 }))));
     WA = 0.9;
@@ -781,7 +803,13 @@ export function attach(svg, ctx) {
   const r = refs(svg, 'egg-');
   const st = new WeakMap();    // last written attribute values per element (write only on change)
   const set = (el, k, val) => { let m = st.get(el); if (!m) st.set(el, m = {}); if (m[k] !== val) { m[k] = val; el.setAttribute(k, val); } };
-  const vis = (el, on) => set(el, 'visibility', on ? 'inherit' : 'hidden');   // 'inherit': a shown child never overrides a hidden egg group
+  // an egg's top group is display:none while idle (its whole subtree then costs no style, layout or paint); parts
+  // inside a shown egg toggle visibility ('inherit': a shown child never overrides a hidden egg group)
+  const TOP = ['capBrown', 'capVelo', 'sunFace', 'moonFace', 'wish', 'flight', 'note', 'catJump', 'popMeow', 'popSplash', 'popSnap', 'popBleep', 'splash',
+    'posterKm', 'poster42', 'confetti', 'velo', 'ufoFish', 'bed', 'ufo', 'chorus', 'turn', 'end', 'bench', 'puddle', 'bottle', 'corner'].map(k => r[k]).filter(Boolean);
+  for (const el of TOP) if (el.getAttribute('visibility') === 'hidden') { el.removeAttribute('visibility'); el.setAttribute('display', 'none'); }
+  const TOPS = new Set(TOP);
+  const vis = (el, on) => (TOPS.has(el) ? set(el, 'display', on ? 'inline' : 'none') : set(el, 'visibility', on ? 'inherit' : 'hidden'));
   const reduced = ctx.reduced;
   const E = {};                  // id -> { t0, ...params }
   const found = new Set();
@@ -803,6 +831,12 @@ export function attach(svg, ctx) {
     const vw = w / s, vh = hh / s; box = [800 - vw / 2, 450 - vh / 2, 800 + vw / 2, 450 + vh / 2];
   };
   measure();
+  // the page corner: print.js's curled corner (its translate = the corner, screen coords of L-letterbox), else ours
+  const printCurl = svg.querySelector('[data-ref="print-curl"]');
+  const corner = () => {
+    const m = printCurl && /translate\(\s*([-\d.]+)[\s,]+([-\d.]+)/.exec(printCurl.getAttribute('transform') || '');
+    return m ? [+m[1], +m[2]] : [box[2] - 9, box[3] - 9];   // inside the cover cloth + page edges (print.js RIM)
+  };
   const win = svg.ownerDocument && svg.ownerDocument.defaultView;
   if (win) win.addEventListener('resize', measure);
 
@@ -812,9 +846,9 @@ export function attach(svg, ctx) {
     frame: () => lastFrame,
     onFound(fn) { onFound = fn; },
     catTake(k) { catTaken = k; },
-    box: () => box,
+    box: () => box, corner,
     // layer-space anchors (an egg element's parent in each layer: its screen CTM maps clicks into layer coords)
-    anchor: { 'L-sunmoon': r.sunFace.parentNode, 'L-stars': r.wish.parentNode, 'L-sea': r.bottle.parentNode },
+    anchor: { 'L-sunmoon': () => r.sunFace.parentNode, 'L-stars': () => r.wish.parentNode, 'L-sea': () => r.bottle.parentNode },
   };
   inst = api;
 
@@ -1115,7 +1149,7 @@ export function attach(svg, ctx) {
           // yawn bubble (0.2 – 2.4 s)
           const yu = u - 0.2, yOn = yu >= 0 && yu < 2.2 && off < 0;
           vis(r.bedYawn, yOn);
-          if (yOn) { const s = reduced ? 1 : easeOutBack(clamp(yu / 0.3, 0, 1)) * (1 - 0.3 * sstep(1.9, 2.2, yu)); set(r.bedYawn, 'transform', `translate(${f(hj.x + 120)} ${f(hj.y - 96)}) scale(${f2(Math.max(0.01, s))})`); set(r.bedYawn, 'opacity', f2(1 - sstep(1.9, 2.2, yu))); }
+          if (yOn) { const s = reduced ? 1 : easeOutBack(clamp(yu / 0.3, 0, 1)) * (1 - 0.3 * sstep(1.9, 2.2, yu)); set(r.bedYawn, 'transform', `translate(${f(hj.x + 215)} ${f(hj.y - 58)}) scale(${f2(Math.max(0.01, s))})`); set(r.bedYawn, 'opacity', f2(1 - sstep(1.9, 2.2, yu))); }
           // nightcap: drops in from above at 1.4 s with a squashy bounce, stays until the ride resumes
           const cu = u - 1.4;
           vis(r.bedCap, cu >= 0 && endU < 1.2);
@@ -1131,16 +1165,16 @@ export function attach(svg, ctx) {
           for (let i = 0; i < 3; i++) {
             const zu = wrap(u - 2.2 - i * 0.9, 2.7), zOn = u > 2.2 + i * 0.9 && endU < 0 && !reduced;
             vis(r['bedZ' + i], zOn);
-            if (zOn) set(r['bedZ' + i], 'transform', `translate(${f(hj.x + 40 - 70 * zu + 10 * Math.sin(zu * 3))} ${f(hj.y - 40 - 70 * zu)}) rotate(${f(-12 + 8 * Math.sin(zu * 2))}) scale(${f2(0.6 + 0.4 * zu)})`), set(r['bedZ' + i], 'opacity', f2(sstep(0, 0.3, zu) * (1 - sstep(2.1, 2.7, zu))));
+            if (zOn) set(r['bedZ' + i], 'transform', `translate(${f(hj.x - 30 - 60 * zu + 10 * Math.sin(zu * 3))} ${f(hj.y - 44 - 36 * zu)}) rotate(${f(-12 + 8 * Math.sin(zu * 2))}) scale(${f2(0.6 + 0.25 * zu)})`), set(r['bedZ' + i], 'opacity', f2(sstep(0, 0.3, zu) * (1 - sstep(2.1, 2.7, zu))));
           }
         }
       }
 
       // ---- the page: dog-eared corner (a flutter every 12 s: the visible clue), page-turn curl, The End
       {
-        const [X0, Y0, X1, Y1] = box;
+        const [X0, Y0] = box, [X1, Y1] = corner();
         const tu = tau('pageturn', t), turning = tu >= 0 && tu < DUR.pageturn;
-        vis(r.corner, !(turning && tu < TURN + 0.1));
+        vis(r.corner, !printCurl && !(turning && tu < TURN + 0.1));
         if (!turning) {
           const fp = wrap(t, 12), lift = reduced ? 0 : Math.sin(Math.PI * clamp(fp / 1.1, 0, 1)) * (fp < 1.1 ? 1 : 0);
           set(r.corner, 'transform', `translate(${f(X1)} ${f(Y1)})`);
@@ -1149,14 +1183,16 @@ export function attach(svg, ctx) {
           const back = sstep(TURN, DUR.pageturn, tu);   // the corner curls back in after the turn
           set(r.corner, 'transform', `translate(${f(X1)} ${f(Y1)})`);
           set(r.cornerIn, 'transform', `scale(${f2(Math.max(0.01, back))})`);
-          vis(r.corner, tu > TURN);
+          vis(r.corner, !printCurl && tu > TURN);
         }
         vis(r.turn, turning && tu < TURN);
         if (turning && tu < TURN) {
           const smax = Math.abs(TN[0] * (X0 - X1) + TN[1] * (Y0 - Y1)) * 2 + 80;   // flap fully off the page
           const s = 60 + (smax - 60) * easeInOut(clamp(tu / TURN, 0, 1));
-          const g = turnGeom(s * 0.5, [X0 - 20, Y0 - 20, X1 + 2, Y1 + 2]);
-          set(r.turnFlap, 'd', g.flap); set(r.turnTex, 'd', g.flap); set(r.turnLine, 'd', g.flap);
+          const ins = box[2] - X1, g = turnGeom(s * 0.5, [X0 + ins, Y0 + ins, X1, Y1]);
+          set(r.turnFlap, 'd', g.flap); set(r.turnTex, 'd', g.flap); set(r.turnLine, 'd', g.flap); set(r.turnBleed, 'd', g.flap); set(r.turnGrad, 'd', g.flap);
+          const fx0 = X1 + TN[0] * s * 0.5, fy0 = Y1 + TN[1] * s * 0.5;   // on the fold line; the gradient runs across the flap
+          set(r.turnG, 'x1', f(fx0)); set(r.turnG, 'y1', f(fy0)); set(r.turnG, 'x2', f(fx0 + TN[0] * 320)); set(r.turnG, 'y2', f(fy0 + TN[1] * 320));
           set(r.turnShade, 'd', g.shade); set(r.turnGut, 'd', g.gut); set(r.turnShadow, 'd', g.shadow);
         }
         // The End: the page irises shut on the rider, "The End" … "?" … "…or is it?", and opens again
@@ -1164,13 +1200,17 @@ export function attach(svg, ctx) {
         vis(r.end, eOn);
         if (eOn) {
           const [cx, cy] = toScr(fr, RIDER_X + 40, GROUND_Y + fr.pose.riderY - 290);
+          const vw = box[2] - box[0], vh = box[3] - box[1], z = (fr.cam && fr.cam.zoom) || 1;
+          const R = Math.min(300 * z, 0.47 * vw, 0.3 * vh), k1 = R / 900, k0 = Math.hypot(vw, vh) / 900 + 0.1;
           const close = easeInOut(clamp(eu / 1.6, 0, 1)), open = easeInOut(clamp((eu - 7.0) / 1.6, 0, 1));
-          const k = lerp(1.35, 0.33, close) + (1.4 - 0.33) * open;
+          const k = lerp(k0, k1, close) + (k0 - k1) * open;
           set(r.endIris, 'transform', `translate(${f(cx)} ${f(cy)}) scale(${f2(k)})`);
           const tx = sstep(1.1, 1.7, eu) * (1 - sstep(6.6, 7.2, eu));
-          const vw = X1 - X0, ks = Math.min(1, vw / 640);
-          set(r.endText, 'transform', `translate(800 ${f(Y0)}) scale(${f2(ks)}) translate(-800 0)`);
-          set(r.endText, 'opacity', f2(tx));
+          const ks = Math.min(1, vw / 640), mx = clamp(cx, box[0] + 320 * ks, box[2] - 320 * ks);
+          const ty = Math.max(box[1] + 150 * ks, cy - R - 18), by = Math.min(box[3] - 20 * ks, cy + R + 46 * ks);
+          set(r.endText, 'transform', `translate(${f(mx)} ${f(ty)}) scale(${f2(ks)}) translate(-800 -200)`);
+          set(r.endBot, 'transform', `translate(${f(mx)} ${f(by)}) scale(${f2(ks)}) translate(-800 -842)`);
+          set(r.endText, 'opacity', f2(tx)); set(r.endBot, 'opacity', f2(tx));
           const q = clamp((eu - 3.4) / 0.3, 0, 1);
           vis(r.endQ, q > 0);
           if (q > 0) set(r.endQ, 'transform', `translate(${f(958 + 6 * Math.sin(eu * 3))} 152) rotate(${f(10 + 6 * Math.sin(eu * 2))}) scale(${f2(Math.max(0.01, reduced ? 1 : easeOutBack(q)))})`);
@@ -1263,7 +1303,7 @@ export function connect({ bus, state, svg }) {
 
   // clicks on the sky and the sea, hit-tested in each layer's own coordinates. The anchor is an egg element's parent
   // in that layer (never a hoisted strip, whose sheet carries a CSS translate), so its screen CTM is the layer's.
-  const layerPt = (lid, e) => { const el = A.anchor[lid]; const m = el && el.getScreenCTM(); if (!m) return null; return new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()); };
+  const layerPt = (lid, e) => { const el = A.anchor[lid] && A.anchor[lid](); const m = el && el.getScreenCTM(); if (!m) return null; return new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()); };
   const shoots = [...svg.querySelectorAll('[data-ref^="sky-shoot"]')];
   const shootSeen = [];
   const watchShoots = () => {
@@ -1276,7 +1316,7 @@ export function connect({ bus, state, svg }) {
   win.requestAnimationFrame(watchShoots);
   // the page corner: a click (or tap) in the bottom-right corner of the picture, unless it lands on a UI control
   const toVB = e => { const rc = svg.getBoundingClientRect(), [X0, Y0, X1, Y1] = A.box(); const s = rc.width / (X1 - X0 || 1); return [X0 + (e.clientX - rc.left) / s, Y0 + (e.clientY - rc.top) / s]; };
-  const onCorner = e => { const [x, y] = toVB(e), [, , X1, Y1] = A.box(); return x > X1 - 96 && y > Y1 - 96 && (X1 - x) + (Y1 - y) < 130; };
+  const onCorner = e => { const [x, y] = toVB(e), [X1, Y1] = A.corner(); return x > X1 - 96 && y > Y1 - 96 && x < X1 + 30 && y < Y1 + 30 && (X1 - x) + (Y1 - y) < 130; };
   const isControl = el => el && el.closest && el.closest('button,a,input,select,textarea,label,[role="button"],[role="slider"],[role="switch"],[role="dialog"]');
   win.addEventListener('click', e => {
     if (isControl(e.target) || !onCorner(e)) return;

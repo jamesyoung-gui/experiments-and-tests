@@ -2,7 +2,7 @@
 //  · the book: a cloth-bound cover rim and the stacked page edges at the screen edge, the deckled edge of the top page,
 //    the cream paper margin (fibre texture) whose inner edge is the painting's dry-brush boundary, the illustrator's
 //    ruled pencil frame (double, overshooting at the corners), the gutter shadow down the spread with its sewing
-//    stitches, running heads, bilingual page numbers with leaf flourishes, a curled page corner, a red satin bookmark
+//    stitches, running heads, bilingual page numbers with leaf flourishes, a red satin bookmark
 //    ribbon, a publisher's colophon and little spot illustrations in the margins (shell, fish bone, star, feather,
 //    paper boat, a child's crayon heart, a thumbprint);
 //  · the hand-lettered title "Pelican Bay" + 鹈鹕湾 (DejaVu Serif Bold / WenQuanYi outlines, every glyph baked with its
@@ -25,6 +25,8 @@ import { LAT, SER, ZH } from './print-glyphs.js';
 import { stretchAt, lapOf, lapPos } from './route.js';
 
 export const id = 'print';
+// the animated title and the fading captions get their own composited sheets: the page itself never re-rasterises
+export const isolate = ['#print-captions', '#print-title'];
 // page paints (graded by the hour like every material: the bedtime page at night is a lavender-dusk cream)
 export const materials = {
   pgPaper: '#F8EDD8', pgPaperHi: '#FFF8EC', pgPaperLo: '#E6D2B2', pgEdge: '#EADAC0',
@@ -163,8 +165,15 @@ const zhNum = n => n <= 10 ? (n === 10 ? '十' : ZH_DIG[n]) : n < 20 ? '十' + (
 const EN_NUM = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
 const titleCase = s => s.toLowerCase().split(' ').map((w, i) => (i && /^(the|of|and)$/.test(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 const chapterOf = lap => ({ zh: `第${zhNum(lap + 1)}章`, en: `Chapter ${EN_NUM[lap + 1] || lap + 1}` });
+const pageCache = new Map();
 function pageOf(D, night) {
-  const s = stretchAt(D), lap = Math.max(0, lapOf(D)), n = lap * 12 + s.i + 1;
+  const s = stretchAt(D), lap = Math.max(0, lapOf(D)), ck = (lap * 12 + s.i) * 2 + (night ? 1 : 0);
+  let pg = pageCache.get(ck);
+  if (!pg) { if (pageCache.size > 64) pageCache.clear(); pageCache.set(ck, pg = makePage(s, lap, night)); }
+  return pg;
+}
+function makePage(s, lap, night) {
+  const n = lap * 12 + s.i + 1;
   const [zh, en] = (night && STORY_NIGHT[s.key]) || STORY[s.key];
   return { key: `${lap}:${s.i}:${night && STORY_NIGHT[s.key] ? 'n' : 'd'}`, n, lap, s, zh, en,
     headZh: `第${zhNum(n)}页 · ${s.cn}`, headEn: `Page ${n} · ${titleCase(s.en)}` };
@@ -182,11 +191,11 @@ const SUB_TXT = 'a seaside picture book · 海边的图画书';
 const SUBW = measure(SUB_TXT, SUBS, { zs: 0.95 });
 const PW = 286, PH = 46;              // chapter plate
 const LAYOUTS = {
-  line: { w1: [0, 0], w2: [W1 + GAP, 0], zh: [4, 76], sw: [0, 76], sub: [ZHW + 36, 70], plate: [LINE_W - PW + 20, 100],
-    box: [-16, -96, LINE_W + 46, 150], k: 1 },
+  line: { w1: [0, 0], w2: [W1 + GAP, 0], zh: [4, 76], sw: [0, 76], sub: [6, 118], plate: [LINE_W - PW + 26, 34],
+    box: [-16, -96, LINE_W + 46, 126], k: 1 },
   stack: { w1: [0, 0], w2: [0, 104], zh: [W2 + 26, 104], sw: [W2 + 22, 104], sub: [2, 152], plate: [0, 172],
     box: [-16, -96, Math.max(W1 + 30, W2 + 26 + ZHW + 20, SUBW + 8, PW) + 10, 224], k: 0.74 },
-  logo: { w1: [0, 0], w2: [W1 + GAP, 0], zh: [LINE_W + 34, 0], sw: [LINE_W + 30, 0], sub: [ZHW + 36, 70], plate: [LINE_W + 34 + ZHW + 30, -52, 0.92],
+  logo: { w1: [0, 0], w2: [W1 + GAP, 0], zh: [LINE_W + 34, 0], sw: [LINE_W + 30, 0], sub: [6, 60], plate: [LINE_W + 34 + ZHW + 30, -52, 0.92],
     box: [-12, -90, LINE_W + 34 + ZHW + 30 + PW * 0.92 + 8, 30], k: 1 },
 };
 const RIBBON = { w: 15, len: 62 };   // hangs this far into the picture below the top margin
@@ -207,7 +216,6 @@ export const detailItems = [
   ['page-number-zh', 'O', 'left page number in Chinese numerals (follows the journey)'],
   ['page-number-arabic', 'O', 'right page number in serif figures'],
   ['page-flourish', 'O', 'little leaf flourishes either side of the page numbers'],
-  ['corner-curl', 'O', 'curled-up page corner showing the paper underside and the next page, with a cast shadow'],
   ['bookmark-ribbon', 'O', 'red satin bookmark ribbon with a swallowtail end and frayed threads'],
   ['ribbon-sheen', 'T', 'satin sheen and fold shading painted down the ribbon'],
   ['title-lettering', 'O', 'hand-lettered serif title "Pelican Bay": every glyph tilted and set off its baseline'],
@@ -374,7 +382,7 @@ export function build({ v }) {
     for (let i = 0; i < 18; i++) fleck += circ(r() * 150, r() * 150, 0.35 + r() * 0.5);
     for (let i = 0; i < 5; i++) blot += ell(r() * 150, r() * 150, 8 + r() * 16, 5 + r() * 10);
     defs.push(h('pattern', { id: 'print-paper', width: 150, height: 150, patternUnits: 'userSpaceOnUse' },
-      h('rect', { width: 150, height: 150, fill: c.pp }), P(blot, { fill: c.pHi, opacity: 0.55 }),
+      P(blot, { fill: c.pHi, opacity: 0.6 }),
       P(fib, { fill: 'none', stroke: c.pLo, 'stroke-width': 0.55, opacity: 0.75 }), P(fleck, { fill: c.soft, opacity: 0.3 })));
     defs.push(h('pattern', { id: 'print-cloth', width: 3, height: 3, patternUnits: 'userSpaceOnUse' },
       h('rect', { width: 3, height: 3, fill: c.cl }), P('M0 0.75H3M0 2.25H3', { stroke: c.clLo, 'stroke-width': 0.7, opacity: 0.8 }),
@@ -396,8 +404,6 @@ export function build({ v }) {
   defs.push(h('mask', { id: 'print-gmask', maskContentUnits: 'objectBoundingBox' }, h('rect', { width: 1, height: 1, fill: 'url(#print-gfade)' })));
   defs.push(h('radialGradient', { id: 'print-lamp', cx: 0.5, cy: 0.5, r: 0.5 },
     h('stop', { offset: 0, 'stop-color': c.lamp, 'stop-opacity': 0.2 }), h('stop', { offset: 0.55, 'stop-color': c.lamp, 'stop-opacity': 0.07 }), h('stop', { offset: 1, 'stop-color': c.lamp, 'stop-opacity': 0 })));
-  defs.push(h('linearGradient', { id: 'print-curl', x1: 0, y1: 0, x2: 1, y2: 1 },
-    h('stop', { offset: 0, 'stop-color': c.pHi }), h('stop', { offset: 0.55, 'stop-color': c.pp }), h('stop', { offset: 1, 'stop-color': c.pLo })));
 
   // ---- the paper margin: four long strips whose inner edge is the painting's dry-brush boundary ----
   // local frame: the painting edge runs along u at n = 0, paper on n < 0 (outward). m maps (u, n) -> (x, y).
@@ -407,29 +413,31 @@ export function build({ v }) {
     const M = ([u, n]) => m(u, n).map(f).join(' ');
     let paper = 'M' + M([u0, -1500]) + 'L' + M([u1, -1500]) + pts.slice().reverse().map(p => 'L' + M(p)).join('') + 'Z';
     // bristle drags into the painting + skipped specks just inside it
-    let dry = '';
-    for (let u = u0 + r() * 40; u < u1; u += 26 + r() * 90) {
-      const nB = 2 + Math.floor(r() * 4);
+    // dry brush: short, thin, slanted bristle drags in small irregular clusters, skipped specks just inside the paint
+    let dry = '', wash = 'M' + M([u0, -1]);
+    for (let u = u0 + r() * 30; u < u1; u += 14 + r() * 60) {
+      const nB = 1 + Math.floor(r() * 4), sl = sgn(r) * 0.5;
       for (let j = 0; j < nB; j++) {
-        const uu = u + j * (2.2 + r() * 2.5), L = 3 + r() * 11, w = 0.6 + r() * 1.1;
-        dry += 'M' + M([uu - w, -1]) + 'Q' + M([uu - w * 0.3, L * 0.6]) + ' ' + M([uu + sgn(r) * 1.5, L]) + 'Q' + M([uu + w * 0.4, L * 0.5]) + ' ' + M([uu + w, -1]) + 'Z';
+        const uu = u + j * (1.6 + r() * 3), L = 1.5 + r() * r() * 8, w = 0.35 + r() * 0.6;
+        dry += 'M' + M([uu - w, -0.5]) + 'Q' + M([uu - w * 0.2 + sl * L * 0.5, L * 0.55]) + ' ' + M([uu + sl * L, L]) + 'Q' + M([uu + w * 0.3 + sl * L * 0.5, L * 0.5]) + ' ' + M([uu + w, -0.5]) + 'Z';
       }
-      if (r() < 0.6) for (let j = 0; j < 3; j++) { const [x, y] = m(u + 8 + r() * 20, 2 + r() * 7); dry += circ(x, y, 0.4 + r() * 0.7); }
+      if (r() < 0.45) for (let j = 0; j < 2 + r() * 3; j++) { const [x, y] = m(u + 4 + r() * 26, 1.5 + r() * 6); dry += circ(x, y, 0.3 + r() * 0.55); }
     }
+    // the gouache thins out at its edge: a translucent ragged band of paper
+    for (let u = u0; u <= u1 + 0.01; u += 9) wash += 'L' + M([u, 1.2 + 1.6 * Math.abs(Math.sin(u / 17 + seed)) + r() * 1.2]);
+    wash += 'L' + M([u1, -1]) + 'Z';
     return h('g', { 'data-ref': 'print-m' + k },
-      tag('page-margin', {}, P(paper, { fill: 'url(#print-paper)' })),
-      tag('painting-drybrush', {}, P(dry, { fill: c.pp })));
+      tag('page-margin', {}, P(paper, { fill: c.pp }), tag('paper-fibre', {}, P(paper, { fill: 'url(#print-paper)' }))),
+      tag('painting-drybrush', {}, P(wash, { fill: c.pp, opacity: 0.4 }), P(dry, { fill: c.pp, opacity: 0.92 })));
   };
   const margins = h('g', { id: 'print-margins' },
     strip('T', -60, 1660, (u, n) => [u, n], 3), strip('B', -60, 1660, (u, n) => [u, -n], 5),
-    strip('L', -60, 960, (u, n) => [n, u], 7), strip('R', -60, 960, (u, n) => [-n, u], 9),
-    tag('paper-fibre', {}, h('rect', { 'data-ref': 'print-fibre', x: 0, y: 0, width: 1, height: 1, fill: 'none' })));
+    strip('L', -60, 960, (u, n) => [n, u], 7), strip('R', -60, 960, (u, n) => [-n, u], 9));
 
   // ---- rim: cover cloth + page stack + deckled page edge (paths rebuilt on resize) ----
   const rim = h('g', { id: 'print-rim' },
     ['T', 'B', 'L', 'R'].map(k => h('g', { 'data-ref': 'print-rim' + k },
-      tag('book-cover', {}, P('', { 'data-ref': `print-rim${k}-cloth`, fill: c.cl })),
-      tag('cloth-weave', {}, P('', { 'data-ref': `print-rim${k}-weave`, fill: 'url(#print-cloth)', opacity: 0.9 })),
+      tag('book-cover', {}, P('', { 'data-ref': `print-rim${k}-cloth`, fill: c.cl }), tag('cloth-weave', {}, P('', { 'data-ref': `print-rim${k}-weave`, fill: 'url(#print-cloth)', opacity: 0.9 }))),
       tag('page-stack', {}, P('', { 'data-ref': `print-rim${k}-band`, fill: c.edge }), P('', { 'data-ref': `print-rim${k}-lines`, ...LN(0.45, c.soft), opacity: 0.7 })),
       tag('deckled-edge', {}, P('', { 'data-ref': `print-rim${k}-deck`, ...LN(0.9, c.soft), opacity: 0.8 })))));
 
@@ -440,9 +448,7 @@ export function build({ v }) {
   const gutter = h('g', { id: 'print-gutter' },
     tag('gutter-shadow', {}, unit('print-gutT', { fill: 'url(#print-ggrad)' }), unit('print-gutP', { fill: 'url(#print-ggrad)', mask: 'url(#print-gmask)' }),
       unit('print-gutB', { fill: 'url(#print-ggrad)' })),
-    tag('gutter-stitch', { 'data-ref': 'print-stitch' },
-      P(stitch, { ...LN(1.9, c.pLo) }), P(stitch, { ...LN(1.1, c.pHi) }),
-      P(tp(stitch, [1, 0, 0, 1, 0.6, 14]), { ...LN(1.9, c.pLo) }), P(tp(stitch, [1, 0, 0, 1, 0.6, 14]), { ...LN(1.1, c.pHi) })));
+    ['T', 'B'].map(k => tag('gutter-stitch', { 'data-ref': 'print-stitch' + k }, P(stitch, { ...LN(2, c.pLo) }), P(stitch, { ...LN(1.1, c.pHi) }), P(circ(-0.9, -5, 0.8) + circ(0.9, 5, 0.8), { fill: c.soft }))));
 
   // ---- running heads, page numbers, colophon ----
   const hl = text('鹈鹕湾 · Pelican Bay', { size: 9.5, align: 'center', track: 0.3 });
@@ -450,7 +456,7 @@ export function build({ v }) {
   const heads = h('g', {},
     h('g', { 'data-ref': 'print-headL' }, tag('running-head-left', { 'data-text': '鹈鹕湾 · Pelican Bay' }, P(hl.d, { fill: c.soft }))),
     h('g', { 'data-ref': 'print-headR' }, tag('running-head-right', { 'data-text': headR(0), 'data-ref': 'print-headR-t' }, P(hr0.d, { fill: c.soft, 'data-ref': 'print-headR-d' }))));
-  const pnZ = pageNum(zhNum(1), true), pnA = pageNum('1', false);
+  const pnZ = pageNum('第一页', true), pnA = pageNum('1', false);
   const pnum = (k, pn, name) => h('g', { 'data-ref': 'print-pn' + k },
     tag(name, { 'data-ref': `print-pn${k}-t` }, P(pn.d, { 'data-ref': `print-pn${k}-d`, fill: c.line })),
     tag('page-flourish', {}, P(pn.stem, { 'data-ref': `print-pn${k}-stem`, ...LN(0.9, c.soft) }), P(pn.leaf, { 'data-ref': `print-pn${k}-leaf`, fill: c.leaf, stroke: c.line, 'stroke-width': 0.5 })));
@@ -507,15 +513,6 @@ export function build({ v }) {
     return [g('shell', shell), g('bone', bone), g('star', star), g('feather', feather), g('boat', boat), g('heart', crayon), g('thumb', thumb)];
   })();
 
-  // ---- corner curl (bottom-right page corner at 0,0; the page lies toward -x,-y) ----
-  const A = 40;
-  const curl = h('g', { 'data-ref': 'print-curl' }, h('g', { 'data-ref': 'print-curl-in' }, tag('corner-curl', {},
-    P(`M0 0L${-A} 0L0 ${-A}Z`, { fill: c.edge }),
-    P(`M${-A + 4} -1.5L-1.5 ${-A + 4}M${-A + 9} -1.5L-1.5 ${-A + 9}`, { ...LN(0.4, c.soft), opacity: 0.6 }),
-    P(`M${-A} 0C${-A * 0.86} ${-A * 0.34} ${-A * 0.8} ${-A * 0.6} ${-A * 0.68} ${-A * 0.72}C${-A * 0.58} ${-A * 0.82} ${-A * 0.34} ${-A * 0.88} 0 ${-A}Z`, { fill: c.mauve, opacity: 0.28, transform: 'translate(-4 -3.5)' }),
-    P(`M${-A} 0C${-A * 0.88} ${-A * 0.34} ${-A * 0.82} ${-A * 0.6} ${-A * 0.7} ${-A * 0.7}C${-A * 0.6} ${-A * 0.82} ${-A * 0.34} ${-A * 0.88} 0 ${-A}Z`, { fill: 'url(#print-curl)', stroke: c.line, 'stroke-width': 0.9, 'stroke-linejoin': 'round' }),
-    P(`M${-A * 0.84} ${-A * 0.2}Q${-A * 0.66} ${-A * 0.62} ${-A * 0.2} ${-A * 0.84}`, { ...LN(0.7, c.pLo), opacity: 0.8 }))));
-
   // ---- bookmark ribbon: local end at y = 0 (the swallowtail), runs up 460 u under the top edge ----
   const ribbon = (() => {
     const W = RIBBON.w, cx = y => 1.8 * Math.sin(y / 70) + 0.6 * Math.sin(y / 23);
@@ -544,11 +541,11 @@ export function build({ v }) {
     }
     return gl;
   };
-  const glyphG = (k, i, g, zh) => h('g', { 'data-ref': `print-gl-${k}${i}` },
+  const glyphG = (k, i, g, zh) => h('g', { 'data-ref': `print-gl-${k}${i}`, 'data-cx': f(g.cx) },
     tag('title-shadow', {}, P(g.d, { fill: c.mauve, stroke: c.mauve, 'stroke-width': zh ? 5 : 7, 'stroke-linejoin': 'round', opacity: 0.6, transform: 'translate(5 6)' })),
-    tag(zh ? 'title-zh' : 'title-lettering', {}, P(g.d, { fill: zh ? c.rb : c.ti, stroke: c.line, 'stroke-width': zh ? 4.6 : 6.5, 'stroke-linejoin': 'round', 'paint-order': 'stroke' })),
-    zh ? '' : tag('title-gouache', {}, P(g.d, { fill: 'url(#print-brush)' })),
-    tag('title-pencil', {}, P(g.d, { fill: 'none', stroke: zh ? c.pHi : c.soft, 'stroke-width': zh ? 0.9 : 1.1, opacity: zh ? 0.7 : 0.6, transform: zh ? 'translate(-1.4 -1.2)' : 'translate(-2.4 -1.8)' })));
+    tag(zh ? 'title-zh' : 'title-lettering', {}, P(g.d, { fill: zh ? c.rb : c.ti, stroke: c.line, 'stroke-width': zh ? 4.6 : 6.5, 'stroke-linejoin': 'round', 'paint-order': 'stroke' }),
+      zh ? '' : tag('title-gouache', {}, P(g.d, { fill: 'url(#print-brush)' })),
+      tag('title-pencil', {}, P(g.d, { fill: 'none', stroke: zh ? c.pHi : c.soft, 'stroke-width': zh ? 0.9 : 1.1, opacity: zh ? 0.7 : 0.6, transform: zh ? 'translate(-1.4 -1.2)' : 'translate(-2.4 -1.8)' }))));
   const G1 = titleWord('a', 'Pelican', LAT, TS, 101), G2 = titleWord('b', 'Bay', LAT, TS, 202), GZ = titleWord('z', '鹈鹕湾', ZH, ZS, 303);
   const tw = (k, G, zh, extra = '') => G.map((g, i) => glyphG(k, i, g, zh)).join('') + extra;
   const twinkle = (ref, x, y, r) => h('g', { 'data-ref': ref, transform: `translate(${x} ${y})` },
@@ -593,8 +590,8 @@ export function build({ v }) {
   const pg0 = pageOf(0, false), cl0 = captionLayout(pg0, 'line'), cb0 = captionLayout(pg0, 'bar');
   const capG = (k, L, patch) => h('g', { 'data-ref': 'print-' + k, 'data-text': `${pg0.headZh} · ${pg0.headEn} · ${pg0.zh} ${pg0.en}` }, h('g', { 'data-ref': `print-${k}-in` },
     patch ? P(L.patch, { 'data-ref': `print-${k}-sh`, fill: c.mauve, opacity: 0.22, transform: 'translate(4 5)' }) : '',
-    patch ? tag('caption-patch', {}, P(L.patch, { 'data-ref': `print-${k}-patch`, fill: c.paper, opacity: 0.94 })) : '',
-    patch ? tag('caption-wash', {}, P(L.streak, { 'data-ref': `print-${k}-wash`, fill: c.pLo, opacity: 0.4 })) : '',
+    patch ? tag('caption-patch', {}, P(L.patch, { 'data-ref': `print-${k}-patch`, fill: c.paper, opacity: 0.94 }),
+      tag('caption-wash', {}, P(L.streak, { 'data-ref': `print-${k}-wash`, fill: c.pLo, opacity: 0.4 }))) : '',
     tag('caption-header', {}, P(L.head, { 'data-ref': `print-${k}-head`, fill: c.soft })),
     tag('caption-divider', {}, P(L.div, { 'data-ref': `print-${k}-div`, ...LN(1, c.soft) }), P(L.flw, { 'data-ref': `print-${k}-flw`, fill: c.rb, stroke: c.line, 'stroke-width': 0.5 })),
     tag('caption-zh', {}, P(L.zh, { 'data-ref': `print-${k}-zh`, fill: c.line })),
@@ -605,7 +602,7 @@ export function build({ v }) {
   const lampGlow = h('ellipse', { 'data-ref': 'print-lampglow', cx: 0, cy: 0, rx: 1, ry: 1, fill: 'url(#print-lamp)', style: 'opacity:var(--pb-n-lampOn)', 'pointer-events': 'none' });
   const root = h('g', { id: 'print-root', 'data-ref': 'print-root' },
     lampGlow, margins, gutter, pencil, rim, heads, pnum('Z', pnZ, 'page-number-zh'), pnum('A', pnA, 'page-number-arabic'), colo,
-    h('g', { id: 'print-spots' }, spots), curl, ribbon, captions, title);
+    h('g', { id: 'print-spots' }, spots), ribbon, captions, title);
   return { defs: defs.join(''), layers: { 'L-letterbox': root } };
 }
 
@@ -628,13 +625,13 @@ function freeRects(area, obs) {
   return rs;
 }
 // best placement of boxes (w×h at scale 1, weight k) among rects -> {i, S, X, Y} (top-left in screen units)
-function placeBox(boxes, rects, maxS, right) {
+function placeBox(boxes, rects, maxS, right, topW = 1e-4) {
   let best = null;
   boxes.forEach(([bw, bh, k], i) => {
     for (const r of rects) {
       const s = Math.min(maxS, (r[2] - r[0]) / bw, (r[3] - r[1]) / bh);
       if (s <= 0) continue;
-      const score = s * k - r[1] * 1e-4 + (right ? r[2] : -r[0]) * 1e-5;
+      const score = s * k - r[1] * topW + (right ? r[2] : -r[0]) * 1e-5;
       if (!best || score > best.score) best = { i, score, S: s, X: right ? r[2] - bw * s : r[0], Y: r[1] };
     }
   });
@@ -649,6 +646,9 @@ export function attach(svg) {
   // draw above the lead's plain letterbox rects: the paper margin IS the letterbox in the picture book
   const host = svg.querySelector('#L-letterbox');
   if (R.root && host) host.appendChild(R.root);
+  // the eggs' dog-eared page corner and page-turn curl lie ON the page: keep their group above the paper
+  const eggsPage = host && host.querySelector(':scope > #L-letterbox--eggs');
+  if (eggsPage) host.appendChild(eggsPage);
 
   const cache = new Map();
   const set = (el, name, val) => { if (!el) return; let c = cache.get(el); if (!c) cache.set(el, c = {}); if (c[name] !== val) { c[name] = val; el.setAttribute(name, val); } };
@@ -663,7 +663,7 @@ export function attach(svg) {
   };
   measureV();
   // the UI control card (an HTML overlay that docks to a free corner): title and caption keep clear of it
-  let uiBox = null, uiAt = -1e9;
+  let uiBox = null, uiAt = -1e9, uiKey = '';
   const measureUI = force => {
     const now = view.performance.now();
     if (!force && now - uiAt < 400) return;
@@ -674,6 +674,7 @@ export function attach(svg) {
     if (r.width < 4 || r.height < 4) return;
     const X = px => V.x0 + (px - V.left) / V.s, Y = py => V.y0 + (py - V.top) / V.s;
     uiBox = [X(r.left) - 10, Y(r.top) - 10, X(r.right) + 10, Y(r.bottom) + 10];
+    uiKey = uiBox.map(Math.round).join();
   };
   view.addEventListener('resize', measureV);
   // live: measure the card at the START of a frame (registered before the runtime's loop), when layout is clean
@@ -681,7 +682,7 @@ export function attach(svg) {
   view.requestAnimationFrame(early);
 
   // skip the intro on any key / click (deterministic: the skip is pinned to the sim time it happened at)
-  let skipReq = false, skipAt = Infinity, lastT = 0, lastSig = '', rimKey = '', pencilKey = '';
+  let skipReq = false, skipAt = Infinity, lastT = 0, lastSig = '', rimKey = '', pencilKey = '', layKey = '', lay = null;
   const skip = () => { skipReq = true; };
   doc.addEventListener('keydown', skip, true);
   doc.addEventListener('pointerdown', skip, true);
@@ -693,6 +694,7 @@ export function attach(svg) {
   };
 
   // runtime text caches (a stretch / lap change rebuilds a few paths, once)
+  const cxCache = new Map(), gcx = el => { let v = cxCache.get(el); if (v === undefined) cxCache.set(el, v = +el.getAttribute('data-cx') || 0); return v; };
   const capCache = new Map();
   const capFor = (pg, mode) => { const k = pg.key + mode; let L = capCache.get(k); if (!L) { if (capCache.size > 40) capCache.clear(); capCache.set(k, L = captionLayout(pg, mode)); } return L; };
   let curCap = { cap: '', bar: '' }, curLap = 0, curPn = '';
@@ -720,10 +722,8 @@ export function attach(svg) {
       const pg = pageOf(D, night), p = lapPos(D);
       let capA = Math.min(clamp01((pg.s.b - p) / 1500), pg.lap === 0 && pg.s.i === 0 ? clamp01((ti - 1.85) / 0.5) : clamp01((p - pg.s.a) / 1800));
       if (reduced) capA = capA > 0.5 ? 1 : 0;
-      const turn = clamp01((p - pg.s.a) / 2400);          // the corner curl lifts as the page turns
-      const rb = riderBox(cam, frame.pose), rbQ = rb.map(x => Math.round(x / 6));
-      const sig = [V.w, V.h, V.x0, V.y0, f(lb), ti >= 4.3 ? 'post' : f(ti), reduced ? 1 : 0, rbQ.join(), uiBox ? uiBox.map(Math.round).join() : '',
-        pg.key, f(capA), turn < 1 ? f(turn) : 1].join('|');
+      const rb = riderBox(cam, frame.pose), rbQ = [Math.round(rb[0] / 6), Math.round(rb[1] / 6), Math.round(rb[2] / 6), Math.round(rb[3] / 6)];
+      const sig = `${V.w}|${V.h}|${V.x0}|${V.y0}|${f(lb)}|${ti >= 4.3 ? 'post' : f(ti)}|${reduced ? 1 : 0}|${rbQ[0]},${rbQ[1]},${rbQ[2]},${rbQ[3]}|${uiBox ? uiKey : ''}|${pg.key}|${f(capA)}`;
       if (sig === lastSig) return;
       lastSig = sig;
 
@@ -734,7 +734,6 @@ export function attach(svg) {
       const cx = (V.x0 + V.x1) / 2, cy = (yT + yB) / 2;
       set(R.mT, 'transform', `translate(0 ${f(yT)})`); set(R.mB, 'transform', `translate(0 ${f(yB)})`);
       set(R.mL, 'transform', `translate(${f(xL)} 0)`); set(R.mR, 'transform', `translate(${f(xR)} 0)`);
-      set(R.fibre, 'transform', `translate(${f(V.x0)} ${f(V.y0)}) scale(${f(V.w)} ${f(V.h)})`);
       // rim (cloth + page stack + deckle) along the four screen edges: rebuilt only when the view changes
       const rk = [V.x0, V.y0, V.w, V.h].map(Math.round).join();
       if (rk !== rimKey) {
@@ -764,8 +763,8 @@ export function attach(svg) {
       ur(R.gutB, cx - GW / 2, yB - 1, GW, V.y1 - yB + 1);
       const gEnd = Math.min(rb[1] - 24, yT + 300);
       ur(R.gutP, cx - GW / 2, yT, GW, (cx > rb[0] - GW && cx < rb[2] + GW) ? gEnd - yT : yB - yT - 40);
-      set(R.stitch, 'transform', `translate(${f(cx)} ${f(V.y0 + RIM + 6)})`);
-      set(R.stitch, 'opacity', yT - V.y0 > 30 ? 1 : 0);
+      set(R.stitchT, 'transform', `translate(${f(cx)} ${f((V.y0 + RIM + yT) / 2)})`); set(R.stitchT, 'opacity', yT - V.y0 > 22 ? 1 : 0);
+      set(R.stitchB, 'transform', `translate(${f(cx)} ${f((yB + V.y1 - RIM) / 2)})`); set(R.stitchB, 'opacity', V.y1 - yB > 22 ? 1 : 0);
 
       // ---- margin furniture ----
       const topMid = (V.y0 + RIM + yT) / 2, botMid = (yB + V.y1 - RIM) / 2;
@@ -785,32 +784,30 @@ export function attach(svg) {
       }
       if (curPn !== String(pg.n)) {
         curPn = String(pg.n);
-        for (const [k, s, zh] of [['Z', zhNum(pg.n), true], ['A', String(pg.n), false]]) {
+        for (const [k, s, zh] of [['Z', `第${zhNum(pg.n)}页`, true], ['A', String(pg.n), false]]) {
           const pn = pageNum(s, zh);
           set(R[`pn${k}-d`], 'd', pn.d); set(R[`pn${k}-stem`], 'd', pn.stem); set(R[`pn${k}-leaf`], 'd', pn.leaf);
           set(R[`pn${k}-t`], 'data-text', s);
         }
       }
       const pnY = kc > 0.5 ? V.y1 - RIM - 14 : botMid + 5;
-      set(R.pnZ, 'transform', `translate(${f(xL + 34)} ${f(pnY)})`); set(R.pnA, 'transform', `translate(${f(xR - 34)} ${f(pnY)})`);
+      set(R.pnZ, 'transform', `translate(${f(xL + 34)} ${f(pnY)})`); set(R.pnA, 'transform', `translate(${f(xR - 74)} ${f(pnY)})`);
       set(R.pnZ, 'opacity', botOn); set(R.pnA, 'opacity', botOn);
       set(R.colo, 'transform', `translate(${f(cx + halfW / 2)} ${f(kc > 0.5 ? V.y1 - RIM - 14 : botMid + 1)})`);
       set(R.colo, 'opacity', botOn && halfW > 330 ? 1 : 0);
       const sp = (k, x, y, s, on, rot = 0) => { set(R['sp-' + k], 'transform', `translate(${f(x)} ${f(y)}) rotate(${rot}) scale(${f(s)})`); set(R['sp-' + k], 'opacity', on ? 1 : 0); };
       const sb = Math.min(1, (V.y1 - yB - RIM) / 24);
       sp('shell', xL + 72, botMid + 1.5, Math.max(0.6, sb), botOn, -12);
-      sp('star', xR - 74, botMid + 0.5, Math.max(0.6, sb), botOn, 8);
+      sp('star', xR - 124, botMid + 0.5, Math.max(0.6, sb), botOn, 8);
       sp('boat', xL + halfW / 2, botMid + 0.5, Math.max(0.6, sb), botOn && halfW > 300 && kc < 0.5);
-      sp('heart', xR - 118, botMid + 1, Math.max(0.6, sb), botOn && halfW > 380, -6);
+      sp('heart', xR - 176, botMid + 1, Math.max(0.6, sb), botOn && halfW > 380, -6);
       const st = Math.min(1, (yT - V.y0 - RIM) / 16);
       sp('bone', xL + 44, topMid + 0.5, Math.max(0.55, st * 0.9), topOn, -4);
       sp('feather', xR - 64, topMid + 0.5, Math.max(0.55, st * 0.9), topOn && halfW > 260, 5);
       sp('thumb', V.x0 + RIM + (MS - RIM) / 2 + 1, cy + (yB - yT) * 0.28, 1, V.h > 500, 14);
-      // curled corner (bottom right of the page); it lifts a little higher as a new page arrives
-      const lift = reduced ? 1 : 1 + 0.45 * Math.sin(Math.PI * clamp01(turn * 1.6)) * (pg.s.i || pg.lap ? 1 : 0);
-      set(R.curl, 'transform', `translate(${f(V.x1 - RIM + 1)} ${f(V.y1 - RIM + 1)}) scale(${f(Math.min(1, (V.y1 - yB) / 30 + 0.4) * lift)})`);
       // night: the bedside lamp's warm pool over the top-left of the page
-      set(R.lampglow, 'transform', `translate(${f(V.x0 + 140)} ${f(V.y0 + 90)}) scale(${f(V.w * 0.42)} ${f(V.h * 0.5)})`);
+      const lgx = V.x0 + 60, lrx = Math.max(30, Math.min(V.w * 0.4, rb[0] - lgx - 4)), lry = Math.max(30, Math.min(V.h * 0.45, rb[1] > lgx ? V.h * 0.45 : V.h * 0.3));
+      set(R.lampglow, 'transform', `translate(${f(lgx)} ${f(V.y0 + 60)}) scale(${f(lrx)} ${f(lry)})`);
 
       // ---- ribbon: hangs from the top edge into the picture, clear of the rider and the UI ----
       const rbX = xR - 150 - (V.w < 900 ? 0 : 20);
@@ -821,21 +818,32 @@ export function attach(svg) {
       const ribbonBox = [rbX - 14, V.y0, rbX + 16, rEnd + 8];
 
       // ---- title card: placed in the free space around the rider (and the UI card) ----
-      const area = [xL + 14, yT + 12, xR - 14, yB - 12];
-      const obs = [rb, uiBox, ribbonBox];
-      const rects = freeRects(area, obs);
-      const LB = k => LAYOUTS[k].box, bw = k => LB(k)[2] - LB(k)[0], bh = k => LB(k)[3] - LB(k)[1];
-      const pc = placeBox([[bw('line'), bh('line'), 1], [bw('stack'), bh('stack'), LAYOUTS.stack.k]], rects, 0.92, false)
-        || { i: 0, S: 0.3, X: area[0], Y: area[1] };
-      const cardName = pc.i ? 'stack' : 'line';
-      const cardP = { name: cardName, S: pc.S, X: pc.X - LB(cardName)[0] * pc.S, Y: pc.Y - LB(cardName)[1] * pc.S };
-      const lrects = freeRects([xL + 12, yT + 10, xR - 12, Math.min(yT + 10 + 44, yB)], obs);
-      const pl = placeBox([[bw('logo'), bh('logo'), 1]], lrects, 0.3, false) || { S: 0.22, X: xL + 12, Y: yT + 10 };
-      const logoP = { name: 'logo', S: pl.S, X: pl.X - LB('logo')[0] * pl.S, Y: pl.Y - LB('logo')[1] * pl.S };
-      const barH = lb - (RIM + 22) - 12;
-      const bS = Math.max(0.05, Math.min(0.5, barH / bh('logo'), (halfW * 1.2) / bw('logo')));
-      const barP = { name: 'logo', S: bS, X: xL + 20 - LB('logo')[0] * bS, Y: V.y0 + RIM + 22 + (barH - bh('logo') * bS) / 2 - LB('logo')[1] * bS };
+      function computeLayout() {
+        const area = [xL + 14, yT + 12, xR - 14, yB - 12];
+        const obs = [rb, uiBox, ribbonBox];
+        const rects = freeRects(area, obs);
+        const LB = k => LAYOUTS[k].box, bw = k => LB(k)[2] - LB(k)[0], bh = k => LB(k)[3] - LB(k)[1];
+        const pc = placeBox([[bw('line'), bh('line'), 1], [bw('stack'), bh('stack'), LAYOUTS.stack.k]], rects, 0.92, false, 3e-3)
+          || { i: 0, S: 0.3, X: area[0], Y: area[1] };
+        const cardName = pc.i ? 'stack' : 'line';
+        const cardP = { name: cardName, S: pc.S, X: pc.X - LB(cardName)[0] * pc.S, Y: pc.Y - LB(cardName)[1] * pc.S };
+        const lrects = freeRects([xL + 12, yT + 10, xR - 12, Math.min(yT + 10 + 44, yB)], obs);
+        const pl = placeBox([[bw('logo'), bh('logo'), 1]], lrects, 0.3, false) || { S: 0.22, X: xL + 12, Y: yT + 10 };
+        const logoP = { name: 'logo', S: pl.S, X: pl.X - LB('logo')[0] * pl.S, Y: pl.Y - LB('logo')[1] * pl.S };
+        const barH = lb - (RIM + 22) - 12;
+        const bS = Math.max(0.05, Math.min(0.62, barH / bh('logo'), (halfW * 1.2) / bw('logo')));
+        const barP = { name: 'logo', S: bS, X: xL + 20 - LB('logo')[0] * bS, Y: V.y0 + RIM + 22 + (barH - bh('logo') * bS) / 2 - LB('logo')[1] * bS };
 
+        const titleBox = s => { const q = s === 'card' ? cardP : logoP, b = LB(q.name); return [q.X + b[0] * q.S - 8, q.Y + b[1] * q.S - 8, q.X + b[2] * q.S + 8, q.Y + b[3] * q.S + 8]; };
+        const crects = freeRects(area, [...obs, titleBox('card'), titleBox('logo')]);
+        const Lline = capFor(pg, 'line'), Lcol = capFor(pg, 'col');
+        const pcap = placeBox([[Lline.w, Lline.h, 1], [Lcol.w, Lcol.h, 0.9]], crects, 1, true);
+        return { cardP, logoP, barP, pcap, Lline, Lcol };
+      }
+      // placements are memoised: they change only with the page geometry, the rider box, the UI card and the page
+      const lk = [xL, yT, xR, yB, rEnd, V.y0, lb * 4].map(Math.round).join() + '|' + rbQ.join() + '|' + (uiBox ? uiBox.map(Math.round).join() : '') + '|' + pg.key;
+      if (lk !== layKey) { layKey = lk; lay = computeLayout(); }
+      const { cardP, logoP, barP, pcap, Lline, Lcol } = lay;
       // intro beats
       const E = reduced ? () => 1 : (a, d) => clamp01((ti - a) / d);
       let shrink = easeInOut(clamp01((ti - 3.55) / 0.62)), alpha = 1;
@@ -859,7 +867,7 @@ export function attach(svg) {
       for (const [k, nG] of glyphs) for (let i = 0; i < nG; i++, gi++) {
         const el = R[`gl-${k}${i}`]; if (!el) continue;
         const t0 = k === 'z' ? 0.98 + i * 0.1 : 0.16 + gi * 0.075;
-        pop(el, E(t0, 0.34), 0, (gi % 2 ? 1 : -1) * 9);
+        pop(el, E(t0, 0.34), gcx(el), (gi % 2 ? 1 : -1) * 9);
       }
       set(R.swwipe, 'transform', `translate(0 0) scale(${f(Math.max(0.001, easeOut(E(1.2, 0.4))))} 1)`);
       for (let i = 0; i < 3; i++) { const e = E(1.3 + i * 0.09, 0.3); const b = e > 0 ? backOut(e) : 0; set(R['tw' + i], 'opacity', e > 0 ? 1 : 0); set(R['tw' + i], 'transform', `${['translate(-20 -78)', `translate(${f(W2 + 22)} -66)`, `translate(${f(W2 + 40)} -30)`][i]} rotate(${f(90 * (1 - e))}) scale(${f(Math.max(0.01, b))})`); }
@@ -868,10 +876,6 @@ export function attach(svg) {
       set(R['plate-in'], 'transform', pe >= 1 ? '' : `translate(${PW / 2} ${PH / 2}) rotate(${f(-5 * (1 - pe))}) scale(${f(1.35 - 0.35 * pb)}) translate(${-PW / 2} ${-PH / 2})`);
 
       // ---- the story caption ----
-      const titleBox = s => { const q = s === 'card' ? cardP : logoP, b = LB(q.name); return [q.X + b[0] * q.S - 8, q.Y + b[1] * q.S - 8, q.X + b[2] * q.S + 8, q.Y + b[3] * q.S + 8]; };
-      const crects = freeRects(area, [...obs, titleBox('card'), titleBox('logo')]);
-      const Lline = capFor(pg, 'line'), Lcol = capFor(pg, 'col');
-      const pcap = placeBox([[Lline.w, Lline.h, 1], [Lcol.w, Lcol.h, 0.9]], crects, 1, true);
       const capOn = pcap && pcap.S > 0.42;
       if (pcap) {
         const L = pcap.i ? Lcol : Lline;
