@@ -3,6 +3,7 @@ export const meta = {
   description: 'Pelican Bay storybook edition (style B, warm gouache): 13 builders redraw all art on the proven engine, integrate, 4 grouped judges, ≤6 fixers, final gatekeeper',
   phases: [
     { title: 'Build', detail: '13 builders redraw every module in style B, with the same complexity as edition C' },
+    { title: 'Gouache', detail: 'dedicated painterly texture pass across every layer' },
     { title: 'Integrate', detail: 'wiring, 0 errors, detail gate, bake, 60 fps' },
     { title: 'Review', detail: '4 grouped judges across all 13 rubric dimensions' },
     { title: 'Fix', detail: '≤ 6 owners with blockers/majors' },
@@ -81,6 +82,19 @@ DETAIL QUOTA: ${b.quota}
 BRIEF: ${b.brief}`, { label: `build:${b.id}`, phase: 'Build', schema: REPORT })))).filter(Boolean)
 log(`builders done: ${reports.map(r => `${r.owner}(${r.detailCount ?? '-'})`).join(' ')}`)
 
+phase('Gouache')
+const gouache = await agent(`${COMMON.replaceAll('<your-id>', 'gouache')}
+
+YOUR ROLE: GOUACHE TEXTURE DIRECTOR. The user looked at the work in progress and asked for the gouache (水粉) style. The builders redrew the shapes, but the page still reads as a CLEAN VECTOR CARTOON rather than a hand-painted picture book. Your job is to make EVERY layer read unmistakably as gouache on paper, like draft B (Read ${REF}/keyframe.png and closeup.png, and compare them with the current shots side by side), while holding 60 fps.
+You MAY edit any art/world/fx file and src/page.css, and you may add a shared helper module src/art/gouache.js (exporting seeded helpers and <pattern>/<filter> defs that modules can use). Keep every data-ref, data-detail, slot and interface intact.
+Techniques (STYLE-B §2):
+- A full-screen static PAPER sheet: warm paper grain + mottle (feTurbulence rendered once, low opacity, normal blending; test mix-blend-mode only if it keeps 60 fps) + a soft vignette.
+- Far and static layers (sky, clouds, hills, far sea, far town): painterly edge wobble (feDisplacementMap), soft blurred edges, brush-stroke texture overlays. These sheets only translate, so the filters rasterize once.
+- The rider, bike and moving props (NO filters): gouache pattern fills in local coordinates (painted blotches, dry-brush streaks, visible brush direction) over the flat fills; deterministic wobble jitter on outlines; a second offset pencil line; dry-brush highlights; soft painted shading shapes (a darker glaze on the shadow side, a warm light edge); a subtle paper-texture pattern inside large white areas so the plumage isn't flat vector white.
+- Colour: slightly desaturated, warmer, with pigment variation within each fill (2–3 tone blotches), so no large perfectly flat areas remain.
+Verify: shoot the hero, the close-up and the zoom crops, and compare with the draft B images. Iterate at least 5 times until the look matches (or exceeds) the draft's painterly quality. Then check --perf (fps ≥ 58, else move effects to static sheets or bake them), shoot --dist with 0 errors, and detail-inventory still PASS.`, { label: 'gouache:texture', phase: 'Gouache', schema: REPORT })
+reports.push(gouache)
+
 phase('Integrate')
 const integ = await agent(`${COMMON.replaceAll('<your-id>', 'integrator')}
 
@@ -115,7 +129,7 @@ const SCORE = {
 const GROUPS = [
   { id: 'J-canon', dims: 'D1 D2 D3 D4', focus: 'benchmark canon, bike engineering, contact and physics, pelican species and anatomy (the draft-B defects: goose body, a clump of primaries, the floating decal)' },
   { id: 'J-motion', dims: 'D5 D6 D8', focus: 'animation, acting, wow moments, eggs (node tools/check-eggs.mjs), MUSIC and PELICAN VOICE (read src/audio/audio.js and docs/AUDIO.md; run an OfflineAudioContext render if feasible), the director over time, and calm wind' },
-  { id: 'J-art', dims: 'D7 D13', focus: 'style-B fidelity (docs/STYLE-B.md vs drafts/B-storybook), light and the picture-book page, detail (detail-inventory; spot-check 15 items for padding; 3× crops), the long route (renderAt t = 0, 30, 60, 120, 240 s), and compare with edition C for "same complexity" (Read /home/user/experiments-and-tests/pelican-bicycle/shots/final/sheet.png)' },
+  { id: 'J-art', dims: 'D7 D13', focus: 'style-B fidelity (docs/STYLE-B.md vs drafts/B-storybook: does it read as hand-painted GOUACHE on paper, not clean vector?), light and the picture-book page, detail (detail-inventory; spot-check 15 items for padding; 3× crops), the long route (renderAt t = 0, 30, 60, 120, 240 s), and compare with edition C for "same complexity" (Read /home/user/experiments-and-tests/pelican-bicycle/shots/final/sheet.png)' },
   { id: 'J-product', dims: 'D9 D10 D11 D12', focus: 'interaction and accessibility (drive keys and UI with Playwright; desktop and 390px), perf (--perf ≥ 58 fps), the baked SVG (check-baked), and engineering' },
 ]
 phase('Review')

@@ -1,26 +1,43 @@
 // OWNER: fx. Layers: L-gulls-far (depth .15), L-shadow, L-fx-back, L-fx-front (depth 1).
-// Style C (docs/STYLE-C.md): every effect is printed in the seven inks of the hour: flat shapes, hard-edged
-// quantised glows (stacked flat rings, never gradients), key lines, letterpress sound words.
+// Style B (docs/STYLE-B.md): every effect is a painted storybook mark — soft gouache puffs, warm mauve glazes for
+// shadows, warm brown hand-drawn outlines (never black) with a second faint "pencil" line, little hand-lettered
+// sound words on cream sticker bubbles with stars and hearts.
 //
-// Everything here is a PURE function of (t, distance, speed, cadence, events, pose, tod): particles live in fixed
-// pools whose slots are re-used by a deterministic spawn schedule (slot k of a stream is born at k·dt, its look and
-// path come from a hash of k), so renderAt(t) is exact, the loop can be scrubbed backwards, and there is zero DOM
-// churn after build. Per frame we only write transforms / opacities / a few dash offsets, and only when they change.
+// PERFORMANCE RULE (STYLE-B §2): nothing here carries a filter. The hand-made look is baked into the geometry at
+// build time: seeded point jitter (wobbly outlines), an offset thinner second stroke (pencil double line), short
+// tapered dry-brush strokes along edges, and soft light/shadow edges as radial / linear gradients (no blur).
 //
-//   L-gulls-far  far gull flock (4 flap frames by href), distant fireflies over the dunes at night
-//   L-shadow     crisp N contact shadows (+ B penumbra ring) and a sun-projected cast shadow of bike + rider
-//                (shear matrix from the sun / moon position, pelican parts follow the live joints)
-//   L-fx-back    headlamp beam cone + road pool (3 quantised rings), escort gulls, wind curls, speed lines, fireflies
-//   L-fx-front   dust puffs + grit from the rear tyre, landing burst + impact rays, feathers, dandelion seeds,
-//                butterflies, a fly buzzing the fish basket, chrome glints, lamp flare + moths, event pops
-//                (DING! / HOP! / GULP! on R/O bursts), bell notes, gulp drips, hearts, a spat-out fish bone,
-//                wave action arcs
+// Everything is a PURE function of (t, distance, speed, cadence, events, pose, tod): particles live in fixed pools
+// whose slots are re-used by a deterministic spawn schedule (slot k of a stream is born at k·dt, its look and path
+// come from a hash of k), so renderAt(t) is exact, the loop can be scrubbed backwards, and there is zero DOM churn
+// after build. Per frame we only write transforms / opacities / a few dash offsets, and only when they change.
+//
+//   L-gulls-far  far gulls (4 painted flap frames by href), distant fireflies over the dunes at night
+//   L-shadow     painted contact shadows (soft gradient glaze + dry-brush edge) and a sun-projected mauve cast shadow
+//                of bike + rider (shear matrix from the sun / moon position, pelican parts follow the live joints)
+//   L-fx-back    headlamp glow cone + road pool (soft gradients), escort gulls, ONE calm breeze swirl, fireflies,
+//                a bumblebee
+//   L-fx-front   dust puffs + sand grit, landing puffs + bump marks, feathers, dandelion seeds, butterflies, dragonfly,
+//                a tumbling leaf, a fly and a ladybird on the basket, sparkles, lamp glow + moths, event pops
+//                ("Ding!" "Hop!" "Gulp!" on cloud bubbles, with stars / hearts), bell notes, hum notes when coasting,
+//                drips, hearts, a fish bone, wave arcs, sparse speed strokes in a real sprint
 import { fmt1, fmt2 } from '../core/math.js';
 import { GROUND_Y, RIDER_X, BIKE } from '../contract.js';
 import { h, refs, xf } from '../core/svg.js';
 import { TIMING } from '../rig/solve.js';
 
 export const id = 'fx';
+
+// extra base paints (graded by the hour like every material; night turns them lavender, never grey)
+export const materials = {
+  fxShadow: '#6E4660', fxDust: '#F6E2C2', fxDustShade: '#D9AE7E',
+  fxGullMantle: '#CDBFCB', fxGullTip: '#2E2632', fxGullBill: '#F4B84A', fxGullSpot: '#D8443A',
+  fxMonarch: '#F2963E', fxMonarchDeep: '#C4582A', fxBrimstone: '#F7E7A0',
+  fxHeart: '#E4574E', fxHeartHi: '#FFC2B0', fxStar: '#FAC957', fxStarDeep: '#E8A23A',
+  fxLeaf: '#86A864', fxLeafDeep: '#4F7A48', fxTeal: '#2A9A94', fxTealDeep: '#17656A', fxWing: '#EAF2F2',
+  fxBee: '#F6BE3E', fxBeeDark: '#3A2630', fxLady: '#D8443A', fxSky: '#9CC2DE',
+  fxDing: '#1F8A8A', fxHop: '#F08A3C', fxGulp: '#D8443A',
+};
 
 // ------------------------------------------------------------------------------------------------ helpers
 const f = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
@@ -32,7 +49,7 @@ const sstep = (a, b, x) => { const u = clamp((x - a) / (b - a), 0, 1); return u 
 const wrap = (x, m) => ((x % m) + m) % m;
 const circ = (x, y, r) => `M${f(x - r)} ${f(y)}a${f(r)} ${f(r)} 0 1 0 ${f(2 * r)} 0a${f(r)} ${f(r)} 0 1 0 ${f(-2 * r)} 0Z`;
 const poly = (pts, close = true) => 'M' + pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + (close ? 'Z' : '');
-const star4 = (r, w) => `M0 ${f(-r)}L${f(w)} ${f(-w)}L${f(r)} 0L${f(w)} ${f(w)}L0 ${f(r)}L${f(-w)} ${f(w)}L${f(-r)} 0L${f(-w)} ${f(-w)}Z`;
+// Catmull-Rom -> cubic (the draft's cr())
 function smooth(pts, closed = true, k = 1 / 6) {
   const n = pts.length; const g = i => closed ? pts[(i + n) % n] : pts[Math.max(0, Math.min(n - 1, i))];
   let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
@@ -51,127 +68,195 @@ const hash = (a, b = 0) => {
 };
 const easeOutBack = u => { const c = 1.70158, v = u - 1; return 1 + (c + 1) * v * v * v + c * v * v; };
 const DD = key => ({ 'data-detail': key });
+// seeded jitter of outline points (the hand-drawn wobble, baked: identical every frame)
+const jit = (pts, a, R) => pts.map(([x, y]) => [x + (R() - 0.5) * 2 * a, y + (R() - 0.5) * 2 * a]);
+// tapered dry-brush stroke from a to b, width w at its heavy end (a filled sliver, no stroke)
+function brush(a, b, w, bend = 0) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+  const m = [(a[0] + b[0]) / 2 + nx * bend, (a[1] + b[1]) / 2 + ny * bend];
+  return `M${f(a[0] + nx * w / 2)} ${f(a[1] + ny * w / 2)}Q${f(m[0] + nx * w * 0.3)} ${f(m[1] + ny * w * 0.3)} ${f(b[0])} ${f(b[1])}Q${f(m[0] - nx * w * 0.3)} ${f(m[1] - ny * w * 0.3)} ${f(a[0] - nx * w / 2)} ${f(a[1] - ny * w / 2)}Z`;
+}
+// soft rounded star (5 points by default)
+function starD(r, ri = 0.48, n = 5, rot = -90) {
+  const pts = [];
+  for (let i = 0; i < n * 2; i++) { const a = (rot + i * 180 / n) * D2R, rr = i % 2 ? r * ri : r; pts.push([Math.cos(a) * rr, Math.sin(a) * rr]); }
+  return smooth(pts, true, 0.06);
+}
+// 4-point painted sparkle
+const sparkle = (r, w) => { const p = []; for (let i = 0; i < 8; i++) { const a = (i * 45 - 90) * D2R, rr = i % 2 ? w : r; p.push([Math.cos(a) * rr, Math.sin(a) * rr]); } return smooth(p, true, 0.04); };
+// blobby cloud bubble (scalloped ellipse, seeded bumps)
+function bubble(rx, ry, n, R) {
+  let d = '';
+  const P = i => { const a = (i / n) * TAU; return [Math.cos(a) * rx, Math.sin(a) * ry]; };
+  for (let i = 0; i < n; i++) {
+    const a0 = P(i), a1 = P(i + 1), am = (i + 0.5) / n * TAU, k = 1.2 + 0.1 * R();
+    const c = [Math.cos(am) * rx * k, Math.sin(am) * ry * k];
+    d += (i ? '' : `M${f(a0[0])} ${f(a0[1])}`) + `Q${f(c[0])} ${f(c[1])} ${f(a1[0])} ${f(a1[1])}`;
+  }
+  return d + 'Z';
+}
+// gouache puff (the draft's puff(): bumps on a flat-ish base), centred on the origin
+function puffD(R, w, hh, n) {
+  const pts = [];
+  for (let i = 0; i <= n; i++) { const t = i / n; pts.push([-w / 2 + w * t, -(Math.sin(Math.PI * t) ** 0.8) * hh * (0.72 + 0.42 * R())]); }
+  pts.push([w / 2 + hh * 0.18, hh * 0.1]);
+  for (let i = n; i >= 0; i -= 2) pts.push([-w / 2 + w * i / n, hh * (0.14 + 0.14 * R())]);
+  pts.push([-w / 2 - hh * 0.18, hh * 0.08]);
+  return { d: smooth(pts), top: pts.slice(1, n) };
+}
 
 // fly loop around the basket (rider-local): centre + half extents
 const FLY_C = [198, -326], FLY_A = [54, 24];
-// speed-line anchors (rider-local, just behind the trailing silhouette): scarf, back, tail, rear tyre
-const SPEEDLINES = [[-96, -470], [-150, -402], [-182, -366], [-176, -344], [-232, -128], [-238, -100], [-230, -70], [-205, -36]];
+// speed-stroke anchors (rider-local, just behind the trailing silhouette): scarf, back, tail, rear tyre
+const SPEEDLINES = [[-150, -402], [-232, -128], [-176, -344], [-205, -36]];
+// ladybird crawl on the basket front (rider-local)
+const LADY = { x0: 152, x1: 206, y: -262 };
 
 // ------------------------------------------------------------------------------------------------ detail inventory
 export const detailItems = [
-  ['fx:O:gull-far', 'O', 'far flock of gulls: white bodies, grey mantles, black tips; 4-frame flap cycle, drifting with parallax'],
-  ['fx:O:gull-escort', 'O', 'near companion gull (key-lined body, tail, tucked orange feet); the whole flock escorts the rider above 85 rpm'],
-  ['fx:T:gull-wingtip-mirrors', 'T', 'white underwing with key line and covert line, black hand with primary separations and white "mirror" spots'],
-  ['fx:O:gull-beak', 'O', 'yellow-orange gull bill with the red gonys spot (herring-gull field mark)'],
-  ['fx:O:gull-eye', 'O', 'gull eye with catch-light'],
-  ['fx:O:shadow-contact', 'O', 'crisp navy contact shadow under each tyre (shrinks / fades in a hop)'],
-  ['fx:T:shadow-penumbra', 'T', 'second, hard-edged periwinkle penumbra ring around the contact shadow (quantised softness)'],
-  ['fx:O:shadow-cast-bike', 'O', 'sun-projected cast shadow of the bicycle: elliptical wheel rings, hubs, frame tubes, saddle, bars, basket'],
-  ['fx:O:shadow-cast-pelican', 'O', 'cast shadow of the pelican: body, neck, head, bill, pouch, crest, tail, wings and pedalling legs follow the live pose'],
-  ['fx:O:dust-puff', 'O', 'dust puffs kicked from the rear tyre (paper puff with peach under-lobe), rate and size scale with speed'],
-  ['fx:O:dust-grit', 'O', 'grit specks flicked up behind the rear tyre on ballistic arcs'],
-  ['fx:O:feather-contour', 'O', 'drifting contour feather: vane, rachis, barbs, split notch'],
-  ['fx:O:feather-down', 'O', 'drifting down plume (fluffy key-lined wisps)'],
-  ['fx:O:seed-dandelion', 'O', 'dandelion seeds floating on the breeze: pappus rays with dot tips, stalk, seed'],
-  ['fx:O:butterfly-monarch', 'O', 'monarch butterfly fluttering ahead of the bill (flap + glide), blown away when sprinting'],
-  ['fx:T:butterfly-monarch-veins', 'T', 'black veins and border with white spots on the monarch wings'],
-  ['fx:O:butterfly-white', 'O', 'cabbage-white butterfly chasing the scarf tail (black wing tip and spot)'],
-  ['fx:O:dragonfly', 'O', 'dragonfly hovering and darting ahead of the front wheel: teal segmented abdomen, amber compound eye'],
+  ['fx:O:gull-far', 'O', 'far gulls painted small with a soft brown line: white body, rose-grey mantle, dark tips; 4-frame flap cycle'],
+  ['fx:O:gull-escort', 'O', 'near companion gull: plump white body with a rose-grey belly glaze, warm brown hand-drawn outline; the flock escorts the rider above 85 rpm'],
+  ['fx:T:gull-wingtip-mirrors', 'T', 'underwing with covert line, rose-grey mantle band and a dark hand with painted primary separations and cream "mirror" spots'],
+  ['fx:T:gull-pencil-line', 'T', 'second, offset, fainter "pencil" line around the gull body (baked double stroke)'],
+  ['fx:O:gull-beak', 'O', 'yellow gull bill with the red gonys spot'],
+  ['fx:O:gull-eye', 'O', 'kind dark gull eye with a catch-light and a rosy cheek dab'],
+  ['fx:O:gull-feet', 'O', 'orange feet tucked under the belly'],
+  ['fx:O:shadow-contact', 'O', 'painted contact shadow under each tyre: a warm mauve core (shrinks / fades in a hop)'],
+  ['fx:T:shadow-penumbra', 'T', 'soft gouache glaze around the contact shadow (radial gradient, no blur filter)'],
+  ['fx:T:shadow-drybrush', 'T', 'dry-brush strokes dragged along the shadow edge, the painter\'s hand'],
+  ['fx:O:shadow-cast-bike', 'O', 'sun-projected mauve cast shadow of the bicycle: wheel rings, hubs, frame tubes, saddle, bars, basket'],
+  ['fx:O:shadow-cast-pelican', 'O', 'cast shadow of the pelican: body, neck, head, bill, pouch, crest, tail, wings and legs follow the live pose'],
+  ['fx:O:dust-puff', 'O', 'soft gouache dust puffs kicked from the rear tyre (cream puff, sand under-lobe), rate and size scale with speed'],
+  ['fx:T:dust-drybrush', 'T', 'broken brown line along the top of each puff and a dry-brush fleck'],
+  ['fx:O:dust-grit', 'O', 'sand specks flicked up behind the rear tyre on ballistic arcs'],
+  ['fx:O:feather-contour', 'O', 'drifting contour feather: cream vane, rachis, barbs, split notch'],
+  ['fx:T:feather-glaze', 'T', 'rose-grey glaze on the lower vane of the drifting feather'],
+  ['fx:O:feather-down', 'O', 'drifting down plume (fluffy painted wisps)'],
+  ['fx:O:seed-dandelion', 'O', 'dandelion seeds floating on the breeze: pappus rays with dot tips, stalk, brown seed'],
+  ['fx:O:butterfly-monarch', 'O', 'orange storybook butterfly fluttering ahead of the bill (flap + glide), blown away when sprinting'],
+  ['fx:T:butterfly-monarch-veins', 'T', 'brown veins, deep-orange wing border and cream spots on the orange butterfly'],
+  ['fx:O:butterfly-white', 'O', 'pale-lemon brimstone chasing the scarf tail (orange wing dot, brown line)'],
+  ['fx:O:dragonfly', 'O', 'dragonfly hovering and darting ahead of the front wheel: teal segmented abdomen, big amber eye'],
   ['fx:T:dragonfly-venation', 'T', 'wing venation, cross-veins and pterostigma spots on the dragonfly wings'],
-  ['fx:O:leaf-tumble', 'O', 'a teal almond leaf tumbling past on the breeze (3-D flip by scaleX)'],
-  ['fx:O:basket-fly', 'O', 'a red-eyed fly buzzing figure-eights around the fish basket, wings flickering'],
+  ['fx:O:leaf-tumble', 'O', 'a green leaf tumbling past on the breeze (3-D flip by scaleX), painted midrib and veins'],
+  ['fx:O:basket-fly', 'O', 'a cartoon fly buzzing figure-eights around the fish basket, wings flickering'],
   ['fx:T:fly-dotted-trail', 'T', 'cartoon dotted flight trail behind the fly'],
-  ['fx:O:wind-curl', 'O', 'art-deco wind curls drawn on and wiped off behind the rider'],
-  ['fx:O:glint-bell', 'O', 'four-point chrome glint twinkling on the bell (sun side)'],
-  ['fx:O:glint-rim', 'O', 'eight-ray sparkle with ring on the rear rim, held on the sun side while the wheel turns under it'],
-  ['fx:O:speed-lines', 'O', 'dry-brush speed lines above 80 rpm (toggle "speedlines")'],
-  ['fx:O:land-dust-burst', 'O', 'landing dust burst spreading from both tyres'],
-  ['fx:O:land-impact-rays', 'O', 'R/O impact ticks printed at both contact points on landing'],
-  ['fx:O:pop-ding', 'O', 'letterpress DING! on an R burst with O/R impact rays'],
-  ['fx:O:pop-hop', 'O', 'letterpress HOP! pop at take-off'],
-  ['fx:O:pop-gulp', 'O', 'letterpress GULP! pop at the swallow'],
+  ['fx:O:ladybird', 'O', 'a ladybird crawling along the front of the basket: red shell, black spots and head, cream eye dots'],
+  ['fx:O:bumblebee', 'O', 'a round bumblebee bumbling about behind the rider with a dotted trail'],
+  ['fx:T:bee-stripes', 'T', 'fuzzy bee stripes painted as short brush hairs'],
+  ['fx:O:wind-swirl', 'O', 'ONE soft painted breeze swirl in the upper sky, only above 75 rpm, rare and slow'],
+  ['fx:O:glint-bell', 'O', 'painted four-point sparkle twinkling on the bell (sun side)'],
+  ['fx:O:glint-rim', 'O', 'sparkle with a halo ring on the rear rim, held on the sun side while the wheel turns under it'],
+  ['fx:O:speed-lines', 'O', 'sparse cream dry-brush speed strokes, only in a real sprint (> 86 rpm, toggle "speedlines")'],
+  ['fx:O:land-dust-burst', 'O', 'landing dust puffs spreading from both tyres'],
+  ['fx:O:land-bump-marks', 'O', 'little hand-drawn bump arcs and yellow sparkles at both contact points on landing'],
+  ['fx:O:pop-ding', 'O', 'hand-lettered "Ding!" (叮铃) on a cream cloud bubble with twinkling stars'],
+  ['fx:O:pop-hop', 'O', 'hand-lettered "Hop!" (嘿哟) pop at take-off with stars and motion arcs'],
+  ['fx:O:pop-gulp', 'O', 'hand-lettered "Gulp!" (咕嘟) pop at the swallow with hearts and bubbles'],
+  ['fx:T:pop-sticker-letters', 'T', 'sticker lettering: coloured serif letters, cream band, brown outline, mauve drop shadow, bouncing baseline'],
   ['fx:O:bell-notes', 'O', 'eighth note and beamed pair rising from the bell'],
+  ['fx:O:hum-notes', 'O', 'little notes drifting up from the bill while the pelican hums, coasting'],
   ['fx:O:gulp-drips', 'O', 'sea-water drips falling from the bill during the scoop'],
-  ['fx:O:gulp-hearts', 'O', 'little hearts rising after the gulp'],
+  ['fx:O:gulp-hearts', 'O', 'little painted hearts with a highlight rising after the gulp'],
   ['fx:O:fish-bone', 'O', 'fish bone spat over the shoulder, landing on the road and scrolling away'],
-  ['fx:O:wave-arcs', 'O', 'rubber-hose action arcs beside the waving wing'],
-  ['fx:O:headlamp-beam', 'O', 'night headlamp cone and road pool in three hard-edged quantised rings'],
-  ['fx:O:lamp-flare', 'O', 'quantised lamp flare rings and star on the headlamp at night'],
+  ['fx:O:wave-arcs', 'O', 'soft action arcs beside the waving wing'],
+  ['fx:O:headlamp-beam', 'O', 'night headlamp: a warm cone and road pool painted as soft gradients'],
+  ['fx:O:lamp-flare', 'O', 'warm lamp glow and sparkle on the headlamp at night'],
   ['fx:O:moths', 'O', 'moths circling the headlamp at night'],
-  ['fx:O:fireflies', 'O', 'fireflies with 3-ring quantised glow, blinking out of phase at night'],
+  ['fx:O:fireflies', 'O', 'fireflies: little bodies with glowing tails in a soft golden glow, blinking out of phase at night'],
   ['fx:O:fireflies-far', 'O', 'distant firefly twinkles over the dunes'],
 ].map(([key, kind, what]) => ({ id: key.split(':')[2], layer: 'fx', kind, what, key }));
 
 // ------------------------------------------------------------------------------------------------ lettering
-// Stroke-built art-deco capitals (as drafts/C-poster/gen.mjs): monoline strokes in a 100-high box, clipped flush
-// to cap- and base-line so the terminals are square.
-const LET = {
-  D: { w: 78, s: ['M12 -10V110', 'M12 12H40A26 38 0 0 1 40 88H12'] },
-  I: { w: 24, s: ['M12 -10V110'] },
-  N: { w: 82, s: ['M12 112V-2L70 102V-12'] },
-  G: { w: 80, s: ['M78 12H46A34 38 0 0 0 46 88H68', 'M68 110V50', 'M44 56H80'] },
-  H: { w: 80, s: ['M12 -10V110', 'M68 -10V110', 'M12 50H68'] },
-  O: { w: 84, s: ['M42 12A30 38 0 1 0 42 88A30 38 0 1 0 42 12Z'] },
-  P: { w: 76, s: ['M12 112V12H40A24 23 0 0 1 40 58H12'] },
-  U: { w: 80, s: ['M12 -10V56A28 32 0 0 0 68 56V-10'] },
-  L: { w: 60, s: ['M12 -10V88H60'] },
-  '!': { w: 24, s: ['M12 -10V64', 'M12 78V110'] },
-};
-function wordDef(word) {
-  let pen = 0, d = '';
-  for (const ch of word) { const L = LET[ch]; for (const s of L.s) d += `<path transform="translate(${pen} 0)" d="${s}"/>`; pen += L.w + 11; }
-  const w = pen - 11;
-  const defs = h('clipPath', { id: `fx-wc-${word.replace('!', '')}` }, h('rect', { x: -30, y: 0, width: w + 60, height: 100 })) +
-    `<g id="fx-wd-${word.replace('!', '')}" clip-path="url(#fx-wc-${word.replace('!', '')})" fill="none" stroke-miterlimit="12">${d}</g>`;
-  return { w, defs };
+// Hand-lettered sound words: DejaVu Serif Bold (Latin) and WenQuanYi Zen Hei (CJK) outlines, extracted at build time
+// with tools/ttf.mjs (both licences allow embedding outlines). em = 100, y down, baseline 0. [advance, d, bbox]
+const GLYPH_LAT = {"D":[86.7,"M32.8-5.9L39.6-5.9Q51-5.9 56.3-13.2Q61.6-20.6 61.6-36.5Q61.6-52.4 56.4-59.7Q51.1-67 39.6-67L32.8-67ZM4.7 0L4.7-5.9L14-5.9L14-67L4.7-67L4.7-72.9L42.1-72.9Q61.7-72.9 72.1-63.5Q82.5-54.1 82.5-36.5Q82.5-18.8 72.1-9.4Q61.7 0 42.1 0Z",[5,-73,83,0]],"i":[38,"M9.2-66.6Q9.2-70.6 11.9-73.3Q14.7-76 18.6-76Q22.5-76 25.2-73.3Q27.9-70.6 27.9-66.6Q27.9-62.7 25.2-60Q22.5-57.3 18.6-57.3Q14.7-57.3 11.9-60Q9.2-62.7 9.2-66.6ZM28.1-5.9L35.5-5.9L35.5 0L3.4 0L3.4-5.9L10.8-5.9L10.8-46L3.4-46L3.4-51.9L28.1-51.9Z",[3,-76,36,0]],"n":[72.7,"M3.4 0L3.4-5.9L10.8-5.9L10.8-46L3.4-46L3.4-51.9L28.1-51.9L28.1-44.6Q31.2-49.2 35.2-51.3Q39.2-53.3 45.3-53.3Q54.1-53.3 58.5-48.2Q63-43 63-33L63-5.9L70.4-5.9L70.4 0L39.4 0L39.4-5.9L45.7-5.9L45.7-33.5Q45.7-40.1 44-42.6Q42.3-45.2 38.2-45.2Q33-45.2 30.5-41.4Q28.1-37.5 28.1-29.2L28.1-5.9L34.4-5.9L34.4 0Z",[3,-53,70,0]],"g":[69.9,"M60.2-46L60.2-0.7Q60.2 10.3 52.4 16.2Q44.6 22.2 30.4 22.2Q25.2 22.2 19.9 21.4Q14.6 20.6 9 19L9 6.6L14.5 6.6Q15.2 11.7 18.6 14.2Q22 16.7 28.3 16.7Q36.3 16.7 39.6 12.9Q42.9 9 42.9-0.7L42.9-6.6Q40.7-2.5 37-0.6Q33.3 1.4 27.8 1.4Q16.8 1.4 10.4-5.9Q4.1-13.2 4.1-26Q4.1-38.8 10.4-46Q16.8-53.3 27.8-53.3Q33.3-53.3 37-51.3Q40.7-49.4 42.9-45.3L42.9-51.9L67.6-51.9L67.6-46ZM42.9-28.5Q42.9-37.6 40.6-41.6Q38.2-45.7 33.1-45.7Q27.7-45.7 25.6-41.4Q23.4-37.2 23.4-26Q23.4-14.8 25.6-10.5Q27.8-6.2 33.1-6.2Q38.2-6.2 40.6-10.2Q42.9-14.3 42.9-23.4Z",[4,-53,68,22]],"H":[94.5,"M4.7 0L4.7-5.9L14-5.9L14-67L4.7-67L4.7-72.9L42.2-72.9L42.2-67L32.8-67L32.8-42.5L61.8-42.5L61.8-67L52.5-67L52.5-72.9L90-72.9L90-67L80.6-67L80.6-5.9L90-5.9L90 0L52.5 0L52.5-5.9L61.8-5.9L61.8-35.8L32.8-35.8L32.8-5.9L42.2-5.9L42.2 0Z",[5,-73,90,0]],"o":[66.7,"M33.4-4.1Q38.9-4.1 41.1-8.8Q43.3-13.5 43.3-26Q43.3-38.5 41.1-43.1Q38.9-47.8 33.4-47.8Q27.9-47.8 25.6-43.1Q23.4-38.4 23.4-26Q23.4-13.6 25.6-8.8Q27.9-4.1 33.4-4.1ZM33.4 1.4Q19.7 1.4 11.9-5.9Q4.1-13.2 4.1-26Q4.1-38.8 11.9-46.1Q19.7-53.3 33.4-53.3Q47.2-53.3 54.9-46.1Q62.7-38.8 62.7-26Q62.7-13.2 54.9-5.9Q47.1 1.4 33.4 1.4Z",[4,-53,63,1]],"p":[69.9,"M27-28.5L27-23.4Q27-14.3 29.3-10.2Q31.6-6.2 36.8-6.2Q42.1-6.2 44.3-10.5Q46.5-14.8 46.5-26Q46.5-37.2 44.3-41.4Q42.1-45.7 36.8-45.7Q31.6-45.7 29.3-41.6Q27-37.6 27-28.5ZM9.7-46L2.3-46L2.3-51.9L27-51.9L27-45.3Q29.2-49.4 32.9-51.3Q36.6-53.3 42.1-53.3Q53.2-53.3 59.6-46Q65.9-38.7 65.9-26Q65.9-13.2 59.6-5.9Q53.2 1.4 42.1 1.4Q36.6 1.4 32.9-0.6Q29.2-2.5 27-6.6L27 14.9L35 14.9L35 20.8L2.3 20.8L2.3 14.9L9.7 14.9Z",[2,-53,66,21]],"G":[85.4,"M68.8-50Q66.6-59.7 61.5-64Q56.4-68.3 47-68.3Q35.7-68.3 30.4-60.6Q25.1-52.9 25.1-36.4Q25.1-20 30.2-12.2Q35.3-4.5 46-4.5Q50.1-4.5 53.6-5.4Q57.1-6.3 60-8.2L60-28.2L51.2-28.2L51.2-34.1L77.5-34.1L77.5-6.1Q69.3-2.3 61.1-0.4Q52.9 1.4 44.4 1.4Q25.6 1.4 14.9-8.7Q4.2-18.8 4.2-36.4Q4.2-54 14.9-64.1Q25.6-74.2 44.4-74.2Q52.2-74.2 59.8-72.7Q67.3-71.1 75-67.9L75-50Z",[4,-74,77,1]],"u":[72.7,"M61.9-51.9L61.9-5.9L69.3-5.9L69.3 0L44.6 0L44.6-7.3Q41.5-2.7 37.5-0.6Q33.5 1.4 27.4 1.4Q18.7 1.4 14.2-3.7Q9.7-8.9 9.7-18.9L9.7-46L2.3-46L2.3-51.9L27-51.9L27-21.6Q27-11.9 28.6-9.3Q30.2-6.7 34.5-6.7Q39.8-6.7 42.2-10.5Q44.6-14.4 44.6-22.8L44.6-46L38.3-46L38.3-51.9Z",[2,-52,69,1]],"l":[38,"M28.1-5.9L35.5-5.9L35.5 0L3.4 0L3.4-5.9L10.8-5.9L10.8-70.1L3.4-70.1L3.4-76L28.1-76Z",[3,-76,36,0]],"!":[43.9,"M12.7-7.9Q12.7-11.7 15.4-14.4Q18.1-17.2 21.9-17.2Q25.7-17.2 28.5-14.4Q31.2-11.7 31.2-7.9Q31.2-4 28.5-1.3Q25.7 1.4 21.9 1.4Q18.1 1.4 15.4-1.3Q12.7-4 12.7-7.9ZM12.8-72.9L31.1-72.9L25.3-31.8L25.3-22.5L18.5-22.5L18.5-31.8Z",[13,-73,31,1]],"z":[56.8,"M3.5 0L3.5-5.9L33.3-46.2L10.9-46.2L10.9-37.3L5.1-37.3L5.1-51.9L53.4-51.9L53.4-46.1L23.6-5.8L47.6-5.8L47.6-15.2L53.4-15.2L53.4 0Z",[4,-52,53,0]],"Z":[73,"M3.7 0L3.7-6.9L47.2-66.2L12.3-66.2L12.3-55.3L5.6-55.3L5.6-72.9L68.9-72.9L68.9-66L25.9-6.7L62.7-6.7L62.7-16.9L69.4-16.9L69.4 0Z",[4,-73,69,0]]};
+const GLYPH_ZH = {"叮":[100,"M66.4-1.8L66.4-71L55.8-71Q49.8-71 43.9-70.7Q44.1-73.9 43.9-77.1Q49.8-76.9 55.8-76.9L84.9-76.9Q90.8-76.9 96.8-77.1Q96.4-73.9 96.8-70.7Q90.8-71 84.9-71L73.6-71L73.6 0.9Q73.6 7.9 69.3 10.5Q64.8 13.2 55.1 13.1Q56.2 8.1 52.7 4.3Q55.9 4.7 60 4.7Q64.2 4.8 65.3 3.9Q66.4 3 66.4-1.8ZM15-0.6L8.3-0.6L8.4-71L37.4-71L37.4-0.6L30.7-0.6L30.7-10L15-10ZM30.7-65.4L15-65.4L15-15.5L30.7-15.5Z",[8,-77,97,13]],"铃":[100,"M57.8-19.5Q52.9-19.5 48.1-19.2Q48.3-21.9 48.1-24.5Q52.9-24.3 57.8-24.3L83.7-24.3L84.7-18.5Q82.5-17.5 80.6-14.7Q78.6-11.9 70 1.2L79 9.2L73.9 14.6L62.7 4.5L51-5L55.5-10.7L64.9-3.1L75.7-19.5ZM72.5-34.3L66.2-30.4L56.7-45.6L63-49.5ZM96.6-40.4Q93-38.8 91.2-35.2Q83.3-39.4 76.2-47.2Q69.1-55.1 65.3-65Q55.1-43.6 43.6-30.9Q40.8-34.1 36.8-35Q48-47.1 53.7-57Q59.4-66.9 63.5-80.5Q67.2-78.7 71.2-77.8L69.1-73.2Q72.1-60.5 79.8-52.6Q86.9-45.2 96.6-40.4ZM16.3-78.8Q20-77.6 24.4-77.3Q22.6-70.7 20.5-64.2L33-64.2Q37.8-64.2 42.6-64.4Q42.3-61.9 42.6-59.4Q37.8-59.7 33-59.7L19-59.7Q16.8-52.7 14.8-47.5L30.6-47.5Q35.4-47.5 40.1-47.7Q39.8-45.2 40.1-42.7Q35.4-43 30.6-43L25.5-43L25.5-30.4L33.5-30.4Q38.3-30.4 43.1-30.6Q42.8-28.1 43.1-25.6Q38.3-25.9 33.5-25.9L25.5-25.9L25.5-5.5L38.6-17.5L41.4-13.7Q39.8-12.3 38.2-10.7Q29.6-1.9 22.1 7.7L17.2 3Q18.7 0.6 18.7-2.1L18.7-25.9L13.2-25.9Q8.4-25.9 3.5-25.6Q3.8-28.1 3.5-30.6Q8.4-30.4 13.2-30.4L18.7-30.4L18.7-43L12.8-43Q10.4-37.3 7.2-32Q4.3-34.3-0.4-34.5Q2.7-39.6 6.6-47.1Q13.8-61 16.3-78.8Z",[0,-80,97,15]],"嘿":[100,"M91.4 13.1Q87.6 2.5 81.1-6.4L86.7-10.5Q93.8-0.7 98 10.6ZM79.6 8.1L73.2 11L65.8-5L72.2-7.9ZM62.2 9.4L55.8 11.8L49.5-4.5L56.1-6.9ZM30.9 10.5Q34.7 1.7 37.2-7.6L44-5.9Q41.2 3.9 37.3 13.2ZM96.5-18.6Q96.2-16.4 96.5-14.2Q92.3-14.4 88-14.4L39.3-14.4Q35.1-14.4 30.9-14.2Q31.1-16.4 30.9-18.6Q35.1-18.5 39.3-18.5L60.9-18.5L60.9-29.3L45.2-29.3Q41-29.3 36.8-29.1Q37.1-31.4 36.8-33.7Q41-33.5 45.2-33.5L60.9-33.5L60.9-43.2L37.7-43.2Q38.9-61.5 37.7-79.8L89.7-79.8Q88.6-61.5 89.7-43.2L67.2-43.2L67.2-33.5L82-33.5Q86.2-33.5 90.4-33.7Q90.2-31.4 90.4-29.1Q86.2-29.3 82-29.3L67.2-29.3L67.2-18.5L88-18.5Q92.2-18.5 96.5-18.6ZM67.2-47.4L83.3-47.4L83.3-75.7L67.2-75.7L67.2-52.6Q68.7-55.5 72.7-65.3L75.7-72.6Q78.8-71 82.1-70L79.1-62.6L73.1-50.3Q70.4-52 67.2-52.1ZM51.6-51.5Q48.5-60.9 44.3-69.9L50.6-72.8Q55.1-63.5 58.2-53.6ZM60.9-75.7L44-75.7L44-47.4L60.9-47.4ZM10-4.2L3.8-4.2L3.8-74.2L27.3-74.2L27.3-4.2L21.1-4.2L21.1-13L10-13ZM21.1-70L10-70L10-16.9L21.1-16.9Z",[4,-80,98,13]],"哟":[100,"M85.6-55.1L73.1-55.1Q71-48.4 69.1-43.7L72.5-45.4Q77.8-34.5 80.3-22.6L73.1-21Q71.1-30.4 67.2-39.2Q65.8-35.8 64-32.3Q60.6-34.8 56.3-34.7Q63-46.9 66.4-56.6Q69.8-66.4 72-80Q75.9-78.8 80-78.4L74.6-60.1L92.4-60.1L92.4 1.8Q92.4 6.5 89.3 9.6Q85.8 12.8 74.9 12.7Q76 8 72.7 4.5Q75.7 4.8 79.7 4.8Q83.7 4.9 84.7 4.1Q85.6 2.8 85.6-1.4ZM30.7-4Q43.9-5.3 54.7-8.6Q58.6-9.8 66.4-12.3L66.6-7.8Q45-0.9 33.3 4.1Q33.2-0.3 30.7-4ZM54.7-61.7Q58.4-60 62.4-59Q61.6-56.6 60-53.5Q58.4-50.3 51.1-38.5Q43.9-26.8 41.1-23L56.2-25.1L61.4-26.5L61.3-21.1L56.8-20.7L31.6-16.6L30.9-21.5Q32.9-22.1 34.2-23.6Q38.7-28.9 45.7-41.4L31.4-40.3L31.1-45.3Q32.8-45.6 33.6-47.3Q35.7-51.9 40.5-63.6Q45.2-75.3 46.8-81Q50.4-79 54.4-77.9L39.6-45.8L48.2-46.2Q53.5-56.3 54.7-61.7ZM10.2-4.2L3.9-4.2L3.9-74.2L27.7-74.2L27.7-4.2L21.5-4.2L21.5-13L10.2-13ZM21.5-70L10.2-70L10.2-16.9L21.5-16.9Z",[4,-81,92,13]],"咕":[100,"M53.2 12Q49.4 11.6 45.6 12Q46 5 46-1.9L46-31L64.6-31L64.6-53.6L50.7-53.6Q45.4-53.6 40.2-53.4Q40.5-56.2 40.2-59.1Q45.4-58.8 50.7-58.8L64.6-58.8L64.6-68.3Q64.6-75.2 64.3-82.1Q68.1-81.7 71.8-82.1Q71.5-75.2 71.5-68.3L71.5-58.8L86.1-58.8Q91.4-58.8 96.7-59.1Q96.4-56.2 96.7-53.4Q91.4-53.6 86.1-53.6L71.5-53.6L71.5-31L89.8-31L89.8 11.8L83 11.8L83 3.1L52.9 3.1Q52.9 7.5 53.2 12ZM83-25.8L52.8-25.8L52.8-2L83-2ZM12.3-4.2L4.7-4.2L4.7-74.2L33.6-74.2L33.6-4.2L26.1-4.2L26.1-13L12.3-13ZM26.1-70L12.3-70L12.3-16.9L26.1-16.9Z",[5,-82,97,12]],"嘟":[100,"M78.7 12Q75.1 11.6 71.6 12Q71.9 5.4 71.9-1.2L71.9-73.1L94.6-73.1L94.6-68.7Q93.4-66.7 92.6-64.4L85.6-44.4Q90.2-40.7 92.9-35.3Q95.5-29.9 95.5-23.8L95.6-15.6Q95.9-7.7 92.4-3.9Q89.9-1.9 87-1Q84-0.1 81.7 0.4Q80.5-2.8 78.3-5.6L78.3-1.2Q78.3 5.4 78.7 12ZM44.5 12Q40.9 11.6 37.4 12Q37.7 5.4 37.7-1.2L37.7-26.4Q33.2-22.4 28.6-19Q26.8-22.6 23.1-24.4Q36.9-33.6 47.3-45.6L36.2-45.6Q31.8-45.6 27.3-45.4Q27.6-47.7 27.3-50.2Q31.8-50 36.2-50L43.4-50L43.4-64.2L31.9-64Q32.2-66.3 31.9-68.7L43.4-68.5L43.1-82.1Q46.6-81.7 50.2-82.1L49.9-68.5L60.8-68.7Q60.6-66.9 60.6-65.3Q62.2-68.3 63.6-71.3Q66.9-69.1 70.5-67.7Q65.1-58.4 59-50L68.8-50.2Q68.6-47.7 68.8-45.4L55.7-45.6Q51.3-40 46.8-35.2L65.1-35.2L65.1 11.8L58.7 11.8L58.7 2.3L44.2 2.3Q44.2 7.1 44.5 12ZM78.3-68.7L78.3-6Q82.7-6.3 85-6.9Q87.3-7.5 88.3-8.7Q89.4-9.9 89.7-11.8Q90-13.8 90-15.4L89.8-23.8Q89.8-30.1 86.8-35.5Q83.9-41 78.8-44.5L87.2-68.7ZM58.7-18.4L58.7-30.9L44.2-30.9L44.2-18.4ZM58.7-14.4L44.2-14.4L44.2-1.7L58.7-1.7ZM60-64L49.9-64.2L49.9-50L50.8-50Q56-56.6 60-64ZM9-4.2L3.4-4.2L3.4-74.2L24.6-74.2L24.6-4.2L19-4.2L19-13L9-13ZM19-70L9-70L9-16.9L19-16.9Z",[3,-82,96,12]]};
+
+function glyphWord(id, text, table, opt = {}) {
+  // per-letter bounce + tilt: a hand-lettered, slightly dancing baseline (seeded, static)
+  const { bounce = 4, tilt = 5, track = -1, seed = 1 } = opt;
+  let pen = 0, d = '', x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, i = 0;
+  for (const ch of text) {
+    const g = table[ch]; if (!g) continue;
+    const [adv, pd, bb] = g;
+    const dy = (hash(i, seed) - 0.5) * 2 * bounce - (i % 2 ? bounce * 0.5 : 0), r = (hash(i, seed + 7) - 0.5) * 2 * tilt;
+    const cx = (bb[0] + bb[2]) / 2, cy = (bb[1] + bb[3]) / 2;
+    d += `<path transform="translate(${f(pen)} ${f(dy)}) rotate(${f(r)} ${f(cx)} ${f(cy)})" d="${pd}"/>`;
+    x0 = Math.min(x0, pen + bb[0]); x1 = Math.max(x1, pen + bb[2]); y0 = Math.min(y0, bb[1] + dy); y1 = Math.max(y1, bb[3] + dy);
+    pen += adv + track; i++;
+  }
+  return { defs: `<g id="${id}">${d}</g>`, w: x1 - x0, x0, y0, y1, h: y1 - y0 };
 }
 
 // ------------------------------------------------------------------------------------------------ build
 export function build(ctx) {
   const { v, rng } = ctx;
-  const I = k => v('ink' + k);
+  const LINE = v('line'), SOFT = v('lineSoft'), PAPER = v('paper');
+  const M = k => v(k), MF = k => v(k, { far: true });
   let defs = '';
   const L = { far: '', shadow: '', back: '', front: '' };
+  // pencil double line: the main warm-brown line plus an offset, thinner, fainter second pass
+  const inked = (d, w, attrs = {}, col = LINE) =>
+    h('path', { d, fill: 'none', stroke: col, 'stroke-width': w, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', ...attrs });
+  const pencil = (d, w, dx = 0.7, dy = -0.6, key) =>
+    h('path', { d, fill: 'none', stroke: LINE, 'stroke-width': f(w * 0.45), opacity: 0.4, transform: `translate(${dx} ${dy})`, 'stroke-linecap': 'round', ...(key ? DD(key) : {}) });
+
+  // ---- soft painted gradients (glazes and glows; they replace blur filters)
+  const stop = (o, col, op) => h('stop', { offset: o, 'stop-color': col, 'stop-opacity': op });
+  defs += h('radialGradient', { id: 'fx-gShadow' }, stop(0, M('fxShadow'), 0.5), stop(0.55, M('fxShadow'), 0.26), stop(1, M('fxShadow'), 0));
+  defs += h('radialGradient', { id: 'fx-gGlow' }, stop(0, v('headlamp'), 1), stop(0.22, v('lamp'), 0.75), stop(0.55, v('lampGlow'), 0.25), stop(1, v('lampGlow'), 0));
+  defs += h('radialGradient', { id: 'fx-gPool' }, stop(0, v('headlamp'), 0.42), stop(0.6, v('lamp'), 0.16), stop(1, v('lamp'), 0));
+  defs += h('linearGradient', { id: 'fx-gBeam', gradientUnits: 'userSpaceOnUse', x1: BIKE.lamp[0], y1: BIKE.lamp[1], x2: 820, y2: 10 },
+    stop(0, v('headlamp'), 0.5), stop(0.35, v('lamp'), 0.22), stop(1, v('lamp'), 0));
 
   // ============================================== gull (side view, facing +x). Wings drawn raised; flap = scaleY.
-  const GBODY = smooth([[21.5, -4.6], [15, -8.6], [8, -7.2], [-4, -5], [-18, -3.2], [-31, -2.8], [-31.5, 0.6], [-18, 3.4], [-4, 6.6], [10, 5.6], [19, 1.8], [22, 0.4]]);
-  const GBEAK = poly([[21.2, -4.3], [29, -2.8], [33.6, -0.8], [32.2, 1.1], [29.6, 0.6], [21.6, 0.8]]);
-  const wingNear = (s, far) => {
-    // raised wing seen from the side: white arm (underwing) with a B key line, black hand with white mirrors;
-    // pivot = shoulder (0,0). The far wing prints flat N (STYLE-C far-side rule).
-    const arm = smooth([[6, 0.6], [5, -12], [2.4, -24.5], [-3, -25.5], [-8.6, -24], [-12.4, -13], [-16.5, -2.6], [-6, 1.6]]);
-    const hand = poly([[2.4, -24.5], [-4.4, -34], [-11, -42], [-17.6, -48.6], [-19.6, -45.4], [-16.4, -38], [-12, -29.5], [-8.6, -24]]);
+  const Rg = rng('fx-gullart');
+  const GB = jit([[21.5, -4.6], [15, -8.8], [8, -7.4], [-4, -5.2], [-18, -3.4], [-31, -3.2], [-32, 0.8], [-18, 3.8], [-4, 7], [10, 6], [19, 2], [22, 0.4]], 0.35, Rg);
+  const GBODY = smooth(GB);
+  const GBELLY = smooth([[-27, 1.6], [-14, 4], [-2, 6.4], [9, 5.4], [17, 2], [7, 1.8], [-8, 1.2]]);
+  const GBEAK = smooth([[21.2, -4.3], [27, -3.4], [33.6, -1], [32.4, 1.2], [29.6, 0.7], [21.6, 0.8]], true, 0.08);
+  const wing = (s, far, farLine) => {
+    // raised wing seen from the side: pale underwing arm with a mantle band, dark hand with cream mirrors;
+    // pivot = shoulder (0,0). The far wing is the same shape in a cooler, darker glaze (STYLE-B far-side rule).
+    const arm = smooth(jit([[6, 0.6], [5, -12], [2.4, -24.5], [-3, -25.5], [-8.6, -24], [-12.4, -13], [-16.5, -2.6], [-6, 1.6]], 0.3, Rg));
+    const hand = smooth([[2.4, -24.5], [-4.4, -34], [-11, -42], [-17.6, -48.6], [-19.8, -45.4], [-16.4, -38], [-12, -29.5], [-8.6, -24]], true, 0.1);
+    const band = 'M-13 -11C-8 -9.6 -2 -10.4 3.4 -12.6L2.6 -17C-3 -15 -8 -14.6 -12.2 -16Z';
     const primaries = 'M-4.4 -34L-8.8 -30.4M-8 -38.4L-12.2 -34.6M-11.8 -42.6L-15.4 -39.8';
-    if (far) return h('g', { transform: `scale(1 ${f(s)})` }, h('path', { d: arm + hand, fill: I('N') }));
+    if (far) return h('g', { transform: `scale(1 ${f(s)})` }, h('path', { d: arm + hand, fill: MF('fxGullMantle'), stroke: farLine || 'none', 'stroke-width': farLine ? 1.4 : 0, 'stroke-linejoin': 'round' }));
     return h('g', { transform: `scale(1 ${f(s)})` },
-      h('path', { d: arm, fill: I('P'), stroke: I('B'), 'stroke-width': 1.2, 'stroke-linejoin': 'round' }),
-      h('path', { d: 'M-12 -13.4Q-5 -12 1.8 -14.2', fill: 'none', stroke: I('B'), 'stroke-width': 0.7, 'stroke-linecap': 'round' }),
+      h('path', { d: arm, fill: PAPER }),
+      h('path', { d: band, fill: M('fxGullMantle') }),
+      h('path', { d: arm, fill: 'none', stroke: farLine || LINE, 'stroke-width': farLine ? 1.6 : 1.2, 'stroke-linejoin': 'round' }),
       h('g', DD('fx:T:gull-wingtip-mirrors'),
-        h('path', { d: hand, fill: I('N') }),
-        h('path', { d: primaries, fill: 'none', stroke: I('B'), 'stroke-width': 0.6 }),
-        h('path', { d: circ(-15.6, -44.4, 1.3) + circ(-11.2, -37.4, 0.9), fill: I('P') })));
+        h('path', { d: hand, fill: M('fxGullTip') }),
+        h('path', { d: primaries, fill: 'none', stroke: M('fxGullMantle'), 'stroke-width': 0.6, 'stroke-linecap': 'round' }),
+        h('path', { d: circ(-15.8, -44.4, 1.35) + circ(-11.2, -37.4, 0.95), fill: PAPER })));
   };
-  const gullBody = (detail) => h('g', {},
-    h('path', { d: GBODY, fill: I('P'), stroke: I('B'), 'stroke-width': 1.3, 'stroke-linejoin': 'round' }),
-    h('path', { d: 'M-24 -1.3L-31 -1.2', stroke: I('B'), 'stroke-width': 0.8, fill: 'none' }),
-    h('path', { d: 'M-5 5.6L-14.5 7.6M-2.5 6L-12 9', fill: 'none', stroke: I('O'), 'stroke-width': 1.5, 'stroke-linecap': 'round' }),
-    h('g', detail ? DD('fx:O:gull-beak') : {}, h('path', { d: GBEAK, fill: I('O') }), h('path', { d: circ(30.2, 0.4, 1.05), fill: I('R') })),
-    h('g', detail ? DD('fx:O:gull-eye') : {}, h('path', { d: circ(15.2, -4.6, 1.45), fill: I('N') }), h('path', { d: circ(15.6, -5, 0.45), fill: I('P') })));
-  // far gull frames (4 flap positions), used by <use href> swap
+  const gullBody = (detail, farLine) => h('g', {},
+    h('path', { d: GBODY, fill: PAPER }),
+    h('path', { d: GBELLY, fill: M('plumeShade') }),
+    h('path', { d: 'M-5 5.8L-13 8.2M-2.4 6.4L-10.4 9.4', fill: 'none', stroke: M('foot'), 'stroke-width': 1.7, 'stroke-linecap': 'round', ...(detail ? DD('fx:O:gull-feet') : {}) }),
+    inked(GBODY, farLine ? 1.7 : 1.3, {}, farLine || LINE),
+    detail ? pencil(GBODY, 1.3, 0.8, -0.7, 'fx:T:gull-pencil-line') : '',
+    h('path', { d: 'M-24 -1.4L-31 -1.1', stroke: farLine || SOFT, 'stroke-width': 0.8, fill: 'none', 'stroke-linecap': 'round' }),
+    h('g', detail ? DD('fx:O:gull-beak') : {}, h('path', { d: GBEAK, fill: M('fxGullBill'), stroke: farLine || LINE, 'stroke-width': farLine ? 1.2 : 0.8, 'stroke-linejoin': 'round' }), h('path', { d: circ(30.2, 0.3, 1.05), fill: M('fxGullSpot') })),
+    h('g', detail ? DD('fx:O:gull-eye') : {},
+      detail ? h('path', { d: circ(12.6, -2.2, 2), fill: M('fxHeartHi'), opacity: 0.55 }) : '',
+      h('path', { d: circ(15.2, -4.6, 1.5), fill: M('fxGullTip') }), h('path', { d: circ(15.7, -5.1, 0.5), fill: PAPER })));
+  // far gull frames (4 flap positions), used by <use href> swap; far = lighter, softer line (atmospheric perspective)
   const FRAMES = [1, 0.4, -0.35, -0.9];
   FRAMES.forEach((s, i) => {
     defs += h('g', { id: 'fx-gf' + i },
-      h('g', { transform: 'translate(3 -4.5) scale(0.86)' }, wingNear(s, true)), gullBody(false), h('g', { transform: 'translate(1 -4)' }, wingNear(s, false)));
+      h('g', { transform: 'translate(3 -4.5) scale(0.86)' }, wing(s, true, SOFT)), gullBody(false, SOFT), h('g', { transform: 'translate(1 -4)' }, wing(s, false, SOFT)));
   });
-  // far flock: two loose groups (L-gulls-far)
   const R = rng('fx-gulls');
   const FAR = [];
   for (let i = 0; i < 7; i++) {
     const grp = i < 4 ? 0 : 1;
     FAR.push({ x0: grp * 1300 + i * 70 + R() * 50, y: (grp ? 150 : 205) + (i % 4) * 22 + R() * 18, s: 0.34 + R() * 0.14, f: 2.4 + R() * 1.2, ph: R() * 10, gl: R() * 10 });
   }
-  L.far += h('g', {}, FAR.map((g, i) => h('use', { 'data-ref': 'fx-gfar' + i, ...DD('fx:O:gull-far'), href: '#fx-gf1', transform: `translate(${f(g.x0)} ${f(g.y)}) scale(${f(g.s)})` })));
-  // escort gulls (L-fx-back): continuous flap
+  L.far += h('g', { opacity: 0.92 }, FAR.map((g, i) => h('use', { 'data-ref': 'fx-gfar' + i, ...DD('fx:O:gull-far'), href: '#fx-gf1', transform: `translate(${f(g.x0)} ${f(g.y)}) scale(${f(g.s)})` })));
   const ESC = [
     { idle: [400, 262], st: [455, 318], s: 1.15 },
     { idle: [-300, 420], st: [300, 405], s: 1.0 },
@@ -179,16 +264,18 @@ export function build(ctx) {
     { idle: [-300, 120], st: [1115, 168], s: 0.85 },
   ];
   L.back += h('g', { 'data-ref': 'fx-escort' }, ESC.map((g, i) => h('g', { 'data-ref': 'fx-esc' + i, transform: `translate(${g.idle[0]} ${g.idle[1]}) scale(${g.s})`, ...(i === 0 ? DD('fx:O:gull-escort') : {}) },
-    h('g', { transform: 'translate(3 -4.5) scale(0.86)' }, h('g', { 'data-ref': 'fx-escWf' + i }, wingNear(1, true))),
+    h('g', { transform: 'translate(3 -4.5) scale(0.86)' }, h('g', { 'data-ref': 'fx-escWf' + i }, wing(1, true))),
     gullBody(i === 0),
-    h('g', { transform: 'translate(1 -4)' }, h('g', { 'data-ref': 'fx-escWn' + i }, wingNear(1, false))))));
+    h('g', { transform: 'translate(1 -4)' }, h('g', { 'data-ref': 'fx-escWn' + i }, wing(1, false))))));
 
   // ============================================== shadow (L-shadow)
-  // contact shadows (world), cast shadow group (rider-local coordinates under a sun-projection matrix)
   const [rhx] = BIKE.rearHub, [fhx] = BIKE.frontHub;
+  const Rs = rng('fx-shadow');
+  const dry = Array.from({ length: 7 }, (_, i) => { const x = -58 + i * 18 + (Rs() - 0.5) * 8, y = 3.4 + Rs() * 2.4, l = 10 + Rs() * 14; return brush([x - l / 2, y], [x + l / 2, y + (Rs() - 0.5) * 1.2], 1.1 + Rs() * 0.8, (Rs() - 0.5) * 1.5); }).join('');
   const contact = (ref, x) => h('g', { 'data-ref': ref, transform: `translate(${RIDER_X + x} ${GROUND_Y + 1})` },
-    h('ellipse', { cy: 1.6, rx: 62, ry: 7, fill: I('B'), ...DD('fx:T:shadow-penumbra') }),
-    h('ellipse', { rx: 33, ry: 4.2, fill: I('N'), ...DD('fx:O:shadow-contact') }));
+    h('ellipse', { cy: 1.4, rx: 74, ry: 10, fill: 'url(#fx-gShadow)', ...DD('fx:T:shadow-penumbra') }),
+    h('path', { d: dry, fill: M('fxShadow'), opacity: 0.32, ...DD('fx:T:shadow-drybrush') }),
+    h('path', { d: smooth(jit([[-34, 0], [-18, -3.8], [0, -4.4], [18, -3.8], [34, 0], [18, 3.6], [0, 4.2], [-18, 3.6]], 0.5, Rs)), fill: M('fxShadow'), opacity: 0.6, ...DD('fx:O:shadow-contact') }));
   const B = BIKE;
   const tube = (a, b) => `M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}`;
   const frameD = [tube(B.rearHub, B.bb), tube(B.rearHub, B.seatTubeTop), tube(B.bb, B.seatClamp), tube(B.seatTubeTop, B.headTop), tube(B.bb, B.headBottom),
@@ -199,199 +286,244 @@ export function build(ctx) {
     h('path', { d: frameD, fill: 'none', stroke: 'currentColor', 'stroke-width': 7, 'stroke-linecap': 'round' }),
     h('path', { d: 'M-101 -287Q-60 -296 -23 -287L-40 -279H-90Z', fill: 'currentColor' }),
     h('path', { d: poly([[B.basket.x0, B.basket.y0], [B.basket.x1, B.basket.y0], [B.basket.x1 - 6, B.basket.y1], [B.basket.x0 + 6, B.basket.y1]]), fill: 'currentColor' }));
-  // pelican: one capsule per slot, sized from the slot art's bbox in attach(); the neck is a live thick stroke
   const PSLOTS = ['tail', 'wingFarUpper', 'thighFar', 'shankFar', 'footFar', 'body', 'crest', 'head', 'pouch', 'billLower', 'billUpper', 'thighNear', 'shankNear', 'footNear', 'wingNearUpper', 'wingNearLower'];
   const pelShadow = h('g', { ...DD('fx:O:shadow-cast-pelican') },
     h('path', { 'data-ref': 'fx-shNeck', d: 'M0 0L0 0', fill: 'none', stroke: 'currentColor', 'stroke-width': 34, 'stroke-linecap': 'round' }),
     PSLOTS.map(s => h('g', { 'data-ref': 'fx-sh-' + s }, h('rect', { 'data-ref': 'fx-shr-' + s, x: 0, y: 0, width: 0, height: 0, fill: 'currentColor' }))));
-  L.shadow += h('g', { 'data-ref': 'fx-cast', style: 'opacity:calc(var(--pb-n-shadowAlpha) * 1.75)', color: I('B') },
+  L.shadow += h('g', { 'data-ref': 'fx-cast', style: 'opacity:calc(var(--pb-n-shadowAlpha) * 1.3)', color: M('fxShadow') },
     h('g', { 'data-ref': 'fx-castM' }, h('g', { 'data-ref': 'fx-castP' }, bikeShadow, pelShadow)));
-  L.shadow += h('g', { style: 'opacity:calc(0.5 + var(--pb-n-shadowAlpha))' }, contact('fx-cR', rhx), contact('fx-cF', fhx));
+  L.shadow += h('g', { style: 'opacity:calc(0.55 + var(--pb-n-shadowAlpha))' }, contact('fx-cR', rhx), contact('fx-cF', fhx));
 
-  // ============================================== headlamp beam (L-fx-back, rider-local)
+  // ============================================== headlamp glow (L-fx-back, rider-local)
   const lamp = B.lamp;
-  const beamRing = (cx, rx, ry, reach, op) => h('g', { opacity: op },
-    h('path', { d: poly([[lamp[0] + 2, lamp[1] - 5], [cx + rx * 0.92, -ry * 0.4], [cx, ry], [cx - rx * 0.9, ry * 0.2], [lamp[0] + 2, lamp[1] + 5]]), fill: v('headlamp') }),
-    h('ellipse', { cx, cy: 4, rx, ry, fill: v('headlamp') }));
+  const cone = smooth([[lamp[0] + 2, lamp[1] - 6], [330, -120], [640, -26], [900, -2], [760, 16], [480, 18], [300, 4], [lamp[0] + 2, lamp[1] + 6]], true, 0.12);
   L.back += h('g', { 'data-ref': 'fx-riderB' },
     h('g', { 'data-ref': 'fx-beam', style: 'opacity:var(--pb-n-lampOn)', ...DD('fx:O:headlamp-beam') },
-      beamRing(620, 330, 22, 0, 0.13), beamRing(590, 245, 16, 0, 0.14), beamRing(560, 150, 10, 0, 0.18)));
+      h('path', { d: cone, fill: 'url(#fx-gBeam)' }),
+      h('ellipse', { cx: 580, cy: 6, rx: 330, ry: 26, fill: 'url(#fx-gPool)' }),
+      h('ellipse', { cx: 500, cy: 5, rx: 170, ry: 13, fill: 'url(#fx-gPool)' })));
 
-  // ============================================== fireflies (L-fx-back near) + far twinkles (L-gulls-far)
-  const glowDot = (a, b, c) => h('path', { d: circ(0, 0, a), fill: v('lampGlow'), opacity: 0.22 }) + h('path', { d: circ(0, 0, b), fill: v('lamp'), opacity: 0.5 }) + h('path', { d: circ(0, 0, c), fill: v('headlamp') });
+  // ============================================== fireflies (L-fx-back) + far twinkles (L-gulls-far)
+  const glow = r => h('circle', { r, fill: 'url(#fx-gGlow)' });
+  const bug = h('path', { d: 'M-3.6 -0.2C-3 -1.8 1.2 -2 2.6 -0.8C3.4 0.4 1.2 1.6 -1 1.4C-2.4 1.3 -3.8 0.8 -3.6 -0.2Z', fill: M('fxBeeDark') }) +
+    h('path', { d: 'M-0.6 -1.2C-2 -4.6 -4.8 -5 -4.8 -3.2C-4.6 -2 -2.6 -1.4 -0.6 -1.2ZM0.6 -1.4C0.8 -4.8 3.2 -5.6 3.4 -3.8C3.4 -2.6 2 -1.8 0.6 -1.4Z', fill: PAPER, opacity: 0.8, stroke: SOFT, 'stroke-width': 0.4 }) +
+    h('path', { d: circ(-3.4, 0.2, 1.7), fill: v('headlamp') });
   const FF = [];
   const Rf = rng('fx-ff');
   for (let i = 0; i < 8; i++) FF.push({ x: 180 + i * 150 + Rf() * 60, y: 360 + Rf() * 380, ax: 20 + Rf() * 30, ay: 12 + Rf() * 22, w: 0.4 + Rf() * 0.5, p: 2.2 + Rf() * 2.4, ph: Rf() });
-  L.back += h('g', { 'data-ref': 'fx-ffG', visibility: 'hidden' }, FF.map((q, i) => h('g', { 'data-ref': 'fx-ff' + i, ...DD('fx:O:fireflies') }, glowDot(12, 6.5, 2.6))));
+  L.back += h('g', { 'data-ref': 'fx-ffG', visibility: 'hidden' }, FF.map((q, i) => h('g', { 'data-ref': 'fx-ff' + i, ...DD('fx:O:fireflies') }, glow(15), h('g', { transform: 'translate(3 0) scale(1.4)' }, bug))));
   const FFF = [];
   for (let i = 0; i < 6; i++) FFF.push({ x: Rf() * 2600 - 500, y: 500 + Rf() * 70, p: 1.6 + Rf() * 2, ph: Rf() });
-  L.far += h('g', { 'data-ref': 'fx-fffG', visibility: 'hidden' }, FFF.map((q, i) => h('g', { 'data-ref': 'fx-fff' + i, ...DD('fx:O:fireflies-far') }, glowDot(5, 2.6, 1.2))));
+  L.far += h('g', { 'data-ref': 'fx-fffG', visibility: 'hidden' }, FFF.map((q, i) => h('g', { 'data-ref': 'fx-fff' + i, ...DD('fx:O:fireflies-far') }, glow(6))));
 
-  // ============================================== wind curls + speed lines (L-fx-back)
-  const CURL = ['M0 0C-28 -3 -52 3 -70 -3C-84 -8 -82 -24 -70 -23C-61 -22 -61 -12 -69 -13', 'M-10 9C-26 7 -38 11 -50 8'];
-  L.back += h('g', { ...DD('fx:O:wind-curl') }, [0, 1, 2].map(i => h('g', { 'data-ref': 'fx-curl' + i, visibility: 'hidden' },
-    CURL.map((d, k) => h('path', { 'data-ref': `fx-curl${i}p${k}`, d, pathLength: 1, 'stroke-dasharray': '1 1', 'stroke-dashoffset': 1, fill: 'none', stroke: I('P'), 'stroke-width': k ? 1.8 : 2.4, 'stroke-linecap': 'round' })))));
-  const SL = [];
-  for (let i = 0; i < 8; i++) SL.push(i);
-  // tapered dry-brush strokes: heavy where they leave the silhouette, hairline tails, a broken second bristle
-  const SLD = ['M0 -2.6C-30 -1.8 -70 -0.5 -100 0C-70 0.5 -30 1.8 0 2.6ZM-14 5.4L-17 4.2L-58 5.1L-17 6.6Z', 'M0 -2.1C-26 -1.4 -60 -0.4 -86 0C-60 0.4 -26 1.4 0 2.1ZM-30 -4.4L-33 -5.6L-74 -4.9L-33 -3.4Z'];
-  L.front += h('g', { 'data-ref': 'fx-slG', visibility: 'hidden', ...DD('fx:O:speed-lines') }, SL.map(i => h('path', {
-    'data-ref': 'fx-sl' + i, d: SLD[i % 2], fill: I('N'), visibility: 'hidden',
+  // ============================================== ONE calm breeze swirl (L-fx-back, upper sky)
+  // A soft painted curl: a cream brush line that draws on slowly, holds, and wipes off, plus a fainter echo line.
+  const SW = ['M0 0C-40 -8 -96 6 -140 -4C-176 -12 -186 -52 -156 -58C-130 -62 -122 -34 -144 -32C-152 -31 -156 -38 -152 -42',
+    'M-20 16C-54 12 -90 20 -122 14'];
+  L.back += h('g', { 'data-ref': 'fx-curl0', visibility: 'hidden', ...DD('fx:O:wind-swirl') },
+    SW.map((d, k) => h('path', { 'data-ref': `fx-curl0p${k}`, d, pathLength: 1, 'stroke-dasharray': '1 1', 'stroke-dashoffset': 1, fill: 'none', stroke: PAPER, 'stroke-width': k ? 2.6 : 4.2, opacity: k ? 0.55 : 0.85, 'stroke-linecap': 'round' })),
+    h('path', { d: SW[0], pathLength: 1, 'data-ref': 'fx-curl0p2', 'stroke-dasharray': '1 1', 'stroke-dashoffset': 1, fill: 'none', stroke: v('skyWashWarm'), 'stroke-width': 1.4, transform: 'translate(1.5 3)', opacity: 0.6, 'stroke-linecap': 'round' }));
+  // ============================================== sparse speed strokes (sprint only)
+  const SLD = [brush([0, 0], [-100, 0.5], 4.6, 0.6) + brush([-16, 5.4], [-60, 5.8], 1.6, 0.3), brush([0, 0], [-86, -0.4], 3.8, -0.5) + brush([-30, -4.6], [-74, -5], 1.4, -0.2)];
+  L.front += h('g', { 'data-ref': 'fx-slG', visibility: 'hidden', ...DD('fx:O:speed-lines') }, SPEEDLINES.map((_, i) => h('path', {
+    'data-ref': 'fx-sl' + i, d: SLD[i % 2], fill: PAPER, visibility: 'hidden',
   })));
 
-
-  // escort gulls go behind the rider but above the beam (already appended)
+  // ============================================== bumblebee (L-fx-back, day)
+  const beeWing = 'M-1 -3C-3 -9 -9 -11 -9.6 -7.6C-10 -5 -5 -3.2 -1 -3ZM1.4 -3.4C1.6 -10 6.6 -12 7.6 -9C8.2 -6.8 4.8 -4.2 1.4 -3.4Z';
+  const Rb0 = rng('fx-bee');
+  const fuzz = Array.from({ length: 18 }, (_, i) => { const a = (i / 18) * TAU, r = 5.6 + Rb0() * 0.8; return brush([Math.cos(a) * 4.6 * 1.25, Math.sin(a) * 4.6], [Math.cos(a) * r * 1.25, Math.sin(a) * r], 0.8); }).join('');
+  L.back += h('g', { 'data-ref': 'fx-beeG', visibility: 'hidden' },
+    h('path', { 'data-ref': 'fx-beeTrail', d: 'M0 0', fill: 'none', stroke: SOFT, 'stroke-width': 1.6, 'stroke-linecap': 'round', 'stroke-dasharray': '0 6', opacity: 0.7 }),
+    h('g', { 'data-ref': 'fx-bee', ...DD('fx:O:bumblebee') },
+      h('g', { 'data-ref': 'fx-beeW' }, h('path', { d: beeWing, fill: M('fxWing'), opacity: 0.85, stroke: LINE, 'stroke-width': 0.6 })),
+      h('ellipse', { rx: 6.8, ry: 5.2, fill: M('fxBee') }),
+      h('g', DD('fx:T:bee-stripes'),
+        h('path', { d: 'M-1.6 -5.1C-2.6 -2 -2.6 2 -1.6 5.1L0.8 5.1C-0.2 2 -0.2 -2 0.8 -5.1ZM-5.6 -3.2C-6.4 -1 -6.4 1 -5.6 3.2L-3.8 4.4C-4.6 1.6 -4.6 -1.6 -3.8 -4.4Z', fill: M('fxBeeDark') }),
+        h('path', { d: fuzz, fill: M('fxBee'), opacity: 0.8 })),
+      h('path', { d: 'M-6.8 0C-6.8 -3 -3.6 -5.2 0 -5.2C3.6 -5.2 6.8 -3 6.8 0C6.8 3 3.6 5.2 0 5.2C-3.6 5.2 -6.8 3 -6.8 0Z', fill: 'none', stroke: LINE, 'stroke-width': 0.9 }),
+      h('path', { d: circ(6.6, -0.6, 3.1), fill: M('fxBeeDark') }), h('path', { d: circ(7.6, -1.4, 0.8), fill: PAPER }),
+      h('path', { d: 'M8 -3Q9 -6.4 11 -7M6.6 -3.4Q6.6 -6.6 8 -7.8M-7 0.4L-9 1.2', fill: 'none', stroke: LINE, 'stroke-width': 0.7, 'stroke-linecap': 'round' })));
 
   // ============================================== dust + grit + landing (L-fx-front)
-  const PUFF = circ(0, -0.6, 5.6) + circ(5.6, -1.6, 4.2) + circ(-5.2, 0.8, 3.8) + circ(1.2, -4.8, 3.4);
-  const puff = (ref, key) => h('g', { 'data-ref': ref, visibility: 'hidden', ...DD(key) },
-    h('path', { d: PUFF, fill: I('P') }),
-    h('path', { d: 'M-8.8 2.2Q0 6.4 9.6 0.8Q9 3.4 5 4Q0 6 -5 4.6Q-8 4 -8.8 2.2Z', fill: I('O') }),
-    h('path', { d: 'M-3 -3.2A4 4 0 0 1 2.4 -6.4', fill: 'none', stroke: I('K'), 'stroke-width': 0.9, 'stroke-linecap': 'round' }));
+  const Rd = rng('fx-dust');
+  const puffV = [0, 1, 2].map(() => puffD(Rd, 17, 10, 5));
+  const puff = (ref, key, vi) => {
+    const p = puffV[vi % 3];
+    return h('g', { 'data-ref': ref, visibility: 'hidden', ...DD(key) },
+      h('path', { d: p.d, fill: M('fxDust') }),
+      h('path', { d: 'M-8.8 1.4Q0 5.6 9.4 0.8Q8.6 3 5 3.6Q0 5.4 -5 4Q-7.8 3.4 -8.8 1.4Z', fill: M('fxDustShade'), opacity: 0.8 }),
+      h('g', key === 'fx:O:dust-puff' && vi === 0 ? DD('fx:T:dust-drybrush') : {},
+        h('path', { d: smooth(p.top.slice(1, 4), false), fill: 'none', stroke: SOFT, 'stroke-width': 0.8, 'stroke-linecap': 'round', opacity: 0.8 }),
+        h('path', { d: brush([-4.4, -2.4], [1.6, -4.6], 1.2, -0.4), fill: PAPER, opacity: 0.9 })));
+  };
   const NDUST = 10, NGRIT = 10, NBURST = 8;
-  L.front += h('g', {}, Array.from({ length: NDUST }, (_, i) => puff('fx-dust' + i, 'fx:O:dust-puff')));
+  L.front += h('g', {}, Array.from({ length: NDUST }, (_, i) => puff('fx-dust' + i, 'fx:O:dust-puff', i)));
   L.front += h('g', {}, Array.from({ length: NGRIT }, (_, i) => h('path', {
-    'data-ref': 'fx-grit' + i, ...DD('fx:O:dust-grit'), visibility: 'hidden', d: i % 3 ? circ(0, 0, 1.5) : 'M-1.8 -1.2L1.9 -0.6L0.4 1.8Z', fill: i % 3 === 1 ? I('O') : I('N'),
+    'data-ref': 'fx-grit' + i, ...DD('fx:O:dust-grit'), visibility: 'hidden', d: i % 3 ? circ(0, 0, 1.5) : 'M-1.8 -1.2L1.9 -0.6L0.4 1.8Z', fill: i % 3 === 1 ? M('fxDustShade') : SOFT,
   })));
-  L.front += h('g', { 'data-ref': 'fx-burstG', visibility: 'hidden' }, Array.from({ length: NBURST }, (_, i) => puff('fx-bp' + i, 'fx:O:land-dust-burst')));
-  const tick = (a, r0, r1, w) => { const c = Math.cos(a * D2R), s = Math.sin(a * D2R), n = [-s * w, c * w]; return poly([[c * r0 - n[0], s * r0 - n[1]], [c * r1, s * r1], [c * r0 + n[0], s * r0 + n[1]]]); };
+  L.front += h('g', { 'data-ref': 'fx-burstG', visibility: 'hidden' }, Array.from({ length: NBURST }, (_, i) => puff('fx-bp' + i, 'fx:O:land-dust-burst', i)));
+  const bumpArcs = [-150, -115, -65, -30].map((a, i) => { const r0 = 16 + (i % 2) * 5, c = Math.cos(a * D2R), s = Math.sin(a * D2R); return brush([c * r0, s * r0], [c * (r0 + 14), s * (r0 + 14)], 2.4, i < 2 ? 1.5 : -1.5); }).join('');
   const impact = ref => h('g', { 'data-ref': ref },
-    h('path', { d: [-160, -120, -80, -40].map(a => tick(a, 14, 34, 2.6)).join(''), fill: I('R') }),
-    h('path', { d: [-140, -100, -60, -20].map(a => tick(a, 16, 28, 2)).join(''), fill: I('O') }));
-  L.front += h('g', { 'data-ref': 'fx-impG', visibility: 'hidden', ...DD('fx:O:land-impact-rays') }, impact('fx-impR'), impact('fx-impF'));
+    h('path', { d: bumpArcs, fill: LINE }),
+    h('path', { transform: 'translate(-40 -26)', d: sparkle(6, 1.4), fill: M('fxStar'), stroke: LINE, 'stroke-width': 0.6 }),
+    h('path', { transform: 'translate(38 -30)', d: sparkle(4.6, 1.1), fill: M('fxStar'), stroke: LINE, 'stroke-width': 0.6 }));
+  L.front += h('g', { 'data-ref': 'fx-impG', visibility: 'hidden', ...DD('fx:O:land-bump-marks') }, impact('fx-impR'), impact('fx-impF'));
 
   // ============================================== feathers, seeds (L-fx-front)
-  const contourFeather = h('g', { ...DD('fx:O:feather-contour') },
-    h('path', { d: 'M0 0C3 -4 10 -7 18 -6.4C23 -6 26 -3.6 27 -1C24 1.6 19 3.2 12 3.2L10.6 1.2L9 3.2C5 3 2 2 0 0Z', fill: I('P'), stroke: I('B'), 'stroke-width': 1, 'stroke-linejoin': 'round' }),
-    h('path', { d: 'M-4 1.2C4 0 14 -0.8 26.4 -1.2', fill: 'none', stroke: I('B'), 'stroke-width': 0.9, 'stroke-linecap': 'round' }),
-    h('path', { d: 'M8 -0.4L12 -5M13 -0.7L17 -5.6M18 -0.9L21.4 -5M14 -0.6L17 2.8M20 -1L22.6 1.8', fill: 'none', stroke: I('B'), 'stroke-width': 0.55, 'stroke-linecap': 'round' }));
+  const vane = 'M0 0C3 -4 10 -7 18 -6.4C23 -6 26 -3.6 27 -1C24 1.6 19 3.2 12 3.2L10.6 1.2L9 3.2C5 3 2 2 0 0Z';
+  const contourFeather = (tag) => h('g', tag ? DD('fx:O:feather-contour') : {},
+    h('path', { d: vane, fill: PAPER }),
+    h('path', { d: 'M1 0.4C5 1.4 9 2.8 12 3.2L10.6 1.2L9 3.2C12 3.2 19 3 24 1C18 0.4 10 -0.2 1 0.4Z', fill: M('plumeShade'), ...(tag ? DD('fx:T:feather-glaze') : {}) }),
+    inked(vane, 1),
+    h('path', { d: 'M-4 1.2C4 0 14 -0.8 26.4 -1.2', fill: 'none', stroke: LINE, 'stroke-width': 0.9, 'stroke-linecap': 'round' }),
+    h('path', { d: 'M8 -0.4L12 -5M13 -0.7L17 -5.6M18 -0.9L21.4 -5M14 -0.6L17 2.8M20 -1L22.6 1.8', fill: 'none', stroke: SOFT, 'stroke-width': 0.55, 'stroke-linecap': 'round' }));
   const downD = [[0, 0, -8, -9], [0, 0, 0, -12], [0, 0, 8, -9], [0, 0, 11, -2], [0, 0, -11, -2], [0, 0, -5, -11], [0, 0, 5, -11]]
     .map(([x0, y0, x1, y1]) => `M${x0} ${y0}Q${f(x1 * 0.3 + y1 * 0.25)} ${f(y1 * 0.55 - x1 * 0.2)} ${x1} ${y1}`).join('');
   const downFeather = h('g', { ...DD('fx:O:feather-down') },
-    h('path', { d: downD + 'M0 0L0.6 5', fill: 'none', stroke: I('B'), 'stroke-width': 3, 'stroke-linecap': 'round' }),
-    h('path', { d: downD + 'M0 0L0.6 5', fill: 'none', stroke: I('P'), 'stroke-width': 1.7, 'stroke-linecap': 'round' }));
-  L.front += h('g', {}, [contourFeather, downFeather, contourFeather].map((fe, i) => h('g', { 'data-ref': 'fx-fea' + i, visibility: 'hidden' }, i === 2 ? fe.replace(/ data-detail="[^"]*"/, '') : fe)));
+    h('path', { d: downD + 'M0 0L0.6 5', fill: 'none', stroke: SOFT, 'stroke-width': 3, 'stroke-linecap': 'round' }),
+    h('path', { d: downD + 'M0 0L0.6 5', fill: 'none', stroke: PAPER, 'stroke-width': 1.8, 'stroke-linecap': 'round' }));
+  L.front += h('g', {}, [contourFeather(true), downFeather, contourFeather(false)].map((fe, i) => h('g', { 'data-ref': 'fx-fea' + i, visibility: 'hidden' }, fe)));
   const seedRays = Array.from({ length: 9 }, (_, i) => { const a = (-165 + i * (150 / 8)) * D2R; return [Math.cos(a) * 6, Math.sin(a) * 6]; });
   const seed = h('g', {},
-    h('path', { d: seedRays.map(([x, y]) => `M0 0L${f(x)} ${f(y)}`).join('') + 'M0 0L0.4 9', fill: 'none', stroke: I('P'), 'stroke-width': 0.7, 'stroke-linecap': 'round' }),
-    h('path', { d: seedRays.map(([x, y]) => circ(x, y, 0.75)).join(''), fill: I('P') }),
-    h('ellipse', { cx: 0.45, cy: 10.4, rx: 0.9, ry: 1.9, fill: I('O') }));
+    h('path', { d: seedRays.map(([x, y]) => `M0 0L${f(x)} ${f(y)}`).join('') + 'M0 0L0.4 9', fill: 'none', stroke: PAPER, 'stroke-width': 0.8, 'stroke-linecap': 'round' }),
+    h('path', { d: seedRays.map(([x, y]) => circ(x, y, 0.8)).join(''), fill: PAPER }),
+    h('path', { d: seedRays.map(([x, y]) => `M0 0L${f(x)} ${f(y)}`).join(''), fill: 'none', stroke: SOFT, 'stroke-width': 0.3, opacity: 0.6 }),
+    h('ellipse', { cx: 0.45, cy: 10.4, rx: 0.95, ry: 2, fill: M('trunk') }));
   L.front += h('g', { 'data-ref': 'fx-seedG' }, [0, 1, 2, 3].map(i => h('g', { 'data-ref': 'fx-seed' + i, ...DD('fx:O:seed-dandelion') }, seed)));
 
-  // ============================================== butterflies + fly (L-fx-front)
+  // ============================================== butterflies, dragonfly, leaf, fly, ladybird (L-fx-front)
   const FW = 'M0.5 -1C2 -6 5 -13 7.5 -17C4 -18.8 -2 -17.8 -5 -14C-4.5 -9 -2.5 -4 0.5 -1Z';
   const HW = 'M-0.5 -0.8C-3 -3 -6 -6 -8.5 -10.4C-10.4 -7 -10.2 -3.4 -7.5 -1.4C-5 -0.4 -2.5 -0.4 -0.5 -0.8Z';
-  const bfBody = h('path', { d: 'M-5 0.4C-3 -0.9 3 -1.1 5 -0.2C3 1.1 -3 1.4 -5 0.4Z' + circ(5.9, -0.4, 1.35), fill: I('N') }) +
-    h('path', { d: 'M6 -1.2Q8.4 -5.4 10.6 -7.2M6.3 -0.8Q9.6 -4.4 12.2 -5.2', fill: 'none', stroke: I('N'), 'stroke-width': 0.5, 'stroke-linecap': 'round' }) +
-    h('path', { d: circ(10.6, -7.2, 0.6) + circ(12.2, -5.2, 0.6), fill: I('N') });
+  const bfBody = h('path', { d: 'M-5 0.4C-3 -0.9 3 -1.1 5 -0.2C3 1.1 -3 1.4 -5 0.4Z' + circ(5.9, -0.4, 1.4), fill: LINE }) +
+    h('path', { d: 'M6 -1.2Q8.4 -5.4 10.6 -7.2M6.3 -0.8Q9.6 -4.4 12.2 -5.2', fill: 'none', stroke: LINE, 'stroke-width': 0.5, 'stroke-linecap': 'round' }) +
+    h('path', { d: circ(10.6, -7.2, 0.65) + circ(12.2, -5.2, 0.65), fill: LINE });
   const monarch = h('g', { 'data-ref': 'fx-bf0', ...DD('fx:O:butterfly-monarch') },
     h('g', { 'data-ref': 'fx-bfw0' },
-      h('path', { d: FW + HW, fill: I('O'), stroke: I('N'), 'stroke-width': 1.5, 'stroke-linejoin': 'round' }),
+      h('path', { d: FW + HW, fill: M('fxMonarch') }),
       h('g', { ...DD('fx:T:butterfly-monarch-veins') },
-        h('path', { d: 'M0.5 -1.4L6 -15.4M0 -1.6L1.6 -16.8M-0.6 -1.6L-3.6 -14M-0.5 -1L-7.6 -9.2M-0.8 -0.9L-9 -4.6M1.2 -9L4.4 -8.2', fill: 'none', stroke: I('N'), 'stroke-width': 0.6, 'stroke-linecap': 'round' }),
-        h('path', { d: [[6.2, -16.2], [3.4, -17.9], [0.4, -17.8], [-2.6, -16.6], [-8, -8.6], [-9.4, -5.2], [-8.4, -2.4]].map(([x, y]) => circ(x, y, 0.42)).join('') + circ(4.6, -15.2, 0.7), fill: I('P') }))),
+        h('path', { d: 'M7.5 -17C4 -18.8 -2 -17.8 -5 -14L-3.6 -12.6C-1 -15.4 3.6 -16.4 6.6 -15.4ZM-8.5 -10.4C-10.4 -7 -10.2 -3.4 -7.5 -1.4L-6.4 -2.6C-8.4 -4.4 -8.6 -7 -7.6 -9Z', fill: M('fxMonarchDeep') }),
+        h('path', { d: 'M0.5 -1.4L6 -15.4M0 -1.6L1.6 -16.8M-0.6 -1.6L-3.6 -14M-0.5 -1L-7.6 -9.2M-0.8 -0.9L-9 -4.6M1.2 -9L4.4 -8.2', fill: 'none', stroke: LINE, 'stroke-width': 0.55, 'stroke-linecap': 'round', opacity: 0.8 }),
+        h('path', { d: [[6, -16.4], [3.4, -17.6], [0.4, -17.4], [-2.6, -16.2], [-8.4, -8.2], [-9.2, -5], [-8.2, -2.6]].map(([x, y]) => circ(x, y, 0.5)).join('') + circ(4.4, -14.4, 0.8), fill: PAPER })),
+      inked(FW + HW, 1.1)),
     bfBody);
   const white = h('g', { 'data-ref': 'fx-bf1', ...DD('fx:O:butterfly-white') },
     h('g', { 'data-ref': 'fx-bfw1' },
-      h('path', { d: FW + HW, fill: I('P'), stroke: I('B'), 'stroke-width': 1.1, 'stroke-linejoin': 'round' }),
-      h('path', { d: 'M7.5 -17C5 -18.6 2.6 -18.3 1 -17.4L3 -13.2C4.8 -14.2 6.4 -15.4 7.5 -17Z' + circ(0.6, -10, 1.15) + circ(-5.4, -6.2, 0.8), fill: I('N') })),
+      h('path', { d: FW + HW, fill: M('fxBrimstone') }),
+      h('path', { d: circ(1.8, -10, 1.2) + circ(-5.6, -5.8, 0.9), fill: M('fxMonarch') }),
+      inked(FW + HW, 1)),
     bfBody);
   L.front += monarch + white;
-  // dragonfly (hover-and-dart ahead of the front wheel): segmented teal abdomen, big compound eyes, veined wings
-  const dWing = (x, y, len, w, rot) => `M${x} ${y}C${f(x - w * 0.6)} ${f(y - len * 0.35)} ${f(x - w * 0.5)} ${f(y - len)} ${f(x + w * 0.2)} ${f(y - len)}C${f(x + w * 0.6)} ${f(y - len * 0.8)} ${f(x + w * 0.4)} ${f(y - len * 0.3)} ${x} ${y}Z`;
+  const dWing = (x, y, len, w) => `M${x} ${y}C${f(x - w * 0.6)} ${f(y - len * 0.35)} ${f(x - w * 0.5)} ${f(y - len)} ${f(x + w * 0.2)} ${f(y - len)}C${f(x + w * 0.6)} ${f(y - len * 0.8)} ${f(x + w * 0.4)} ${f(y - len * 0.3)} ${x} ${y}Z`;
   const dragonfly = h('g', { 'data-ref': 'fx-dfly', ...DD('fx:O:dragonfly') },
     h('g', { 'data-ref': 'fx-dflyW' },
-      h('path', { d: dWing(1, -1, 15, 5, 0) + dWing(-2.4, -1, 13.5, 5, 0), fill: I('P'), stroke: I('B'), 'stroke-width': 0.7, 'stroke-linejoin': 'round', opacity: 0.92 }),
-      h('path', { ...DD('fx:T:dragonfly-venation'), d: 'M1 -1L0.8 -15M-2.4 -1L-3.2 -13.4M-0.6 -7L2.6 -8.4M-0.6 -11L2.2 -12.6M-3.8 -6.4L-0.6 -7.4M-4 -10.2L-1 -11', fill: 'none', stroke: I('B'), 'stroke-width': 0.5 }),
-      h('path', { d: circ(2.3, -13.6, 0.8) + circ(-1.4, -12, 0.8), fill: I('N') })),
-    h('path', { d: 'M-2 -0.9L-22 -0.5L-23.4 0.3L-22 1L-2 1.2Z', fill: I('T') }),
-    h('path', { d: [-5, -8, -11, -14, -17, -20].map(x => `M${x} -0.8V1.1`).join(''), stroke: I('N'), 'stroke-width': 0.8, fill: 'none' }),
-    h('path', { d: 'M-2.6 -1.8C0 -2.8 3.6 -2.6 4.6 -0.8C3.8 1.2 0 1.8 -2.6 1.2Z', fill: I('T') }),
-    h('path', { d: circ(5.6, -0.4, 2.3), fill: I('O') }), h('path', { d: circ(6.2, -1.1, 0.7), fill: I('P') }));
+      h('path', { d: dWing(1, -1, 15, 5) + dWing(-2.4, -1, 13.5, 5), fill: M('fxWing'), stroke: LINE, 'stroke-width': 0.7, 'stroke-linejoin': 'round', opacity: 0.9 }),
+      h('path', { ...DD('fx:T:dragonfly-venation'), d: 'M1 -1L0.8 -15M-2.4 -1L-3.2 -13.4M-0.6 -7L2.6 -8.4M-0.6 -11L2.2 -12.6M-3.8 -6.4L-0.6 -7.4M-4 -10.2L-1 -11', fill: 'none', stroke: SOFT, 'stroke-width': 0.5 }),
+      h('path', { d: circ(2.3, -13.6, 0.85) + circ(-1.4, -12, 0.85), fill: M('fxTealDeep') })),
+    h('path', { d: 'M-2 -1L-22 -0.6L-23.6 0.3L-22 1.1L-2 1.3Z', fill: M('fxTeal'), stroke: LINE, 'stroke-width': 0.6, 'stroke-linejoin': 'round' }),
+    h('path', { d: [-5, -8, -11, -14, -17, -20].map(x => `M${x} -0.8V1.1`).join(''), stroke: M('fxTealDeep'), 'stroke-width': 0.9, fill: 'none' }),
+    h('path', { d: 'M-2.6 -1.8C0 -2.8 3.6 -2.6 4.6 -0.8C3.8 1.2 0 1.8 -2.6 1.2Z', fill: M('fxTeal'), stroke: LINE, 'stroke-width': 0.6 }),
+    h('path', { d: circ(5.6, -0.4, 2.4), fill: M('fxStarDeep'), stroke: LINE, 'stroke-width': 0.6 }), h('path', { d: circ(6.2, -1.1, 0.75), fill: PAPER }));
   L.front += dragonfly;
-  // tumbling almond leaf carried on the breeze
   L.front += h('g', { 'data-ref': 'fx-leaf', visibility: 'hidden', ...DD('fx:O:leaf-tumble') }, h('g', { 'data-ref': 'fx-leafS' },
-    h('path', { d: 'M-12 0C-6 -7 6 -7.6 13 0C6 6.6 -6 6.4 -12 0Z', fill: I('T') }),
-    h('path', { d: 'M-15 0.6L12 0M-6 0.3L-2.6 -4.2M-1 0.2L2.6 -4.6M4 0.1L7 -3.6M-4 0.3L-1 4.2M1.6 0.2L4.6 4.2', fill: 'none', stroke: I('N'), 'stroke-width': 0.8, 'stroke-linecap': 'round' })));
-  // fly loop around the basket (rider-local), with a cartoon dotted trail
+    h('path', { d: 'M-12 0C-6 -7 6 -7.6 13 0C6 6.6 -6 6.4 -12 0Z', fill: M('fxLeaf') }),
+    h('path', { d: 'M-11 0.4C-5 5.6 6 6 12.4 0.6C6 3.4 -4 3.4 -11 0.4Z', fill: M('fxLeafDeep'), opacity: 0.7 }),
+    inked('M-12 0C-6 -7 6 -7.6 13 0C6 6.6 -6 6.4 -12 0Z', 0.9),
+    h('path', { d: 'M-15 0.6L12 0M-6 0.3L-2.6 -4.2M-1 0.2L2.6 -4.6M4 0.1L7 -3.6M-4 0.3L-1 4.2M1.6 0.2L4.6 4.2', fill: 'none', stroke: LINE, 'stroke-width': 0.7, 'stroke-linecap': 'round', opacity: 0.85 })));
   const flyPt = u => [FLY_C[0] + FLY_A[0] * Math.sin(TAU * u), FLY_C[1] + FLY_A[1] * Math.sin(2 * TAU * u) - 10 * Math.cos(TAU * u)];
   const FLYN = 120, flyPts = Array.from({ length: FLYN }, (_, i) => flyPt(i / FLYN));
   const flyLen = [0]; for (let i = 1; i <= FLYN; i++) { const a = flyPts[i - 1], b = flyPts[i % FLYN]; flyLen.push(flyLen[i - 1] + Math.hypot(b[0] - a[0], b[1] - a[1])); }
   const flyTotal = flyLen[FLYN];
   const flyG = h('g', { 'data-ref': 'fx-flyG' },
-    h('path', { 'data-ref': 'fx-flyTrail', d: poly(flyPts), fill: 'none', stroke: I('N'), 'stroke-width': 1.9, 'stroke-linecap': 'round', 'stroke-dasharray': `${'0 5.5 '.repeat(7)}0 ${f(flyTotal - 38.5)}`, ...DD('fx:T:fly-dotted-trail') }),
+    h('path', { 'data-ref': 'fx-flyTrail', d: poly(flyPts), fill: 'none', stroke: SOFT, 'stroke-width': 1.8, 'stroke-linecap': 'round', 'stroke-dasharray': `${'0 5.5 '.repeat(7)}0 ${f(flyTotal - 38.5)}`, ...DD('fx:T:fly-dotted-trail') }),
     h('g', { 'data-ref': 'fx-fly', ...DD('fx:O:basket-fly') },
-      h('g', { 'data-ref': 'fx-flyW' }, h('path', { d: 'M-0.5 -1.2C-3 -6 -7 -6.4 -6.4 -3.6C-6 -2 -3 -1.2 -0.5 -1.2ZM0.4 -1.2C0 -6.4 3.2 -7.6 3.6 -4.8C3.8 -3 2 -1.6 0.4 -1.2Z', fill: I('P'), stroke: I('B'), 'stroke-width': 0.5 })),
-      h('path', { d: 'M-3.4 0C-3.4 -1.6 1.6 -2 2.6 -0.4C2 1.6 -3 1.6 -3.4 0Z' + circ(3.6, -0.6, 1.5), fill: I('N') }),
-      h('path', { d: circ(4.3, -1.1, 0.7), fill: I('R') })));
+      h('g', { 'data-ref': 'fx-flyW' }, h('path', { d: 'M-0.5 -1.2C-3 -6 -7 -6.4 -6.4 -3.6C-6 -2 -3 -1.2 -0.5 -1.2ZM0.4 -1.2C0 -6.4 3.2 -7.6 3.6 -4.8C3.8 -3 2 -1.6 0.4 -1.2Z', fill: M('fxWing'), stroke: LINE, 'stroke-width': 0.5, opacity: 0.9 })),
+      h('path', { d: 'M-3.4 0C-3.4 -1.6 1.6 -2 2.6 -0.4C2 1.6 -3 1.6 -3.4 0Z' + circ(3.6, -0.6, 1.5), fill: M('fxBeeDark') }),
+      h('path', { d: circ(4.3, -1.1, 0.75), fill: M('fxHeart') }), h('path', { d: circ(4.5, -1.3, 0.25), fill: PAPER })));
+  // ladybird on the basket front (rider-local): crawls slowly left and right, little legs ticking
+  const lady = h('g', { 'data-ref': 'fx-lady', ...DD('fx:O:ladybird') },
+    h('g', { 'data-ref': 'fx-ladyL' }, h('path', { d: 'M-2.6 2.6L-3.8 4.4M0 3L0 4.8M2.6 2.6L3.8 4.4', fill: 'none', stroke: LINE, 'stroke-width': 0.6, 'stroke-linecap': 'round' })),
+    h('path', { d: 'M-4.6 1.6C-4.6 -2.4 -2 -4 0.4 -4C3 -4 4.6 -2.2 4.6 1.6Z', fill: M('fxLady') }),
+    h('path', { d: circ(-2.2, -1.4, 0.9) + circ(1.8, -2, 0.8) + circ(-0.6, 0.4, 0.75) + circ(2.8, 0.2, 0.6), fill: M('fxBeeDark') }),
+    h('path', { d: 'M0.2 -4V1.6', stroke: M('fxBeeDark'), 'stroke-width': 0.5 }),
+    h('path', { d: 'M4.4 -1.4C6.8 -1.6 7.4 0.2 6.8 1.6L4.4 1.6Z', fill: M('fxBeeDark') }),
+    h('path', { d: circ(5.9, -0.4, 0.4) + circ(5.3, 0.3, 0.3), fill: PAPER }),
+    inked('M-4.6 1.6C-4.6 -2.4 -2 -4 0.4 -4C3 -4 4.6 -2.2 4.6 1.6Z', 0.6),
+    h('path', { d: 'M-2.8 -2.6A3 3 0 0 1 -0.6 -3.4', fill: 'none', stroke: PAPER, 'stroke-width': 0.6, 'stroke-linecap': 'round', opacity: 0.8 }));
 
-  // ============================================== glints, lamp flare, moths, wave arcs (L-fx-front, rider-local)
+  // ============================================== sparkles, lamp glow, moths, wave arcs (L-fx-front, rider-local)
   const flare = h('g', { 'data-ref': 'fx-flare', transform: `translate(${lamp[0] + 5} ${lamp[1]})`, style: 'opacity:var(--pb-n-lampOn)', ...DD('fx:O:lamp-flare') },
-    h('path', { d: circ(0, 0, 30), fill: v('lampGlow'), opacity: 0.2 }), h('path', { d: circ(0, 0, 18), fill: v('lamp'), opacity: 0.35 }),
-    h('path', { d: circ(0, 0, 8.5), fill: v('headlamp'), opacity: 0.85 }),
-    h('path', { 'data-ref': 'fx-flareStar', d: star4(26, 1.4), fill: v('headlamp') }));
+    glow(40), h('path', { 'data-ref': 'fx-flareStar', d: sparkle(24, 1.6), fill: v('headlamp'), opacity: 0.9 }));
   const moth = i => h('g', { 'data-ref': 'fx-moth' + i },
-    h('g', { 'data-ref': 'fx-mothW' + i }, h('path', { d: 'M1 -0.6L-3.4 -6.4L-6.2 -4.6L-4.6 -0.4Z', fill: I('P'), stroke: I('B'), 'stroke-width': 0.7, 'stroke-linejoin': 'round' })),
-    h('path', { d: 'M-4.2 0.4C-3 -1 2 -1.2 3 0C2 1.1 -3 1.3 -4.2 0.4Z', fill: I('B') }));
-  const glintBell = h('g', { 'data-ref': 'fx-glB', ...DD('fx:O:glint-bell') }, h('path', { d: star4(12.5, 1.5) + circ(0, 0, 2), fill: I('P') }));
+    h('g', { 'data-ref': 'fx-mothW' + i }, h('path', { d: 'M1 -0.6C-1 -4 -4 -6.8 -6.2 -4.6C-7 -2.6 -5.6 -0.6 -4.6 -0.4Z', fill: PAPER, stroke: SOFT, 'stroke-width': 0.7, 'stroke-linejoin': 'round' })),
+    h('path', { d: 'M-4.2 0.4C-3 -1 2 -1.2 3 0C2 1.1 -3 1.3 -4.2 0.4Z', fill: SOFT }));
+  const glintBell = h('g', { 'data-ref': 'fx-glB', ...DD('fx:O:glint-bell') }, h('path', { d: sparkle(12.5, 1.8), fill: PAPER }), h('path', { d: circ(0, 0, 2.2), fill: M('fxStar') }));
   const glintRim = h('g', { 'data-ref': 'fx-glR', ...DD('fx:O:glint-rim') },
-    h('path', { d: star4(14, 1.4), fill: I('P') }), h('path', { d: star4(6.6, 1), fill: I('P'), transform: 'rotate(45)' }),
-    h('path', { d: circ(0, 0, 3.4), fill: 'none', stroke: I('P'), 'stroke-width': 0.9 }));
+    h('path', { d: sparkle(14, 1.7), fill: PAPER }), h('path', { d: sparkle(6.6, 1.2), fill: PAPER, transform: 'rotate(45)' }),
+    h('path', { d: circ(0, 0, 3.6), fill: 'none', stroke: M('fxStar'), 'stroke-width': 1 }));
   const waveArcs = h('g', { 'data-ref': 'fx-waveArcs', visibility: 'hidden', ...DD('fx:O:wave-arcs') },
-    h('path', { d: 'M-8 -40A42 42 0 0 1 30 -44M-2 -52A54 54 0 0 1 36 -58M14 -30A30 30 0 0 1 34 -32', fill: 'none', stroke: I('N'), 'stroke-width': 2.2, 'stroke-linecap': 'round', 'stroke-dasharray': '14 5 40' }));
-  L.front += h('g', { 'data-ref': 'fx-riderF' }, flyG, glintBell, glintRim, flare, h('g', { 'data-ref': 'fx-mothG', visibility: 'hidden', ...DD('fx:O:moths') }, [0, 1, 2].map(moth)), waveArcs);
+    h('path', { d: brush([-8, -40], [30, -44], 2.6, -8) + brush([-2, -54], [36, -60], 2.6, -10) + brush([14, -30], [34, -32], 2.2, -4), fill: LINE, opacity: 0.85 }),
+    h('path', { transform: 'translate(44 -52)', d: sparkle(5, 1.2), fill: M('fxStar'), stroke: LINE, 'stroke-width': 0.5 }));
+  L.front += h('g', { 'data-ref': 'fx-riderF' }, flyG, lady, glintBell, glintRim, flare, h('g', { 'data-ref': 'fx-mothG', visibility: 'hidden', ...DD('fx:O:moths') }, [0, 1, 2].map(moth)), waveArcs);
 
-  // ============================================== pops (L-fx-front, world)
-  const burst = (rx, ry, n, seed) => {
-    const Rb = rng('fx-burst' + seed), pts = [];
-    for (let i = 0; i < n * 2; i++) { const a = (i / (n * 2)) * TAU, r = i % 2 ? 0.74 + Rb() * 0.06 : 1 + Rb() * 0.12; pts.push([Math.cos(a) * rx * r, Math.sin(a) * ry * r]); }
-    return poly(pts);
-  };
-  const rays = (rx, ry, n) => {
-    let dR = '', dO = '';
-    for (let i = 0; i < n; i++) {
-      const a = (i / n) * TAU + 0.12, c = Math.cos(a), s = Math.sin(a), w = 0.07;
-      const p = (r, da) => [Math.cos(a + da) * rx * r, Math.sin(a + da) * ry * r];
-      const d = poly([p(1.02, -w * 0.8), p(i % 2 ? 1.34 : 1.5, 0), p(1.02, w * 0.8)]);
-      if (i % 2) dO += d; else dR += d;
-      void c; void s;
-    }
-    return h('path', { d: dR, fill: I('R') }) + h('path', { d: dO, fill: I('O') });
-  };
-  const words = {};
-  for (const w of ['DING!', 'HOP!', 'GULP!']) { const wd = wordDef(w); defs += wd.defs; words[w] = wd.w; }
-  const pop = (word, ref, key, rx, ry, sc) => {
-    const k = word.replace('!', ''), w = words[word];
-    const tx = -w * sc / 2, ty = -50 * sc;
-    let letters = '';
-    for (let i = 5; i >= 1; i--) letters += h('use', { href: '#fx-wd-' + k, x: i * 1.5, y: i * 1.5, stroke: I('N'), 'stroke-width': 22 });
-    letters += h('use', { href: '#fx-wd-' + k, stroke: I('P'), 'stroke-width': 22 }) + h('use', { href: '#fx-wd-' + k, stroke: I('R'), 'stroke-width': 2.6 });
+  // ============================================== pops (L-fx-front, world): sticker words on cloud bubbles
+  const star = (x, y, r, col = M('fxStar')) => h('path', { transform: `translate(${f(x)} ${f(y)})`, d: starD(r), fill: col, stroke: LINE, 'stroke-width': 1.1, 'stroke-linejoin': 'round' });
+  const heartD = 'M0 4.6C-5 1 -8 -1.6 -8 -4.6C-8 -7.2 -6 -8.6 -4 -8.6C-2.2 -8.6 -0.8 -7.6 0 -6C0.8 -7.6 2.2 -8.6 4 -8.6C6 -8.6 8 -7.2 8 -4.6C8 -1.6 5 1 0 4.6Z';
+  const heartArt = (sc = 1) => h('g', { transform: `scale(${sc})` },
+    h('path', { d: heartD, fill: M('fxHeart'), stroke: LINE, 'stroke-width': 1.3, 'stroke-linejoin': 'round' }),
+    h('path', { d: 'M-5.4 -5.2A2.6 2.6 0 0 1 -3 -7', fill: 'none', stroke: M('fxHeartHi'), 'stroke-width': 1.4, 'stroke-linecap': 'round' }));
+  const bubbleDot = (x, y, r) => h('g', { transform: `translate(${f(x)} ${f(y)})` }, h('path', { d: circ(0, 0, r), fill: M('fxSky'), opacity: 0.7, stroke: LINE, 'stroke-width': 0.9 }), h('path', { d: `M${f(-r * 0.5)} ${f(-r * 0.2)}A${f(r * 0.55)} ${f(r * 0.55)} 0 0 1 ${f(-r * 0.1)} ${f(-r * 0.6)}`, fill: 'none', stroke: PAPER, 'stroke-width': 0.9, 'stroke-linecap': 'round' }));
+  const pop = (spec) => {
+    const { word, zh, ref, key, col, rx, ry, sc, extras, seed } = spec;
+    const Rp = rng('fx-pop' + ref);
+    const W = glyphWord('fx-wd-' + ref, word, GLYPH_LAT, { seed, bounce: 4.5, tilt: 6 });
+    const Z = glyphWord('fx-wz-' + ref, zh, GLYPH_ZH, { seed: seed + 3, bounce: 1.5, tilt: 3, track: 2 });
+    defs += W.defs + Z.defs;
+    const tx = -W.x0 - W.w / 2, ty = -(W.y0 + W.y1) / 2 - 22;
+    const use = (a) => h('use', { href: '#fx-wd-' + ref, ...a });
+    const letters = h('g', { transform: `scale(${sc}) translate(${f(tx)} ${f(ty)})`, ...DD('fx:T:pop-sticker-letters'), 'stroke-linejoin': 'round' },
+      use({ fill: M('fxShadow'), stroke: M('fxShadow'), 'stroke-width': 20, opacity: 0.3, transform: 'translate(5 6)' }),
+      use({ fill: LINE, stroke: LINE, 'stroke-width': 19 }),
+      use({ fill: PAPER, stroke: PAPER, 'stroke-width': 11 }),
+      use({ fill: M(col), stroke: LINE, 'stroke-width': 2.2 }),
+      use({ fill: 'none', stroke: PAPER, 'stroke-width': 1.6, opacity: 0.55, transform: 'translate(-1.6 -2)', 'stroke-dasharray': '6 14' }));
+    const zs = 0.2, zt = `translate(${f(-(Z.x0 + Z.w / 2) * zs)} ${f(ry * 0.56)}) scale(${zs}) translate(0 ${f(-(Z.y0 + Z.y1) / 2)})`;
+    const cloud = bubble(rx, ry, 11, Rp);
     return h('g', { 'data-ref': 'fx-' + ref, visibility: 'hidden', ...DD(key) },
-      h('g', { 'data-ref': `fx-${ref}Rays` }, rays(rx, ry, 22)),
-      h('path', { d: burst(rx, ry, 11, ref), fill: I('N'), transform: 'translate(4.5 4.5)' }),
-      h('path', { d: burst(rx, ry, 11, ref), fill: I('R') }),
-      h('path', { d: burst(rx * 0.84, ry * 0.8, 11, ref), fill: 'none', stroke: I('P'), 'stroke-width': 1.6, 'stroke-linejoin': 'round' }),
-      h('g', { transform: `translate(${f(tx)} ${f(ty)}) scale(${sc})` }, letters));
+      h('g', { 'data-ref': `fx-${ref}Rays` }, extras),
+      h('path', { d: cloud, fill: M('fxShadow'), opacity: 0.25, transform: 'translate(4 5)' }),
+      h('path', { d: cloud, fill: PAPER }),
+      h('path', { d: bubble(rx * 0.86, ry * 0.8, 9, Rp), fill: M('fxDust'), opacity: 0.45 }),
+      inked(cloud, 2.2), pencil(cloud, 2.2, 1.2, -1),
+      letters,
+      h('g', { transform: zt }, h('use', { href: '#fx-wz-' + ref, fill: LINE })));
   };
-  L.front += pop('DING!', 'popDing', 'fx:O:pop-ding', 84, 50, 0.33) + pop('HOP!', 'popHop', 'fx:O:pop-hop', 70, 46, 0.34) + pop('GULP!', 'popGulp', 'fx:O:pop-gulp', 86, 50, 0.32);
-  // bell notes (eighth + beamed pair)
-  const noteStyle = { fill: I('P'), stroke: I('N'), 'stroke-width': 2.4, 'paint-order': 'stroke', 'stroke-linejoin': 'round' };
-  const note1 = h('path', { d: 'M0 0A5.6 4 -20 1 1 -0.1 0.1ZM4.6 -2.4V-24C8 -21 12 -19 12.4 -13C11 -16 8.4 -17.4 6.8 -17.6V-2.4Z', ...noteStyle });
+  L.front += pop({ word: 'Ding!', zh: '叮铃', ref: 'popDing', key: 'fx:O:pop-ding', col: 'fxDing', rx: 98, ry: 56, sc: 0.52, seed: 11,
+    extras: star(-96, -40, 9) + star(92, -46, 7) + star(104, 30, 5.5, M('fxHeartHi')) + h('path', { transform: 'translate(-104 26)', d: sparkle(8, 1.6), fill: M('fxStar'), stroke: LINE, 'stroke-width': 0.7 }) +
+      h('path', { d: brush([70, -64], [86, -80], 2.4, -2) + brush([82, -58], [102, -66], 2.2, -1.4), fill: LINE }) });
+  L.front += pop({ word: 'Hop!', zh: '嘿哟', ref: 'popHop', key: 'fx:O:pop-hop', col: 'fxHop', rx: 88, ry: 54, sc: 0.54, seed: 23,
+    extras: star(-80, -44, 8) + star(84, -38, 6.5, M('fxHeartHi')) + h('path', { transform: 'translate(-90 30)', d: sparkle(7, 1.5), fill: M('fxStar'), stroke: LINE, 'stroke-width': 0.7 }) +
+      h('path', { d: brush([-52, 62], [-30, 56], 2.4, 2) + brush([-8, 66], [14, 66], 2.4, 2) + brush([30, 56], [52, 62], 2.4, 2), fill: LINE }) });
+  L.front += pop({ word: 'Gulp!', zh: '咕嘟', ref: 'popGulp', key: 'fx:O:pop-gulp', col: 'fxGulp', rx: 100, ry: 56, sc: 0.5, seed: 37,
+    extras: h('g', { transform: 'translate(-100 -34) rotate(-14)' }, heartArt(1.2)) + h('g', { transform: 'translate(98 -42) rotate(12)' }, heartArt(0.95)) +
+      bubbleDot(-104, 26, 6) + bubbleDot(-116, 10, 3.6) + bubbleDot(106, 22, 4.6) + star(84, 50, 5.5) });
+  // bell notes (eighth + beamed pair) and hum notes (quarter notes) — cream heads, warm brown line
+  const noteStyle = { fill: PAPER, stroke: LINE, 'stroke-width': 2.2, 'paint-order': 'stroke', 'stroke-linejoin': 'round' };
+  const note1 = h('path', { d: 'M-5.4 1.6A5.6 4 -20 1 1 -5.5 1.7ZM-0.8 -0.8V-22.4C2.6 -19.4 6.6 -17.4 7 -11.4C5.6 -14.4 3 -15.8 1.4 -16V-0.8Z', ...noteStyle });
   const note2 = h('path', { d: 'M0 0A5.4 3.9 -20 1 1 -0.1 0.1ZM16 -4A5.4 3.9 -20 1 1 15.9 -3.9ZM4.4 -2.2V-24L20.4 -28V-6.2H18.2V-22.4L6.6 -19.4V-2.2Z', ...noteStyle });
-  L.front += h('g', {}, h('g', { 'data-ref': 'fx-note0', visibility: 'hidden', ...DD('fx:O:bell-notes') }, h('g', { transform: 'translate(0 3.5) scale(1)' }, note1.replace('M0 0A', 'M-5.4 1.6A'))), h('g', { 'data-ref': 'fx-note1', visibility: 'hidden', ...DD('fx:O:bell-notes') }, note2));
+  const note3 = h('path', { d: 'M0 0A5 3.6 -20 1 1 -0.1 0.1ZM4.2 -2V-20H6.2V-2Z', fill: M('fxDing'), stroke: LINE, 'stroke-width': 1.6, 'paint-order': 'stroke', 'stroke-linejoin': 'round' });
+  L.front += h('g', {}, h('g', { 'data-ref': 'fx-note0', visibility: 'hidden', ...DD('fx:O:bell-notes') }, h('g', { transform: 'translate(0 3.5)' }, note1)), h('g', { 'data-ref': 'fx-note1', visibility: 'hidden', ...DD('fx:O:bell-notes') }, note2));
+  L.front += h('g', {}, [0, 1, 2].map(i => h('g', { 'data-ref': 'fx-hum' + i, visibility: 'hidden', ...DD('fx:O:hum-notes') }, i === 1 ? note1 : note3)));
   // gulp drips, hearts, fish bone
-  L.front += h('g', {}, [0, 1, 2, 3].map(i => h('path', { 'data-ref': 'fx-drip' + i, ...DD('fx:O:gulp-drips'), visibility: 'hidden', d: 'M0 -4.6C1.6 -1.8 2.8 -0.2 2.8 1.4A2.8 2.8 0 0 1 -2.8 1.4C-2.8 -0.2 -1.6 -1.8 0 -4.6Z', fill: I('P'), stroke: I('B'), 'stroke-width': 1 })));
-  const heart = h('path', { d: 'M0 4.6C-5 1 -8 -1.6 -8 -4.6C-8 -7.2 -6 -8.6 -4 -8.6C-2.2 -8.6 -0.8 -7.6 0 -6C0.8 -7.6 2.2 -8.6 4 -8.6C6 -8.6 8 -7.2 8 -4.6C8 -1.6 5 1 0 4.6Z', fill: I('R'), stroke: I('N'), 'stroke-width': 1.4, 'paint-order': 'stroke', 'stroke-linejoin': 'round' }) +
-    h('path', { d: 'M-5.4 -5.2A2.6 2.6 0 0 1 -3 -7', fill: 'none', stroke: I('P'), 'stroke-width': 1.3, 'stroke-linecap': 'round' });
-  L.front += h('g', {}, [0, 1, 2].map(i => h('g', { 'data-ref': 'fx-heart' + i, visibility: 'hidden', ...DD('fx:O:gulp-hearts') }, heart)));
+  L.front += h('g', {}, [0, 1, 2, 3].map(i => h('path', { 'data-ref': 'fx-drip' + i, ...DD('fx:O:gulp-drips'), visibility: 'hidden', d: 'M0 -4.6C1.6 -1.8 2.8 -0.2 2.8 1.4A2.8 2.8 0 0 1 -2.8 1.4C-2.8 -0.2 -1.6 -1.8 0 -4.6Z', fill: M('fxSky'), stroke: LINE, 'stroke-width': 0.9 })));
+  L.front += h('g', {}, [0, 1, 2].map(i => h('g', { 'data-ref': 'fx-heart' + i, visibility: 'hidden', ...DD('fx:O:gulp-hearts') }, heartArt(1))));
   const boneD = 'M-16 0H13M-10 0L-13 -5M-10 0L-13 5M-4 0L-7 -6M-4 0L-7 6M2 0L-1 -6.4M2 0L-1 6.4M8 0L5 -5.6M8 0L5 5.6M-16 0L-22 -5M-16 0L-22 5';
   L.front += h('g', { 'data-ref': 'fx-bone', visibility: 'hidden', ...DD('fx:O:fish-bone') },
-    h('path', { d: boneD, fill: 'none', stroke: I('N'), 'stroke-width': 4, 'stroke-linecap': 'round' }),
-    h('path', { d: 'M12 -5.6C17 -6 21 -3 21.6 0C21 3 17 6 12 5.6Z', fill: I('P'), stroke: I('N'), 'stroke-width': 1.6, 'paint-order': 'stroke' }),
-    h('path', { d: boneD, fill: 'none', stroke: I('P'), 'stroke-width': 1.7, 'stroke-linecap': 'round' }),
-    h('path', { d: circ(16.4, -1.2, 1.3), fill: I('N') }));
+    h('path', { d: boneD, fill: 'none', stroke: LINE, 'stroke-width': 3.8, 'stroke-linecap': 'round' }),
+    h('path', { d: 'M12 -5.6C17 -6 21 -3 21.6 0C21 3 17 6 12 5.6Z', fill: PAPER, stroke: LINE, 'stroke-width': 1.5, 'paint-order': 'stroke' }),
+    h('path', { d: boneD, fill: 'none', stroke: PAPER, 'stroke-width': 1.7, 'stroke-linecap': 'round' }),
+    h('path', { d: circ(16.4, -1.2, 1.3), fill: LINE }));
 
-  // stash layout data for attach (plain JSON in a data attribute would be overkill: recompute there instead)
   return {
     defs,
     layers: {
@@ -403,6 +535,7 @@ export function build(ctx) {
   };
 }
 
+// ------------------------------------------------------------------------------------------------ attach
 // ------------------------------------------------------------------------------------------------ attach
 export function attach(svg, ctx) {
   if (typeof location !== 'undefined' && /[?&]fxoff\b/.test(location.search)) { for (const id of ['L-gulls-far--fx', 'L-shadow--fx', 'L-fx-back--fx', 'L-fx-front--fx']) { const g = svg.querySelector('#' + id); if (g) g.setAttribute('display', 'none'); } return {}; }
@@ -566,8 +699,9 @@ export function attach(svg, ctx) {
         const x = RIDER_X + RC[0] - 16 - (0.12 + 0.1 * hk) * sp * age * (1 - 0.3 * u) - 40 * age;
         const y = GROUND_Y - 3 - (22 + 30 * hk) * u - 6 * Math.sin(u * 3 + hk * 6);
         const s = (0.6 + 1.1 * Math.sqrt(u)) * (0.75 + 0.45 * Math.min(1.4, sN)) * (0.8 + 0.4 * hash(k, 5));
-        // solid ink puff: swells, then breaks up by shrinking (no transparency, it is a print)
-        set(el, 'transform', `translate(${f1(x)} ${f1(y)}) scale(${f(s * (1 - sstep(0.55, 1, u)))})`);
+        // soft gouache puff: swells, thins out and dissolves (opacity), shrinking a little as it goes
+        set(el, 'transform', `translate(${f1(x)} ${f1(y)}) scale(${f(s * (1 - 0.35 * sstep(0.55, 1, u)))})`);
+        set(el, 'opacity', f(0.95 * sstep(0, 0.08, u) * (1 - sstep(0.4, 1, u))));
       }
       const gdens = clamp(-0.1 + 0.6 * sN, 0, 1) * (reduced ? 0.3 : 1) * (lift > 0.05 ? 0 : 1);
       const GDT = 0.05;
@@ -607,32 +741,31 @@ export function attach(svg, ctx) {
         set(r.impG, 'opacity', f(1 - u * u));
       }
 
-      // ================= wind curls (draw on / wipe off) + speed lines
-      // one wind curl at a time (not three), and none while the weather's wind band is showing: a single wind language
-      // Calm, occasional accent (user: the curls were too fast, too many, too busy): at most ONE curl, only when really
-      // pedalling hard (> 75 rpm), about one in three 6-second windows, drawn on slowly beside the scarf and wiped off in
-      // place; it barely drifts. Never while the weather's wind band is showing, so there is a single wind language.
-      const curlOn = !reduced && cad > 75 && !((fr.weather && fr.weather.wind) > 0.3);
-      for (let i = 0; i < 3; i++) {
-        if (i > 0) { vis(r['curl' + i], false); continue; }
-        const P = 6, k = Math.floor(t / P), age = t - k * P, el = r['curl' + i];
-        const LIFE = 2.8;
-        const act = curlOn && age < LIFE && hash(k, 30) < 0.35;
-        if (!act) { vis(el, false); continue; }
-        vis(el, true);
-        const u = age / LIFE, hk = hash(k, 40);
-        const x = RIDER_X - 170 - 30 * hk - 28 * age, y = GROUND_Y - 455 + 40 * hk;
-        set(el, 'transform', `translate(${f1(x)} ${f1(y)}) scale(${f(0.75 + 0.15 * hk)})`);
-        const draw = sstep(0, 0.4, u), wipe = sstep(0.65, 1, u);
-        for (let p = 0; p < 2; p++) set(r[`curl${i}p${p}`], 'stroke-dashoffset', f(p ? 1 - sstep(0.1, 0.5, u) - wipe : 1 - draw - wipe));
+      // ================= ONE calm breeze swirl (STYLE-B §6, the user's feedback on edition C: slow, sparse, one language)
+      // Only when really pedalling hard (> 75 rpm), about one in three 14-second windows, high in the sky; it draws on
+      // slowly, holds, drifts a little and wipes off. Never while the weather's wind band is showing.
+      {
+        const curlOn = !reduced && cad > 75 && !((fr.weather && fr.weather.wind) > 0.3);
+        const P = 14, k = Math.floor(t / P), age = t - k * P, el = r.curl0, LIFE = 6;
+        const act = curlOn && age < LIFE && hash(k, 30) < 0.4;
+        vis(el, act);
+        if (act) {
+          const u = age / LIFE, hk = hash(k, 40);
+          const x = RIDER_X + 120 + 260 * hk - 16 * age, y = 190 + 70 * hash(k, 41);
+          set(el, 'transform', `translate(${f1(x)} ${f1(y)}) scale(${f(0.85 + 0.2 * hk)})`);
+          const draw = sstep(0, 0.35, u), wipe = sstep(0.7, 1, u);
+          set(r.curl0p0, 'stroke-dashoffset', f(1 - draw - wipe));
+          set(r.curl0p2, 'stroke-dashoffset', f(1 - draw - wipe));
+          set(r.curl0p1, 'stroke-dashoffset', f(1 - sstep(0.1, 0.45, u) - sstep(0.62, 0.95, u)));
+        }
       }
       const slW = (tg.speedlines !== false && !reduced) ? sstep(86, 98, cad) : 0;   // only a real sprint
       vis(r.slG, slW > 0.01);
       if (slW > 0.01) {
         for (let i = 0; i < SPEEDLINES.length; i++) {
           const [ax, ay] = SPEEDLINES[i], [xe, yy] = W(ax, ay);
-          const P = 0.9, k = Math.floor((t + i * 0.29) / P), age = t + i * 0.29 - k * P, el = r['sl' + i];
-          const on = i < 4 && hash(k, 50 + i) < 0.3 + 0.3 * slW;   // ≤ 4 lines, slower rhythm
+          const P = 1.1, k = Math.floor((t + i * 0.37) / P), age = t + i * 0.37 - k * P, el = r['sl' + i];
+          const on = hash(k, 50 + i) < 0.25 + 0.3 * slW;   // ≤ 4 strokes, slow rhythm, often fewer
           if (!on) { vis(el, false); continue; }
           vis(el, true);
           const u = age / P, hk = hash(k, 60 + i);
@@ -641,7 +774,7 @@ export function attach(svg, ctx) {
           const len = (110 + 190 * hk) * (0.25 + 0.75 * grow) * (1 - 0.55 * go);
           const x0 = xe - 6 - 14 * hk - 380 * go * go;
           set(el, 'transform', `translate(${f1(x0)} ${f1(yy + 6 * (hk - 0.5))}) scale(${f(len / 100)} ${f(0.8 + 0.5 * hk)})`);
-          set(el, 'opacity', f(slW * (1 - sstep(0.75, 1, u))));
+          set(el, 'opacity', f(0.8 * slW * sstep(0, 0.15, u) * (1 - sstep(0.7, 1, u))));
         }
       }
 
@@ -726,6 +859,49 @@ export function attach(svg, ctx) {
           set(r.flyW, 'transform', `rotate(${f1(reduced ? 0 : 22 * Math.sin(t * 90))} 0 -1.2)`);
           const idx = uu * FLYN, i0 = Math.floor(idx), cur = lerp(flyLen[i0], flyLen[i0 + 1], idx - i0);
           set(r.flyTrail, 'stroke-dashoffset', f1(wrap(-(cur - 46), flyTotal)));
+        }
+      }
+
+      // ================= bumblebee: bumbles round a lazy loop behind the rider (day), with a short dotted trail
+      {
+        const on = day > 0.3 && tg.critters !== false;
+        vis(r.beeG, on);
+        if (on) {
+          const bp = tt => [330 + 70 * Math.sin(0.43 * tt) + 26 * Math.sin(1.3 * tt + 1), 600 + 34 * Math.sin(0.71 * tt + 2) + 12 * Math.sin(2.3 * tt)];
+          const p = bp(t), q = bp(t + 0.05), dir = q[0] >= p[0] ? 1 : -1;
+          const bob = reduced ? 0 : 2.2 * Math.sin(t * 9);
+          set(r.bee, 'transform', `translate(${f1(p[0])} ${f1(p[1] + bob)}) scale(${dir * 1.7} 1.7) rotate(${f1(clamp((q[1] - p[1]) * 6, -18, 18) * dir)})`);
+          set(r.beeW, 'transform', `scale(1 ${f(reduced ? 0.8 : 0.35 + 0.65 * Math.abs(Math.sin(t * 57)))})`);
+          let d = '';
+          for (let i = 1; i <= 7; i++) { const s = bp(t - i * 0.09); d += `${i === 1 ? 'M' : 'L'}${f1(s[0])} ${f1(s[1] + 4)}`; }
+          set(r.beeTrail, 'd', d);
+        }
+      }
+      // ================= ladybird crawling along the basket front (rider-local), stops now and then
+      {
+        const on = day > 0.2;
+        vis(r.lady, on);
+        if (on) {
+          const P = 16, u = wrap(t / P, 1), tri = u < 0.5 ? u * 2 : 2 - u * 2, e = sstep(0, 1, tri);
+          const x = lerp(LADY.x0, LADY.x1, e), dir = u < 0.5 ? 1 : -1, moving = Math.abs(Math.sin(Math.PI * tri)) > 0.08;
+          set(r.lady, 'transform', `translate(${f1(x)} ${LADY.y}) scale(${dir * 1.5} 1.5)`);
+          set(r.ladyL, 'transform', `translate(${f(moving && !reduced ? 0.5 * Math.sin(t * 22) : 0)} 0)`);
+        }
+      }
+      // ================= hum notes: while coasting the pelican hums; little notes drift up from the bill
+      {
+        let mk = null; for (const e of fr.events || []) if ((e.type === 'coast' || e.type === 'pedal') && e.t0 <= t && (!mk || e.t0 >= mk.t0)) mk = e;
+        const humming = mk ? mk.type === 'coast' : !!fr.coasting;
+        const t0 = mk && mk.type === 'coast' ? mk.t0 : (fr.coasting ? -1e3 : 0);
+        const hx = J.head ? W(J.head.x, J.head.y) : [RIDER_X + 125, GROUND_Y - 520];
+        for (let i = 0; i < 3; i++) {
+          const el = r['hum' + i], P = 2.7, off = 0.6 + i * 0.9, tau = wrap(t - t0 - off, P);
+          const on = !nofx && humming && t - t0 > off && tau < 2.2;
+          vis(el, on);
+          if (!on) continue;
+          const u = tau / 2.2;
+          set(el, 'transform', `translate(${f1(hx[0] + 70 + 18 * i - 30 * tau)} ${f1(hx[1] - 40 - 55 * tau)}) rotate(${f1(-12 + 16 * Math.sin(tau * 3 + i))}) scale(${f(0.9 + 0.2 * (i % 2))})`);
+          set(el, 'opacity', f(sstep(0, 0.15, u) * (1 - sstep(0.7, 1, u))));
         }
       }
 

@@ -42,6 +42,13 @@ function cr(pts, closed = true, k = 1 / 6) {
   }
   return d + (closed ? 'Z' : '');
 }
+// closed midpoint-quadratic smoothing (≈ 2/3 the bytes of cr(); used for the many small painted marks)
+function qc(pts) {
+  const n = pts.length, m = i => { const a = pts[i % n], b = pts[(i + 1) % n]; return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; };
+  let d = `M${P(...m(0))}`;
+  for (let i = 1; i <= n; i++) d += `Q${P(...pts[i % n])} ${P(...m(i))}`;
+  return d + 'Z';
+}
 // puffy cloud outline along a baseline (the draft's puff(), made lobed): n round lobes under a sine envelope that
 // meet in shallow notches, then a softly flattened, slightly wavy base. Seeded; returns the points.
 function puffPts(R, cx, cy, w, hh, n, flat = 0.25) {
@@ -68,7 +75,7 @@ const blob = (R, cx, cy, rx, ry, n, amp, a0 = 0) => Array.from({ length: n }, (_
 });
 // tapered gouache brush stroke along a gentle arc (a filled shape: a heavy head, a dry thinning tail)
 function brush(R, x, y, len, w, bend = 0, ang = 0, head = 0.18) {
-  const n = 10, top = [], bot = [], c = Math.cos(ang * D2R), s = Math.sin(ang * D2R);
+  const n = Math.max(3, Math.min(10, Math.round(len / 14))), top = [], bot = [], c = Math.cos(ang * D2R), s = Math.sin(ang * D2R);
   for (let i = 0; i <= n; i++) {
     const t = i / n;
     const prof = t < head ? 0.45 + 0.55 * Math.sin((t / head) * Math.PI / 2) : Math.pow(1 - (t - head) / (1 - head), 0.55);
@@ -77,7 +84,7 @@ function brush(R, x, y, len, w, bend = 0, ang = 0, head = 0.18) {
     top.push([px, py - wt / 2]); bot.push([px, py + wt / 2]);
   }
   const pts = [...top, ...bot.reverse()].map(([px, py]) => [x + px * c - py * s, y + px * s + py * c]);
-  return cr(pts);
+  return qc(pts);
 }
 // a few bristle lines inside a stroke (open paths, thin)
 function bristles(R, x, y, len, w, bend = 0, ang = 0, k = 3) {
@@ -233,11 +240,11 @@ export function build(ctx) {
     for (let i = 0; i < 40; i++) {
       const x = X0 + 60 + R() * (X1 - X0 - 120), y = -40 + R() * 470, rx = 110 + R() * 220, ry = 16 + R() * 34;
       const pts = blob(R, x, y, rx, ry, 11, 0.5, R() * 6);
-      if (i % 2) lite += cr(pts); else dark += cr(pts);
+      if (i % 2) lite += qc(pts); else dark += qc(pts);
     }
-    for (let i = 0; i < 160; i++) { const x = X0 + R() * (X1 - X0), y = -40 + Math.pow(R(), 1.6) * 300, r = 0.8 + R() * 1.6; gran += cr(blob(R, x, y, r, r * 0.8, 5, 0.5)); }
+    for (let i = 0; i < 160; i++) { const x = X0 + R() * (X1 - X0), y = -40 + Math.pow(R(), 1.6) * 300; gran += `M${f1(x)} ${f1(y)}l${f1(R() * 1.4)} ${f1((R() - 0.5) * 0.8)}`; }
     sky += h('g', DD('sky:T:gouache-mottle'), h('path', { d: dark, fill: '#4A3060', opacity: 0.03 }), h('path', { d: lite, fill: '#FFF6EC', opacity: 0.05 }));
-    sky += h('path', { ...DD('sky:T:pigment-granulation'), d: gran, fill: v('skyTop'), opacity: 0.35 });
+    sky += h('path', { ...DD('sky:T:pigment-granulation'), d: gran, ...S(v('skyTop'), 2.2, { opacity: 0.35 }) });
   }
 
   // dry-brush streaks: long horizontal strokes, three paints by height (the draft's 38 soft strokes, baked)
@@ -316,8 +323,11 @@ export function build(ctx) {
   {
     // a painted cross: two tapered strokes (vertical a touch longer), slightly tilted by hand
     const cross = (x, y, r, R) => {
-      const a = (R() - 0.5) * 16, w = r * 0.34;
-      return brush(R, x - r, y, 2 * r, w, 0, a, 0.5) + brush(R, x, y - r * 1.15, 2.3 * r, w, 0, 90 + a, 0.5);
+      // four tapered arms (the vertical a little longer), tilted by hand; quadratic waists keep it painterly and tiny
+      const a = (R() - 0.5) * 0.28, c = Math.cos(a), s2 = Math.sin(a), q = r * 0.17;
+      const p = (px, py) => f1(x + px * c - py * s2) + ' ' + f1(y + px * s2 + py * c);
+      const t = -r * (1.15 + R() * 0.15), b = r * (1.05 + R() * 0.1), l = -r * (0.9 + R() * 0.15), rr = r * (0.95 + R() * 0.1);
+      return `M${p(0, t)}Q${p(q, -q)} ${p(rr, 0)}Q${p(q, q)} ${p(0, b)}Q${p(-q, q)} ${p(l, 0)}Q${p(-q, -q)} ${p(0, t)}Z`;
     };
     const R = rng('stars'); const b = ['', '', ''], dots = [];
     for (let i = 0; i < 150; i++) {
@@ -384,15 +394,15 @@ export function build(ctx) {
     crisp += h('path', { ...DD('sky:T:cloud-rim-light'), d: rimOf(hi, 0.25), ...S(v('cloudRim'), 2.2, { opacity: 0.7 }) });
     // long dry strokes dragged across the middle tone (the gouache brush direction)
     let tex = '';
-    for (let i = 0; i < 3 + Math.round(w / 160); i++) tex += brush(R, cx - w * 0.4 + R() * w * 0.3, cy - hh * (0.05 + R() * 0.3), w * (0.25 + R() * 0.35), 1.6 + R() * 1.4, (R() - 0.5) * 3, (R() - 0.5) * 3, 0.2);
+    for (let i = 0; i < 2 + Math.round(w / 180); i++) tex += brush(R, cx - w * 0.4 + R() * w * 0.3, cy - hh * (0.05 + R() * 0.3), w * (0.25 + R() * 0.35), 1.6 + R() * 1.4, (R() - 0.5) * 3, (R() - 0.5) * 3, 0.2);
     crisp += h('path', { ...DD('sky:T:cloud-brush-texture'), d: tex, fill: v('cloudLit'), opacity: 0.3 });
     // dry-brush dabs on the lit top
     let dabs = '';
-    for (let i = 0; i < Math.round(w / 45); i++) { const p = hi[1 + Math.floor(R() * (hi.length / 2 - 1))]; dabs += brush(R, p[0] - 6, p[1] + 5 + R() * hh * 0.2, 10 + R() * 14, 2.2 + R() * 1.6, -1, -8 + R() * 16); }
+    for (let i = 0; i < Math.round(w / 60); i++) { const p = hi[1 + Math.floor(R() * (hi.length / 2 - 1))]; dabs += brush(R, p[0] - 6, p[1] + 5 + R() * hh * 0.2, 10 + R() * 14, 2.2 + R() * 1.6, -1, -8 + R() * 16); }
     crisp += h('path', { ...DD('sky:T:cloud-brush-dabs'), d: dabs, fill: v('cloudRim'), opacity: 0.6 });
     // flecks along the lower edge (tiny tapered ticks just outside the silhouette)
     let fl = '';
-    for (let i = 0; i < Math.round(w / 30); i++) { const x = cx - w * 0.45 + R() * w * 0.9; fl += brush(R, x, cy + hh * 0.2 + R() * 4, 6 + R() * 10, 1.6 + R(), 0.6, (R() - 0.5) * 10); }
+    for (let i = 0; i < Math.round(w / 40); i++) { const x = cx - w * 0.45 + R() * w * 0.9; fl += brush(R, x, cy + hh * 0.2 + R() * 4, 6 + R() * 10, 1.6 + R(), 0.6, (R() - 0.5) * 10); }
     crisp += h('path', { ...DD('sky:T:cloud-edge-flecks'), d: fl, fill: v(sh), opacity: 0.55 });
     return h('g', DD(key), soft, crisp);
   }
@@ -434,7 +444,7 @@ export function build(ctx) {
       for (let x = 150 + O + row * 18 + R() * 10; x < 470 + O - row * 30;) {
         const w = r * (2 + R() * 1.8), yy = y + (R() - 0.5) * 4;
         if (R() < 0.18) { x += w + 6; continue; }        // gaps: the cloudlets break up irregularly
-        d += cr(blob(R, x, yy, w / 2, r * (0.55 + R() * 0.3), 9, 0.2).map(([px, py]) => [px, Math.min(py, yy + r * 0.22)]));
+        d += qc(blob(R, x, yy, w / 2, r * (0.55 + R() * 0.3), 8, 0.2).map(([px, py]) => [px, Math.min(py, yy + r * 0.22)]));
         u += brush(R, x - w * 0.42, yy + r * 0.12, w * 0.84, Math.max(1.2, r * 0.28), 0, 0, 0.3);
         x += w + 4 + R() * 9;
       }
@@ -459,6 +469,8 @@ export function build(ctx) {
     at(2600, h('g', DD('sky:O:fish-cloud'),
       h('path', { d: cr(tail) + cr(body), fill: v('cloudMid') }), h('path', { d: cr(blob(R, x + 6, y - 8, 56, 18, 14, 0.12)), fill: v('cloudLit') }),
       h('path', { d: circ(x + 44, y - 6, 4.2), fill: v('cloudShade'), opacity: 0.7 }),
+      h('path', { d: cr([[x - 20, y - 26], [x - 4, y - 46], [x + 12, y - 44], [x + 20, y - 27]]) + cr([[x - 6, y + 26], [x + 4, y + 40], [x + 16, y + 26]]), fill: v('cloudMid'), opacity: 0.9 }),   // fins
+      h('path', { d: `M${x + 52} ${y + 10}q6 4 12 -1`, ...S(v('cloudShade'), 1.8, { opacity: 0.6 }) }),                                                               // a smile
       h('path', { d: `M${x + 24} ${y - 22}q-8 22 0 44M${x - 6} ${y - 26}q-8 26 0 52`, ...S(v('cloudRim'), 2.4, { opacity: 0.7 }) }),
       h('path', { d: circ(x + 86, y - 26, 5) + circ(x + 98, y - 42, 3.4) + circ(x + 104, y - 56, 2.2), fill: v('cloudLit'), opacity: 0.85 })));
   }
@@ -466,7 +478,7 @@ export function build(ctx) {
   {
     const R = rng('virga'), x = 2900 + O, y = 200;
     let veil = '';
-    for (let i = 0; i < 9; i++) veil += brush(R, x - 70 + i * 16, y + 14, 50 + R() * 40, 5 + R() * 3, 3, 78, 0.25);
+    for (let i = 0; i < 14; i++) veil += brush(R, x - 76 + i * 11 + R() * 4, y + 12 + R() * 6, 44 + R() * 44, 2.6 + R() * 2.4, 0.4, 76 + R() * 4, 0.2);
     at(2900, h('g', DD('sky:O:rain-cloud'), h('path', { d: veil, fill: v('cloudShade'), opacity: 0.35 }),
       cloud('h', x, y, 190, 44, 6, 'sky:O:cumulus-small', { lit: 'cloudMid', mid: 'cloudShade', shade: 'cloudBank' })));
   }
