@@ -72,6 +72,32 @@ const CLOUD_W = 3200;                  // cloud tile (drawn twice: original + <u
 const PLANE_SPAN = 3000, PLANE_V = 24; // biplane loop (px) and screen speed (px/s)
 const FLOCK_SPAN = 2600, SKEIN_SPAN = 2600, SHIP_SPAN = 2600;
 
+// Sunburst wedges about (sx,sy) turned by `ang` degrees, clipped to each sky band -> one path `d` per band.
+const RAY_N = 18, RAY_W = 0.62 * 10;   // 18 lit wedges, each 6.2° wide (period 20°)
+function clipY(poly2, y, keepBelow) {
+  const out = [];
+  for (let i = 0; i < poly2.length; i++) {
+    const a = poly2[i], b = poly2[(i + 1) % poly2.length];
+    const ina = keepBelow ? a[1] >= y : a[1] <= y, inb = keepBelow ? b[1] >= y : b[1] <= y;
+    if (ina) out.push(a);
+    if (ina !== inb) { const u = (y - a[1]) / (b[1] - a[1]); out.push([a[0] + (b[0] - a[0]) * u, y]); }
+  }
+  return out;
+}
+export function wedgeBands(sx, sy, ang) {
+  const tris = [];
+  for (let k = 0; k < RAY_N; k++) {
+    const a0 = (k * 20 + ang) * D2R, a1 = a0 + RAY_W * D2R;
+    tris.push([[sx, sy], [sx + 2900 * Math.cos(a0), sy + 2900 * Math.sin(a0)], [sx + 2900 * Math.cos(a1), sy + 2900 * Math.sin(a1)]]);
+  }
+  return BANDS.map(([y0, y1], i) => {
+    const top = i === 0 ? -60 : y0, bot = i === BANDS.length - 1 ? y1 : y1 + 0.6;
+    let d = '';
+    for (const t of tris) { const p = clipY(clipY(t, top, true), bot, false); if (p.length > 2) d += poly(p); }
+    return d || 'M0 0Z';
+  });
+}
+
 export const detailItems = [
   ['sky:O:band-zenith', 'O', 'top sky band (cool ink)'],
   ['sky:O:band-mid', 'O', 'mid sky band (accent ink at golden hour)'],
@@ -81,8 +107,9 @@ export const detailItems = [
   ['sky:T:zenith-halftone', 'T', 'dark-ink dots darkening the zenith'],
   ['sky:O:horizon-hairlines', 'O', 'two paper-ink hairlines just above the horizon'],
   ['sky:O:sunburst-wedges', 'O', '18 slowly turning wedges printed one ink lighter'],
-  ['sky:T:sunburst-halftone', 'T', 'paper dots inside the wedges on the top band + wedge seams'],
+  ['sky:T:sunburst-halftone', 'T', 'paper-ink dots inside the wedges on the top band (lower bands too at noon/dusk)'],
   ['sky:T:sun-grooves', 'T', 'engraved hairline grooves in the upper disc'],
+  ['sky:T:sun-misregister', 'T', 'static 1–2 px misregistration sliver of the warm ink under the disc'],
   ['sky:O:sun-disc', 'O', 'paper-ink sun disc with deco slits cut into its lower third'],
   ['sky:O:sun-glow-rings', 'O', 'glow quantised into two hard-edged ink rings'],
   ['sky:T:sun-glow-halftone', 'T', 'halftone fringe on the outer glow ring'],
@@ -100,7 +127,7 @@ export const detailItems = [
   ['sky:T:cloud-shade-halftone', 'T', 'halftone shade dots above the flat base'],
   ['sky:O:stratus-streaks', 'O', 'long two-ink streak bars'],
   ['sky:O:speed-cloud', 'O', 'puff with a speed-line tail'],
-  ['sky:O:cirrus-hooks', 'O', "mares' tails hooked strokes high up"],
+  ['sky:O:cirrus-hooks', 'O', "mares' tails: hooked strokes with thin trailing strands"],
   ['sky:T:mackerel-sky', 'T', 'rows of small scallops (altocumulus)'],
   ['sky:T:virga', 'T', 'dotted rain shafts evaporating under a cloud'],
   ['sky:O:horizon-bank', 'O', 'distant cloud tops sitting on the horizon'],
@@ -131,6 +158,7 @@ export const detailItems = [
   ['sky:O:pelican-v-formation', 'O', 'migrating pelicans in a V (flapping)'],
   ['sky:O:bird-skein', 'O', 'far skein of small birds'],
   ['sky:O:moon', 'O', 'moon disc'],
+  ['sky:T:moon-misregister', 'T', 'static misregistration sliver of the shade ink'],
   ['sky:O:moon-craters', 'O', 'craters with rims'],
   ['sky:T:moon-maria', 'T', 'halftone maria'],
   ['sky:O:moon-halo-rings', 'O', 'halo quantised into rings'],
@@ -152,46 +180,50 @@ export function build(ctx) {
 
   // ======================== L-sky: bands + seams + zenith + hairlines + sunburst
   let sky = '';
-  // bands, printed as x-segments (one tag per band; segments keep hit-tests local)
-  const SEGX = [X0, 400, 800, 1200, X1];
-  const band = (key, y, hh, tok) => h('g', DD(key), SEGX.slice(0, -1).map((x, i) => h('rect', { x, y, width: SEGX[i + 1] - x + (i < 3 ? 0.5 : 0), height: hh, fill: v(tok) })));
-  sky += band('sky:O:band-zenith', -420, 745, 'sky0') + band('sky:O:band-mid', 324, 51, 'sky1') + band('sky:O:band-lower', 374, 51, 'sky1b') + band('sky:O:band-horizon', 424, 52, 'sky2');
-  // halftone seams: upper-band ink printed as shrinking dots over the lower band
-  const seams = (map, seed, xa = X0, xb = X1) => {
-    let s2 = '';
-    for (let i = 0; i < BANDS.length - 1; i++) {
-      const y = BANDS[i][1], len = i === 0 ? 34 : 26;
-      s2 += dots(rng('seam' + seed + i + xa), xa, xb, y + 1.5, y + len, 3.2, 0.35, 7.5, v(map(BANDS[i][2])));
+  // Halftone rows as one-row <pattern>s: a full-width row of equal dots is one rect (tiny markup, cheap to raster).
+  let rowN = 0;
+  const htRows = (y0, y1, rOf, s2, tok) => {
+    const dy = s2 * 0.866; let out = '';
+    for (let j = 0, y = y0; y <= y1 + 0.01; j++, y = y0 + j * dy) {
+      const r = Math.min(rOf(y), dy / 2 - 0.05); if (r < 0.3) continue;
+      const pid = 'sky-ht' + rowN++;
+      defs += h('pattern', { id: pid, x: f(X0 + (j % 2 ? s2 / 2 : 0) - s2 / 2), y: f(y - dy / 2), width: s2, height: f(dy), patternUnits: 'userSpaceOnUse' },
+        h('circle', { cx: s2 / 2, cy: f(dy / 2), r: f(r), fill: v(tok) }));
+      out += h('rect', { x: X0, y: f(y - dy / 2), width: X1 - X0, height: f(dy), fill: `url(#${pid})` });
     }
-    return s2;
+    return out;
   };
-  const SX = X0 + 7.5 * 119; // = 472.5: split exactly on the dot grid (7.5 pitch from X0) so the halves tile seamlessly
-  sky += h('g', DD('sky:T:band-halftone-seams'), seams(k => k, 'a', X0, SX - 0.01)) + h('g', DD('sky:T:band-halftone-seams'), seams(k => k, 'a', SX, X1));
-  // sunburst: alternate wedges print every band one ink lighter; the clip turns about the sun (the dots don't move)
+  // flat bands; each band's tag sits on its clean (seam-free) part so hit-tests see the band itself
+  const SEAM = [34, 26, 26];
+  BANDS.forEach(([y0, y1, tok], i) => {
+    const key = ['sky:O:band-zenith', 'sky:O:band-mid', 'sky:O:band-lower', 'sky:O:band-horizon'][i];
+    const top = i === 0 ? y0 : y0 + SEAM[i - 1] + 1, pureTop = i === 0 ? 124 : top;
+    if (pureTop > y0) sky += h('rect', { x: X0, y: y0, width: X1 - X0, height: pureTop - y0 + 0.5, fill: v(tok) });
+    sky += h('rect', { ...DD(key), x: X0, y: pureTop, width: X1 - X0, height: y1 - pureTop + (i < 3 ? 1 : 0), fill: v(tok) });
+  });
+  // sunburst: alternate wedges print each lower band one ink lighter, and paper dots over the top band. The wedges
+  // are real geometry (triangles clipped to each band in JS, no clip-path), re-cut only when the stepped angle changes.
   {
-    const n = 36; let wd = '';
-    for (let k = 0; k < n; k += 2) {
-      const a0 = (k / n) * 360, a1 = a0 + (360 / n) * 0.62;
-      const p = a => [2900 * Math.cos(a * D2R), 2900 * Math.sin(a * D2R)];
-      wd += poly([[0, 0], p(a0), p(a1)]);
-    }
-    defs += h('clipPath', { id: 'sky-rays-clip' }, h('path', { 'data-ref': 'sky-rays', d: wd, transform: 'translate(1451 330)' }));
-    const pat = (pid, tok, r, s, ang) => h('pattern', { id: pid, width: s, height: s, patternUnits: 'userSpaceOnUse', patternTransform: `rotate(${ang})` },
-      h('circle', { cx: s / 2, cy: s / 2, r, fill: v(tok) }));
+    const pat = (pid, tok, r, s2, ang) => h('pattern', { id: pid, width: s2, height: s2, patternUnits: 'userSpaceOnUse', patternTransform: `rotate(${ang})` },
+      h('circle', { cx: s2 / 2, cy: s2 / 2, r, fill: v(tok) }));
     defs += pat('sky-ht-ray0', 'ray0', 1.55, 6.5, 30) + pat('sky-ht-ray1', 'rayDot1', 1.35, 6.5, 30) + pat('sky-ht-ray1b', 'rayDot1b', 1.2, 6.5, 30) + pat('sky-ht-ray2', 'rayDot2', 1.05, 6.5, 30);
-    let r = '';
-    for (const [y0, y1, tok] of BANDS.slice(1)) r += h('rect', { x: X0, y: y0, width: X1 - X0, height: y1 - y0 + 1, fill: v(RAYS[tok]) });
-    for (const [y0, y1, tok] of BANDS) r += h('rect', { x: X0, y: Math.max(y0, -40), width: X1 - X0, height: y1 - Math.max(y0, -40) + (tok === 'sky2' ? 0 : 1), fill: `url(#sky-ht-${RAYDOTS[tok].replace('rayDot', 'ray')})` });
-    const rmap = k => (k === 'sky0' ? 'sky0' : RAYS[k]);
-    sky += h('g', { 'data-ref': 'sky-raysG', 'clip-path': 'url(#sky-rays-clip)', ...DD('sky:O:sunburst-wedges') }, r,
-      h('g', DD('sky:T:sunburst-halftone'), seams(rmap, 'r', X0, SX - 0.01)), h('g', DD('sky:T:sunburst-halftone'), seams(rmap, 'r', SX, X1)));
+    const D0 = wedgeBands(1451, 330, 0);
+    let r = h('path', { ...DD('sky:T:sunburst-halftone'), 'data-ref': 'sky-w0', d: D0[0], fill: 'url(#sky-ht-ray0)' });
+    BANDS.slice(1).forEach(([, , tok], i) => {
+      r += h('path', { 'data-ref': 'sky-w' + (i + 1), d: D0[i + 1], fill: v(RAYS[tok]) });
+      // lower-band wedge dots print only at hours whose role map asks for them (toggled on palette change)
+      r += h('path', { 'data-ref': 'sky-rp' + tok, d: D0[i + 1], fill: `url(#sky-ht-${RAYDOTS[tok].replace('rayDot', 'ray')})`, visibility: 'hidden' });
+    });
+    sky += h('g', { 'data-ref': 'sky-raysG', ...DD('sky:O:sunburst-wedges') }, r);
   }
-
+  // halftone seams (upper-band ink as shrinking dots over the lower band), printed over the wedges too
+  let seam = '';
+  for (let i = 0; i < 3; i++) { const y = BANDS[i][1]; seam += htRows(y + 3.2, y + SEAM[i], yy => lerp(3.2, 0.35, (yy - y - 3.2) / (SEAM[i] - 3.2)), 7.5, BANDS[i][2]); }
+  sky += h('g', DD('sky:T:band-halftone-seams'), seam);
   // zenith: dark ink dots fading down from the top
-  sky += h('g', DD('sky:T:zenith-halftone'), h('rect', { x: X0, y: -420, width: X1 - X0, height: 410, fill: v('skyZen') }),
-    dots(rng('zen'), X0, X1, -12, 120, 4.4, 0.3, 9, v('skyZen'), { rfn: (x, y) => 4.4 * Math.pow(1 - (y + 12) / 132, 1.6) }));
+  sky += h('g', DD('sky:T:zenith-halftone'), h('rect', { x: X0, y: -420, width: X1 - X0, height: 422, fill: v('skyZen') }),
+    htRows(6, 120, yy => 4.6 * Math.pow(1 - (yy - 2) / 122, 1.6), 10, 'skyZen'));
   sky += h('path', { ...DD('sky:O:horizon-hairlines'), d: rrect(X0, 452.5, X1 - X0, 2.4) + rrect(X0, 460.5, X1 - X0, 3.2), fill: v('skyLine') });
-
 
   // ======================== L-sunmoon: sun group (local coords, centre 0,0) and moon group
   const SR = 80;
@@ -201,6 +233,7 @@ export function build(ctx) {
     let clip = `M${-SR - 2} ${-SR - 2}H${SR + 2}V26H${-SR - 2}Z`;
     let y = 26; for (const [gap, bar] of [[2.2, 11], [2.8, 9], [3.4, 7.5], [4, 6], [4.6, 5], [5.2, 4.2]]) { y += gap; clip += `M${-SR - 2} ${f(y)}H${SR + 2}V${f(y + bar)}H${-SR - 2}Z`; y += bar; }
     defs += h('clipPath', { id: 'sky-sun-slits' }, h('path', { d: clip }));
+    sun += h('circle', { ...DD('sky:T:sun-misregister'), cx: 1.8, cy: 1.6, r: SR, fill: v('sunGlow'), 'clip-path': 'url(#sky-sun-slits)' });
     sun += h('circle', { ...DD('sky:O:sun-disc'), r: SR, fill: v('sunCore'), 'clip-path': 'url(#sky-sun-slits)' });
     // glow quantised into two hard rings, with a halftone fringe
     sun += h('g', DD('sky:O:sun-glow-rings'), h('path', { d: annulus(112.5, 23), fill: v('sunGlow'), 'fill-rule': 'evenodd' }), h('path', { d: annulus(90.25, 21.5), fill: v('sunHalo'), 'fill-rule': 'evenodd' }));
@@ -212,7 +245,7 @@ export function build(ctx) {
       clip: (x, y) => { const d = Math.hypot(x, y); return d > 125 && d < 152; },
       rfn: (x, y) => 2.8 * (1 - (Math.hypot(x, y) - 125) / 27),
     }));
-    sun += h('path', { ...DD('sky:O:sun-dotted-ring'), d: dotRing(140, 1.7, 10), fill: v('sunRing') });
+    sun += h('path', { ...DD('sky:O:sun-dotted-ring'), d: dotRing(140, 2.1, 11), fill: v('sunRing') });
     sun += h('path', { ...DD('sky:O:sun-deco-ring'), d: annulus(111, 3), fill: v('sunRing'), 'fill-rule': 'evenodd' });
     // corona teeth (counter-rotating)
     let teeth = '';
@@ -250,6 +283,7 @@ export function build(ctx) {
       rfn: (x, y) => { const d = Math.hypot(x, y); return d < 74 ? 1.9 * (1 - (d - 50) / 30) : 1.3 * (1 - (d - 74) / 25); },
     }));
     moon += h('path', { ...DD('sky:O:moon-deco-rings'), d: annulus(86, 1.6) + dotRing(112, 0.9, 8), fill: v('moonRing'), 'fill-rule': 'evenodd' });
+    moon += h('circle', { ...DD('sky:T:moon-misregister'), cx: -1.6, cy: -1.4, r: MR, fill: v('moonShade') });
     moon += h('circle', { ...DD('sky:O:moon'), r: MR, fill: v('moon') });
     // maria as halftone
     const maria = [[-12, -10, 15], [10, 8, 12], [-6, 16, 8], [16, -14, 7]];
@@ -304,7 +338,7 @@ export function build(ctx) {
       h('path', { d: cstars.map(([x, y]) => `M${x} ${y}h0`).join(''), stroke: v('star'), 'stroke-width': 3.4, 'stroke-linecap': 'round' }));
     // Milky Way: halftone band from lower left to upper right
     const mw = (x, y) => { const u = (x - 200) * 0.34 + (y - 120) * 0.94; return Math.abs(u + 20 * Math.sin(x / 160)); };
-    stars += h('g', DD('sky:T:milky-way'), dots(rng('milky'), X0, X1, -80, 440, 0, 0, 8, v('milky'), {
+    stars += h('g', DD('sky:T:milky-way'), dots(rng('milky'), X0, X1, -20, 440, 0, 0, 9.5, v('milky'), {
       jitter: 3, clip: (x, y) => mw(x, y) < 70, rfn: (x, y) => 2.4 * (1 - mw(x, y) / 70) + 0.2,
     }));
     // shooting stars (animated along +x -> down-left direction; local streak points to +x)
@@ -365,13 +399,13 @@ export function build(ctx) {
   const LOBES_C = [[0, 0, 30], [44, -8, 40], [92, 0, 30], [-30, 10, 20], [126, 10, 20]];
   // tile content: x in [-400, CLOUD_W-400]; at the inventory frame (t≈3.2) the tile has scrolled ≈200 px
   drift.push([620, cumulus(700, 250, 0.66, LOBES_A, 'sky:O:cumulus-large', 'a')]);
-  drift.push([1180, cumulus(1236, 214, 0.5, LOBES_B, 'sky:O:cumulus-small', 'b')]);
+  drift.push([2700, cumulus(2756, 214, 0.5, LOBES_B, 'sky:O:cumulus-small', 'b')]);
   drift.push([2240, cumulus(2300, 236, 0.74, LOBES_C, 'sky:O:cumulus-large', 'c')]);
   drift.push([-300, cumulus(-260, 300, 0.46, LOBES_A, 'sky:O:cumulus-large', 'd')]);
   // virga under the small cumulus
   {
-    const bx = 1236, by = 214 + 30 * 0.5 + 18;
-    drift.push([1180, h('g', DD('sky:T:virga'), dots(rng('virga'), bx - 30, bx + 70, by, by + 64, 1.9, 0.35, 6, v('cloudLit'), {
+    const bx = 2756, by = 214 + 30 * 0.5 + 18;
+    drift.push([2700, h('g', DD('sky:T:virga'), dots(rng('virga'), bx - 30, bx + 70, by, by + 64, 1.9, 0.35, 6, v('cloudLit'), {
       clip: (x, y) => { const u = (x - bx + (y - by) * 0.35); return (Math.round(u / 9) % 2 === 0) && u > -26 && u < 64; },
     }))]);
   }
@@ -379,7 +413,7 @@ export function build(ctx) {
   const streaks = (x, y, rows) => h('g', DD('sky:O:stratus-streaks'),
     h('path', { d: rows.map(([dx, dy, w, hh]) => rrect(x + dx, y + dy, w, hh)).join(''), fill: v('cloudLit') }),
     h('path', { d: rows.map(([dx, dy, w, hh]) => rrect(x + dx + 18, y + dy + hh + 2, w * 0.6, Math.max(2, hh * 0.45))).join(''), fill: v('cloudShade') }));
-  drift.push([1130, streaks(1170, 398, [[0, 0, 170, 6], [60, 13, 190, 5], [-40, 25, 120, 4]])]);
+  drift.push([1130, streaks(1170, 346, [[0, 0, 170, 6], [60, 13, 190, 5], [-40, 25, 120, 4]])]);
   drift.push([2650, streaks(2650, 390, [[0, 0, 220, 6], [80, 14, 150, 4.5]])]);
   // speed-line cloud: a puff racing +x with a tail of rounded bars
   {
@@ -395,12 +429,17 @@ export function build(ctx) {
       h('path', { d: rrect(x - 26, base - 3, 64, 3) + rrect(x - 200, y + 2, 34, 2.4), fill: v('cloudShade') }),
       h('path', { d: `M${f(x + 8)} ${f(y - 16)}A16 16 0 0 1 ${f(x + 34)} ${f(y - 8)}`, stroke: v('cloudRim'), 'stroke-width': 2, fill: 'none', 'stroke-linecap': 'round' }))]);
   }
-  // mares' tails (cirrus hooks), high in the top band
+  // mares' tails (cirrus hooks) with thinner trailing strands, high in the top band (far: static)
   {
-    const R = rng('cirrus'); let d = '';
+    const R = rng('cirrus'); let d = '', d2 = '';
     const hook = (x, y, L2, k) => `M${f(x)} ${f(y)}q${f(L2 * 0.5)} ${f(-4 * k)} ${f(L2)} ${f(-2 * k)}q${f(10 * k)} ${f(0.5)} ${f(13 * k)} ${f(-8 * k)}`;
-    for (const [x, y] of [[410, 96], [500, 124], [580, 72], [680, 104], [760, 60], [1480, 40]]) d += hook(x, y, 50 + R() * 50, 0.8 + R() * 0.6);
-    still += h('path', { ...DD('sky:O:cirrus-hooks'), d, fill: 'none', stroke: v('cloudHigh'), 'stroke-width': 2.2, 'stroke-linecap': 'round' });
+    for (const [x, y] of [[410, 96], [500, 124], [580, 72], [680, 104], [760, 60], [1480, 40]]) {
+      const L2 = 50 + R() * 50, k = 0.8 + R() * 0.6;
+      d += hook(x, y, L2, k);
+      d2 += `M${f(x + L2 * 0.18)} ${f(y + 4.2)}q${f(L2 * 0.35)} ${f(-2.6 * k)} ${f(L2 * 0.7)} ${f(-1.8 * k)}` + `M${f(x - 14)} ${f(y - 3)}q${f(L2 * 0.2)} ${f(-1.4 * k)} ${f(L2 * 0.42)} ${f(-1.6 * k)}`;
+    }
+    still += h('g', DD('sky:O:cirrus-hooks'), h('path', { d, fill: 'none', stroke: v('cloudHigh'), 'stroke-width': 2.2, 'stroke-linecap': 'round' }),
+      h('path', { d: d2, fill: 'none', stroke: v('cloudHigh'), 'stroke-width': 1.1, 'stroke-linecap': 'round' }));
   }
   // mackerel sky (altocumulus): rows of tiny flat-based two-lobe cloudlets, smaller toward the top (perspective)
   {
@@ -548,6 +587,7 @@ export function attach(svg, ctx) {
   const st = { sun: '', moon: '', moonVis: '', starVis: '', flap: [], sunVis: '' };
   const set = (el, k, val, key) => { if (el && st[key] !== val) { st[key] = val; el.setAttribute(k, val); } };
   const pan = [0, 1, 2, 3, 4].map(i => r['pan' + i]);
+  const wv = [0, 1, 2, 3].map(i => r['w' + i]), rp = ['sky1', 'sky1b', 'sky2'].map(k => r['rp' + k]);
   const birds = [0, 1, 2, 3, 4, 5, 6].map(i => r['b' + i]);
   const clouds = Object.keys(r).filter(k => /^cl\d+$/.test(k)).map(k => [r[k], +r[k].getAttribute('data-ax')]);
   return {
@@ -559,11 +599,19 @@ export function attach(svg, ctx) {
       const sunVis = sun.elev < -0.42 ? 'hidden' : 'visible';
       set(r.sun, 'visibility', sunVis, 'sunVis'); set(r.raysG, 'visibility', sunVis, 'raysVis');
       if (sunVis === 'visible') {
-        const tq = Math.floor(t * 12) / 12;           // stepped at 12 Hz: ≤2 px at the far edge, 1/5 the repaints
-        const a = reduced ? 0 : wrap(tq * 1.0, 360);
-        r.rays.setAttribute('transform', `translate(${f(sun.x)} ${f(sun.y)}) rotate(${a.toFixed(3)})`);
-        r.corona.setAttribute('transform', `rotate(${(reduced ? 0 : -wrap(tq * 2.2, 360)).toFixed(2)})`);
+        // the sunburst turns 0.6°/s, stepped at 6 Hz (0.1°: ≤2.5 px at the far edge): each step repaints the whole sky
+        const tq = Math.floor(t * 6) / 6;
+        const a = reduced ? 0 : wrap(tq * 0.6, 20);
+        const key = a.toFixed(3) + '|' + f(sun.x) + '|' + f(sun.y);
+        if (st.rayKey !== key) {
+          st.rayKey = key; const D = wedgeBands(sun.x, sun.y, a);
+          for (let i = 0; i < 4; i++) { wv[i].setAttribute('d', D[i]); if (i) rp[i - 1].setAttribute('d', D[i]); }
+          r.corona.setAttribute('transform', `rotate(${(reduced ? 0 : -wrap(tq * 2.2, 360)).toFixed(2)})`);
+        }
       }
+      const env = fr.pal && fr.pal.env;
+      if (env) for (const [tok, a2, b2] of [['sky1', 'rayDot1', 'ray1'], ['sky1b', 'rayDot1b', 'ray1b'], ['sky2', 'rayDot2', 'ray2']])
+        set(r['rp' + tok], 'visibility', env[a2] !== env[b2] ? 'visible' : 'hidden', 'rp' + tok);
       // moon
       set(r.moon, 'transform', `translate(${f(moon.x)} ${f(moon.y)})`, 'moon');
       set(r.moon, 'visibility', moon.elev > -0.32 && fr.night > 0.02 ? 'visible' : 'hidden', 'moonVis');
