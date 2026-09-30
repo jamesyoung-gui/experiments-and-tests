@@ -1,477 +1,657 @@
-// OWNER: print. Screen-fixed poster furniture in L-letterbox (depth null), STYLE-C §4–§5:
-//  · the poster border: P paper margin, N keyline + outer hairline, deco sunburst corners, stepped edge diamonds,
-//    crop and registration marks, a printer's strip (imprint, colour bar, halftone tint ramp, edition number);
-//  · the intro title card "PELICAN BAY" in stroke-built deco capitals (P face, R inline, N stepped shadow + N hatched
-//    cast shadow), the 鹈鹕湾 deco label tablet and the subtitle band. It is PRINTED IN plate by plate (shadow plate,
-//    face plate dropping into register, inline plate, the label thunked down, the band rolled on), holds ~3 s, then
-//    shrinks into a small corner logo. Every frame the card is fitted into the free space around the rider's screen
-//    box (from frame.cam + pose), so it never covers the bird at any camera, aspect, or during a hop;
-//  · ephemera: an "ADMIT ONE" coast-railway ticket (guilloche, perforated stub, conductor's punch, matching serials),
-//    a perforated postage stamp with an engraved vignette of a pelican on a bicycle, and a 鹈鹕湾 postmark with date;
-//  · the cinematic letterbox: the paper margin itself grows into the bars (driven by frame.cam.letterbox); the logo
-//    and stamp move into the top bar and the ticket into the bottom bar.
-// All lettering is path data (print-glyphs.js, generated offline by print-glyphs.gen.mjs); no runtime fonts.
+// OWNER: print. The PICTURE-BOOK SPREAD (STYLE-B §4): screen-fixed page furniture in L-letterbox (depth null).
+//  · the book: a cloth-bound cover rim and the stacked page edges at the screen edge, the deckled edge of the top page,
+//    the cream paper margin (fibre texture) whose inner edge is the painting's dry-brush boundary, the illustrator's
+//    ruled pencil frame (double, overshooting at the corners), the gutter shadow down the spread with its sewing
+//    stitches, running heads, bilingual page numbers with leaf flourishes, a curled page corner, a red satin bookmark
+//    ribbon, a publisher's colophon and little spot illustrations in the margins (shell, fish bone, star, feather,
+//    paper boat, a child's crayon heart, a thumbprint);
+//  · the hand-lettered title "Pelican Bay" + 鹈鹕湾 (DejaVu Serif Bold / WenQuanYi outlines, every glyph baked with its
+//    own baseline wobble and tilt, painted shadow, gouache streaks, pencil double line), a brush swash, twinkles, the
+//    subtitle and the "Chapter One · 第一章" plate. The letters pop in one by one, hold ~3 s, then the card shrinks into
+//    a small corner title. It is fitted into the free space around the rider's screen box every frame (never covers
+//    the bird at any camera, aspect or hop) and keeps clear of the UI card;
+//  · the story caption: a bilingual picture-book sentence per route stretch (route.js STRETCHES) with its page header,
+//    a red raised initial and a flower divider, on a gouache patch; the page number follows the journey and the
+//    chapter the lap. Captions fade across stretch boundaries as a pure function of road distance (renderAt-stable);
+//  · cinematic: the letterbox IS the book: the margins grow into the bars, the title moves into the top margin and the
+//    caption is printed straight onto the bottom margin, like the text block of a real picture book.
+// No filters, no per-frame geometry: the hand-made look (wobble, deckle, dry brush, double lines) is seeded jitter
+// baked into the paths; textures are static <pattern>s. After the intro nothing here changes unless the view, the
+// letterbox, the UI card, the (coarse) rider box, the stretch or the lap changes.
 import { fmt2 } from '../core/math.js';
 import { h } from '../core/svg.js';
 import { VIEW, RIDER_X, GROUND_Y, CAMERAS } from '../contract.js';
-import { LAT, ZH } from './print-glyphs.js';
+import { LAT, SER, ZH } from './print-glyphs.js';
+import { stretchAt, lapOf, lapPos } from './route.js';
 
 export const id = 'print';
+// page paints (graded by the hour like every material: the bedtime page at night is a lavender-dusk cream)
+export const materials = {
+  pgPaper: '#F8EDD8', pgPaperHi: '#FFF8EC', pgPaperLo: '#E6D2B2', pgEdge: '#EADAC0',
+  pgCloth: '#7C3A32', pgClothLo: '#5A2622', pgClothHi: '#A45A48',
+  pgRibbon: '#C9382F', pgRibbonLo: '#8C2226', pgRibbonHi: '#F2826A',
+  pgTitle: '#FFF3DC', pgTitleLo: '#F1D9B4', pgGold: '#FAC957', pgGoldLo: '#E39A3A',
+  pgShell: '#F6B79A', pgShellLo: '#D9876C', pgSea: '#6A8FC4', pgLeaf: '#6E9A58', pgBone: '#FFF8EC',
+};
 
 const TD = 'typography_frame';
-const f = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
+const f = fmt2;
 const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
 const lerp = (a, b, t) => a + (b - a) * t;
 const easeOut = t => 1 - (1 - t) ** 3;
 const easeInOut = t => t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 const backOut = t => { const c = 1.9; return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2; };
 
-// ------------------------------------------------------------------ path geometry helpers (build time only)
-// Affine-transform an absolute SVG path (M L H V Q C A Z). m = [a b c d e f]: x' = a·x + c·y + e, y' = b·x + d·y + f.
+// seeded PRNG (mulberry32): every wobble is the same on every frame and every load
+function srand(seed) {
+  let s = seed >>> 0;
+  return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+const sgn = r => r() * 2 - 1;
+
+// ------------------------------------------------------------------ path helpers
+// Affine-transform an absolute SVG path (M L H V Q C Z). m = [a b c d e f]: x' = a·x + c·y + e, y' = b·x + d·y + f.
 function tp(d, m) {
   const tok = d.match(/[a-zA-Z]|-?(?:\d+\.?\d*|\.\d+)(?:e-?\d+)?/g) || [];
-  const P = (x, y) => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
-  const det = m[0] * m[3] - m[1] * m[2], sc = Math.sqrt(Math.abs(det)), ang = Math.atan2(m[1], m[0]) * 180 / Math.PI;
-  let i = 0, cmd = '', cx = 0, cy = 0, out = '';
+  let i = 0, cmd = '', out = '';
   const num = () => +tok[i++];
-  const pt = (x, y) => { const [X, Y] = P(x, y); return `${f(X)} ${f(Y)}`; };
+  const pt = () => { const x = num(), y = num(); return `${f(m[0] * x + m[2] * y + m[4])} ${f(m[1] * x + m[3] * y + m[5])}`; };
   while (i < tok.length) {
     if (/[a-zA-Z]/.test(tok[i])) cmd = tok[i++];
     switch (cmd) {
-      case 'M': case 'L': { cx = num(); cy = num(); out += cmd + pt(cx, cy); if (cmd === 'M') cmd = 'L'; break; }
-      case 'h': cx += num(); out += 'L' + pt(cx, cy); break;
-      case 'v': cy += num(); out += 'L' + pt(cx, cy); break;
-      case 'm': case 'l': { cx += num(); cy += num(); out += cmd.toUpperCase() + pt(cx, cy); if (cmd === 'm') cmd = 'l'; break; }
-      case 'H': cx = num(); out += 'L' + pt(cx, cy); break;
-      case 'V': cy = num(); out += 'L' + pt(cx, cy); break;
-      case 'Q': { const a = pt(num(), num()); cx = num(); cy = num(); out += `Q${a} ${pt(cx, cy)}`; break; }
-      case 'C': { const a = pt(num(), num()), b = pt(num(), num()); cx = num(); cy = num(); out += `C${a} ${b} ${pt(cx, cy)}`; break; }
-      case 'a': case 'A': {
-        const rx = num(), ry = num(), rot = num(), la = num(), sw = num();
-        if (cmd === 'a') { cx += num(); cy += num(); } else { cx = num(); cy = num(); }
-        out += `A${f(rx * sc)} ${f(ry * sc)} ${f(rot + ang)} ${la} ${det < 0 ? 1 - sw : sw} ${pt(cx, cy)}`; break;
-      }
+      case 'M': out += 'M' + pt(); cmd = 'L'; break;
+      case 'L': out += 'L' + pt(); break;
+      case 'Q': out += 'Q' + pt() + ' ' + pt(); break;
+      case 'C': out += 'C' + pt() + ' ' + pt() + ' ' + pt(); break;
       case 'Z': case 'z': out += 'Z'; cmd = ''; break;
-      default: throw new Error('print: unsupported path token ' + tok[i]);
+      default: throw new Error('print: unsupported path token ' + tok[i - 1]);
     }
   }
   return out;
 }
-// matrix for translate(tx,ty) rotate(deg) scale(sx,sy)
-const mat = (tx, ty, deg = 0, sx = 1, sy = sx) => {
-  const r = deg * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
-  return [c * sx, s * sx, -s * sy, c * sy, tx, ty];
-};
-const circ = (x, y, r, ccw = false) => `M${f(x - r)} ${f(y)}a${f(r)} ${f(r)} 0 1 ${ccw ? 1 : 0} ${f(2 * r)} 0a${f(r)} ${f(r)} 0 1 ${ccw ? 1 : 0} ${f(-2 * r)} 0Z`;
-const rectD = (x, y, w, hh) => `M${f(x)} ${f(y)}h${f(w)}v${f(hh)}h${f(-w)}Z`;
-const rectCCW = (x, y, w, hh) => `M${f(x)} ${f(y)}v${f(hh)}h${f(w)}v${f(-hh)}Z`;
-const roundRect = (x, y, w, hh, r) => `M${f(x + r)} ${f(y)}H${f(x + w - r)}A${r} ${r} 0 0 1 ${f(x + w)} ${f(y + r)}V${f(y + hh - r)}A${r} ${r} 0 0 1 ${f(x + w - r)} ${f(y + hh)}H${f(x + r)}A${r} ${r} 0 0 1 ${f(x)} ${f(y + hh - r)}V${f(y + r)}A${r} ${r} 0 0 1 ${f(x + r)} ${f(y)}Z`;
-const diamond = (x, y, hw, hh) => `M${f(x - hw)} ${f(y)}L${f(x)} ${f(y - hh)}L${f(x + hw)} ${f(y)}L${f(x)} ${f(y + hh)}Z`;
-
-// Glyph text -> one path d. font = LAT | ZH (em 1000, y down, baseline 0). rot in degrees about (x, y).
-const SPACE = { lat: 330, zh: 500 };
-function measure(font, str, size, track = 0, sx = 1) {
-  const k = size / 1000, ch = [...str];
-  return ch.reduce((w, c, i) => w + (font[c] ? font[c][0] : font === ZH ? SPACE.zh : SPACE.lat) * k * sx + (i < ch.length - 1 ? track : 0), 0);
+// closed / open Catmull-Rom -> cubic path (the draft's cr())
+function cr(pts, closed = true, k = 1 / 6) {
+  const n = pts.length; let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
+  const g = i => closed ? pts[(i + n) % n] : pts[Math.max(0, Math.min(n - 1, i))];
+  const last = closed ? n : n - 1;
+  for (let i = 0; i < last; i++) {
+    const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2);
+    d += `C${f(p1[0] + (p2[0] - p0[0]) * k)} ${f(p1[1] + (p2[1] - p0[1]) * k)} ${f(p2[0] - (p3[0] - p1[0]) * k)} ${f(p2[1] - (p3[1] - p1[1]) * k)} ${f(p2[0])} ${f(p2[1])}`;
+  }
+  return d + (closed ? 'Z' : '');
 }
-function text(font, str, { size = 10, x = 0, y = 0, track = 0, sx = 1, rot = 0, align = 'left' } = {}) {
-  const k = size / 1000, w = measure(font, str, size, track, sx);
-  const r = rot * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
-  let pen = align === 'center' ? -w / 2 : align === 'right' ? -w : 0, d = '';
-  for (const ch of str) {
-    const g = font[ch];
-    if (!g && ch !== ' ') throw new Error(`print: no glyph for "${ch}" (add it to print-glyphs.gen.mjs)`);
-    if (g) d += tp(g[1], [c * k * sx, s * k * sx, -s * k, c * k, x + c * pen, y + s * pen]);
-    pen += (g ? g[0] : font === ZH ? SPACE.zh : SPACE.lat) * k * sx + track;
+const circ = (x, y, r) => `M${f(x - r)} ${f(y)}a${f(r)} ${f(r)} 0 1 0 ${f(2 * r)} 0a${f(r)} ${f(r)} 0 1 0 ${f(-2 * r)} 0Z`;
+const ell = (x, y, rx, ry) => `M${f(x - rx)} ${f(y)}a${f(rx)} ${f(ry)} 0 1 0 ${f(2 * rx)} 0a${f(rx)} ${f(ry)} 0 1 0 ${f(-2 * rx)} 0Z`;
+// wobbly hand-drawn polyline through pts (seeded), open or closed
+const wob = (pts, r, amp = 0.8, closed = false) => cr(pts.map(([x, y]) => [x + sgn(r) * amp, y + sgn(r) * amp]), closed);
+// tapered brush stroke along a centre line c(t) (t 0..1) with half width w(t) -> closed outline
+function brush(c, w, n = 24) {
+  const L = [], R = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, [x, y] = c(t), [x2, y2] = c(Math.min(1, t + 0.01)), [x1, y1] = c(Math.max(0, t - 0.01));
+    const dx = x2 - x1, dy = y2 - y1, l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, ww = w(t);
+    L.push([x + nx * ww, y + ny * ww]); R.push([x - nx * ww, y - ny * ww]);
+  }
+  return cr([...L, ...R.reverse()], true);
+}
+// 4-point painted twinkle
+const star4 = (x, y, r, k = 0.22) => `M${f(x)} ${f(y - r)}Q${f(x + r * k)} ${f(y - r * k)} ${f(x + r)} ${f(y)}Q${f(x + r * k)} ${f(y + r * k)} ${f(x)} ${f(y + r)}Q${f(x - r * k)} ${f(y + r * k)} ${f(x - r)} ${f(y)}Q${f(x - r * k)} ${f(y - r * k)} ${f(x)} ${f(y - r)}Z`;
+
+// ------------------------------------------------------------------ lettering (glyph outlines -> one path)
+const HAN = /[　-〿一-鿿＀-￯]/;
+const advOf = (font, ch) => font[ch] ? font[ch][0] : ch === ' ' ? (font === ZH ? 500 : 300) : 0;
+// mixed-script run: Han characters from ZH (zs = relative size), everything else from `lat`
+function measure(str, size, { lat = SER, track = 0, zs = 1 } = {}) {
+  let w = 0; const ch = [...str];
+  ch.forEach((c, i) => { const zh = HAN.test(c); w += advOf(zh ? ZH : lat, c) * size * (zh ? zs : 1) / 1000 + (i < ch.length - 1 ? track : 0); });
+  return w;
+}
+// -> {d, w}. jit = seeded rng for hand-lettering wobble (per-glyph tilt ± rotJ°, baseline ± dyJ, size ± sJ)
+function text(str, { size = 12, x = 0, y = 0, lat = SER, track = 0, zs = 1, align = 'left', jit = null, rotJ = 1.6, dyJ = 0.05, sJ = 0.02 } = {}) {
+  const w = measure(str, size, { lat, track, zs });
+  let pen = x - (align === 'center' ? w / 2 : align === 'right' ? w : 0), d = '';
+  for (const c of str) {
+    const zh = HAN.test(c), font = zh ? ZH : lat, g = font[c], sz = size * (zh ? zs : 1), a = advOf(font, c) * sz / 1000;
+    if (!g && c !== ' ') throw new Error(`print: no glyph for "${c}" (rerun print-glyphs.gen.mjs)`);
+    if (g) {
+      let k = sz / 1000, rr = 0, dy = 0;
+      if (jit) { rr = sgn(jit) * rotJ * Math.PI / 180; dy = sgn(jit) * dyJ * size; k *= 1 + sgn(jit) * sJ; }
+      const c0 = Math.cos(rr), s0 = Math.sin(rr), cx = pen + a / 2;
+      d += tp(g[1], [c0 * k, s0 * k, -s0 * k, c0 * k, cx - c0 * a / 2, y + dy - s0 * a / 2]);
+    }
+    pen += a + track;
   }
   return { d, w };
 }
-// Text along a circle. top: reads clockwise, glyphs stand outward on radius r. bottom: reads left→right along the
-// bottom of the circle, glyphs hang inward from radius r.
-function arcText(font, str, cx, cy, r, { size = 7, track = 0, bottom = false, mid = bottom ? 90 : -90 } = {}) {
-  const k = size / 1000, w = measure(font, str, size, track);
-  const span = w / r * 180 / Math.PI;
-  let pen = 0, d = '';
-  for (const ch of str) {
-    const g = font[ch], adv = (g ? g[0] : font === ZH ? SPACE.zh : SPACE.lat) * k;
-    const th = bottom ? mid + span / 2 - (pen + adv / 2) / r * 180 / Math.PI : mid - span / 2 + (pen + adv / 2) / r * 180 / Math.PI;
-    const a = th * Math.PI / 180, rot = bottom ? th - 90 : th + 90;
-    const rr = rot * Math.PI / 180, c = Math.cos(rr), s = Math.sin(rr);
-    const px = cx + r * Math.cos(a), py = cy + r * Math.sin(a);
-    if (g) d += tp(g[1], [c * k, s * k, -s * k, c * k, px - c * adv / 2, py - s * adv / 2]);
-    pen += adv + track;
+// greedy wrap. Latin by words, Han by characters (no line may start with closing punctuation)
+function wrap(str, size, maxW, opt = {}) {
+  const han = HAN.test(str), units = han ? [...str] : str.split(' ');
+  const lines = []; let cur = '';
+  for (const u of units) {
+    const cand = cur ? (han ? cur + u : cur + ' ' + u) : u;
+    if (cur && measure(cand, size, opt) > maxW && !(han && /[，。！？、：；”）]/.test(u))) { lines.push(cur); cur = u; } else cur = cand;
   }
-  return d;
-}
-// Halftone patch as zero-length round-capped strokes (one path per radius), hex grid of pitch s.
-function dotsD(x0, y0, w, hh, s) {
-  let d = '';
-  for (let j = 0, y = y0 + s / 2; y < y0 + hh; j++, y += s * 0.866)
-    for (let x = x0 + (j % 2 ? s : s / 2); x < x0 + w; x += s) d += `M${f(x)} ${f(y)}h0`;
-  return d;
-}
-// Sine polyline
-function wave(x0, x1, y, amp, per, phase = 0, step = 1.5) {
-  let d = '';
-  for (let x = x0; x <= x1 + 0.01; x += step) d += (x === x0 ? 'M' : 'L') + f(x) + ' ' + f(y + amp * Math.sin((x - x0) / per * 2 * Math.PI + phase));
-  return d;
-}
-// Perforated stamp outline: rectangle whose edges are bitten by semicircles (holes of radius r at pitch p).
-function perforated(w, hh, r, p) {
-  const nx = Math.round(w / p), ny = Math.round(hh / p), px = w / nx, py = hh / ny;
-  let d = `M0 0`;
-  for (let i = 0; i < nx; i++) { const c = (i + 0.5) * px; d += `L${f(c - r)} 0A${r} ${r} 0 0 0 ${f(c + r)} 0`; }
-  d += `L${f(w)} 0`;
-  for (let i = 0; i < ny; i++) { const c = (i + 0.5) * py; d += `L${f(w)} ${f(c - r)}A${r} ${r} 0 0 0 ${f(w)} ${f(c + r)}`; }
-  d += `L${f(w)} ${f(hh)}`;
-  for (let i = nx - 1; i >= 0; i--) { const c = (i + 0.5) * px; d += `L${f(c + r)} ${f(hh)}A${r} ${r} 0 0 0 ${f(c - r)} ${f(hh)}`; }
-  d += `L0 ${f(hh)}`;
-  for (let i = ny - 1; i >= 0; i--) { const c = (i + 0.5) * py; d += `L0 ${f(c + r)}A${r} ${r} 0 0 0 0 ${f(c - r)}`; }
-  return d + 'Z';
+  if (cur) lines.push(cur);
+  return lines;
 }
 
-// ------------------------------------------------------------------ deco stroke capitals (ported from the draft)
-// Monoline strokes (w = 24 in a 100-high box), clipped flush to the cap and base lines. D M O T are new.
-const LET = {
-  P: { w: 76, s: [['M12 112V12H40A24 23 0 0 1 40 58H12', 24]] },
-  E: { w: 64, s: [['M64 12H12V88H64', 24], ['M12 50H56', 22]] },
-  L: { w: 60, s: [['M12 -10V88H60', 24]] },
-  I: { w: 24, s: [['M12 -10V110', 24]] },
-  C: { w: 76, s: [['M76 12H46A34 38 0 0 0 12 50A34 38 0 0 0 46 88H76', 24]] },
-  A: { w: 90, s: [['M10 118L45 -14L80 118', 24], ['M20 76H70', 18]] },
-  N: { w: 82, s: [['M12 112V-2L70 102V-12', 24]] },
-  B: { w: 78, s: [['M12 -10V110', 24], ['M12 12H42A20 19 0 0 1 42 50H12', 24], ['M12 50H44A22 19 0 0 1 44 88H12', 24]] },
-  Y: { w: 84, s: [['M2 -14L42 54L82 -14', 24], ['M42 50V112', 24]] },
-  D: { w: 80, s: [['M12 -10V110', 24], ['M12 12H36A32 38 0 0 1 36 88H12', 24]] },
-  M: { w: 100, s: [['M12 112V-6L50 82L88 -6V112', 24]] },
-  O: { w: 84, s: [['M12 50A30 38 0 1 1 72 50A30 38 0 1 1 12 50Z', 24]] },
-  T: { w: 72, s: [['M0 12H72', 24], ['M36 -10V110', 24]] },
+// ------------------------------------------------------------------ the story (one picture-book sentence per stretch)
+const STORY = {
+  village: ['鹈鹕系好红围巾，骑上自行车出发啦。', 'Pelican ties on the red scarf and sets off along the coast road.'],
+  pier: ['长长的栈桥上，钓鱼的爷爷们挥手问好。', 'On the long pier, the old anglers wave hello.'],
+  harbour: ['渔船回港了，海鸥们都盼着分到一条鱼。', 'The fishing boats come home, and every gull hopes for a fish.'],
+  funfair: ['摩天轮慢慢地转，音乐叮叮咚咚。', 'The Ferris wheel turns slowly, and the music goes plink, plonk.'],
+  railway: ['小火车呜呜地叫，鹈鹕要和它比一比。', 'The little train toots, and Pelican races it along the shore.'],
+  lighthouse: ['鹈鹕向灯塔守护人挥挥翅膀。', 'Pelican waves to the lighthouse keeper.'],
+  cliffs: ['高高的断崖下，浪花在唱歌。', 'Under the tall cliffs, the waves sing their song.'],
+  dunes: ['沙丘上，小螃蟹一家排着队去散步。', 'On the dunes, the crab family goes for a walk, all in a row.'],
+  bridge: ['过了河口桥，风儿轻轻地吹。', 'Over the river bridge, the breeze blows soft and slow.'],
+  fort: ['古堡旁边，大家在海里扑通扑通地游泳。', 'By the old fort, everybody splashes in the sea.'],
+  pines: ['松林里静悄悄，只听见车铃叮铃铃。', 'The pine wood is hushed, all but the ring-a-ding of the bell.'],
+  return: ['绕了一大圈，又回到了鹈鹕湾。明天再来！', 'All the way round and home to Pelican Bay. Again tomorrow!'],
 };
-function deco(str, gap = 13) {
-  let pen = 0; const byW = {}; let inl = '';
-  for (const ch of str) {
-    if (ch === ' ') { pen += 44; continue; }
-    const L = LET[ch]; if (!L) throw new Error('print: no deco capital ' + ch);
-    for (const [d, sw] of L.s) { const dd = tp(d, [1, 0, 0, 1, pen, 0]); byW[sw] = (byW[sw] || '') + dd; inl += dd; }
-    pen += L.w + gap;
-  }
-  return { byW, inl, w: pen - gap };
+// the bedtime-story night has its own lines for a few pages
+const STORY_NIGHT = {
+  village: ['星星亮了，鹈鹕打开车灯出发啦。', 'The stars come out, so Pelican switches on the lamp and sets off.'],
+  lighthouse: ['灯塔的光一圈又一圈，照亮回家的路。', 'Round and round goes the lighthouse beam, lighting the way home.'],
+  pines: ['松林里黑黑的，萤火虫提着小灯笼。', 'The pine wood is dark, and the fireflies carry little lanterns.'],
+  return: ['月亮升起来了，鹈鹕湾就要睡着啦。', 'The moon is up, and Pelican Bay is falling asleep.'],
+};
+const ZH_DIG = '零一二三四五六七八九';
+const zhNum = n => n <= 10 ? (n === 10 ? '十' : ZH_DIG[n]) : n < 20 ? '十' + (n % 10 ? ZH_DIG[n % 10] : '')
+  : n < 100 ? ZH_DIG[Math.floor(n / 10)] + '十' + (n % 10 ? ZH_DIG[n % 10] : '') : [...String(n)].map(d => ZH_DIG[+d]).join('');
+const EN_NUM = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
+const titleCase = s => s.toLowerCase().split(' ').map((w, i) => (i && /^(the|of|and)$/.test(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+const chapterOf = lap => ({ zh: `第${zhNum(lap + 1)}章`, en: `Chapter ${EN_NUM[lap + 1] || lap + 1}` });
+function pageOf(D, night) {
+  const s = stretchAt(D), lap = Math.max(0, lapOf(D)), n = lap * 12 + s.i + 1;
+  const [zh, en] = (night && STORY_NIGHT[s.key]) || STORY[s.key];
+  return { key: `${lap}:${s.i}:${night && STORY_NIGHT[s.key] ? 'n' : 'd'}`, n, lap, s, zh, en,
+    headZh: `第${zhNum(n)}页 · ${s.cn}`, headEn: `Page ${n} · ${titleCase(s.en)}` };
 }
 
 // ------------------------------------------------------------------ geometry constants (screen / viewBox units)
-const M = 18, MB = 24;                  // paper margin (sides+top) / bottom margin (holds the printer's strip)
+const RIM = 9;                       // cover cloth (0..5) + stacked page edges (5..9) at every screen edge
+const MS = 26, MT = 26, MB = 36;     // paper margin: sides / top / bottom (holds page numbers and the colophon)
 const LB_MAX = CAMERAS.cinematic.letterbox;
-const W1 = deco('PELICAN'), W2 = deco('BAY');
-const LINE_W = W1.w + 57 + W2.w;       // "PELICAN BAY" on one line (space 44 + gap 13)
-const SEAL = { w: 56, h: 140 };
-const SUB = { h: 32 };
-const SUBTXT = text(LAT, 'THE COAST ROAD  ·  BY BICYCLE', { size: 21, track: 5.2, sx: 0.92 });
-const SUB_W = SUBTXT.w + 64;
-// Title layouts in card-local units: pose per group {x, y, s}; bbox {x0,y0,x1,y1}.
+// title card, card-local units (Latin at size 100: cap height 73, descender 23)
+const TS = 100, ZS = 46, SUBS = 20;
+const W1 = measure('Pelican', TS, { lat: LAT }), W2 = measure('Bay', TS, { lat: LAT }), GAP = 30, LINE_W = W1 + GAP + W2;
+const ZHW = measure('鹈鹕湾', ZS, { track: 5 });
+const SUB_TXT = 'a seaside picture book · 海边的图画书';
+const SUBW = measure(SUB_TXT, SUBS, { zs: 0.95 });
+const PW = 286, PH = 46;              // chapter plate
 const LAYOUTS = {
-  line: { w1: { x: 0, y: 0 }, w2: { x: W1.w + 57, y: 0 }, seal: { x: LINE_W + 30, y: -4, s: 1 }, sub: { x: 4, y: 130 },
-    box: [-6, -8, LINE_W + 30 + SEAL.w + 6, 166] },
-  stack: { w1: { x: 0, y: 0 }, w2: { x: 0, y: 118 }, seal: { x: W2.w + 30, y: 112, s: 1 }, sub: { x: 4, y: 262 },
-    box: [-6, -8, Math.max(W1.w, W2.w + 30 + SEAL.w, SUB_W) + 18, 300] },
-  logo: { w1: { x: 0, y: 0 }, w2: { x: W1.w + 57, y: 0 }, seal: { x: LINE_W + 24, y: -2, s: 0.74 }, sub: { x: 4, y: 110 },
-    box: [-4, -6, LINE_W + 24 + SEAL.w * 0.74 + 4, 106] },
-  logoBar: { w1: { x: 0, y: 0 }, w2: { x: W1.w + 57, y: 0 }, seal: { x: LINE_W + 24, y: -2, s: 0.74 }, sub: { x: LINE_W + 24 + SEAL.w * 0.74 + 40, y: 30, s: 1.25 },
-    box: [-4, -6, LINE_W + 24 + SEAL.w * 0.74 + 40 + SUB_W * 1.25 + 4, 106] },
+  line: { w1: [0, 0], w2: [W1 + GAP, 0], zh: [4, 76], sw: [0, 76], sub: [ZHW + 36, 70], plate: [LINE_W - PW + 20, 100],
+    box: [-16, -96, LINE_W + 46, 150], k: 1 },
+  stack: { w1: [0, 0], w2: [0, 104], zh: [W2 + 26, 104], sw: [W2 + 22, 104], sub: [2, 152], plate: [0, 172],
+    box: [-16, -96, Math.max(W1 + 30, W2 + 26 + ZHW + 20, SUBW + 8, PW) + 10, 224], k: 0.74 },
+  logo: { w1: [0, 0], w2: [W1 + GAP, 0], zh: [LINE_W + 34, 0], sw: [LINE_W + 30, 0], sub: [ZHW + 36, 70], plate: [LINE_W + 34 + ZHW + 30, -52, 0.92],
+    box: [-12, -90, LINE_W + 34 + ZHW + 30 + PW * 0.92 + 8, 30], k: 1 },
 };
-const TICKET = { w: 236, h: 92 };
-const SH_N = 5, SH_STEP = 1.52;        // stepped shadow: 5 plates, 7.6 units deep
-const ED = text(LAT, 'PLATE C · SEVEN INKS · № 07/120', { size: 7.2, track: 1.05, align: 'right' });
-const STAMP = { w: 80, h: 96 };
+const RIBBON = { w: 15, len: 62 };   // hangs this far into the picture below the top margin
 
 export const detailItems = [
-  ['paper-margin', 'O', 'cream paper margin that becomes the cinematic letterbox bars'],
-  ['frame-keyline', 'O', 'navy 3-unit keyline where the print meets the paper'],
-  ['frame-hairline', 'O', 'outer navy hairline, a double-rule frame'],
-  ['corner-sunburst', 'O', 'deco corner ornament: quarter sun with rays, bead ring and stepped keyline blocks'],
-  ['edge-diamond', 'O', 'stepped deco diamond stops at the middle of each frame side'],
-  ['crop-marks', 'O', 'printer\'s crop marks in the margin at each corner'],
-  ['registration-mark', 'O', 'registration targets (ring, crosshair, filled quadrants) on the margins'],
-  ['colour-bar', 'O', 'seven-ink colour bar: one swatch per ink of the hour'],
-  ['tint-ramp', 'T', 'halftone tint ramp: five dot sizes of the cool ink'],
-  ['imprint', 'O', 'imprint "PRINTED AT PELICAN BAY · 鹈鹕湾印制"'],
-  ['edition-number', 'O', 'edition line "PLATE C · SEVEN INKS · № 07/120"'],
-  ['title-face', 'O', 'PELICAN BAY in stroke-built deco capitals (paper ink)'],
-  ['title-inline', 'T', 'vermilion inline engraved down the centre of every stroke'],
-  ['title-stepped-shadow', 'O', 'navy stepped (extruded) drop shadow, 5 plates'],
-  ['title-hatch-shadow', 'T', 'hatched cast shadow offset behind the extrusion'],
-  ['title-label', 'O', '鹈鹕湾 vertical deco label tablet (vermilion, cream rule, navy offset)'],
-  ['subtitle-band', 'O', 'navy band "THE COAST ROAD · BY BICYCLE" in cream'],
-  ['band-ornament', 'O', 'swallowtail band ends with diamond studs'],
-  ['ticket-card', 'O', 'ADMIT ONE coast-railway ticket: header band, deco caps, keyline'],
-  ['ticket-guilloche', 'T', 'guilloche security waves printed under the ticket text'],
-  ['ticket-perforation', 'O', 'tear line: dashed rule and punched perforation holes'],
-  ['ticket-serial', 'O', 'matching serial numbers on ticket and stub'],
-  ['ticket-route', 'O', 'route 鹈鹕湾 → 灯塔角 / PELICAN BAY → LIGHTHOUSE PT and fare class'],
-  ['ticket-punch', 'O', 'conductor\'s diamond punch hole through the card'],
-  ['ticket-stub', 'O', 'stub with vertical ADMIT ONE'],
-  ['stamp-perforated', 'O', 'postage stamp with perforated (bitten) edge and frame rule'],
-  ['stamp-vignette', 'O', 'tiny pelican riding a bicycle on the coast road, rising sun, sea'],
-  ['stamp-engraving', 'T', 'engraved line shading across sky and sun'],
-  ['stamp-value', 'O', 'denomination roundel 5分'],
-  ['stamp-legend', 'O', 'legend 鹈鹕湾邮政 / PELICAN BAY POST'],
-  ['postmark-ring', 'O', 'double-ring postmark with PELICAN BAY and 鹈鹕湾 set on the arcs'],
-  ['postmark-date', 'O', 'postmark date 30 SEP 2026 between bars'],
-  ['postmark-cancel', 'T', 'wavy cancellation lines struck across the stamp'],
+  ['book-cover', 'O', 'cloth-bound cover rim at the very edge of the screen (the book lies open on the table)'],
+  ['cloth-weave', 'T', 'book-cloth weave texture (warp and weft threads) on the cover rim'],
+  ['page-stack', 'O', 'stacked page edges between the cover and the open page, fine page lines'],
+  ['deckled-edge', 'O', 'deckled (hand-torn) outer edge of the top page, with its soft shadow on the stack'],
+  ['page-margin', 'O', 'cream paper margin around the painting; it grows into the cinematic letterbox bars'],
+  ['paper-fibre', 'T', 'paper fibres, flecks and pale blotches in the margin'],
+  ['painting-drybrush', 'T', 'dry-brush boundary of the painting: bristle drags and skipped specks where the gouache ends'],
+  ['pencil-frame', 'O', 'the illustrator\'s ruled pencil frame, double-struck in places, overshooting at the corners'],
+  ['gutter-shadow', 'O', 'soft gutter shadow down the centre of the spread (fades out above the rider)'],
+  ['gutter-stitch', 'O', 'sewing thread stitches visible in the gutter of the margins'],
+  ['running-head-left', 'O', 'left running head "鹈鹕湾 · Pelican Bay"'],
+  ['running-head-right', 'O', 'right running head: chapter of the lap and "海滨路 · The Coast Road"'],
+  ['page-number-zh', 'O', 'left page number in Chinese numerals (follows the journey)'],
+  ['page-number-arabic', 'O', 'right page number in serif figures'],
+  ['page-flourish', 'O', 'little leaf flourishes either side of the page numbers'],
+  ['corner-curl', 'O', 'curled-up page corner showing the paper underside and the next page, with a cast shadow'],
+  ['bookmark-ribbon', 'O', 'red satin bookmark ribbon with a swallowtail end and frayed threads'],
+  ['ribbon-sheen', 'T', 'satin sheen and fold shading painted down the ribbon'],
+  ['title-lettering', 'O', 'hand-lettered serif title "Pelican Bay": every glyph tilted and set off its baseline'],
+  ['title-gouache', 'T', 'gouache brush streaks inside the cream title letters'],
+  ['title-shadow', 'O', 'painted mauve shadow behind the title letters'],
+  ['title-pencil', 'T', 'offset pencil double line along the title letters'],
+  ['title-zh', 'O', '鹈鹕湾 in scarf red with a brown outline'],
+  ['title-swash', 'O', 'yellow gouache brush swash under 鹈鹕湾, ending in a little wave curl'],
+  ['title-twinkles', 'O', 'three painted twinkles that pop around the title'],
+  ['title-subtitle', 'O', 'subtitle "a seaside picture book · 海边的图画书"'],
+  ['chapter-plate', 'O', 'chapter plate with notched corners, double rule and the chapter of the lap'],
+  ['plate-sprigs', 'O', 'leaf sprigs and berries at both ends of the chapter plate'],
+  ['caption-patch', 'O', 'paper-white gouache patch behind the story text, brushy edges'],
+  ['caption-wash', 'T', 'dry-brush streak texture on the caption patch'],
+  ['caption-header', 'O', 'page header "第三页 · 灯塔角 · Page 3 · Lighthouse Point"'],
+  ['caption-divider', 'O', 'hand-drawn wave-and-flower divider under the header'],
+  ['caption-zh', 'O', 'the Chinese story sentence of this stretch'],
+  ['caption-en', 'O', 'the English story sentence of this stretch'],
+  ['caption-initial', 'O', 'red raised initial letter of the English sentence'],
+  ['spot-shell', 'O', 'margin spot illustration: a ribbed scallop shell'],
+  ['spot-fishbone', 'O', 'margin spot illustration: a fish bone (Pelican\'s lunch)'],
+  ['spot-star', 'O', 'margin spot illustration: a golden star with two twinkles'],
+  ['spot-feather', 'O', 'margin spot illustration: a pelican feather with rachis and barbs'],
+  ['spot-boat', 'O', 'margin spot illustration: a folded paper boat on a wavelet'],
+  ['crayon-heart', 'O', 'a child\'s red crayon heart and tick doodled in the margin'],
+  ['thumbprint', 'T', 'a faint gouache thumbprint left on the margin by the painter'],
+  ['colophon', 'O', 'publisher\'s colophon: pelican roundel and "鹈鹕湾出版社 · Pelican Bay Press"'],
 ].map(([name, kind, what]) => ({ id: `${TD}:${kind}:${name}`, layer: TD, kind, what }));
 const DD = Object.fromEntries(detailItems.map(d => [d.id.split(':')[2], d.id]));
 
+// ------------------------------------------------------------------ runtime-built shapes (pure, seeded)
+// rim along one screen edge; local frame: u along the edge, q inward from the screen edge (q = 0 at the edge)
+function rimD(u0, u1, seed) {
+  const r = srand(seed), step = 6;
+  let cloth = `M${f(u0)} -60`, band = '', deck = '', lines = '';
+  const dk = [];
+  for (let u = u0; u <= u1 + 0.01; u += step) dk.push([u, RIM + sgn(r) * 0.9 + Math.sin(u / 23) * 0.5]);
+  cloth += `L${f(u1)} -60L${f(u1)} 5` + dk.slice().reverse().map(([u]) => `L${f(u)} ${f(5 + Math.sin(u / 71) * 0.25)}`).join('') + 'Z';
+  band = `M${f(u0)} 4.6` + dk.map(([u]) => `L${f(u)} 4.6`).join('') + dk.slice().reverse().map(([u, q]) => `L${f(u)} ${f(q)}`).join('') + 'Z';
+  deck = 'M' + dk.map(([u, q]) => `${f(u)} ${f(q)}`).join('L');
+  for (const q of [6.1, 7.4]) lines += `M${f(u0)} ${q}` + dk.filter((_, i) => i % 4 === 0).map(([u]) => `L${f(u)} ${f(q + Math.sin(u / 37 + q) * 0.18)}`).join('');
+  return { cloth, band, deck, lines };
+}
+// the ruled pencil frame round the painting (yT..yB, xL..xR), 5 u out in the margin, overshooting at the corners
+function pencilD(xL, yT, xR, yB, show) {
+  const r = srand(77), o = 5, ov = 11;
+  const seg = (x0, y0, x1, y1) => {
+    const n = Math.max(2, Math.round(Math.hypot(x1 - x0, y1 - y0) / 60)), pts = [];
+    for (let i = 0; i <= n; i++) { const t = i / n; pts.push([lerp(x0, x1, t) + (y0 === y1 ? 0 : sgn(r) * 0.5), lerp(y0, y1, t) + (y0 === y1 ? sgn(r) * 0.5 : 0)]); }
+    return cr(pts, false);
+  };
+  let a = '', b = '';
+  const L = [[xL - ov - o, yT - o, xR + ov + o, yT - o, show.t], [xL - ov - o, yB + o, xR + ov + o, yB + o, show.b],
+    [xL - o, yT - ov - o, xL - o, yB + ov + o, true], [xR + o, yT - ov - o, xR + o, yB + ov + o, true]];
+  for (const [x0, y0, x1, y1, on] of L) {
+    if (!on) continue;
+    a += seg(x0, y0, x1, y1);
+    // second, lighter pass over a stretch of each line (the double-struck pencil)
+    const t0 = 0.1 + r() * 0.3, t1 = t0 + 0.25 + r() * 0.3, dx = y0 === y1 ? 0 : 1.3, dy = y0 === y1 ? 1.3 : 0;
+    b += seg(lerp(x0, x1, t0) + dx, lerp(y0, y1, t0) + dy, lerp(x0, x1, t1) + dx, lerp(y0, y1, t1) + dy);
+  }
+  return { a, b };
+}
+// gouache patch behind the caption: jittered rounded rectangle + bristle drags at the ends
+function patchD(w, hh, seed) {
+  const r = srand(seed), R = 16, pts = [];
+  const per = [[R, 0, w - R, 0], [w, R, w, hh - R], [w - R, hh, R, hh], [0, hh - R, 0, R]];
+  per.forEach(([x0, y0, x1, y1], si) => {
+    const n = Math.max(2, Math.round(Math.hypot(x1 - x0, y1 - y0) / 26));
+    for (let i = 0; i < n; i++) { const t = i / n; pts.push([lerp(x0, x1, t) + sgn(r) * 2, lerp(y0, y1, t) + sgn(r) * 2]); }
+    const cx = [w - R * 0.3, w - R * 0.3, R * 0.3, R * 0.3][si], cy = [R * 0.3, hh - R * 0.3, hh - R * 0.3, R * 0.3][si];
+    pts.push([cx + sgn(r), cy + sgn(r)]);
+  });
+  let bristle = '';
+  for (const side of [0, 1]) for (let i = 0; i < 7; i++) {
+    const y = 8 + r() * (hh - 16), L = 5 + r() * 13, x = side ? w - 1 : 1, dir = side ? 1 : -1, ww = 0.7 + r() * 1.4;
+    bristle += `M${f(x)} ${f(y - ww)}Q${f(x + dir * L * 0.6)} ${f(y - ww * 0.4 + sgn(r))} ${f(x + dir * L)} ${f(y + sgn(r))}Q${f(x + dir * L * 0.5)} ${f(y + ww * 0.5)} ${f(x)} ${f(y + ww)}Z`;
+  }
+  let streak = '';
+  for (let i = 0; i < Math.round(w * hh / 1400); i++) {
+    const x = 10 + r() * (w - 40), y = 6 + r() * (hh - 12), L = 18 + r() * 50;
+    streak += brush(t => [x + L * t, y + Math.sin(t * 3 + i) * 1.2], t => 0.35 + 0.8 * Math.sin(Math.PI * t) ** 0.6, 6);
+  }
+  return { patch: cr(pts, true) + bristle, streak };
+}
+const DIV_W = 74;
+const dividerD = (x, y) => {
+  let d = '';
+  for (let i = 0; i <= 18; i++) { const t = i / 18; d += `${i ? 'L' : 'M'}${f(x + t * DIV_W)} ${f(y + Math.sin(t * Math.PI * 4) * 1.6)}`; }
+  return d;
+};
+const flowerD = (x, y) => [0, 1, 2, 3, 4].map(i => { const a = i * 72 * Math.PI / 180 - Math.PI / 2; return circ(x + Math.cos(a) * 2.7, y + Math.sin(a) * 2.7, 1.9); }).join('');
+// caption text blocks. mode 'line' | 'col' (on the gouache patch, left aligned) | 'bar' (printed on the margin, centred)
+const CAP = { head: 12, zh: 21, zhLH: 31, en: 16.5, enLH: 23.5, init: 30, pad: 18 };
+function captionLayout(pg, mode) {
+  const maxW = mode === 'line' ? 600 : mode === 'col' ? 270 : 1300;
+  const centre = mode === 'bar', P = mode === 'bar' ? 0 : CAP.pad;
+  const heads = mode === 'col' ? [pg.headZh, pg.headEn] : [`${pg.headZh}  ·  ${pg.headEn}`];
+  const zhL = wrap(pg.zh, CAP.zh, maxW), init = pg.en[0], rest = pg.en.slice(1);
+  const initW = measure(init, CAP.init, { lat: LAT }) + 1.5;
+  // English: the first line is shortened by the raised initial
+  const words = rest.split(' '), enL = []; let cur = '', lim = maxW - initW;
+  for (const wd of words) {
+    const cand = cur ? cur + ' ' + wd : wd;
+    if (cur && measure(cand, CAP.en) > lim) { enL.push(cur); cur = wd; lim = maxW; } else cur = cand;
+  }
+  if (cur) enL.push(cur);
+  const wOf = [...heads.map(s => measure(s, CAP.head, { zs: 1.02 })), ...zhL.map(s => measure(s, CAP.zh)), ...enL.map((s, i) => measure(s, CAP.en) + (i ? 0 : initW)), DIV_W];
+  const tw = Math.max(...wOf), W = tw + 2 * P;
+  const X = (lw) => centre ? P + (tw - lw) / 2 : P;
+  const r = srand(pg.n * 31 + (mode === 'bar' ? 7 : mode === 'col' ? 3 : 1));
+  let y = P + 10, head = '', zh = '', en = '', ini = '', div = '', flw = '';
+  for (const s of heads) { head += text(s, { size: CAP.head, x: X(measure(s, CAP.head, { zs: 1.02 })), y, zs: 1.02, track: 0.2 }).d; y += 16; }
+  const dx = X(DIV_W); div = dividerD(dx, y - 4); flw = flowerD(dx + DIV_W / 2, y - 4); y += 26;
+  for (const s of zhL) { zh += text(s, { size: CAP.zh, x: X(measure(s, CAP.zh)), y, jit: r, rotJ: 1.2, dyJ: 0.035, sJ: 0.015 }).d; y += CAP.zhLH; }
+  y += 1;
+  enL.forEach((s, i) => {
+    let x = X(measure(s, CAP.en) + (i ? 0 : initW));
+    if (!i) { ini = text(init, { size: CAP.init, x, y: y + 1, lat: LAT, jit: r, rotJ: 3 }).d; x += initW; }
+    en += text(s, { size: CAP.en, x, y, jit: r, rotJ: 0.9, dyJ: 0.03, sJ: 0.01 }).d; y += CAP.enLH;
+  });
+  const H = y - CAP.enLH + (mode === 'bar' ? 6 : P + 6);
+  const out = { w: W, h: H, head, zh, en, ini, div, flw };
+  if (mode !== 'bar') Object.assign(out, patchD(W, H, pg.n * 13 + (mode === 'col' ? 5 : 1)));
+  return out;
+}
+// running head (right) for a lap, and the chapter plate text
+const headR = lap => { const c = chapterOf(lap); return `${c.zh} · 海滨路  ·  ${c.en} · The Coast Road`; };
+function plateText(lap) {
+  const c = chapterOf(lap), zw = measure(c.zh, 18), ew = measure(c.en, 18, { lat: LAT }), sep = 22, w = zw + sep + ew, x0 = (PW - w) / 2;
+  return { zh: text(c.zh, { size: 18, x: x0, y: PH / 2 + 6.4 }).d, en: text(c.en, { size: 18, x: x0 + zw + sep, y: PH / 2 + 6.4, lat: LAT }).d, dot: circ(x0 + zw + sep / 2, PH / 2, 2) };
+}
+// page number with its leaf flourishes (centred at 0, baseline 0)
+function pageNum(str, zh) {
+  const t = text(str, { size: zh ? 13 : 14, lat: LAT, align: 'center' });
+  const hw = t.w / 2 + 9;
+  const leaf = (x, dir) => {
+    const s = `M${f(x)} -4.5C${f(x + dir * 5)} -4.5 ${f(x + dir * 9)} -7 ${f(x + dir * 13)} -3.5`;
+    return { stem: s, leaf: `M${f(x + dir * 6)} -5.4Q${f(x + dir * 8.5)} -10.5 ${f(x + dir * 11.8)} -9.6Q${f(x + dir * 10)} -5.8 ${f(x + dir * 6)} -5.4Z` + circ(x + dir * 14.2, -3.2, 1.2) };
+  };
+  const a = leaf(-hw, -1), b = leaf(hw, 1);
+  return { d: t.d, stem: a.stem + b.stem, leaf: a.leaf + b.leaf, w: t.w };
+}
+
 // ------------------------------------------------------------------ build
 export function build({ v }) {
-  const I = Object.fromEntries(['P', 'K', 'O', 'R', 'B', 'T', 'N'].map(k => [k, v('ink' + k)]));
+  const c = {
+    line: v('line'), soft: v('lineSoft'), mauve: v('mauve'), paper: v('paper'),
+    pp: v('pgPaper'), pHi: v('pgPaperHi'), pLo: v('pgPaperLo'), edge: v('pgEdge'),
+    cl: v('pgCloth'), clLo: v('pgClothLo'), clHi: v('pgClothHi'),
+    rb: v('pgRibbon'), rbLo: v('pgRibbonLo'), rbHi: v('pgRibbonHi'),
+    ti: v('pgTitle'), tiLo: v('pgTitleLo'), gold: v('pgGold'), goldLo: v('pgGoldLo'),
+    sh: v('pgShell'), shLo: v('pgShellLo'), sea: v('pgSea'), leaf: v('pgLeaf'), bone: v('pgBone'), lamp: v('lampGlow'),
+  };
   const tag = (name, attrs, ...kids) => h('g', { 'data-detail': DD[name], ...attrs }, ...kids);
-  const txt = (s, attrs = {}) => ({ 'data-text': s, ...attrs });
+  const P = (d, attrs) => h('path', { d, ...attrs });
+  const LN = (w, col = c.line) => ({ fill: 'none', stroke: col, 'stroke-width': w, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
   const defs = [];
 
-  // ---- title glyph plates (defs) ----
-  for (const [k, W] of [['w1', W1], ['w2', W2]]) {
-    defs.push(h('clipPath', { id: `print-clip-${k}` }, h('rect', { x: -30, y: 0, width: W.w + 60, height: 100 })));
-    // squeegee wipes that pull the face and inline plates across the word during the intro
-    for (const pl of ['face', 'inl']) defs.push(h('clipPath', { id: `print-wipe-${pl}-${k}` }, h('rect', { 'data-ref': `print-wipe-${pl}-${k}`, x: 0, y: -40, width: 1, height: 190 })));
-    defs.push(h('g', { id: `print-g-${k}`, 'clip-path': `url(#print-clip-${k})`, fill: 'none', 'stroke-miterlimit': 12 },
-      Object.entries(W.byW).map(([sw, d]) => h('path', { d, 'stroke-width': sw }))));
+  // ---- static textures (local coordinates of the element that uses them) ----
+  {
+    const r = srand(11); let fib = '', fleck = '', blot = '';
+    for (let i = 0; i < 34; i++) { const x = r() * 150, y = r() * 150, a = r() * Math.PI, L = 4 + r() * 9; fib += `M${f(x)} ${f(y)}q${f(Math.cos(a) * L / 2 + sgn(r) * 2)} ${f(Math.sin(a) * L / 2 + sgn(r) * 2)} ${f(Math.cos(a) * L)} ${f(Math.sin(a) * L)}`; }
+    for (let i = 0; i < 18; i++) fleck += circ(r() * 150, r() * 150, 0.35 + r() * 0.5);
+    for (let i = 0; i < 5; i++) blot += ell(r() * 150, r() * 150, 8 + r() * 16, 5 + r() * 10);
+    defs.push(h('pattern', { id: 'print-paper', width: 150, height: 150, patternUnits: 'userSpaceOnUse' },
+      h('rect', { width: 150, height: 150, fill: c.pp }), P(blot, { fill: c.pHi, opacity: 0.55 }),
+      P(fib, { fill: 'none', stroke: c.pLo, 'stroke-width': 0.55, opacity: 0.75 }), P(fleck, { fill: c.soft, opacity: 0.3 })));
+    defs.push(h('pattern', { id: 'print-cloth', width: 3, height: 3, patternUnits: 'userSpaceOnUse' },
+      h('rect', { width: 3, height: 3, fill: c.cl }), P('M0 0.75H3M0 2.25H3', { stroke: c.clLo, 'stroke-width': 0.7, opacity: 0.8 }),
+      P('M0.75 0V3M2.25 0V3', { stroke: c.clHi, 'stroke-width': 0.5, opacity: 0.45 })));
+    // gouache streaks for the title letters (title-local units: letters are 100 high)
+    const r2 = srand(23); let st = '', hi = '';
+    for (let i = 0; i < 9; i++) { const x = r2() * 70, y = r2() * 44, L = 16 + r2() * 30; st += brush(t => [x + L * t, y - L * 0.12 * t], t => 0.8 + 1.8 * Math.sin(Math.PI * t) ** 0.7, 6); }
+    for (let i = 0; i < 5; i++) { const x = r2() * 70, y = r2() * 44, L = 10 + r2() * 20; hi += brush(t => [x + L * t, y - L * 0.12 * t], t => 0.5 + 1.1 * Math.sin(Math.PI * t) ** 0.7, 6); }
+    defs.push(h('pattern', { id: 'print-brush', width: 70, height: 44, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(-8)' },
+      P(st, { fill: c.tiLo, opacity: 0.75 }), P(hi, { fill: c.pHi, opacity: 0.9 })));
   }
-  defs.push(h('pattern', { id: 'print-hatch', width: 4.2, height: 4.2, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' },
-    h('rect', { width: 1.5, height: 4.2, fill: I.N })));
+  // gutter: horizontal falloff (unit rect scaled per frame) and the vertical fade mask for the stretch over the picture
+  defs.push(h('linearGradient', { id: 'print-ggrad', x1: 0, x2: 1, y1: 0, y2: 0 },
+    h('stop', { offset: 0, 'stop-color': c.mauve, 'stop-opacity': 0 }), h('stop', { offset: 0.38, 'stop-color': c.mauve, 'stop-opacity': 0.16 }),
+    h('stop', { offset: 0.5, 'stop-color': c.soft, 'stop-opacity': 0.34 }), h('stop', { offset: 0.56, 'stop-color': c.pHi, 'stop-opacity': 0.22 }),
+    h('stop', { offset: 0.7, 'stop-color': c.mauve, 'stop-opacity': 0.08 }), h('stop', { offset: 1, 'stop-color': c.mauve, 'stop-opacity': 0 })));
+  defs.push(h('linearGradient', { id: 'print-gfade', x1: 0, x2: 0, y1: 0, y2: 1 },
+    h('stop', { offset: 0, 'stop-color': '#fff', 'stop-opacity': 0.75 }), h('stop', { offset: 1, 'stop-color': '#fff', 'stop-opacity': 0 })));
+  defs.push(h('mask', { id: 'print-gmask', maskContentUnits: 'objectBoundingBox' }, h('rect', { width: 1, height: 1, fill: 'url(#print-gfade)' })));
+  defs.push(h('radialGradient', { id: 'print-lamp', cx: 0.5, cy: 0.5, r: 0.5 },
+    h('stop', { offset: 0, 'stop-color': c.lamp, 'stop-opacity': 0.2 }), h('stop', { offset: 0.55, 'stop-color': c.lamp, 'stop-opacity': 0.07 }), h('stop', { offset: 1, 'stop-color': c.lamp, 'stop-opacity': 0 })));
+  defs.push(h('linearGradient', { id: 'print-curl', x1: 0, y1: 0, x2: 1, y2: 1 },
+    h('stop', { offset: 0, 'stop-color': c.pHi }), h('stop', { offset: 0.55, 'stop-color': c.pp }), h('stop', { offset: 1, 'stop-color': c.pLo })));
 
-  const word = (k, W, label) => h('g', { 'data-ref': 'print-' + k, 'data-text': label },
-    tag('title-hatch-shadow', { 'data-ref': 'print-hatch-' + k }, h('use', { href: `#print-g-${k}`, transform: 'translate(15 13)', stroke: 'url(#print-hatch)' })),
-    tag('title-stepped-shadow', { 'data-ref': 'print-shadow-' + k },
-      Array.from({ length: SH_N }, (_, i) => h('use', { href: `#print-g-${k}`, transform: `translate(${f((SH_N - i) * SH_STEP)} ${f((SH_N - i) * SH_STEP)})`, stroke: I.N, 'data-ref': `print-sh-${k}-${SH_N - i}` }))),
-    h('g', { 'clip-path': `url(#print-wipe-face-${k})`, 'data-ref': `print-wg-face-${k}` }, h('use', { href: `#print-g-${k}`, stroke: I.P, 'data-detail': DD['title-face'], 'data-ref': 'print-face-' + k })),
-    h('g', { 'clip-path': `url(#print-wipe-inl-${k})`, 'data-ref': `print-wg-inl-${k}` }, h('path', { d: W.inl, fill: 'none', stroke: I.R, 'stroke-width': 2.6, 'clip-path': `url(#print-clip-${k})`, 'data-detail': DD['title-inline'], 'data-ref': 'print-inl-' + k })));
+  // ---- the paper margin: four long strips whose inner edge is the painting's dry-brush boundary ----
+  // local frame: the painting edge runs along u at n = 0, paper on n < 0 (outward). m maps (u, n) -> (x, y).
+  const strip = (k, u0, u1, m, seed) => {
+    const r = srand(seed), step = 5, pts = [];
+    for (let u = u0; u <= u1 + 0.01; u += step) pts.push([u, 0.9 * Math.sin(u / 47 + seed) + 0.6 * Math.sin(u / 13.7) + sgn(r) * 0.45]);
+    const M = ([u, n]) => m(u, n).map(f).join(' ');
+    let paper = 'M' + M([u0, -1500]) + 'L' + M([u1, -1500]) + pts.slice().reverse().map(p => 'L' + M(p)).join('') + 'Z';
+    // bristle drags into the painting + skipped specks just inside it
+    let dry = '';
+    for (let u = u0 + r() * 40; u < u1; u += 26 + r() * 90) {
+      const nB = 2 + Math.floor(r() * 4);
+      for (let j = 0; j < nB; j++) {
+        const uu = u + j * (2.2 + r() * 2.5), L = 3 + r() * 11, w = 0.6 + r() * 1.1;
+        dry += 'M' + M([uu - w, -1]) + 'Q' + M([uu - w * 0.3, L * 0.6]) + ' ' + M([uu + sgn(r) * 1.5, L]) + 'Q' + M([uu + w * 0.4, L * 0.5]) + ' ' + M([uu + w, -1]) + 'Z';
+      }
+      if (r() < 0.6) for (let j = 0; j < 3; j++) { const [x, y] = m(u + 8 + r() * 20, 2 + r() * 7); dry += circ(x, y, 0.4 + r() * 0.7); }
+    }
+    return h('g', { 'data-ref': 'print-m' + k },
+      tag('page-margin', {}, P(paper, { fill: 'url(#print-paper)' })),
+      tag('painting-drybrush', {}, P(dry, { fill: c.pp })));
+  };
+  const margins = h('g', { id: 'print-margins' },
+    strip('T', -60, 1660, (u, n) => [u, n], 3), strip('B', -60, 1660, (u, n) => [u, -n], 5),
+    strip('L', -60, 960, (u, n) => [n, u], 7), strip('R', -60, 960, (u, n) => [-n, u], 9),
+    tag('paper-fibre', {}, h('rect', { 'data-ref': 'print-fibre', x: 0, y: 0, width: 1, height: 1, fill: 'none' })));
 
-  // ---- 鹈鹕湾 label tablet ----
-  const sealChars = ['鹈', '鹕', '湾'].map((ch, i) => text(ZH, ch, { size: 40, x: 8, y: 40 + i * 42 }).d).join('');
-  const seal = h('g', { 'data-ref': 'print-seal' }, h('g', { 'data-ref': 'print-seal-in' }, tag('title-label', txt('鹈鹕湾'),
-    h('rect', { x: 5, y: 5, width: SEAL.w, height: SEAL.h, rx: 6, fill: I.N }),
-    h('rect', { x: 0, y: 0, width: SEAL.w, height: SEAL.h, rx: 6, fill: I.R }),
-    h('rect', { x: 3.5, y: 3.5, width: SEAL.w - 7, height: SEAL.h - 7, rx: 4, fill: 'none', stroke: I.P, 'stroke-width': 1.6 }),
-    h('path', { d: diamond(SEAL.w / 2, 3.5, 5, 3) + diamond(SEAL.w / 2, SEAL.h - 3.5, 5, 3), fill: I.P }),
-    h('path', { d: sealChars, fill: I.P, stroke: I.P, 'stroke-width': 1.4, 'stroke-linejoin': 'round' }))));
+  // ---- rim: cover cloth + page stack + deckled page edge (paths rebuilt on resize) ----
+  const rim = h('g', { id: 'print-rim' },
+    ['T', 'B', 'L', 'R'].map(k => h('g', { 'data-ref': 'print-rim' + k },
+      tag('book-cover', {}, P('', { 'data-ref': `print-rim${k}-cloth`, fill: c.cl })),
+      tag('cloth-weave', {}, P('', { 'data-ref': `print-rim${k}-weave`, fill: 'url(#print-cloth)', opacity: 0.9 })),
+      tag('page-stack', {}, P('', { 'data-ref': `print-rim${k}-band`, fill: c.edge }), P('', { 'data-ref': `print-rim${k}-lines`, ...LN(0.45, c.soft), opacity: 0.7 })),
+      tag('deckled-edge', {}, P('', { 'data-ref': `print-rim${k}-deck`, ...LN(0.9, c.soft), opacity: 0.8 })))));
 
-  // ---- subtitle band ----
-  const bw = SUB_W, bh = SUB.h, n = 9;
-  const band = `M0 0H${f(bw)}L${f(bw - n)} ${f(bh / 2)}L${f(bw)} ${f(bh)}H0L${n} ${f(bh / 2)}Z`;
-  const sub = h('g', { 'data-ref': 'print-sub' }, h('g', { 'data-ref': 'print-sub-in' },
-    tag('subtitle-band', txt('THE COAST ROAD · BY BICYCLE'),
-      h('path', { d: band, fill: I.N }),
-      h('path', { d: tp(SUBTXT.d, [1, 0, 0, 1, 32, 23.5]), fill: I.P })),
-    tag('band-ornament', {},
-      h('path', { d: `M1.5 3H${f(bw - 1.5)}M1.5 ${f(bh - 3)}H${f(bw - 1.5)}`, stroke: I.O, 'stroke-width': 1, fill: 'none' }),
-    ),
-    [20, bw - 20].map(x => tag('band-ornament', {}, h('path', { d: diamond(x, bh / 2, 5, 5), fill: I.O }), h('path', { d: diamond(x, bh / 2, 2, 2), fill: I.N })))));
+  // ---- pencil frame, gutter ----
+  const pencil = tag('pencil-frame', {}, P('', { 'data-ref': 'print-pencilA', ...LN(0.85, c.soft), opacity: 0.55 }), P('', { 'data-ref': 'print-pencilB', ...LN(0.6, c.soft), opacity: 0.35 }));
+  const unit = (ref, attrs) => h('rect', { 'data-ref': ref, x: 0, y: 0, width: 1, height: 1, ...attrs });
+  const stitch = 'M-0.9 -5C-0.4 -1.5 0.6 1.5 0.9 5M-0.9 -5C-2 -5.4 -2.6 -4.2 -1.6 -3.6M0.9 5C2 5.4 2.6 4.2 1.6 3.6';
+  const gutter = h('g', { id: 'print-gutter' },
+    tag('gutter-shadow', {}, unit('print-gutT', { fill: 'url(#print-ggrad)' }), unit('print-gutP', { fill: 'url(#print-ggrad)', mask: 'url(#print-gmask)' }),
+      unit('print-gutB', { fill: 'url(#print-ggrad)' })),
+    tag('gutter-stitch', { 'data-ref': 'print-stitch' },
+      P(stitch, { ...LN(1.9, c.pLo) }), P(stitch, { ...LN(1.1, c.pHi) }),
+      P(tp(stitch, [1, 0, 0, 1, 0.6, 14]), { ...LN(1.9, c.pLo) }), P(tp(stitch, [1, 0, 0, 1, 0.6, 14]), { ...LN(1.1, c.pHi) })));
 
-  const title = h('g', { id: 'print-title', 'data-ref': 'print-title' }, word('w1', W1, 'PELICAN'), word('w2', W2, 'BAY'), seal, sub);
+  // ---- running heads, page numbers, colophon ----
+  const hl = text('鹈鹕湾 · Pelican Bay', { size: 9.5, align: 'center', track: 0.3 });
+  const hr0 = text(headR(0), { size: 9.5, align: 'center', track: 0.3 });
+  const heads = h('g', {},
+    h('g', { 'data-ref': 'print-headL' }, tag('running-head-left', { 'data-text': '鹈鹕湾 · Pelican Bay' }, P(hl.d, { fill: c.soft }))),
+    h('g', { 'data-ref': 'print-headR' }, tag('running-head-right', { 'data-text': headR(0), 'data-ref': 'print-headR-t' }, P(hr0.d, { fill: c.soft, 'data-ref': 'print-headR-d' }))));
+  const pnZ = pageNum(zhNum(1), true), pnA = pageNum('1', false);
+  const pnum = (k, pn, name) => h('g', { 'data-ref': 'print-pn' + k },
+    tag(name, { 'data-ref': `print-pn${k}-t` }, P(pn.d, { 'data-ref': `print-pn${k}-d`, fill: c.line })),
+    tag('page-flourish', {}, P(pn.stem, { 'data-ref': `print-pn${k}-stem`, ...LN(0.9, c.soft) }), P(pn.leaf, { 'data-ref': `print-pn${k}-leaf`, fill: c.leaf, stroke: c.line, 'stroke-width': 0.5 })));
+  const colo = (() => {
+    // pelican roundel: head, long bill with pouch, S-neck, in an oval with a double rule
+    const pel = 'M-3.6 5.8C-4.8 2.6 -2.2 0.6 -2.6 -2.2C-3 -4.6 -1.4 -6.4 0.6 -6.2C2.2 -6.1 3 -5.1 3.2 -4.3L9.6 -2.4L3 -2.1C2 -2 0.8 -2.8 0.5 -3.6C-0.4 -1.2 1.6 1.4 1 4.4C0.6 5.8 -2.8 6.8 -3.6 5.8Z';
+    const pouch = 'M3 -2.1L9 -2.3C7 -0.4 4.6 0.1 3.2 -1.2Z';
+    const zh = text('鹈鹕湾出版社', { size: 8.4, x: 15, y: 3.1, track: 0.6 }), en = text('Pelican Bay Press', { size: 7.6, x: 15 + zh.w + 7, y: 3, track: 0.35 });
+    return h('g', { 'data-ref': 'print-colo' }, tag('colophon', { 'data-text': '鹈鹕湾出版社 · Pelican Bay Press', transform: `translate(${f(-(15 + zh.w + 7 + en.w) / 2)} 0)` },
+      P(ell(0, 0, 8.6, 8.6), { fill: c.pHi, ...{ stroke: c.line, 'stroke-width': 0.8 } }), P(ell(0, 0, 7, 7), { ...LN(0.4, c.soft) }),
+      P(pel, { fill: c.line }), P(pouch, { fill: c.gold }), P(circ(1.2, -4.7, 0.45), { fill: c.pHi }),
+      P(zh.d + en.d + circ(15 + zh.w + 3.5, 0, 0.9), { fill: c.soft })));
+  })();
 
-  // ---- border: bars (paper), keylines, hairlines (unit rects scaled per frame: filled, so no stroke distortion) ----
-  // (each visible piece carries its item tag: the pieces of one item are identical instances, counted once)
-  const unit = (ref, fill, item) => h('rect', { 'data-ref': ref, 'data-detail': DD[item], x: 0, y: 0, width: 1, height: 1, fill });
-  const bar = (k, x, y, w, hh) => h('rect', { 'data-ref': 'print-bar' + k, 'data-detail': DD['paper-margin'], x, y, width: w, height: hh, fill: I.P });
-  const border = h('g', { id: 'print-border' },
-    bar('L', -1200, -1200, 1200, 3300), bar('R', 0, -1200, 1200, 3300), bar('T', -1200, -1400, 4000, 1400), bar('B', -1200, 0, 4000, 1400),
-    ['hT', 'hB', 'hL', 'hR'].map(k => unit('print-' + k, I.N, 'frame-hairline')),
-    ['kT', 'kB', 'kL', 'kR'].map(k => unit('print-' + k, I.N, 'frame-keyline')));
+  // ---- spot illustrations (local, centred at 0,0; hand-wobbled once) ----
+  const spots = (() => {
+    const r = srand(41);
+    // scallop shell: fan with ribs, hinge ears
+    const fan = []; for (let i = 0; i <= 12; i++) { const a = Math.PI * (1.08 + 0.84 * i / 12), rr = 11 + (i % 2 ? -0.9 : 0.6); fan.push([Math.cos(a) * rr, 5 + Math.sin(a) * rr]); }
+    const shellOut = cr([[-2.6, 7.2], ...fan, [2.6, 7.2], [0, 8.4]].map(([x, y]) => [x + sgn(r) * 0.3, y + sgn(r) * 0.3]), true);
+    let ribs = ''; for (let i = 1; i < 7; i++) { const a = Math.PI * (1.12 + 0.76 * i / 7); ribs += `M0 7Q${f(Math.cos(a) * 5)} ${f(5 + Math.sin(a) * 5)} ${f(Math.cos(a) * 9.6)} ${f(5 + Math.sin(a) * 9.6)}`; }
+    const ears = 'M-2.6 7.2L-5.4 8.6L-4.8 5.6ZM2.6 7.2L5.4 8.6L4.8 5.6Z';
+    const shell = tag('spot-shell', {}, P(shellOut, { fill: c.sh, stroke: c.line, 'stroke-width': 0.9, 'stroke-linejoin': 'round' }),
+      P(ears, { fill: c.shLo, stroke: c.line, 'stroke-width': 0.7, 'stroke-linejoin': 'round' }), P(ribs, LN(0.6, c.shLo)),
+      P('M-7 -1.6Q-5 -4.6 -1.6 -5.2', { ...LN(1.1, c.pHi), opacity: 0.9 }));
+    // fish bone: head, eye, spine, ribs, tail
+    const head = 'M8 -0.2C9.5 -4.6 14.6 -5.2 17.6 -2.4C18.6 -1.4 18.6 0.8 17.6 1.8C14.6 4.6 9.5 4.2 8 -0.2Z';
+    let rib = ''; for (let i = 0; i < 5; i++) { const x = 5 - i * 3.3; rib += `M${f(x)} -0.2Q${f(x - 1)} ${f(-3.2 + i * 0.25)} ${f(x - 2.4)} ${f(-4.6 + i * 0.4)}M${f(x)} -0.2Q${f(x - 1)} ${f(2.8 - i * 0.25)} ${f(x - 2.4)} ${f(4.2 - i * 0.4)}`; }
+    const tail = 'M-12.6 -0.2L-17 -4.4Q-15.4 -0.2 -17 4L-12.6 -0.2Z';
+    const bone = tag('spot-fishbone', {}, P(wob([[8, -0.2], [0, 0.2], [-8, -0.4], [-12.6, -0.2]], r, 0.25), LN(1.3)), P(rib, LN(0.9)),
+      P(head, { fill: c.bone, stroke: c.line, 'stroke-width': 1 }), P(tail, { fill: c.bone, stroke: c.line, 'stroke-width': 0.9, 'stroke-linejoin': 'round' }),
+      P(circ(13.6, -1, 1.1), { fill: c.line }), P('M10.6 1.6Q12.6 2.8 15 2', LN(0.6)));
+    // golden star + twinkles
+    const sp = []; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? 4.2 : 9.4; sp.push([Math.cos(a) * rr + sgn(r) * 0.3, Math.sin(a) * rr + sgn(r) * 0.3]); }
+    const starP = 'M' + sp.map(p => p.map(f).join(' ')).join('L') + 'Z';
+    const star = tag('spot-star', {}, P(starP, { fill: c.gold, stroke: c.line, 'stroke-width': 1, 'stroke-linejoin': 'round' }),
+      P('M-2 -4.2L-0.6 -6.8', LN(1, c.pHi)), P(star4(13, -7, 3.4) + star4(-12.5, 5, 2.6), { fill: c.gold, stroke: c.line, 'stroke-width': 0.6 }));
+    // pelican feather: vane + rachis + barbs
+    const vane = cr([[-16, 0.4], [-8, -4.2], [4, -5.4], [14, -2.4], [17, 0.2], [13, 2.8], [2, 4.4], [-9, 3.4]], true);
+    let barbs = ''; for (let i = 0; i < 9; i++) { const x = -11 + i * 3; barbs += `M${f(x)} ${f(0.1)}Q${f(x + 2)} ${f(-2)} ${f(x + 3.6)} ${f(-3.6 + Math.abs(i - 4) * 0.25)}M${f(x)} 0.2Q${f(x + 2)} 1.8 ${f(x + 3.4)} ${f(3.2 - Math.abs(i - 4) * 0.2)}`; }
+    const feather = tag('spot-feather', {}, P(vane, { fill: c.bone, stroke: c.line, 'stroke-width': 0.8 }), P('M-12 1.5Q-4 -1.2 8 -1.4', { ...LN(1.2, c.pLo), opacity: 0.8 }),
+      P(barbs, { ...LN(0.45, c.soft), opacity: 0.8 }), P('M-21 1.6Q-10 0.6 16 -0.3', LN(0.8)), P('M-7 -3.4L-6 -1.4M3 -4.3L3.6 -2', LN(0.6)));
+    // paper boat on a wavelet
+    const boat = tag('spot-boat', {}, P('M-12 1L12 1L8 6.2L-8 6.2Z', { fill: c.pHi, stroke: c.line, 'stroke-width': 0.9, 'stroke-linejoin': 'round' }),
+      P('M-6.6 1L0 -9.6L6.6 1Z', { fill: c.pp, stroke: c.line, 'stroke-width': 0.9, 'stroke-linejoin': 'round' }), P('M0 -9.6L0 1M-3.4 -3.8L0 1', LN(0.5, c.soft)),
+      P('M-16 8.4Q-12 5.8 -8 8.4T0 8.4T8 8.4T16 8.4', LN(1.1, c.sea)));
+    // a child's crayon heart (drawn twice round, a tick beside it)
+    const heart = t => `M0 ${f(3.8 + t)}C${f(-6 - t)} ${f(-0.2)} ${f(-6.4 - t)} ${f(-6.6 - t)} ${f(-2.4)} ${f(-6.4 - t * 0.5)}C${f(-0.8)} ${f(-6.3)} 0 ${f(-4.8)} 0 ${f(-3.6 + t * 0.4)}C0 ${f(-4.8)} ${f(0.9)} ${f(-6.4 - t)} ${f(2.6 + t * 0.3)} ${f(-6.4)}C${f(6.6 + t)} ${f(-6.2)} ${f(6 + t)} ${f(-0.4)} 0 ${f(3.8 + t)}`;
+    const crayon = tag('crayon-heart', {}, P(heart(0) + heart(0.9), { ...LN(1.3, c.rb), opacity: 0.85 }), P('M9 -1L11 2L16 -5', { ...LN(1.1, c.leaf), opacity: 0.85 }));
+    // thumbprint: concentric wobbly loops
+    let tpd = ''; for (let i = 0; i < 6; i++) { const rx = 2 + i * 1.25, ry = 2.8 + i * 1.55, pts = []; for (let k = 0; k < 11; k++) { const a = k / 11 * Math.PI * 2 * 0.92 + i; pts.push([Math.cos(a) * rx + sgn(r) * 0.2, Math.sin(a) * ry + sgn(r) * 0.2]); } tpd += cr(pts, false); }
+    const thumb = tag('thumbprint', {}, P(tpd, { ...LN(0.75, c.mauve), opacity: 0.4 }));
+    const g = (k, el) => h('g', { 'data-ref': 'print-sp-' + k }, el);
+    return [g('shell', shell), g('bone', bone), g('star', star), g('feather', feather), g('boat', boat), g('heart', crayon), g('thumb', thumb)];
+  })();
 
-  // deco corner: art lies in +x,+y from the keyline corner at (0,0)
-  const q = (r) => `M0 0H${r}A${r} ${r} 0 0 1 0 ${r}Z`;
-  const rays = [30, 60].map(a => { const c = Math.cos(a * Math.PI / 180), s = Math.sin(a * Math.PI / 180); return `M0 0L${f(15 * c)} ${f(15 * s)}`; }).join('');
-  const beads = [15, 45, 75].map(a => circ(20.5 * Math.cos(a * Math.PI / 180), 20.5 * Math.sin(a * Math.PI / 180), 1.3)).join('');
-  const steps = rectD(28, 3, 16, 3) + rectD(28, 6, 8, 3) + rectD(3, 28, 3, 16) + rectD(6, 28, 3, 8) + rectD(48, 3, 4, 3) + rectD(3, 48, 3, 4);
-  defs.push(h('g', { id: 'print-corner' },
-    h('path', { d: q(26), fill: I.P }),
-    h('path', { d: q(14), fill: I.R }),
-    h('path', { d: rays, stroke: I.P, 'stroke-width': 1.6, fill: 'none' }),
-    h('path', { d: `M26 0A26 26 0 0 1 0 26M17 0A17 17 0 0 1 0 17`, fill: 'none', stroke: I.N, 'stroke-width': 1.3 }),
-    h('path', { d: beads + steps + q(4.5), fill: I.N })));
-  defs.push(h('g', { id: 'print-crop' },
-    h('rect', { x: -17, y: -17, width: 17, height: 17, fill: 'none' }),   // hit area of the mark's corner cell
-    h('path', { d: 'M1.5 -17V-10M-17 1.5H-10', stroke: I.N, 'stroke-width': 0.9, fill: 'none' })));
-  // stepped edge diamond, centred on the keyline centre (0,0), art toward +y
-  defs.push(h('g', { id: 'print-edge' },
-    h('path', { d: rectD(-44, 1.5, 28, 3) + rectD(16, 1.5, 28, 3) + rectD(-30, 4.5, 14, 2.5) + rectD(16, 4.5, 14, 2.5), fill: I.N }),
-    h('path', { d: diamond(0, 0, 14, 8.5), fill: I.P, stroke: I.N, 'stroke-width': 1.6, 'stroke-linejoin': 'miter' }),
-    h('path', { d: diamond(0, 0, 6.5, 4), fill: I.R })));
-  defs.push(h('g', { id: 'print-reg' },
-    h('circle', { r: 5.2, fill: I.P, stroke: I.N, 'stroke-width': 0.9 }),
-    h('path', { d: 'M0 0H3.2A3.2 3.2 0 0 1 0 3.2ZM0 0H-3.2A3.2 3.2 0 0 1 0 -3.2Z', fill: I.N }),
-    h('path', { d: 'M-9 0H9M0 -9V9', stroke: I.N, 'stroke-width': 0.8 })));
-  const ornaments = h('g', { id: 'print-ornaments' },
-    ['TL', 'TR', 'BL', 'BR'].map(k => h('use', { href: '#print-corner', 'data-ref': 'print-c' + k, 'data-detail': DD['corner-sunburst'] })),
-    ['TL', 'TR', 'BL', 'BR'].map(k => h('use', { href: '#print-crop', 'data-ref': 'print-crop' + k, 'data-detail': DD['crop-marks'] })),
-    ['T', 'B', 'L', 'R'].map(k => h('use', { href: '#print-edge', 'data-ref': 'print-e' + k, 'data-detail': DD['edge-diamond'] })),
-    ['L', 'R', 'B'].map(k => h('use', { href: '#print-reg', 'data-ref': 'print-reg' + k, 'data-detail': DD['registration-mark'] })));
+  // ---- corner curl (bottom-right page corner at 0,0; the page lies toward -x,-y) ----
+  const A = 40;
+  const curl = h('g', { 'data-ref': 'print-curl' }, h('g', { 'data-ref': 'print-curl-in' }, tag('corner-curl', {},
+    P(`M0 0L${-A} 0L0 ${-A}Z`, { fill: c.edge }),
+    P(`M${-A + 4} -1.5L-1.5 ${-A + 4}M${-A + 9} -1.5L-1.5 ${-A + 9}`, { ...LN(0.4, c.soft), opacity: 0.6 }),
+    P(`M${-A} 0C${-A * 0.86} ${-A * 0.34} ${-A * 0.8} ${-A * 0.6} ${-A * 0.68} ${-A * 0.72}C${-A * 0.58} ${-A * 0.82} ${-A * 0.34} ${-A * 0.88} 0 ${-A}Z`, { fill: c.mauve, opacity: 0.28, transform: 'translate(-4 -3.5)' }),
+    P(`M${-A} 0C${-A * 0.88} ${-A * 0.34} ${-A * 0.82} ${-A * 0.6} ${-A * 0.7} ${-A * 0.7}C${-A * 0.6} ${-A * 0.82} ${-A * 0.34} ${-A * 0.88} 0 ${-A}Z`, { fill: 'url(#print-curl)', stroke: c.line, 'stroke-width': 0.9, 'stroke-linejoin': 'round' }),
+    P(`M${-A * 0.84} ${-A * 0.2}Q${-A * 0.66} ${-A * 0.62} ${-A * 0.2} ${-A * 0.84}`, { ...LN(0.7, c.pLo), opacity: 0.8 }))));
 
-  // ---- printer's strip (bottom margin) ----
-  const IMPRINT_LAT = text(LAT, 'PRINTED AT PELICAN BAY', { size: 7.2, track: 1.25, x: 0, y: 0 });
-  const IMPRINT_ZH = text(ZH, '鹈鹕湾印制', { size: 8.4, track: 0.8, x: IMPRINT_LAT.w + 14, y: 0.6 });
-  const imprint = h('g', { 'data-ref': 'print-imprint' }, tag('imprint', txt('PRINTED AT PELICAN BAY · 鹈鹕湾印制'),
-    h('path', { d: IMPRINT_LAT.d + IMPRINT_ZH.d + circ(IMPRINT_LAT.w + 7, -2.6, 1.1), fill: I.N })));
-  const edition = h('g', { 'data-ref': 'print-edition' }, tag('edition-number', txt('PLATE C · SEVEN INKS · № 07/120'), h('path', { d: ED.d, fill: I.N })));
-  const inks = ['P', 'K', 'O', 'R', 'B', 'T', 'N'];
-  const SW = 12, SH = 8;
-  const colour = h('g', { 'data-ref': 'print-colour' },
-    tag('colour-bar', {}, inks.map((k, i) => h('rect', { x: i * SW, y: -SH / 2, width: SW, height: SH, fill: I[k] })),
-      h('rect', { x: 0, y: -SH / 2, width: SW * 7, height: SH, fill: 'none', stroke: I.N, 'stroke-width': 0.7 })),
-    tag('tint-ramp', { 'data-ref': 'print-tint' },
-      h('rect', { x: -6 - 5 * SW, y: -SH / 2, width: 5 * SW, height: SH, fill: I.P, stroke: I.N, 'stroke-width': 0.7 }),
-      [0.45, 0.7, 0.95, 1.2, 1.5].map((r, i) => h('path', { d: dotsD(-6 - (5 - i) * SW, -SH / 2, SW, SH, 3), stroke: I.B, 'stroke-width': f(r * 2), 'stroke-linecap': 'round', fill: 'none' }))));
-  const strip = h('g', { id: 'print-strip' }, imprint, edition, colour);
+  // ---- bookmark ribbon: local end at y = 0 (the swallowtail), runs up 460 u under the top edge ----
+  const ribbon = (() => {
+    const W = RIBBON.w, cx = y => 1.8 * Math.sin(y / 70) + 0.6 * Math.sin(y / 23);
+    const side = (x0) => { const pts = []; for (let y = -460; y <= -9; y += 20) pts.push([x0 + cx(y), y]); return pts; };
+    const Lp = side(-W / 2), Rp = side(W / 2);
+    const out = cr([...Lp, [-W / 2 + cx(0), 0], [cx(-9), -9.5], [W / 2 + cx(0), 0], ...Rp.reverse()], false) + 'Z';
+    const shade = cr(side(-W / 2 + 0.8).concat([[-W / 2 + 1 + cx(0), -1], [-W / 2 + 4.6 + cx(-4), -5.2]]).concat(side(-W / 2 + 4.8).reverse()), false) + 'Z';
+    const shine = cr(side(W / 2 - 4.4), false);
+    const fray = `M${f(-W / 2 + cx(0))} 0l-1 3.4M${f(-W / 2 + 2 + cx(0))} -1.8l-.4 3.6M${f(W / 2 + cx(0))} 0l1 3.4M${f(W / 2 - 2 + cx(0))} -1.8l.4 3.6`;
+    return h('g', { 'data-ref': 'print-ribbon' },
+      P(out, { fill: c.mauve, opacity: 0.3, transform: 'translate(3.5 2.5)' }),
+      tag('bookmark-ribbon', {}, P(out, { fill: c.rb, stroke: c.rbLo, 'stroke-width': 0.9, 'stroke-linejoin': 'round' }), P(fray, LN(0.7, c.rbLo))),
+      tag('ribbon-sheen', {}, P(shade, { fill: c.rbLo, opacity: 0.55 }), P(shine, { ...LN(1.6, c.rbHi), opacity: 0.8 }),
+        P(cr(side(0.5).filter((_, i) => i % 3 === 1), false), { ...LN(0.6, c.rbHi), opacity: 0.35 })));
+  })();
 
-  // ---- ADMIT ONE ticket (local 0..236 × 0..92) ----
-  const T = TICKET, sx0 = 178;
-  let perfHoles = '';
-  for (let y = 9; y <= T.h - 8; y += 7.4) perfHoles += circ(sx0, y, 1.35, true);
-  const punch = `M156 57L161 63L156 69L151 63Z`;
-  const card = roundRect(0, 0, T.w, T.h, 5) + perfHoles + punch;
-  let guil = '';
-  for (let i = 0; i < 6; i++) { guil += wave(8, 172, 30 + i * 9.5, 2.6, 22, i * 0.9); guil += wave(8, 172, 30 + i * 9.5, 2.6, 22, i * 0.9 + Math.PI); }
-  const ADMIT = deco('ADMIT ONE');
-  const aS = 0.205, aX = 12, aY = 28;
-  const admit = Object.entries(ADMIT.byW).map(([sw, d]) => [sw, tp(d, [aS, 0, 0, aS, aX, aY])]);
-  const hdr = text(LAT, 'COAST ROAD RAILWAY', { size: 7.4, track: 1.2, x: 12, y: 18.2 });
-  const hdrZh = text(ZH, '海滨路', { size: 9, track: 0.6, x: 167, y: 18.8, align: 'right' });
-  const route = text(ZH, '鹈鹕湾', { size: 10, x: 12, y: 64 }).d + text(ZH, '灯塔角', { size: 10, x: 64, y: 64 }).d
-    + text(LAT, 'PELICAN BAY → LIGHTHOUSE PT', { size: 5.6, track: 0.55, x: 12, y: 73 }).d;
-  const arrow = 'M46 59.5H59M55.5 56.5L59.5 59.5L55.5 62.5';
-  const fareL = text(LAT, 'SINGLE · 3RD CLASS', { size: 5.2, track: 0.6, x: 170, y: 84, align: 'right' });
-  const fare = fareL.d + text(ZH, '单程', { size: 6.4, x: 170 - fareL.w - 4, y: 84.4, align: 'right' }).d;
-  const serialA = text(LAT, '№ 0719', { size: 9.5, track: 0.5, x: 12, y: 85 }).d, serialB = text(LAT, '0719', { size: 8.5, track: 0.6, x: 227.5, y: 46, rot: -90, align: 'center' }).d;
-  const stubTxt = text(LAT, 'ADMIT ONE', { size: 8.6, track: 1.2, x: 199, y: 46, rot: -90, align: 'center' }).d;
-  const stubMark = text(LAT, '1', { size: 13, x: 206, y: 18, align: 'center' }).d;
-  const ticket = h('g', { 'data-ref': 'print-ticket' },
-    tag('ticket-card', txt('COAST ROAD RAILWAY 海滨路 · ADMIT ONE'),
-      h('path', { d: tp(card, [1, 0, 0, 1, 2.5, 2.5]), fill: I.N, 'fill-rule': 'evenodd' }),
-      h('path', { d: card, fill: I.P, 'fill-rule': 'evenodd' }),
-      h('path', { d: rectD(4.5, 4.5, sx0 - 9, T.h - 9) + rectD(sx0 + 4.5, 4.5, T.w - sx0 - 9, T.h - 9), fill: 'none', stroke: I.N, 'stroke-width': 0.9 }),
-    ),
-    tag('ticket-guilloche', {}, h('rect', { x: 8, y: 25, width: sx0 - 16, height: T.h - 33, fill: I.P }), h('path', { d: guil, fill: 'none', stroke: I.K, 'stroke-width': 0.75, 'clip-path': 'url(#print-clip-guil)' })),
-    tag('ticket-card', {},
-      h('path', { d: rectD(8, 8, sx0 - 16, 14), fill: I.R }),
-      h('path', { d: hdr.d + hdrZh.d, fill: I.P }),
-      admit.map(([sw, d]) => h('path', { d, fill: 'none', stroke: I.R, 'stroke-width': sw * aS, transform: 'translate(0.9 0.9)', 'clip-path': 'url(#print-clip-admit)' })),
-      admit.map(([sw, d]) => h('path', { d, fill: 'none', stroke: I.N, 'stroke-width': sw * aS, 'clip-path': 'url(#print-clip-admit)' }))),
-    tag('ticket-route', txt('鹈鹕湾 → 灯塔角 · PELICAN BAY → LIGHTHOUSE PT · SINGLE · 3RD CLASS 单程'),
-      h('path', { d: route + fare, fill: I.N }), h('path', { d: arrow, fill: 'none', stroke: I.N, 'stroke-width': 1.3 })),
-    tag('ticket-serial', txt('№ 0719'), h('path', { d: serialA, fill: I.R })),
-    tag('ticket-serial', txt('0719'), h('path', { d: serialB, fill: I.R })),
-    tag('ticket-perforation', {}, h('path', { d: `M${sx0} 4V${T.h - 4}`, stroke: I.N, 'stroke-width': 0.8, 'stroke-dasharray': '2.2 5.2', 'stroke-dashoffset': 3.5, fill: 'none' }),
-      h('path', { d: perfHoles.replace(/1\.35/g, '1.9'), fill: 'none', stroke: I.K, 'stroke-width': 0.6 })),
-    tag('ticket-punch', {}, h('path', { d: 'M156 55.5L162.5 63L156 70.5L149.5 63Z', fill: 'none', stroke: I.K, 'stroke-width': 1.2 })),
-    tag('ticket-stub', txt('ADMIT ONE 1'), h('path', { d: stubTxt + stubMark, fill: I.N })));
-  defs.push(h('clipPath', { id: 'print-clip-admit' }, h('rect', { x: 0, y: aY, width: 175, height: 100 * aS })));
-  defs.push(h('clipPath', { id: 'print-clip-guil' }, h('rect', { x: 5, y: 23, width: sx0 - 10, height: T.h - 28 })));
+  // ---- title card ----
+  const titleWord = (k, str, font, size, seed, x0 = 0) => {
+    const r = srand(seed); let pen = x0; const gl = [];
+    for (const ch of str) {
+      const a = advOf(font, ch) * size / 1000;
+      const rot = sgn(r) * 2.4, dy = sgn(r) * 2.6, s = 1 + sgn(r) * 0.025;
+      const k0 = size / 1000 * s, rr = rot * Math.PI / 180, c0 = Math.cos(rr), s0 = Math.sin(rr), cx = pen + a / 2;
+      gl.push({ d: tp(font[ch][1], [c0 * k0, s0 * k0, -s0 * k0, c0 * k0, cx - c0 * a / 2, dy - s0 * a / 2]), cx, a });
+      pen += a + (font === ZH ? 5 : 0);
+    }
+    return gl;
+  };
+  const glyphG = (k, i, g, zh) => h('g', { 'data-ref': `print-gl-${k}${i}` },
+    tag('title-shadow', {}, P(g.d, { fill: c.mauve, stroke: c.mauve, 'stroke-width': zh ? 5 : 7, 'stroke-linejoin': 'round', opacity: 0.6, transform: 'translate(5 6)' })),
+    tag(zh ? 'title-zh' : 'title-lettering', {}, P(g.d, { fill: zh ? c.rb : c.ti, stroke: c.line, 'stroke-width': zh ? 4.6 : 6.5, 'stroke-linejoin': 'round', 'paint-order': 'stroke' })),
+    zh ? '' : tag('title-gouache', {}, P(g.d, { fill: 'url(#print-brush)' })),
+    tag('title-pencil', {}, P(g.d, { fill: 'none', stroke: zh ? c.pHi : c.soft, 'stroke-width': zh ? 0.9 : 1.1, opacity: zh ? 0.7 : 0.6, transform: zh ? 'translate(-1.4 -1.2)' : 'translate(-2.4 -1.8)' })));
+  const G1 = titleWord('a', 'Pelican', LAT, TS, 101), G2 = titleWord('b', 'Bay', LAT, TS, 202), GZ = titleWord('z', '鹈鹕湾', ZH, ZS, 303);
+  const tw = (k, G, zh, extra = '') => G.map((g, i) => glyphG(k, i, g, zh)).join('') + extra;
+  const twinkle = (ref, x, y, r) => h('g', { 'data-ref': ref, transform: `translate(${x} ${y})` },
+    P(star4(0, 0, r), { fill: c.gold, stroke: c.line, 'stroke-width': 1.3, 'stroke-linejoin': 'round' }), P(star4(0, 0, r * 0.35), { fill: c.pHi }));
+  const w1 = h('g', { 'data-ref': 'print-w1', 'data-text': 'Pelican' }, tw('a', G1, false), tag('title-twinkles', {}, twinkle('print-tw0', -20, -78, 10)));
+  const w2 = h('g', { 'data-ref': 'print-w2', 'data-text': 'Bay' }, tw('b', G2, false), tag('title-twinkles', {}, twinkle('print-tw1', W2 + 22, -66, 13), twinkle('print-tw2', W2 + 40, -30, 7)));
+  const zhG = h('g', { 'data-ref': 'print-zh', 'data-text': '鹈鹕湾' }, tw('z', GZ, true));
+  // swash under 鹈鹕湾: tapered yellow gouache stroke with streaks, a wave curl at the end
+  const SWL = ZHW + 18;
+  const swC = t => [lerp(-6, SWL, t), 13 + Math.sin(t * Math.PI * 1.1) * 3.2 - t * 2];
+  const swash = brush(swC, t => 5.4 * Math.sin(Math.PI * Math.min(1, t * 1.05)) ** 0.55 + 0.3, 28);
+  const curlD = `M${f(SWL - 2)} 9C${f(SWL + 8)} 3 ${f(SWL + 16)} 10 ${f(SWL + 11)} 15C${f(SWL + 7)} 18 ${f(SWL + 3)} 13 ${f(SWL + 8)} 11`;
+  defs.push(h('clipPath', { id: 'print-swclip' }, h('rect', { 'data-ref': 'print-swwipe', x: -14, y: -10, width: SWL + 40, height: 40 })));
+  const sw = h('g', { 'data-ref': 'print-sw' }, h('g', { 'clip-path': 'url(#print-swclip)' }, tag('title-swash', {},
+    P(swash, { fill: c.gold, stroke: c.line, 'stroke-width': 1.5, 'stroke-linejoin': 'round' }),
+    P(brush(t => [lerp(4, SWL - 14, t), 12 + Math.sin(t * Math.PI * 1.1) * 3 - t * 2], t => 1 * Math.sin(Math.PI * t), 12), { fill: c.pHi, opacity: 0.75 }),
+    P(brush(t => [lerp(10, SWL - 30, t), 15.5 + Math.sin(t * Math.PI * 1.1) * 3 - t * 2], t => 0.8 * Math.sin(Math.PI * t), 12), { fill: c.goldLo, opacity: 0.8 }),
+    P(curlD, LN(2.2, c.line)))));
+  const subT = text(SUB_TXT, { size: SUBS, zs: 0.95, jit: srand(404), rotJ: 1.2, dyJ: 0.04 });
+  const sub = h('g', { 'data-ref': 'print-sub' }, tag('title-subtitle', { 'data-text': SUB_TXT }, P(subT.d, { fill: c.line })));
+  // chapter plate: notched corners, double rule, sprigs
+  const n = 8, plateOut = `M${n} 0H${PW - n}Q${PW - n} ${n} ${PW} ${n}V${PH - n}Q${PW - n} ${PH - n} ${PW - n} ${PH}H${n}Q${n} ${PH - n} 0 ${PH - n}V${n}Q${n} ${n} ${n} 0Z`;
+  const plateIn = `M${n + 3} 4H${PW - n - 3}Q${PW - n - 2} ${n + 2} ${PW - 4} ${n + 3}V${PH - n - 3}Q${PW - n - 2} ${PH - n - 2} ${PW - n - 3} ${PH - 4}H${n + 3}Q${n + 2} ${PH - n - 2} 4 ${PH - n - 3}V${n + 3}Q${n + 2} ${n + 2} ${n + 3} 4Z`;
+  const sprig = (x, dir) => ({
+    stem: `M${f(x)} ${PH / 2}C${f(x + dir * 8)} ${PH / 2 - 2} ${f(x + dir * 14)} ${PH / 2 - 6} ${f(x + dir * 22)} ${PH / 2 - 5}M${f(x + dir * 9)} ${PH / 2 - 1.6}C${f(x + dir * 14)} ${PH / 2 + 3} ${f(x + dir * 18)} ${PH / 2 + 5} ${f(x + dir * 23)} ${PH / 2 + 4}`,
+    leaf: [[10, -3, -35], [17, -6.5, -15], [15, 3.4, 30], [21, 4.8, 10]].map(([dx, dy, a]) => {
+      const X = x + dir * dx, Y = PH / 2 + dy, rr = (dir > 0 ? a : 180 - a) * Math.PI / 180, L = 7;
+      return `M${f(X)} ${f(Y)}Q${f(X + Math.cos(rr - 0.5) * L * 0.6)} ${f(Y + Math.sin(rr - 0.5) * L * 0.6)} ${f(X + Math.cos(rr) * L)} ${f(Y + Math.sin(rr) * L)}Q${f(X + Math.cos(rr + 0.5) * L * 0.6)} ${f(Y + Math.sin(rr + 0.5) * L * 0.6)} ${f(X)} ${f(Y)}Z`;
+    }).join(''),
+    berry: circ(x + dir * 24.5, PH / 2 - 5.4, 1.9) + circ(x + dir * 25, PH / 2 + 4, 1.6),
+  });
+  const sA = sprig(-1, -1), sB = sprig(PW + 1, 1), pt0 = plateText(0);
+  const plate = h('g', { 'data-ref': 'print-plate' }, h('g', { 'data-ref': 'print-plate-in' },
+    tag('plate-sprigs', {}, P(sA.stem + sB.stem, LN(1.1, c.line)), P(sA.leaf + sB.leaf, { fill: c.leaf, stroke: c.line, 'stroke-width': 0.7 }), P(sA.berry + sB.berry, { fill: c.rb, stroke: c.line, 'stroke-width': 0.6 })),
+    tag('chapter-plate', { 'data-text': 'Chapter One · 第一章', 'data-ref': 'print-plate-t' },
+      P(plateOut, { fill: c.mauve, opacity: 0.35, transform: 'translate(3 3.5)' }),
+      P(plateOut, { fill: c.pHi, stroke: c.line, 'stroke-width': 1.7, 'stroke-linejoin': 'round' }), P(plateIn, { ...LN(0.8, c.soft) }),
+      P(pt0.zh + pt0.dot, { 'data-ref': 'print-plate-zh', fill: c.rb }), P(pt0.en, { 'data-ref': 'print-plate-en', fill: c.line }))));
+  const title = h('g', { id: 'print-title', 'data-ref': 'print-title' }, plate, sub, sw, zhG, w1, w2);
 
-  // ---- postage stamp (local 0..80 × 0..96) + postmark ----
-  const S = STAMP;
-  const vg = { x: 8, y: 8, w: S.w - 16, h: 60 };
-  let eng = '', engSun = '';
-  for (let y = vg.y + 2; y < vg.y + 36; y += 2.4) eng += `M${vg.x} ${f(y)}H${vg.x + vg.w}`;
-  for (let y = vg.y + 28; y < vg.y + 42; y += 2.2) engSun += `M${vg.x + 36} ${f(y)}H${vg.x + vg.w - 2}`;
-  const seaY = vg.y + 42, roadY = vg.y + 50;
-  const sunC = [vg.x + 46, seaY];
-  const bikeR = 6;
-  const wR = [vg.x + 17, roadY + 3.2], wF = [vg.x + 37, roadY + 3.2];
-  const miniBike = `M${wR[0]} ${wR[1]}L${vg.x + 26} ${wR[1]}L${vg.x + 23.5} ${roadY - 6}M${vg.x + 26} ${wR[1]}L${vg.x + 34} ${roadY - 6.5}L${wF[0]} ${wF[1]}M${vg.x + 23.5} ${roadY - 6}L${vg.x + 34} ${roadY - 6.5}M${wR[0]} ${wR[1]}L${vg.x + 23.5} ${roadY - 6}M${vg.x + 34} ${roadY - 6.5}L${vg.x + 33} ${roadY - 9.5}`;
-  const px = vg.x, py = roadY;   // mini pelican anchors
-  const pBody = `M${px + 13} ${py - 11}C${px + 14} ${py - 18} ${px + 25} ${py - 20} ${px + 30} ${py - 16}C${px + 32} ${py - 13} ${px + 28} ${py - 9} ${px + 22} ${py - 8.5}C${px + 18} ${py - 8} ${px + 14} ${py - 8.5} ${px + 13} ${py - 11}Z`;
-  const pNeck = `M${px + 27} ${py - 16}C${px + 30} ${py - 21} ${px + 27} ${py - 25} ${px + 30} ${py - 29}`;
-  const pBill = `M${px + 31} ${py - 31}L${px + 43} ${py - 26.5}L${px + 31} ${py - 28.2}Z`;
-  const pPouch = `M${px + 31.5} ${py - 28.4}L${px + 41} ${py - 26.6}Q${px + 34} ${py - 24.2} ${px + 31.5} ${py - 27}Z`;
-  const pWing = `M${px + 17} ${py - 14}Q${px + 24} ${py - 16.5} ${px + 31} ${py - 12.5}L${px + 21} ${py - 11}Z`;
-  const pLeg = `M${px + 22} ${py - 9}L${px + 26} ${py - 3.5}L${px + 26.5} ${roadY + 3}`;
-  const legend = text(ZH, '鹈鹕湾邮政', { size: 8.6, track: 0.5, x: S.w / 2, y: 83, align: 'center' }).d;
-  const legendLat = text(LAT, 'PELICAN BAY POST', { size: 4.6, track: 0.6, x: S.w / 2, y: 89.5, align: 'center' }).d;
-  const value = text(LAT, '5', { size: 10.5, x: 13.6, y: 21, align: 'center' }).d + text(ZH, '分', { size: 5.6, x: 20.6, y: 21.4, align: 'center' }).d;
-  defs.push(h('clipPath', { id: 'print-clip-vg' }, h('rect', { x: vg.x, y: vg.y, width: vg.w, height: vg.h })));
-  const stamp = h('g', { 'data-ref': 'print-stamp' },
-    h('path', { d: tp(perforated(S.w, S.h, 2.3, 8), [1, 0, 0, 1, 2, 2.2]), fill: I.N }),
-    tag('stamp-vignette', { 'clip-path': 'url(#print-clip-vg)' },
-      h('path', { d: rectD(vg.x, vg.y, vg.w, vg.h), fill: I.B }),
-      h('path', { d: circ(sunC[0], sunC[1], 12), fill: I.K }),
-      h('path', { d: rectD(vg.x, seaY, vg.w, roadY - seaY) + rectD(vg.x, roadY + 7, vg.w, vg.h), fill: I.N }),
-      h('path', { d: rectD(vg.x, roadY, vg.w, 7), fill: I.O }),
-      h('path', { d: wave(vg.x, vg.x + vg.w, seaY + 3, 0.7, 5) + wave(vg.x + 3, vg.x + vg.w, seaY + 6, 0.7, 5, 2), fill: 'none', stroke: I.B, 'stroke-width': 0.7 }),
-      h('path', { d: `M${vg.x + 48} ${seaY + 2.6}h14M${vg.x + 50} ${seaY + 5.2}h10`, stroke: I.K, 'stroke-width': 0.9 }),
-      h('path', { d: circ(...wR, bikeR) + circ(...wF, bikeR), fill: 'none', stroke: I.N, 'stroke-width': 1.5 }),
-      h('path', { d: miniBike, fill: 'none', stroke: I.T, 'stroke-width': 1.25, 'stroke-linecap': 'round' }),
-      h('path', { d: `M${px + 8} ${py - 12}Q${px + 14} ${py - 14} ${px + 27} ${py - 16}`, stroke: I.R, 'stroke-width': 1.4, 'stroke-dasharray': '1.6 1.2', fill: 'none' }),
-      h('path', { d: pLeg, fill: 'none', stroke: I.O, 'stroke-width': 1 }),
-      h('path', { d: pBody + circ(px + 30.5, py - 29.5, 2.7), fill: I.P }),
-      h('path', { d: pNeck, fill: 'none', stroke: I.P, 'stroke-width': 2.6, 'stroke-linecap': 'round' }),
-      h('path', { d: pWing, fill: I.N }),
-      h('path', { d: pBill + pPouch, fill: I.O }),
-      h('path', { d: circ(px + 31, py - 30, 0.55), fill: I.N })),
-    tag('stamp-engraving', { 'clip-path': 'url(#print-clip-vg)' },
-      h('path', { d: eng, stroke: I.P, 'stroke-width': 0.6, 'stroke-opacity': 0.9, fill: 'none', 'clip-path': 'url(#print-clip-sky)' }),
-      h('path', { d: engSun, stroke: I.O, 'stroke-width': 0.8, fill: 'none', 'clip-path': 'url(#print-clip-sun)' })),
-    tag('stamp-perforated', {},
-      h('path', { d: perforated(S.w, S.h, 2.3, 8) + rectCCW(vg.x, vg.y, vg.w, vg.h), fill: I.P }),
-      h('path', { d: rectD(5.5, 5.5, S.w - 11, S.h - 11) + rectD(vg.x, vg.y, vg.w, vg.h), fill: 'none', stroke: I.N, 'stroke-width': 0.8 })),
-    tag('stamp-value', txt('5分'), h('path', { d: circ(16.5, 17.5, 8), fill: I.R }), h('path', { d: value, fill: I.P })),
-    tag('stamp-legend', txt('鹈鹕湾邮政 PELICAN BAY POST'), h('path', { d: legend + legendLat, fill: I.N })));
-  defs.push(h('clipPath', { id: 'print-clip-sky' }, h('path', { d: `M${vg.x} ${vg.y}H${vg.x + vg.w}V${vg.y + 16}C${vg.x + 50} ${vg.y + 22} ${vg.x + 20} ${vg.y + 8} ${vg.x} ${vg.y + 26}Z` })));
-  defs.push(h('clipPath', { id: 'print-clip-sun' }, h('path', { d: circ(sunC[0], sunC[1], 12) })));
+  // ---- captions: on a gouache patch (poster) and printed on the margin (cinematic bar) ----
+  const pg0 = pageOf(0, false), cl0 = captionLayout(pg0, 'line'), cb0 = captionLayout(pg0, 'bar');
+  const capG = (k, L, patch) => h('g', { 'data-ref': 'print-' + k, 'data-text': `${pg0.headZh} · ${pg0.headEn} · ${pg0.zh} ${pg0.en}` }, h('g', { 'data-ref': `print-${k}-in` },
+    patch ? P(L.patch, { 'data-ref': `print-${k}-sh`, fill: c.mauve, opacity: 0.22, transform: 'translate(4 5)' }) : '',
+    patch ? tag('caption-patch', {}, P(L.patch, { 'data-ref': `print-${k}-patch`, fill: c.paper, opacity: 0.94 })) : '',
+    patch ? tag('caption-wash', {}, P(L.streak, { 'data-ref': `print-${k}-wash`, fill: c.pLo, opacity: 0.4 })) : '',
+    tag('caption-header', {}, P(L.head, { 'data-ref': `print-${k}-head`, fill: c.soft })),
+    tag('caption-divider', {}, P(L.div, { 'data-ref': `print-${k}-div`, ...LN(1, c.soft) }), P(L.flw, { 'data-ref': `print-${k}-flw`, fill: c.rb, stroke: c.line, 'stroke-width': 0.5 })),
+    tag('caption-zh', {}, P(L.zh, { 'data-ref': `print-${k}-zh`, fill: c.line })),
+    tag('caption-en', {}, P(L.en, { 'data-ref': `print-${k}-en`, fill: c.line })),
+    tag('caption-initial', {}, P(L.ini, { 'data-ref': `print-${k}-ini`, fill: c.rb, stroke: c.line, 'stroke-width': 0.6 }))));
+  const captions = h('g', { id: 'print-captions' }, capG('cap', cl0, true), capG('bar', cb0, false));
 
-  const PMC = [96, 20], PR = 27;
-  const pmTop = arcText(LAT, 'PELICAN BAY', PMC[0], PMC[1], 19.6, { size: 6, track: 1.1 });
-  const pmBot = arcText(ZH, '鹈鹕湾', PMC[0], PMC[1], 25.4, { size: 6.4, track: 2.2, bottom: true });
-  const pmDate = text(LAT, '30 SEP 2026', { size: 5.4, track: 0.35, x: PMC[0], y: PMC[1] + 2, align: 'center' }).d;
-  let cancel = '';
-  for (let i = 0; i < 4; i++) cancel += wave(PMC[0] - PR - 70, PMC[0] - PR - 3, PMC[1] - 13 + i * 6.2, 2, 15, 0.4);
-  const postmark = h('g', { 'data-ref': 'print-postmark', transform: 'rotate(-9 96 20)' },
-    tag('postmark-cancel', {}, h('path', { d: cancel, fill: 'none', stroke: I.N, 'stroke-width': 1.05 })),
-    tag('postmark-ring', txt('PELICAN BAY 鹈鹕湾'),
-      h('path', { d: circ(PMC[0], PMC[1], PR) + circ(PMC[0], PMC[1], 17.6), fill: 'none', stroke: I.N, 'stroke-width': 1.2 }),
-      h('path', { d: pmTop + pmBot + circ(PMC[0] - 24.6, PMC[1] + 5, 1) + circ(PMC[0] + 24.6, PMC[1] + 5, 1), fill: I.N })),
-    tag('postmark-date', txt('30 SEP 2026'),
-      h('path', { d: pmDate, fill: I.N }), h('path', { d: `M${PMC[0] - 13} ${PMC[1] - 5.5}H${PMC[0] + 13}M${PMC[0] - 13} ${PMC[1] + 5.2}H${PMC[0] + 13}`, stroke: I.N, 'stroke-width': 0.9 })));
-  const post = h('g', { 'data-ref': 'print-post' }, h('g', { transform: 'rotate(6 40 48)' }, stamp), postmark);
-
-  const root = h('g', { id: 'print-root', 'data-ref': 'print-root' }, border, ornaments, strip, h('g', { id: 'print-ephemera', 'data-ref': 'print-ephemera' }, ticket, post), title);
+  const lampGlow = h('ellipse', { 'data-ref': 'print-lampglow', cx: 0, cy: 0, rx: 1, ry: 1, fill: 'url(#print-lamp)', style: 'opacity:var(--pb-n-lampOn)', 'pointer-events': 'none' });
+  const root = h('g', { id: 'print-root', 'data-ref': 'print-root' },
+    lampGlow, margins, gutter, pencil, rim, heads, pnum('Z', pnZ, 'page-number-zh'), pnum('A', pnA, 'page-number-arabic'), colo,
+    h('g', { id: 'print-spots' }, spots), curl, ribbon, captions, title);
   return { defs: defs.join(''), layers: { 'L-letterbox': root } };
 }
 
 // ------------------------------------------------------------------ runtime
-function fitScale(zone, box, maxS) {
-  const w = box[2] - box[0], hh = box[3] - box[1];
-  const zw = zone[2] - zone[0], zh = zone[3] - zone[1];
-  if (zw <= 0 || zh <= 0) return 0;
-  return Math.min(maxS, zw / w, zh / hh);
-}
-// Best placement of a layout among free zones: -> {X, Y, S} (card origin in screen units and scale)
-function place(layoutNames, zones, maxS, alignRight) {
-  let best = null;
-  for (const name of layoutNames) {
-    const L = LAYOUTS[name];
-    for (const z of zones) {
-      const s = fitScale(z, L.box, maxS);
-      const score = name === 'stack' ? s * 0.62 : s;
-      if (!best || score > best.score + 1e-6) {
-        const w = (L.box[2] - L.box[0]) * s;
-        const slack = z[2] - z[0] - w;
-        const x0 = z.right || alignRight ? z[2] - w : z[0] + Math.min(slack, z.inset || 0);
-        best = { name, score, S: s, X: x0 - L.box[0] * s, Y: z[1] - L.box[1] * s };
-      }
+// free rectangles of `area` around obstacles (maximal-rectangle split)
+function freeRects(area, obs) {
+  let rs = [area];
+  for (const o of obs) {
+    if (!o) continue;
+    const next = [];
+    for (const r of rs) {
+      if (!(o[0] < r[2] && o[2] > r[0] && o[1] < r[3] && o[3] > r[1])) { next.push(r); continue; }
+      if (o[0] > r[0]) next.push([r[0], r[1], o[0], r[3]]);
+      if (o[2] < r[2]) next.push([o[2], r[1], r[2], r[3]]);
+      if (o[1] > r[1]) next.push([r[0], r[1], r[2], o[1]]);
+      if (o[3] < r[3]) next.push([r[0], o[3], r[2], r[3]]);
     }
+    rs = next.filter(r => r[2] - r[0] > 24 && r[3] - r[1] > 20);
   }
+  return rs;
+}
+// best placement of boxes (w×h at scale 1, weight k) among rects -> {i, S, X, Y} (top-left in screen units)
+function placeBox(boxes, rects, maxS, right) {
+  let best = null;
+  boxes.forEach(([bw, bh, k], i) => {
+    for (const r of rects) {
+      const s = Math.min(maxS, (r[2] - r[0]) / bw, (r[3] - r[1]) / bh);
+      if (s <= 0) continue;
+      const score = s * k - r[1] * 1e-4 + (right ? r[2] : -r[0]) * 1e-5;
+      if (!best || score > best.score) best = { i, score, S: s, X: right ? r[2] - bw * s : r[0], Y: r[1] };
+    }
+  });
   return best;
 }
+const hit = (a, b) => a && b && a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
 
-export function attach(svg, ctx) {
+export function attach(svg) {
   const doc = svg.ownerDocument, view = doc.defaultView;
   const R = {};
   for (const el of svg.querySelectorAll('[data-ref^="print-"]')) R[el.getAttribute('data-ref').slice(6)] = el;
-  // draw above the lead's plain letterbox rects: the paper margin IS the letterbox in style C
+  // draw above the lead's plain letterbox rects: the paper margin IS the letterbox in the picture book
   const host = svg.querySelector('#L-letterbox');
   if (R.root && host) host.appendChild(R.root);
 
   const cache = new Map();
-  const set = (el, name, val) => { if (!el) return; const k = el; let c = cache.get(k); if (!c) cache.set(k, c = {}); if (c[name] !== val) { c[name] = val; el.setAttribute(name, val); } };
+  const set = (el, name, val) => { if (!el) return; let c = cache.get(el); if (!c) cache.set(el, c = {}); if (c[name] !== val) { c[name] = val; el.setAttribute(name, val); } };
 
   // visible viewBox rectangle (preserveAspectRatio slice)
   let V = { x0: 0, y0: 0, x1: VIEW.w, y1: VIEW.h, w: VIEW.w, h: VIEW.h };
@@ -482,7 +662,7 @@ export function attach(svg, ctx) {
     V = { x0: VIEW.cx - w / 2, y0: VIEW.cy - hh / 2, x1: VIEW.cx + w / 2, y1: VIEW.cy + hh / 2, w, h: hh, left: r.left, top: r.top, s };
   };
   measureV();
-  // the UI control card (an HTML overlay that docks to a free corner): the ephemera keep clear of it
+  // the UI control card (an HTML overlay that docks to a free corner): title and caption keep clear of it
   let uiBox = null, uiAt = -1e9;
   const measureUI = force => {
     const now = view.performance.now();
@@ -493,25 +673,35 @@ export function attach(svg, ctx) {
     const r = el.getBoundingClientRect();
     if (r.width < 4 || r.height < 4) return;
     const X = px => V.x0 + (px - V.left) / V.s, Y = py => V.y0 + (py - V.top) / V.s;
-    uiBox = [X(r.left) - 8, Y(r.top) - 8, X(r.right) + 8, Y(r.bottom) + 8];
+    uiBox = [X(r.left) - 10, Y(r.top) - 10, X(r.right) + 10, Y(r.bottom) + 10];
   };
   view.addEventListener('resize', measureV);
-  // live: measure the card at the START of a frame (this rAF is registered before the runtime's loop), when layout is
-  // clean; a read inside update() would force a synchronous style + layout of the frame's pending scene writes
+  // live: measure the card at the START of a frame (registered before the runtime's loop), when layout is clean
   const early = () => { measureUI(false); view.requestAnimationFrame(early); };
   view.requestAnimationFrame(early);
 
   // skip the intro on any key / click (deterministic: the skip is pinned to the sim time it happened at)
-  let skipReq = false, skipAt = Infinity, lastT = 0, lastSig = '';
+  let skipReq = false, skipAt = Infinity, lastT = 0, lastSig = '', rimKey = '', pencilKey = '';
   const skip = () => { skipReq = true; };
   doc.addEventListener('keydown', skip, true);
   doc.addEventListener('pointerdown', skip, true);
 
-  const riderBox = (cam, pose) => {
+  const riderBox = (cam, pose, pad = 14 + Math.abs(cam.roll || 0) * 8) => {
     const z = cam.zoom, oy = GROUND_Y + (pose ? pose.riderY || 0 : 0);
     const X = x => VIEW.cx + z * (x - cam.fx), Y = y => VIEW.cy + z * (y - cam.fy);
-    const pad = 14 + Math.abs(cam.roll || 0) * 8;
     return [X(RIDER_X - 262) - pad, Y(oy - 572) - pad, X(RIDER_X + 305) + pad, Y(oy + 6) + pad];
+  };
+
+  // runtime text caches (a stretch / lap change rebuilds a few paths, once)
+  const capCache = new Map();
+  const capFor = (pg, mode) => { const k = pg.key + mode; let L = capCache.get(k); if (!L) { if (capCache.size > 40) capCache.clear(); capCache.set(k, L = captionLayout(pg, mode)); } return L; };
+  let curCap = { cap: '', bar: '' }, curLap = 0, curPn = '';
+  const fillCap = (k, L, pg) => {
+    if (curCap[k] === pg.key + L.w) return;
+    curCap[k] = pg.key + L.w;
+    if (L.patch !== undefined) { set(R[k + '-sh'], 'd', L.patch); set(R[k + '-patch'], 'd', L.patch); set(R[k + '-wash'], 'd', L.streak); }
+    for (const p of ['head', 'div', 'flw', 'zh', 'en', 'ini']) set(R[`${k}-${p}`], 'd', L[p === 'ini' ? 'ini' : p]);
+    set(R[k], 'data-text', `${pg.headZh} · ${pg.headEn} · ${pg.zh} ${pg.en}`);
   };
 
   return {
@@ -522,116 +712,182 @@ export function attach(svg, ctx) {
       if (skipReq) { skipReq = false; if (t < 4.2) skipAt = Math.min(skipAt, t); }
       const reduced = frame.reduced;
       const lb = Math.max(0, cam.letterbox || 0);
-      const kc = easeInOut(clamp01((lb - M) / (LB_MAX - M)));      // 0 poster → 1 cinematic bars
-      // integrator perf: after the intro nothing here moves unless the view, letterbox, UI card or (coarse) rider box changes
+      const kc = easeInOut(clamp01((lb - MB) / (LB_MAX - MB)));      // 0 page → 1 cinematic book edges
       if (frame.dt === 0) measureUI(true);
-      const rbQ = riderBox(cam, frame.pose).map(v => Math.round(v / 6));
-      const tiQ = t >= skipAt ? 99 : t;
-      const sig = [V.w, V.h, V.x0, V.y0, f(lb), tiQ >= 4.3 ? 'post' : f(tiQ), reduced ? 1 : 0, rbQ.join(), uiBox ? uiBox.map(Math.round).join() : ''].join('|');
+      const ti = t >= skipAt ? 99 : t;
+      // the page: which stretch / lap, and the caption fade across stretch boundaries (pure function of distance)
+      const D = frame.distance || 0, night = (frame.night || 0) > 0.6;
+      const pg = pageOf(D, night), p = lapPos(D);
+      let capA = Math.min(clamp01((pg.s.b - p) / 1500), pg.lap === 0 && pg.s.i === 0 ? clamp01((ti - 1.85) / 0.5) : clamp01((p - pg.s.a) / 1800));
+      if (reduced) capA = capA > 0.5 ? 1 : 0;
+      const turn = clamp01((p - pg.s.a) / 2400);          // the corner curl lifts as the page turns
+      const rb = riderBox(cam, frame.pose), rbQ = rb.map(x => Math.round(x / 6));
+      const sig = [V.w, V.h, V.x0, V.y0, f(lb), ti >= 4.3 ? 'post' : f(ti), reduced ? 1 : 0, rbQ.join(), uiBox ? uiBox.map(Math.round).join() : '',
+        pg.key, f(capA), turn < 1 ? f(turn) : 1].join('|');
       if (sig === lastSig) return;
       lastSig = sig;
 
-      // ---- border ----
-      const yT = V.y0 + Math.max(M, lb), yB = V.y1 - Math.max(MB, lb), xL = V.x0 + M, xR = V.x1 - M;
-      set(R.barL, 'transform', `translate(${f(xL)} 0)`); set(R.barR, 'transform', `translate(${f(xR)} 0)`);
-      set(R.barT, 'transform', `translate(0 ${f(yT)})`); set(R.barB, 'transform', `translate(0 ${f(yB)})`);
-      const ur = (el, x, y, w, hh) => set(el, 'transform', `translate(${f(x)} ${f(y)}) scale(${f(w)} ${f(hh)})`);
-      ur(R.kT, xL, yT, xR - xL, 3); ur(R.kB, xL, yB - 3, xR - xL, 3); ur(R.kL, xL, yT, 3, yB - yT); ur(R.kR, xR - 3, yT, 3, yB - yT);
-      const hg = 7;
-      ur(R.hT, xL - hg, yT - hg - 1, xR - xL + 2 * hg, 1); ur(R.hB, xL - hg, yB + hg - 1, xR - xL + 2 * hg, 1);
-      ur(R.hL, xL - hg - 1, yT - hg - 1, 1, yB - yT + 2 * hg + 1); ur(R.hR, xR + hg, yT - hg - 1, 1, yB - yT + 2 * hg + 1);
-      set(R.cTL, 'transform', `translate(${f(xL)} ${f(yT)})`); set(R.cTR, 'transform', `translate(${f(xR)} ${f(yT)}) scale(-1 1)`);
-      set(R.cBL, 'transform', `translate(${f(xL)} ${f(yB)}) scale(1 -1)`); set(R.cBR, 'transform', `translate(${f(xR)} ${f(yB)}) scale(-1 -1)`);
-      set(R.cropTL, 'transform', `translate(${f(xL)} ${f(yT)})`); set(R.cropTR, 'transform', `translate(${f(xR)} ${f(yT)}) scale(-1 1)`);
-      set(R.cropBL, 'transform', `translate(${f(xL)} ${f(yB)}) scale(1 -1)`); set(R.cropBR, 'transform', `translate(${f(xR)} ${f(yB)}) scale(-1 -1)`);
-      const cx = (xL + xR) / 2, cy = (yT + yB) / 2;
-      set(R.eT, 'transform', `translate(${f(cx)} ${f(yT + 1.5)})`); set(R.eB, 'transform', `translate(${f(cx)} ${f(yB - 1.5)}) scale(1 -1)`);
-      set(R.eL, 'transform', `translate(${f(xL + 1.5)} ${f(cy)}) rotate(-90)`); set(R.eR, 'transform', `translate(${f(xR - 1.5)} ${f(cy)}) rotate(90)`);
-      set(R.regL, 'transform', `translate(${f(V.x0 + 7.5)} ${f(cy)})`); set(R.regR, 'transform', `translate(${f(V.x1 - 7.5)} ${f(cy)})`);
-      // printer's strip along the bottom edge of the paper
-      const sy = V.y1 - 8.6;
-      set(R.regB, 'transform', `translate(${f(cx)} ${f(sy)})`);
-      const narrow = V.w < 760;
-      set(R.imprint, 'transform', `translate(${f(xL + 22)} ${f(sy + 2.7)})`);
-      set(R.edition, 'transform', `translate(${f(xR - 22)} ${f(sy + 2.7)})`);
-      set(R.edition, 'opacity', narrow ? 0 : 1);
-      set(R.regB, 'opacity', narrow ? 0 : 1);
-      set(R.tint, 'opacity', V.w < 520 ? 0 : 1);
-      set(R.colour, 'transform', `translate(${f(narrow ? xR - 22 - 7 * 12 : xR - 22 - ED.w - 16 - 7 * 12)} ${f(sy)})`);
+      // ---- page geometry: margins shrink where the rider would otherwise be covered (close camera) ----
+      const rTop = riderBox(cam, frame.pose, 0)[1], rBot = riderBox(cam, frame.pose, -2)[3];
+      const mT = Math.max(RIM + 2, Math.min(MT, rTop - 3 - V.y0)), mB = Math.max(RIM + 2, Math.min(MB, V.y1 - rBot));
+      const yT = V.y0 + Math.max(mT, lb), yB = V.y1 - Math.max(mB, lb), xL = V.x0 + MS, xR = V.x1 - MS;
+      const cx = (V.x0 + V.x1) / 2, cy = (yT + yB) / 2;
+      set(R.mT, 'transform', `translate(0 ${f(yT)})`); set(R.mB, 'transform', `translate(0 ${f(yB)})`);
+      set(R.mL, 'transform', `translate(${f(xL)} 0)`); set(R.mR, 'transform', `translate(${f(xR)} 0)`);
+      set(R.fibre, 'transform', `translate(${f(V.x0)} ${f(V.y0)}) scale(${f(V.w)} ${f(V.h)})`);
+      // rim (cloth + page stack + deckle) along the four screen edges: rebuilt only when the view changes
+      const rk = [V.x0, V.y0, V.w, V.h].map(Math.round).join();
+      if (rk !== rimKey) {
+        rimKey = rk;
+        const E = { T: [V.x0, V.x1, 0], B: [V.x0, V.x1, 1], L: [V.y0, V.y1, 2], R: [V.y0, V.y1, 3] };
+        for (const [k, [a, b, i]] of Object.entries(E)) {
+          const d = rimD(Math.floor(a) - 20, Math.ceil(b) + 20, 90 + i);
+          for (const part of ['cloth', 'band', 'lines', 'deck']) set(R[`rim${k}-${part}`], 'd', d[part]);
+          set(R[`rim${k}-weave`], 'd', d.cloth);
+        }
+      }
+      set(R.rimT, 'transform', `translate(0 ${f(V.y0)})`);
+      set(R.rimB, 'transform', `translate(0 ${f(V.y1)}) scale(1 -1)`);
+      set(R.rimL, 'transform', `translate(${f(V.x0)} 0) matrix(0 1 1 0 0 0)`);
+      set(R.rimR, 'transform', `translate(${f(V.x1)} 0) matrix(0 1 -1 0 0 0)`);
+      // pencil frame
+      const pk = [xL, yT, xR, yB].map(x => Math.round(x * 2)).join();
+      if (pk !== pencilKey) {
+        pencilKey = pk;
+        const pd = pencilD(xL, yT, xR, yB, { t: yT - V.y0 > 18, b: V.y1 - yB > 18 });
+        set(R.pencilA, 'd', pd.a); set(R.pencilB, 'd', pd.b);
+      }
+      // gutter: margins full strength; over the picture only down to above the rider, fading
+      const GW = 64;
+      const ur = (el, x, y, w, hh) => { set(el, 'transform', `translate(${f(x)} ${f(y)}) scale(${f(w)} ${f(Math.max(0.01, hh))})`); set(el, 'opacity', hh > 1 ? 1 : 0); };
+      ur(R.gutT, cx - GW / 2, V.y0, GW, yT - V.y0 + 1);
+      ur(R.gutB, cx - GW / 2, yB - 1, GW, V.y1 - yB + 1);
+      const gEnd = Math.min(rb[1] - 24, yT + 300);
+      ur(R.gutP, cx - GW / 2, yT, GW, (cx > rb[0] - GW && cx < rb[2] + GW) ? gEnd - yT : yB - yT - 40);
+      set(R.stitch, 'transform', `translate(${f(cx)} ${f(V.y0 + RIM + 6)})`);
+      set(R.stitch, 'opacity', yT - V.y0 > 30 ? 1 : 0);
 
-      // ---- ephemera: ticket + stamp/postmark (bottom-right corner; into the bars in cinematic) ----
-      const es = Math.min(1, (V.w - 40) / 330);
-      const exR = xR - 26, eyB = yB - 18;
-      // wide poses (screen)
-      const tW = { x: exR - TICKET.w * es, y: eyB - TICKET.h * es - 2, r: -4, s: es };
-      const pW = { x: tW.x - 76 * es, y: eyB - 118 * es, r: 0, s: es };
-      // cinematic poses: ticket in the bottom bar, stamp + postmark in the top bar
-      const barHb = lb - MB - 12;
-      const ts = Math.max(0.3, Math.min(1, barHb / TICKET.h));
-      const tC = { x: exR - TICKET.w * ts, y: V.y1 - lb + 10, r: 0, s: ts };
-      const pC = { x: tC.x - 80 * ts, y: tC.y - 22 * ts, r: 0, s: ts };   // stamp stuck across the bar's edge
-      const mix = (a, b) => ({ x: lerp(a.x, b.x, kc), y: lerp(a.y, b.y, kc), r: lerp(a.r, b.r, kc), s: lerp(a.s, b.s, kc) });
-      const tp_ = mix(tW, tC), pp = mix(pW, pC);
-      // corner choice: bottom-right, else bottom-left, else hidden (never under the UI card or the rider)
-      const rbE = riderBox(cam, frame.pose);
-      const eBox = [pp.x - 4, pp.y - 6, exR + 6, Math.max(tp_.y + (TICKET.h + 12) * tp_.s, eyB + 6)];
-      const hit = (a, b) => b && a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
-      const shiftL = xL + 26 - eBox[0];
-      const boxL = [eBox[0] + shiftL, eBox[1], eBox[2] + shiftL, eBox[3]];
-      let dx = 0, show = 1;
-      if (hit(eBox, uiBox)) { if (!hit(boxL, uiBox) && !(kc < 0.5 && hit(boxL, rbE))) dx = shiftL; else show = 0; }
-      tp_.x += dx; pp.x += dx;
-      set(R.ephemera, 'opacity', show);
-      set(R.ticket, 'transform', `translate(${f(tp_.x)} ${f(tp_.y)}) rotate(${f(tp_.r)}) scale(${f(tp_.s)})`);
-      set(R.post, 'transform', `translate(${f(pp.x)} ${f(pp.y)}) rotate(${f(pp.r)}) scale(${f(pp.s)})`);
+      // ---- margin furniture ----
+      const topMid = (V.y0 + RIM + yT) / 2, botMid = (yB + V.y1 - RIM) / 2;
+      const topOn = yT - V.y0 > 19 ? 1 : 0, botOn = V.y1 - yB > 24 ? 1 : 0;
+      const halfW = (xR - xL) / 2;
+      const headS = Math.min(1, (halfW - 70) / 250);
+      set(R.headL, 'transform', `translate(${f(xL + halfW / 2 + 10)} ${f(V.y0 + RIM + 11.5)}) scale(${f(Math.max(0.5, headS))})`);
+      set(R.headR, 'transform', `translate(${f(cx + halfW / 2 - 10)} ${f(V.y0 + RIM + 11.5)}) scale(${f(Math.max(0.5, headS))})`);
+      set(R.headL, 'opacity', topOn && headS > 0.5 ? 1 : 0); set(R.headR, 'opacity', topOn && headS > 0.5 ? 1 : 0);
+      if (pg.lap !== curLap) {
+        curLap = pg.lap;
+        const hr = text(headR(pg.lap), { size: 9.5, align: 'center', track: 0.3 });
+        set(R['headR-d'], 'd', hr.d); set(R['headR-t'], 'data-text', headR(pg.lap));
+        const pt = plateText(pg.lap);
+        set(R['plate-zh'], 'd', pt.zh + pt.dot); set(R['plate-en'], 'd', pt.en);
+        const ch = chapterOf(pg.lap); set(R['plate-t'], 'data-text', `${ch.en} · ${ch.zh}`);
+      }
+      if (curPn !== String(pg.n)) {
+        curPn = String(pg.n);
+        for (const [k, s, zh] of [['Z', zhNum(pg.n), true], ['A', String(pg.n), false]]) {
+          const pn = pageNum(s, zh);
+          set(R[`pn${k}-d`], 'd', pn.d); set(R[`pn${k}-stem`], 'd', pn.stem); set(R[`pn${k}-leaf`], 'd', pn.leaf);
+          set(R[`pn${k}-t`], 'data-text', s);
+        }
+      }
+      const pnY = kc > 0.5 ? V.y1 - RIM - 14 : botMid + 5;
+      set(R.pnZ, 'transform', `translate(${f(xL + 34)} ${f(pnY)})`); set(R.pnA, 'transform', `translate(${f(xR - 34)} ${f(pnY)})`);
+      set(R.pnZ, 'opacity', botOn); set(R.pnA, 'opacity', botOn);
+      set(R.colo, 'transform', `translate(${f(cx + halfW / 2)} ${f(kc > 0.5 ? V.y1 - RIM - 14 : botMid + 1)})`);
+      set(R.colo, 'opacity', botOn && halfW > 330 ? 1 : 0);
+      const sp = (k, x, y, s, on, rot = 0) => { set(R['sp-' + k], 'transform', `translate(${f(x)} ${f(y)}) rotate(${rot}) scale(${f(s)})`); set(R['sp-' + k], 'opacity', on ? 1 : 0); };
+      const sb = Math.min(1, (V.y1 - yB - RIM) / 24);
+      sp('shell', xL + 72, botMid + 1.5, Math.max(0.6, sb), botOn, -12);
+      sp('star', xR - 74, botMid + 0.5, Math.max(0.6, sb), botOn, 8);
+      sp('boat', xL + halfW / 2, botMid + 0.5, Math.max(0.6, sb), botOn && halfW > 300 && kc < 0.5);
+      sp('heart', xR - 118, botMid + 1, Math.max(0.6, sb), botOn && halfW > 380, -6);
+      const st = Math.min(1, (yT - V.y0 - RIM) / 16);
+      sp('bone', xL + 44, topMid + 0.5, Math.max(0.55, st * 0.9), topOn, -4);
+      sp('feather', xR - 64, topMid + 0.5, Math.max(0.55, st * 0.9), topOn && halfW > 260, 5);
+      sp('thumb', V.x0 + RIM + (MS - RIM) / 2 + 1, cy + (yB - yT) * 0.28, 1, V.h > 500, 14);
+      // curled corner (bottom right of the page); it lifts a little higher as a new page arrives
+      const lift = reduced ? 1 : 1 + 0.45 * Math.sin(Math.PI * clamp01(turn * 1.6)) * (pg.s.i || pg.lap ? 1 : 0);
+      set(R.curl, 'transform', `translate(${f(V.x1 - RIM + 1)} ${f(V.y1 - RIM + 1)}) scale(${f(Math.min(1, (V.y1 - yB) / 30 + 0.4) * lift)})`);
+      // night: the bedside lamp's warm pool over the top-left of the page
+      set(R.lampglow, 'transform', `translate(${f(V.x0 + 140)} ${f(V.y0 + 90)}) scale(${f(V.w * 0.42)} ${f(V.h * 0.5)})`);
 
-      // ---- title card ----
-      const rb = riderBox(cam, frame.pose);
-      const ti = t >= skipAt ? 99 : t;
-      const inset = 38;
-      const top = Object.assign([xL + 14, yT + 14, xR - 14, Math.min(rb[1] - 6, yB - 14)], { inset });
-      const left = Object.assign([xL + 14, yT + 14, Math.min(rb[0] - 6, xR - 14), yB - 150], { inset: 12 });
-      const right = Object.assign([Math.max(rb[2] + 6, xL + 14), yT + 14, xR - 14, pp.y - 8], { right: true });
-      const bar = Object.assign([xL + 20, V.y0 + 12, xR - 20, yT - 12], { inset: 10 });
-      // poster placement (free space around the rider) and bar placement (inside the cinematic top bar), blended by kc
-      const cardP = place(['line', 'stack'], [top, left, right], 1.12), cardB = place(['line'], [bar], 1.12);
-      const logoP = place(['logo'], [Object.assign([xL + 14, yT + 12, xR - 14, Math.min(rb[1] - 4, yT + 12 + 42)], { inset: 6 }),
-        Object.assign([xL + 14, yT + 12, Math.min(rb[0] - 4, xL + 14 + 330), yT + 12 + 42], { inset: 6 })], 0.31);
-      const logoB = place(['logoBar'], [bar], 0.46);
+      // ---- ribbon: hangs from the top edge into the picture, clear of the rider and the UI ----
+      const rbX = xR - 150 - (V.w < 900 ? 0 : 20);
+      let rEnd = yT + RIBBON.len;
+      const rBox = [rbX - 12, V.y0, rbX + 12, rEnd + 6];
+      if (hit(rBox, rb)) rEnd = Math.max(yT + 6, Math.min(rEnd, rb[1] - 6));
+      set(R.ribbon, 'transform', `translate(${f(rbX)} ${f(rEnd)})`);
+      const ribbonBox = [rbX - 14, V.y0, rbX + 16, rEnd + 8];
 
-      // intro plates
+      // ---- title card: placed in the free space around the rider (and the UI card) ----
+      const area = [xL + 14, yT + 12, xR - 14, yB - 12];
+      const obs = [rb, uiBox, ribbonBox];
+      const rects = freeRects(area, obs);
+      const LB = k => LAYOUTS[k].box, bw = k => LB(k)[2] - LB(k)[0], bh = k => LB(k)[3] - LB(k)[1];
+      const pc = placeBox([[bw('line'), bh('line'), 1], [bw('stack'), bh('stack'), LAYOUTS.stack.k]], rects, 0.92, false)
+        || { i: 0, S: 0.3, X: area[0], Y: area[1] };
+      const cardName = pc.i ? 'stack' : 'line';
+      const cardP = { name: cardName, S: pc.S, X: pc.X - LB(cardName)[0] * pc.S, Y: pc.Y - LB(cardName)[1] * pc.S };
+      const lrects = freeRects([xL + 12, yT + 10, xR - 12, Math.min(yT + 10 + 44, yB)], obs);
+      const pl = placeBox([[bw('logo'), bh('logo'), 1]], lrects, 0.3, false) || { S: 0.22, X: xL + 12, Y: yT + 10 };
+      const logoP = { name: 'logo', S: pl.S, X: pl.X - LB('logo')[0] * pl.S, Y: pl.Y - LB('logo')[1] * pl.S };
+      const barH = lb - (RIM + 22) - 12;
+      const bS = Math.max(0.05, Math.min(0.5, barH / bh('logo'), (halfW * 1.2) / bw('logo')));
+      const barP = { name: 'logo', S: bS, X: xL + 20 - LB('logo')[0] * bS, Y: V.y0 + RIM + 22 + (barH - bh('logo') * bS) / 2 - LB('logo')[1] * bS };
+
+      // intro beats
       const E = reduced ? () => 1 : (a, d) => clamp01((ti - a) / d);
-      const shE = easeOut(E(0.12, 0.45)), sealE = E(1.18, 0.32), subE = easeOut(E(1.42, 0.42));
-      let shrink = easeInOut(clamp01((ti - 3.55) / 0.62));
-      let alpha = 1;
+      let shrink = easeInOut(clamp01((ti - 3.55) / 0.62)), alpha = 1;
       if (reduced) { shrink = ti < 3.9 ? 0 : 1; alpha = ti < 3.6 ? 1 : ti < 3.9 ? 1 - (ti - 3.6) / 0.3 : Math.min(1, (ti - 3.9) / 0.35); }
       if (ti >= 99) shrink = 1;
-      const at = (pl, g) => { const a = LAYOUTS[pl.name][g]; return [pl.X + pl.S * a.x, pl.Y + pl.S * a.y, pl.S * (a.s || 1)]; };
+      const at = (pl, g) => { const a = LAYOUTS[pl.name][g]; return [pl.X + pl.S * a[0], pl.Y + pl.S * a[1], pl.S * (a[2] || 1)]; };
       const mix3 = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
-      const pose = g => {
-        const c = mix3(at(cardP, g), at(cardB, g), kc), l = mix3(at(logoP, g), at(logoB, g), kc), p = mix3(c, l, shrink);
-        return `translate(${f(p[0])} ${f(p[1])}) scale(${f(p[2])})`;
-      };
-      set(R.w1, 'transform', pose('w1')); set(R.w2, 'transform', pose('w2'));
-      set(R.seal, 'transform', pose('seal')); set(R.sub, 'transform', pose('sub'));
+      const pose = g => { const q = mix3(mix3(at(cardP, g), at(barP, g), kc), mix3(at(logoP, g), at(barP, g), kc), shrink); return `translate(${f(q[0])} ${f(q[1])}) scale(${f(q[2])})`; };
+      for (const g of ['w1', 'w2', 'zh', 'sw', 'sub', 'plate']) set(R[g], 'transform', pose(g));
       set(R.title, 'opacity', f(alpha));
-      const subRoll = lerp(clamp01(1 - shrink * 1.4), 1, kc);   // the band rolls up into the logo, unrolls in the bar
-      const WW = { w1: W1.w, w2: W2.w };
-      const wipe = { face: { w1: E(0.42, 0.4), w2: E(0.74, 0.22) }, inl: { w1: E(0.9, 0.3), w2: E(1.08, 0.18) } };
-      for (const k of ['w1', 'w2']) {
-        for (const pl of ['face', 'inl']) { const e = wipe[pl][k]; set(R[`wipe-${pl}-${k}`], 'transform', `translate(-30 0) scale(${e >= 1 ? 4000 : f(Math.max(0.001, (WW[k] + 60) * e))} 1)`);
-          set(R[`wg-${pl}-${k}`], 'clip-path', e >= 1 ? 'none' : `url(#print-wipe-${pl}-${k})`); }   // no clip once pulled
-        for (let i = 1; i <= SH_N; i++) set(R[`sh-${k}-${i}`], 'transform', `translate(${f(i * SH_STEP * shE)} ${f(i * SH_STEP * shE)})`);
-        set(R['shadow-' + k], 'opacity', f(Math.min(1, shE * 2.5)));
-        set(R['hatch-' + k], 'opacity', f(shE));
-        set(R['hatch-' + k], 'display', shrink >= 1 && kc < 0.01 ? 'none' : 'inline');   // too fine for the small logo
-        const fe = easeOut(wipe.face[k]);
-        set(R['face-' + k], 'transform', `translate(${f(-7 * (1 - fe))} ${f(-5 * (1 - fe))})`);   // drops into register
+      set(R.sub, 'opacity', f(E(1.35, 0.45) * (1 - Math.max(shrink, kc))));
+      // letters pop in one by one (a squash-and-settle), then the 鹈鹕湾 stamp, the swash, the twinkles, the plate
+      const pop = (el, e, cxx, rot) => {
+        if (e >= 1) { set(el, 'transform', ''); set(el, 'opacity', 1); return; }
+        const b = e > 0 ? backOut(e) : 0;
+        set(el, 'opacity', e > 0 ? f(Math.min(1, e * 3)) : 0);
+        set(el, 'transform', `translate(${f(cxx)} 0) rotate(${f(rot * (1 - e))}) scale(${f(Math.max(0.01, 0.35 + 0.65 * b))} ${f(Math.max(0.01, 0.2 + 0.8 * b))}) translate(${f(-cxx)} 0)`);
+      };
+      const glyphs = [['a', 7], ['b', 3], ['z', 3]];
+      let gi = 0;
+      for (const [k, nG] of glyphs) for (let i = 0; i < nG; i++, gi++) {
+        const el = R[`gl-${k}${i}`]; if (!el) continue;
+        const t0 = k === 'z' ? 0.98 + i * 0.1 : 0.16 + gi * 0.075;
+        pop(el, E(t0, 0.34), 0, (gi % 2 ? 1 : -1) * 9);
       }
-      const sb = sealE > 0 ? backOut(sealE) : 0;
-      set(R['seal-in'], 'transform', `translate(28 70) rotate(${f(-10 * (1 - sealE))}) scale(${f(sealE > 0 ? 1.7 - 0.7 * sb : 1.7)}) translate(-28 -70)`);
-      set(R['seal-in'], 'opacity', sealE > 0 ? 1 : 0);
-      set(R['sub-in'], 'transform', `scale(${f(Math.max(0.001, subE * subRoll))} 1)`);
+      set(R.swwipe, 'transform', `translate(0 0) scale(${f(Math.max(0.001, easeOut(E(1.2, 0.4))))} 1)`);
+      for (let i = 0; i < 3; i++) { const e = E(1.3 + i * 0.09, 0.3); const b = e > 0 ? backOut(e) : 0; set(R['tw' + i], 'opacity', e > 0 ? 1 : 0); set(R['tw' + i], 'transform', `${['translate(-20 -78)', `translate(${f(W2 + 22)} -66)`, `translate(${f(W2 + 40)} -30)`][i]} rotate(${f(90 * (1 - e))}) scale(${f(Math.max(0.01, b))})`); }
+      const pe = E(1.5, 0.42), pb = pe > 0 ? backOut(pe) : 0;
+      set(R['plate-in'], 'opacity', pe > 0 ? f(Math.min(1, pe * 2.5)) : 0);
+      set(R['plate-in'], 'transform', pe >= 1 ? '' : `translate(${PW / 2} ${PH / 2}) rotate(${f(-5 * (1 - pe))}) scale(${f(1.35 - 0.35 * pb)}) translate(${-PW / 2} ${-PH / 2})`);
+
+      // ---- the story caption ----
+      const titleBox = s => { const q = s === 'card' ? cardP : logoP, b = LB(q.name); return [q.X + b[0] * q.S - 8, q.Y + b[1] * q.S - 8, q.X + b[2] * q.S + 8, q.Y + b[3] * q.S + 8]; };
+      const crects = freeRects(area, [...obs, titleBox('card'), titleBox('logo')]);
+      const Lline = capFor(pg, 'line'), Lcol = capFor(pg, 'col');
+      const pcap = placeBox([[Lline.w, Lline.h, 1], [Lcol.w, Lcol.h, 0.9]], crects, 1, true);
+      const capOn = pcap && pcap.S > 0.42;
+      if (pcap) {
+        const L = pcap.i ? Lcol : Lline;
+        fillCap('cap', L, pg);
+        set(R.cap, 'transform', `translate(${f(pcap.X)} ${f(pcap.Y)}) scale(${f(pcap.S)})`);
+      }
+      set(R.cap, 'opacity', capOn ? f(capA * (1 - kc)) : 0);
+      set(R['cap-in'], 'transform', capA >= 1 || reduced ? '' : `translate(0 ${f(6 * (1 - easeOut(capA)))})`);
+      if (kc > 0.001) {
+        const Lb = capFor(pg, 'bar');
+        fillCap('bar', Lb, pg);
+        const zone = [xL + 110, yB + 8, xR - 110, V.y1 - RIM - 28];
+        const s = Math.max(0.05, Math.min(1, (zone[2] - zone[0]) / Lb.w, (zone[3] - zone[1]) / Lb.h));
+        set(R.bar, 'transform', `translate(${f((zone[0] + zone[2]) / 2 - Lb.w * s / 2)} ${f(zone[1] + ((zone[3] - zone[1]) - Lb.h * s) / 2)}) scale(${f(s)})`);
+      }
+      set(R.bar, 'opacity', kc > 0.001 ? f(capA * kc) : 0);
     },
   };
 }
