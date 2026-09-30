@@ -82,8 +82,6 @@ function* bakeGen(svg, opts) {
   const story = (cfg.story || []).map(e => ({ type: e.type, t0: cfg.start + e.t0 }));
   const render = t => pb.renderAt(t, { tod: cfg.tod, cam: cfg.cam, cadence: cfg.cadence, loopT: T, toggles: cfg.toggles, events: story.filter(e => e.t0 <= t + 1e-9) });
   const stats = { period: T, fps, start: cfg.start, samples: 0, tracks: 0, animated: 0, anims: 0, keyframes: 0, warnings: [], nonClosing: [], trends: [], subPeriods: {}, errMax: {}, bytesByGroup: {}, ms: {} };
-  const prevBake = globalThis.__pbBake;
-  globalThis.__pbBake = true;   // land.js (journey) falls back to the seamless hero loop while recording
   try {
     // ---- 1. base frame: the static fallback of the baked file is the t0 pose (a proper hero pose, not a collapsed rig)
     render(cfg.start); render(cfg.start);
@@ -154,7 +152,6 @@ function* bakeGen(svg, opts) {
     if (typeof window !== 'undefined') window.__pbBakeStats = stats;
     return out;
   } finally {
-    globalThis.__pbBake = prevBake;
     if (saved) restoreState(pb, st, saved);
   }
 }
