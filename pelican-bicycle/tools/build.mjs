@@ -75,5 +75,6 @@ ${keyRows.join('\n')}
 |---|---|---|
 ${eggRows.join('\n')}
 `;
-fs.writeFileSync(path.join(ROOT, 'README.md'), readme);
+const making = path.join(ROOT, 'docs/MAKING.md');
+fs.writeFileSync(path.join(ROOT, 'README.md'), readme + (fs.existsSync(making) ? '\n' + fs.readFileSync(making, 'utf8') : ''));
 console.log('README.md generated');

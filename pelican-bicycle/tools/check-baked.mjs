@@ -192,7 +192,8 @@ await lp.waitForFunction(() => window.__pb && window.__pb.ready, null, { timeout
 await lp.addStyleTag({ content: '#ui{display:none!important}' });
 const liveAt = async tau => { await lp.evaluate(o => window.__pb.renderAt(o.t, { tod: o.tod, cam: o.cam, cadence: o.cad, loopT: o.T, toggles: { skeleton: false } }), { t: START + tau, tod: TOD, cam: CAM, cad: CAD, T }); return decodePNG(await lp.screenshot()); };
 const bakedAt = async tau => { await bp.evaluate(t => { const s = document.getElementById('baked'); s.pauseAnimations(); s.setCurrentTime(t); }, tau); await bp.waitForTimeout(16); return decodePNG(await bp.screenshot()); };
-const riderBox = await lp.evaluate(() => { const r = document.querySelector('#rider').getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom].map(Math.round); });
+// rider box = union of the slot groups (the live scene is split into <svg> sheets; #rider holds only the first group)
+const riderBox = await lp.evaluate(() => { let l = 1e9, t = 1e9, r = -1e9, b = -1e9; for (const e of document.querySelectorAll('#scene [id^="j-"]')) { const q = e.getBoundingClientRect(); if (!q.width && !q.height) continue; l = Math.min(l, q.left); t = Math.min(t, q.top); r = Math.max(r, q.right); b = Math.max(b, q.bottom); } return [l, t, r, b].map(Math.round); });
 const RB = [Math.max(0, riderBox[0] - 20), Math.max(0, riderBox[1] - 20), Math.min(1600, riderBox[2] + 20), Math.min(900, riderBox[3] + 10)];
 
 if (!parse.error) {

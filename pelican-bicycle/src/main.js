@@ -114,7 +114,7 @@ for (const ev of ['ui:tod', 'ui:camera', 'ui:toggle', 'ui:speed']) bus.on(ev, ()
 // click-to-feed: any hit on the rider, or a near miss (within 12 px of the bird's body, neck, head or bill boxes), on every camera
 const birdParts = ['j-body', 'j-neck', 'j-head', 'j-billUpper', 'j-pouch'].map(id => svg.querySelector('#' + id)).filter(Boolean);
 svg.addEventListener('click', e => {
-  if (e.target.closest && e.target.closest('#L-rider')) { bus.emit('ui:gulp', {}); return; }
+  if (e.target.closest && e.target.closest('[id^="j-"]')) { bus.emit('ui:gulp', {}); return; }   // any rider slot (the rider spans several sheets)
   for (const el of birdParts) { const b = el.getBoundingClientRect(), m = 12; if (e.clientX > b.left - m && e.clientX < b.right + m && e.clientY > b.top - m && e.clientY < b.bottom + m) { bus.emit('ui:gulp', {}); return; } }
 });
 
@@ -158,6 +158,7 @@ function render(dt) {
   const [rcx, rcy] = BIKE.rearContact;
   setA(riderEl, 'transform', `translate(${RIDER_X} ${(GROUND_Y + pose.riderY).toFixed(2)}) rotate(${pose.bikePitch.toFixed(3)} ${rcx} ${rcy})`);
   for (const [s, el] of slotEls) { const j = pose.joints[s]; if (j && el) setA(el, 'transform', xf(j)); }
+  sheets.flush();   // camera / rider transforms reach the wrapper clones of the other sheets before any module measures
   // head focus in viewBox coords (depth-1 layers): sky / fx props should keep out of this circle (no-overlap zone)
   const hj = pose.joints.head, pr = (pose.bikePitch * Math.PI) / 180;
   const hx = hj ? hj.x - rcx : 0, hy = hj ? hj.y - rcy : 0;
@@ -171,14 +172,14 @@ function render(dt) {
   if (modPerf) {   // per-module totals, plus the last 600 frames' per-module ms in __pb.modPerf().frames (spike hunting)
     const fr = { core: performance.now() - tR0 }; let t1 = performance.now();
     for (const a of attached) if (a.update) { try { a.update(frame); } catch (e) { console.error(e); a.update = null; } const t2 = performance.now(); fr[a.__id] = t2 - t1; t1 = t2; }
-    ui.update(frame); audio.update(frame); sheets.update(cam); fr.ui = performance.now() - t1;
+    ui.update(frame); audio.update(frame); sheets.flush(); sheets.update(cam); fr.ui = performance.now() - t1;
     for (const k in fr) modPerf[k] = (modPerf[k] || 0) + fr[k];
     modPerf.n = (modPerf.n || 0) + 1; (modPerf.frames ||= []).push(fr); if (modPerf.frames.length > 600) modPerf.frames.shift();
     return frame;
   }
   else { for (const a of attached) if (a.update) try { a.update(frame); } catch (e) { console.error(e); a.update = null; }
   ui.update(frame); audio.update(frame); }
-  sheets.update(cam);
+  sheets.flush(); sheets.update(cam);
   return frame;
 }
 

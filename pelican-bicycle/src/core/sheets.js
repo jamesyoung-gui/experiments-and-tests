@@ -25,7 +25,7 @@ export function createSheets(wrapper, svg, opts) {
   const nSet = P.setAttribute, nGet = P.getAttribute, nRem = P.removeAttribute;
   const rootAttrs = { id: svg.getAttribute('id'), role: svg.getAttribute('role') };
   let parts = [svg], origOf = new Map(), clonesOf = new Map(), homeOf = new Map(), sheets = [], mo = null, isSplit = false;
-  let s = 1, dpr = 1, lastCam = null;
+  let s = 1, dpr = 1, lastCam = null, handle = null;
 
   const newPart = tag => {
     const p = doc.createElementNS(NS, 'svg');
@@ -139,7 +139,8 @@ export function createSheets(wrapper, svg, opts) {
     nSet.call(svg, 'id', 'scene-root'); nSet.call(svg, 'role', 'presentation'); nSet.call(svg, 'aria-hidden', 'true');
     nSet.call(svg, 'class', 'pb-sheet'); nSet.call(svg, 'data-sheet', 'defs');
     nSet.call(wrapper, 'id', rootAttrs.id || 'scene');
-    mo = new doc.defaultView.MutationObserver(recs => {
+    mo = new doc.defaultView.MutationObserver(recs => handle(recs));
+    handle = recs => {
       let resplit = false;
       for (const r of recs) {
         const k = r.attributeName; if (SKIP.has(k)) continue;
@@ -148,9 +149,9 @@ export function createSheets(wrapper, svg, opts) {
         if (l) for (const c of l) v === null ? nRem.call(c, k) : nSet.call(c, k, v);
       }
       if (resplit) { unsplit(); split(); }
-    });
+    };
     for (const o of new Set([...clonesOf.keys(), ...elided])) mo.observe(o, { attributes: true });
-    isSplit = true; lastCam = null;
+    isSplit = true; wrapper.__pbSplit = true; lastCam = null;
     resize();
   }
 
@@ -165,7 +166,7 @@ export function createSheets(wrapper, svg, opts) {
     nRem.call(svg, 'aria-hidden'); nRem.call(svg, 'class'); nRem.call(svg, 'data-sheet');
     rootAttrs.id === null ? nRem.call(svg, 'id') : nSet.call(svg, 'id', rootAttrs.id);
     rootAttrs.role === null ? nRem.call(svg, 'role') : nSet.call(svg, 'role', rootAttrs.role);
-    isSplit = false;
+    isSplit = false; wrapper.__pbSplit = false;
   }
 
   // slice fit: viewBox units -> CSS px
@@ -190,11 +191,14 @@ export function createSheets(wrapper, svg, opts) {
       if (css !== sh.css) { sh.css = css; sh.part.style.transform = px || py ? css : ''; }
     }
   }
+  // mirror pending wrapper changes to their clones NOW (the observer would do it at the next microtask: too late for
+  // code that measures in the same task, e.g. the UI docking during renderAt)
+  function flush() { if (mo) { const r = mo.takeRecords(); if (r.length) handle(r); } }
   // run fn on the single, unsplit <svg> (bake / download), then split again
   function whole(fn) {
     const was = isSplit;
     unsplit();
     try { return fn(svg); } finally { if (was) split(); }
   }
-  return { split, unsplit, update, resize, whole, get parts() { return parts; }, get sheets() { return sheets; }, get isSplit() { return isSplit; } };
+  return { split, unsplit, update, flush, resize, whole, get parts() { return parts; }, get sheets() { return sheets; }, get isSplit() { return isSplit; } };
 }

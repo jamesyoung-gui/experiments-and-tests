@@ -1457,6 +1457,8 @@ export function attach(svg, ctx) {
     pools[L] = Array.from({ length: POOL[L] }, (_, i) => { const el = r[`sl-${L}-${i}`]; return { el, uses: el ? [...el.children] : [], j: null, it: null }; });
   }
   const fixedSlots = [0, 1, 2].map(i => { const el = r['fx' + i]; return { el, uses: el ? [...el.children] : [], key: null }; });
+  const hosts = [...Object.keys(DEP).flatMap(L => [r['pool-' + L], r['sphost-' + L]]), r.fixed];
+  let hostMode = null;
   const DGW = 14.6;   // digit advance at size 21
   let bakeMode = null;
   const legacy = on => {   // bake: the classic seamless loop (the hero tile + two copies), no stream / set pieces
@@ -1496,8 +1498,12 @@ export function attach(svg, ctx) {
         disp(full, heroOn);
       }
       // host scroll offsets per layer (layer units): props below are placed at x + off[L]
-      const off = {};
-      if (!baking) for (const L of Object.keys(DEP)) {
+      // only while the runtime has split the scene into sheets (svg.__pbSplit): unsplit (the baker, ?nosheets) the props
+      // stay in screen space exactly as before and the hosts carry no transform
+      const off = { shore: 0, roadside: 0, road: 0, fg: 0 };
+      const hosted = !baking && !!svg.__pbSplit;
+      if (hosted !== hostMode) { hostMode = hosted; for (const el of hosts) if (el) { el.removeAttribute('transform'); el.__lv = undefined; } }
+      if (hosted) for (const L of Object.keys(DEP)) {
         const base = D * DEP[L], o = base - Math.floor(base / HOST_WRAP) * HOST_WRAP, xf0 = `translate(${f(-o)} 0)`;
         off[L] = o; set(r['pool-' + L], 'transform', xf0); set(r['sphost-' + L], 'transform', xf0);
         if (L === 'roadside') set(r.fixed, 'transform', xf0);

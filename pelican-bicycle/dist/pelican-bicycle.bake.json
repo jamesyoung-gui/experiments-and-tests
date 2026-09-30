@@ -1,9 +1,9 @@
 {
  "file": "dist/pelican-bicycle.svg",
  "bytes": 2601389,
- "gzip": 496629,
- "sha256": "8d7cd15b441b3fcba6cb9240b0895dabe3b22c7c309244f287e6874c6caed4ed",
- "bakeMs": 47788,
+ "gzip": 496610,
+ "sha256": "adaa2a3674e45e3546765968c0b3022e913927775eeae8a8f92f837b651e2ab7",
+ "bakeMs": 49184,
  "opts": {},
  "stats": {
   "period": 4,
@@ -1041,10 +1041,10 @@
    "other": 180240
   },
   "ms": {
-   "record": 33871,
-   "probe": 12183,
-   "analyse": 687,
-   "total": 47269
+   "record": 35269,
+   "probe": 12188,
+   "analyse": 641,
+   "total": 48605
   },
   "childList": [
    "27 mutations → 15 presence nodes",
@@ -2269,19 +2269,9 @@
     "194@48"
    ],
    [
-    "land-bshore0.display",
-    129,
-    "3@96"
-   ],
-   [
     "land-bshore0.transform",
     3336,
     "191@96"
-   ],
-   [
-    "land-bshore1.display",
-    129,
-    "3@96"
    ],
    [
     "land-bshore1.transform",
@@ -2289,19 +2279,9 @@
     "191@96"
    ],
    [
-    "land-bshore2.display",
-    129,
-    "3@96"
-   ],
-   [
     "land-bshore2.transform",
     3145,
     "191@96"
-   ],
-   [
-    "land-broadside0.display",
-    129,
-    "3@96"
    ],
    [
     "land-broadside0.transform",
@@ -2309,19 +2289,9 @@
     "383@96"
    ],
    [
-    "land-broadside1.display",
-    129,
-    "3@96"
-   ],
-   [
     "land-broadside1.transform",
     5837,
     "383@96"
-   ],
-   [
-    "land-broadside2.display",
-    129,
-    "3@96"
    ],
    [
     "land-broadside2.transform",
@@ -2329,29 +2299,14 @@
     "383@96"
    ],
    [
-    "land-broad0.display",
-    129,
-    "3@96"
-   ],
-   [
     "land-broad0.transform",
     6413,
     "383@96"
    ],
    [
-    "land-broad1.display",
-    129,
-    "3@96"
-   ],
-   [
     "land-broad1.transform",
     5935,
     "383@96"
-   ],
-   [
-    "land-broad2.display",
-    129,
-    "3@96"
    ],
    [
     "land-broad2.transform",
@@ -2734,21 +2689,6 @@
     "6@96"
    ],
    [
-    "land-sl-roadside-3.style:--pb-inkT",
-    236,
-    "7@96"
-   ],
-   [
-    "land-sl-roadside-3.style:--pb-inkR",
-    164,
-    "4@96"
-   ],
-   [
-    "land-sl-roadside-3.style:--pb-inkO",
-    132,
-    "3@96"
-   ],
-   [
     "land-sl-roadside-3.transform",
     4901,
     "153@96,94@96,50@96"
@@ -2772,11 +2712,6 @@
     "land-sl-shore-30.style:--pb-inkO",
     165,
     "4@96"
-   ],
-   [
-    "land-sl-shore-30.display",
-    245,
-    "12@96"
    ],
    [
     "g.transform",
@@ -2809,34 +2744,19 @@
     "8@96"
    ],
    [
-    "land-sl-shore-31.display",
-    245,
-    "12@96"
-   ],
-   [
     "use.href",
     744,
     "29@96"
    ],
    [
-    "land-sl-roadside-4.style:--pb-inkR",
-    181,
-    "5@96"
-   ],
-   [
-    "land-sl-roadside-4.style:--pb-inkT",
-    235,
-    "7@96"
-   ],
-   [
-    "land-sl-roadside-4.style:--pb-inkO",
-    184,
-    "5@96"
-   ],
-   [
     "land-tile-shore.transform",
     188,
     "7@96"
+   ],
+   [
+    "land-bshore2.display",
+    129,
+    "3@96"
    ],
    [
     "land-tile-shore.display",
@@ -2862,11 +2782,6 @@
     "land-sl-shore-32.style:--pb-inkT",
     132,
     "3@96"
-   ],
-   [
-    "land-sl-shore-32.display",
-    245,
-    "12@96"
    ],
    [
     "land-sl-road-0.display",
@@ -2899,11 +2814,6 @@
     "3@96"
    ],
    [
-    "land-sl-roadside-5.display",
-    661,
-    "44@96"
-   ],
-   [
     "use.href",
     327,
     "11@96"
@@ -2929,29 +2839,9 @@
     "3@96"
    ],
    [
-    "land-sl-shore-0.display",
-    219,
-    "10@96"
-   ],
-   [
     "use.href",
     828,
     "32@96"
-   ],
-   [
-    "land-sl-roadside-6.style:--pb-inkR",
-    234,
-    "7@96"
-   ],
-   [
-    "land-sl-roadside-6.style:--pb-inkT",
-    132,
-    "3@96"
-   ],
-   [
-    "land-sl-roadside-6.style:--pb-inkO",
-    234,
-    "7@96"
    ],
    [
     "land-sl-roadside-6.display",
@@ -3004,21 +2894,6 @@
     "34@96"
    ],
    [
-    "land-sl-roadside-7.style:--pb-inkR",
-    182,
-    "5@96"
-   ],
-   [
-    "land-sl-roadside-7.style:--pb-inkO",
-    340,
-    "11@96"
-   ],
-   [
-    "land-sl-roadside-7.display",
-    675,
-    "45@96"
-   ],
-   [
     "use.href",
     408,
     "15@96"
@@ -3039,11 +2914,6 @@
     "5@96"
    ],
    [
-    "land-sl-shore-2.display",
-    271,
-    "14@96"
-   ],
-   [
     "sea-spk1.transform",
     8925,
     "776@96"
@@ -3052,11 +2922,6 @@
     "use.href",
     873,
     "31@96"
-   ],
-   [
-    "land-sl-road-1.display",
-    285,
-    "15@96"
    ],
    [
     "land-sl-fg-3.display",
@@ -3087,11 +2952,6 @@
     "land-sl-shore-3.style:--pb-inkO",
     132,
     "3@96"
-   ],
-   [
-    "land-sl-shore-3.display",
-    193,
-    "8@96"
    ],
    [
     "sea-burgee.transform",
@@ -3174,11 +3034,6 @@
     "7@96"
    ],
    [
-    "land-sl-shore-4.display",
-    219,
-    "10@96"
-   ],
-   [
     "land-sl-roadside-9.display",
     687,
     "46@96"
@@ -3202,11 +3057,6 @@
     "land-sl-roadside-9.style:--pb-inkR",
     235,
     "7@96"
-   ],
-   [
-    "land-sl-fg-4.display",
-    441,
-    "27@96"
    ],
    [
     "use.href",
@@ -3237,11 +3087,6 @@
     "land-sl-shore-5.style:--pb-inkR",
     249,
     "7@96"
-   ],
-   [
-    "land-sl-shore-5.display",
-    245,
-    "12@96"
    ],
    [
     "use.href",
@@ -3329,11 +3174,6 @@
     "3@96"
    ],
    [
-    "land-sl-roadside-11.display",
-    519,
-    "33@96"
-   ],
-   [
     "land-sl-shore-7.display",
     245,
     "12@96"
@@ -3409,26 +3249,6 @@
     "30@96"
    ],
    [
-    "land-sl-roadside-13.style:--pb-inkO",
-    183,
-    "5@96"
-   ],
-   [
-    "land-sl-roadside-13.style:--pb-inkB",
-    184,
-    "5@96"
-   ],
-   [
-    "land-sl-roadside-13.style:--pb-inkR",
-    132,
-    "3@96"
-   ],
-   [
-    "land-sl-roadside-13.display",
-    661,
-    "44@96"
-   ],
-   [
     "land-sl-shore-10.display",
     245,
     "12@96"
@@ -3444,11 +3264,6 @@
     "6@96"
    ],
    [
-    "land-sl-road-3.display",
-    311,
-    "17@96"
-   ],
-   [
     "use.href",
     798,
     "30@96"
@@ -3462,11 +3277,6 @@
     "land-sl-roadside-14.style:--pb-inkO",
     234,
     "7@96"
-   ],
-   [
-    "land-sl-roadside-14.display",
-    571,
-    "37@96"
    ],
    [
     "land-sl-shore-11.display",
@@ -3519,11 +3329,6 @@
     "8@96"
    ],
    [
-    "land-sl-road-4.display",
-    311,
-    "17@96"
-   ],
-   [
     "land-sl-shore-14.display",
     297,
     "16@96"
@@ -3542,26 +3347,6 @@
     "use.href",
     167,
     "4@96"
-   ],
-   [
-    "land-sl-roadside-17.style:--pb-inkO",
-    235,
-    "7@96"
-   ],
-   [
-    "land-sl-roadside-17.style:--pb-inkT",
-    269,
-    "8@96"
-   ],
-   [
-    "land-sl-roadside-17.style:--pb-inkB",
-    132,
-    "3@96"
-   ],
-   [
-    "land-sl-roadside-17.style:--pb-inkR",
-    132,
-    "3@96"
    ],
    [
     "land-sl-shore-15.display",
@@ -3599,11 +3384,6 @@
     "3@96"
    ],
    [
-    "land-sl-roadside-18.display",
-    623,
-    "41@96"
-   ],
-   [
     "land-sl-shore-16.display",
     297,
     "16@96"
@@ -3614,6 +3394,11 @@
     "7@96"
    ],
    [
+    "land-broadside2.display",
+    129,
+    "3@96"
+   ],
+   [
     "land-tile-roadside.display",
     127,
     "3@96"
@@ -3622,6 +3407,11 @@
     "land-tile-road.transform",
     188,
     "7@96"
+   ],
+   [
+    "land-broad2.display",
+    129,
+    "3@96"
    ],
    [
     "land-tile-road.display",
@@ -3699,6 +3489,16 @@
     "12@96"
    ],
    [
+    "land-bshore1.display",
+    129,
+    "3@96"
+   ],
+   [
+    "land-sl-roadside-5.display",
+    661,
+    "44@96"
+   ],
+   [
     "land-sl-shore-23.display",
     323,
     "18@96"
@@ -3729,6 +3529,11 @@
     "12@96"
    ],
    [
+    "land-sl-roadside-7.display",
+    675,
+    "45@96"
+   ],
+   [
     "land-sl-shore-26.display",
     297,
     "16@96"
@@ -3744,9 +3549,29 @@
     "14@96"
    ],
    [
+    "land-sl-road-1.display",
+    285,
+    "15@96"
+   ],
+   [
+    "land-broadside1.display",
+    129,
+    "3@96"
+   ],
+   [
+    "land-broad1.display",
+    129,
+    "3@96"
+   ],
+   [
     "land-sl-shore-29.display",
     271,
     "14@96"
+   ],
+   [
+    "land-sl-shore-30.display",
+    245,
+    "12@96"
    ],
    [
     "land-sl-fg-7.display",
@@ -3759,6 +3584,11 @@
     "123@96,95@96,1@96"
    ],
    [
+    "land-sl-roadside-11.display",
+    519,
+    "33@96"
+   ],
+   [
     "use.href",
     385,
     "14@96"
@@ -3769,29 +3599,19 @@
     "3@96"
    ],
    [
+    "land-sl-shore-32.display",
+    245,
+    "12@96"
+   ],
+   [
+    "land-sl-roadside-13.display",
+    661,
+    "44@96"
+   ],
+   [
     "use.href",
     819,
     "31@96"
-   ],
-   [
-    "land-sl-roadside-15.style:--pb-inkO",
-    285,
-    "9@96"
-   ],
-   [
-    "land-sl-roadside-15.style:--pb-inkT",
-    184,
-    "5@96"
-   ],
-   [
-    "land-sl-roadside-15.style:--pb-inkB",
-    132,
-    "3@96"
-   ],
-   [
-    "land-sl-roadside-15.style:--pb-inkR",
-    132,
-    "3@96"
    ],
    [
     "sea-o-fish.visibility",
@@ -3802,16 +3622,6 @@
     "sea-o-fish.transform",
     701,
     "34@96"
-   ],
-   [
-    "land-sl-roadside-16.style:--pb-inkO",
-    235,
-    "7@96"
-   ],
-   [
-    "land-sl-roadside-16.style:--pb-inkR",
-    132,
-    "3@96"
    ],
    [
     "use.href",
@@ -3854,6 +3664,11 @@
     "70@96,40@96,14@96"
    ],
    [
+    "land-sl-roadside-18.display",
+    623,
+    "41@96"
+   ],
+   [
     "land-sl-shore-7.style:--pb-inkR",
     182,
     "5@96"
@@ -3866,6 +3681,16 @@
    [
     "land-sl-shore-7.style:--pb-inkO",
     132,
+    "3@96"
+   ],
+   [
+    "land-broadside0.display",
+    129,
+    "3@96"
+   ],
+   [
+    "land-broad0.display",
+    129,
     "3@96"
    ],
    [
@@ -3979,26 +3804,6 @@
     "13@96"
    ],
    [
-    "land-sl-shore-11.style:--pb-inkR",
-    236,
-    "7@96"
-   ],
-   [
-    "land-sl-shore-11.style:--pb-inkT",
-    132,
-    "3@96"
-   ],
-   [
-    "land-sl-shore-11.style:--pb-inkB",
-    132,
-    "3@96"
-   ],
-   [
-    "land-sl-shore-11.style:--pb-inkO",
-    165,
-    "4@96"
-   ],
-   [
     "use.href",
     316,
     "11@96"
@@ -4079,6 +3884,11 @@
     "3@96"
    ],
    [
+    "land-bshore0.display",
+    129,
+    "3@96"
+   ],
+   [
     "use.href",
     319,
     "11@96"
@@ -4087,21 +3897,6 @@
     "use.href",
     157,
     "3@96"
-   ],
-   [
-    "land-sl-shore-14.style:--pb-inkT",
-    182,
-    "5@96"
-   ],
-   [
-    "land-sl-shore-14.style:--pb-inkR",
-    301,
-    "9@96"
-   ],
-   [
-    "land-sl-shore-14.style:--pb-inkO",
-    113,
-    "2@96"
    ],
    [
     "use.href",
@@ -4157,21 +3952,6 @@
     "use.href",
     306,
     "10@96"
-   ],
-   [
-    "land-sl-shore-17.style:--pb-inkR",
-    183,
-    "5@96"
-   ],
-   [
-    "land-sl-shore-17.style:--pb-inkO",
-    165,
-    "4@96"
-   ],
-   [
-    "land-sl-shore-17.style:--pb-inkT",
-    132,
-    "3@96"
    ],
    [
     "use.href",
@@ -4309,26 +4089,6 @@
     "2@96"
    ],
    [
-    "land-sl-shore-22.style:--pb-inkB",
-    112,
-    "2@96"
-   ],
-   [
-    "land-sl-shore-22.style:--pb-inkR",
-    267,
-    "8@96"
-   ],
-   [
-    "land-sl-shore-22.style:--pb-inkT",
-    132,
-    "3@96"
-   ],
-   [
-    "land-sl-shore-22.style:--pb-inkO",
-    145,
-    "3@96"
-   ],
-   [
     "sea-fish1.visibility",
     538,
     "31@96"
@@ -4454,6 +4214,26 @@
     "3@96"
    ],
    [
+    "land-sl-roadside-15.style:--pb-inkO",
+    285,
+    "9@96"
+   ],
+   [
+    "land-sl-roadside-15.style:--pb-inkT",
+    184,
+    "5@96"
+   ],
+   [
+    "land-sl-roadside-15.style:--pb-inkB",
+    132,
+    "3@96"
+   ],
+   [
+    "land-sl-roadside-15.style:--pb-inkR",
+    132,
+    "3@96"
+   ],
+   [
     "use.href",
     317,
     "11@96"
@@ -4461,16 +4241,6 @@
    [
     "use.href",
     157,
-    "3@96"
-   ],
-   [
-    "land-sl-shore-27.style:--pb-inkR",
-    268,
-    "8@96"
-   ],
-   [
-    "land-sl-shore-27.style:--pb-inkO",
-    132,
     "3@96"
    ],
    [
@@ -4502,6 +4272,11 @@
     "use.href",
     128,
     "2@96"
+   ],
+   [
+    "land-sl-fg-4.display",
+    441,
+    "27@96"
    ],
    [
     "use.href",
@@ -4574,21 +4349,6 @@
     "33@96"
    ],
    [
-    "land-sl-roadside-1.style:--pb-inkO",
-    184,
-    "5@96"
-   ],
-   [
-    "land-sl-roadside-1.style:--pb-inkB",
-    132,
-    "3@96"
-   ],
-   [
-    "land-sl-roadside-1.style:--pb-inkR",
-    183,
-    "5@96"
-   ],
-   [
     "use.href",
     273,
     "9@96"
@@ -4602,6 +4362,21 @@
     "use.href",
     157,
     "3@96"
+   ],
+   [
+    "land-sl-roadside-4.style:--pb-inkR",
+    181,
+    "5@96"
+   ],
+   [
+    "land-sl-roadside-4.style:--pb-inkT",
+    235,
+    "7@96"
+   ],
+   [
+    "land-sl-roadside-4.style:--pb-inkO",
+    184,
+    "5@96"
    ],
    [
     "use.href",
@@ -4639,9 +4414,69 @@
     "3@96"
    ],
    [
+    "land-sl-roadside-7.style:--pb-inkR",
+    182,
+    "5@96"
+   ],
+   [
+    "land-sl-roadside-7.style:--pb-inkO",
+    340,
+    "11@96"
+   ],
+   [
     "use.href",
     771,
     "27@96"
+   ],
+   [
+    "land-sl-shore-14.style:--pb-inkT",
+    182,
+    "5@96"
+   ],
+   [
+    "land-sl-shore-14.style:--pb-inkR",
+    301,
+    "9@96"
+   ],
+   [
+    "land-sl-shore-14.style:--pb-inkO",
+    113,
+    "2@96"
+   ],
+   [
+    "land-sl-roadside-13.style:--pb-inkO",
+    183,
+    "5@96"
+   ],
+   [
+    "land-sl-roadside-13.style:--pb-inkB",
+    184,
+    "5@96"
+   ],
+   [
+    "land-sl-roadside-13.style:--pb-inkR",
+    132,
+    "3@96"
+   ],
+   [
+    "land-sl-roadside-14.display",
+    571,
+    "37@96"
+   ],
+   [
+    "land-sl-shore-17.style:--pb-inkR",
+    183,
+    "5@96"
+   ],
+   [
+    "land-sl-shore-17.style:--pb-inkO",
+    165,
+    "4@96"
+   ],
+   [
+    "land-sl-shore-17.style:--pb-inkT",
+    132,
+    "3@96"
    ],
    [
     "use.href",
@@ -4664,9 +4499,44 @@
     "11@96"
    ],
    [
+    "land-sl-shore-22.style:--pb-inkB",
+    112,
+    "2@96"
+   ],
+   [
+    "land-sl-shore-22.style:--pb-inkR",
+    267,
+    "8@96"
+   ],
+   [
+    "land-sl-shore-22.style:--pb-inkT",
+    132,
+    "3@96"
+   ],
+   [
+    "land-sl-shore-22.style:--pb-inkO",
+    145,
+    "3@96"
+   ],
+   [
     "use.href",
     157,
     "3@96"
+   ],
+   [
+    "land-sl-roadside-6.style:--pb-inkR",
+    234,
+    "7@96"
+   ],
+   [
+    "land-sl-roadside-6.style:--pb-inkT",
+    132,
+    "3@96"
+   ],
+   [
+    "land-sl-roadside-6.style:--pb-inkO",
+    234,
+    "7@96"
    ],
    [
     "g.display",
@@ -4744,9 +4614,49 @@
     "3@96"
    ],
    [
+    "land-sl-roadside-17.style:--pb-inkO",
+    235,
+    "7@96"
+   ],
+   [
+    "land-sl-roadside-17.style:--pb-inkT",
+    269,
+    "8@96"
+   ],
+   [
+    "land-sl-roadside-17.style:--pb-inkB",
+    132,
+    "3@96"
+   ],
+   [
+    "land-sl-roadside-17.style:--pb-inkR",
+    132,
+    "3@96"
+   ],
+   [
     "use.href",
     160,
     "3@96"
+   ],
+   [
+    "land-sl-shore-11.style:--pb-inkR",
+    236,
+    "7@96"
+   ],
+   [
+    "land-sl-shore-11.style:--pb-inkT",
+    132,
+    "3@96"
+   ],
+   [
+    "land-sl-shore-11.style:--pb-inkB",
+    132,
+    "3@96"
+   ],
+   [
+    "land-sl-shore-11.style:--pb-inkO",
+    165,
+    "4@96"
    ],
    [
     "use.href",
@@ -4769,6 +4679,56 @@
     "3@96"
    ],
    [
+    "land-sl-shore-27.style:--pb-inkR",
+    268,
+    "8@96"
+   ],
+   [
+    "land-sl-shore-27.style:--pb-inkO",
+    132,
+    "3@96"
+   ],
+   [
+    "land-sl-road-3.display",
+    311,
+    "17@96"
+   ],
+   [
+    "land-sl-roadside-1.style:--pb-inkO",
+    184,
+    "5@96"
+   ],
+   [
+    "land-sl-roadside-1.style:--pb-inkB",
+    132,
+    "3@96"
+   ],
+   [
+    "land-sl-roadside-1.style:--pb-inkR",
+    183,
+    "5@96"
+   ],
+   [
+    "land-sl-road-4.display",
+    311,
+    "17@96"
+   ],
+   [
+    "land-sl-roadside-3.style:--pb-inkT",
+    236,
+    "7@96"
+   ],
+   [
+    "land-sl-roadside-3.style:--pb-inkR",
+    164,
+    "4@96"
+   ],
+   [
+    "land-sl-roadside-3.style:--pb-inkO",
+    132,
+    "3@96"
+   ],
+   [
     "egg-bottleGlint.visibility",
     161,
     "5@96"
@@ -4777,6 +4737,11 @@
     "egg-bottleGlint.transform",
     892,
     "6@96,41@96,6@96"
+   ],
+   [
+    "land-sl-shore-2.display",
+    271,
+    "14@96"
    ],
    [
     "sea-o-sloop.visibility",
@@ -4797,6 +4762,21 @@
     "g.display",
     141,
     "4@96"
+   ],
+   [
+    "land-sl-shore-0.display",
+    219,
+    "10@96"
+   ],
+   [
+    "land-sl-shore-4.display",
+    219,
+    "10@96"
+   ],
+   [
+    "land-sl-shore-5.display",
+    245,
+    "12@96"
    ],
    [
     "g.transform",
@@ -4829,9 +4809,24 @@
     "2@96"
    ],
    [
+    "land-sl-shore-31.display",
+    245,
+    "12@96"
+   ],
+   [
     "land-sp-catchfish.transform",
     1147,
     "9@96,70@96"
+   ],
+   [
+    "land-sl-roadside-16.style:--pb-inkO",
+    235,
+    "7@96"
+   ],
+   [
+    "land-sl-roadside-16.style:--pb-inkR",
+    132,
+    "3@96"
    ],
    [
     "sea-o-steamer.visibility",
@@ -4842,6 +4837,11 @@
     "sea-o-steamer.transform",
     2607,
     "92@96,53@96,1@96"
+   ],
+   [
+    "land-sl-shore-3.display",
+    193,
+    "8@96"
    ],
    [
     "sea-o-can.visibility",

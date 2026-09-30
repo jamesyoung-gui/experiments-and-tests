@@ -384,7 +384,17 @@ export function createUI(host, bus, init) {
     rpm: [...host.querySelectorAll('[data-drums="rpm"] .ui-drum')].map(makeDrum),
   };
   const srKm = $('[data-live="km"]'), srKmh = $('[data-live="kmh"]'), srRpm = $('[data-live="rpm"]');
-  const rider = () => doc.querySelector('#scene #rider');
+  // the rider's screen box = union of its slot groups (the scene is split into <svg> sheets, so #rider itself only holds
+  // the first group of slots; its children are exactly the j-* slots)
+  const rider = () => {
+    const slots = doc.querySelectorAll('#scene [id^="j-"]');
+    if (!slots.length) return null;
+    return { getBoundingClientRect() {
+      let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+      for (const e of slots) { const q = e.getBoundingClientRect(); if (!q.width && !q.height) continue; l = Math.min(l, q.left); t = Math.min(t, q.top); r = Math.max(r, q.right); b = Math.max(b, q.bottom); }
+      return l < r ? { left: l, top: t, right: r, bottom: b, width: r - l, height: b - t, x: l, y: t } : { left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0 };
+    } };
+  };
 
   // ---------- ink: copy the palette's seven inks onto #ui and the dialog ----------
   const inkCache = {};
