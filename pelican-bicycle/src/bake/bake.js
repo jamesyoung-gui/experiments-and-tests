@@ -32,8 +32,10 @@ export const BAKE_DEFAULTS = {
   story: [],           // optional baked events [{type:'wave'|'bell'|'hop'|'gulp', t0: seconds into the loop}]
   toggles: { skeleton: false },
   probe: { horizon: 480, step: 0.25 },   // long horizon to find the wrap width of slow, non-closing layers
-  tol: { len: 0.08, ang: 0.06, scale: 0.0012, d: 0.25, opacity: 0.006, dash: 0.05, num: 0.05 },
-  dGap: 2,             // path-data keyframes at most every 2nd sample (30 Hz); SMIL interpolates in between
+  tol: { len: 0.12, ang: 0.08, scale: 0.0015, d: 0.3, opacity: 0.008, dash: 0.05, num: 0.05 },          // rider (u, °)
+  tolWorld: { len: 0.3, ang: 0.3, scale: 0.004, d: 0.35, opacity: 0.012, dash: 0.1, num: 0.1 },       // everything else
+  blend: 1,            // seconds of seam cross-fade for channels that don't close within the loop
+  dGap: 3,             // path-data keyframes at most every 2nd sample (30 Hz); SMIL interpolates in between
   strip: true,         // drop data-* attributes, comments and ids nothing references
   width: 1600, height: 900,
   title: 'Pelican Bay · 鹈鹕湾 — 骑自行车的鹈鹕 · A pelican riding a bicycle',
@@ -71,7 +73,7 @@ const now = () => (typeof performance !== 'undefined' ? performance.now() : Date
 // ------------------------------------------------------------------------------------------------ driver
 function* bakeGen(svg, opts) {
   const pb = typeof window !== 'undefined' ? window.__pb : null;
-  const cfg = { ...BAKE_DEFAULTS, ...pickDefined(opts), tol: { ...BAKE_DEFAULTS.tol, ...(opts.tol || {}) }, probe: { ...BAKE_DEFAULTS.probe, ...(opts.probe || {}) } };
+  const cfg = { ...BAKE_DEFAULTS, ...pickDefined(opts), tol: { ...BAKE_DEFAULTS.tol, ...(opts.tol || {}) }, tolWorld: { ...BAKE_DEFAULTS.tolWorld, ...(opts.tolWorld || {}) }, probe: { ...BAKE_DEFAULTS.probe, ...(opts.probe || {}) } };
   if (!pb || !pb.renderAt) return new XMLSerializer().serializeToString(svg);   // no runtime: static snapshot
   const t0 = now();
   cfg_minGapD = Math.max(1, Math.round(cfg.dGap || 1));
@@ -89,22 +91,25 @@ function* bakeGen(svg, opts) {
 
     // ---- 2. record: master loop + one pass per data-bake-period subtree
     const ownerP = el => { const h = el.closest('[data-bake-static],[data-bake-period]'); if (!h) return T; if (h.hasAttribute('data-bake-static')) return 0; return +h.getAttribute('data-bake-period') || T; };
-    const main = yield* recordPass(svg, render, cfg.start, N, 1 / fps, stats);
-    const groups = [{ P: T, step: 1 / fps, n: N, tracks: [...main.tracks.values()].filter(tr => ownerP(tr.el) === T) }];
+    // the master pass starts `blend` seconds early: a channel that doesn't close is cross-faded over the last `blend`
+    // seconds into its own motion one loop earlier, so the seam is continuous in value AND velocity
+    const M = Math.max(0, Math.min(Math.round(cfg.blend * fps), N >> 1));
+    const main = yield* recordPass(svg, render, cfg.start - M / fps, N + M, 1 / fps, stats);
+    const groups = [{ P: T, step: 1 / fps, n: N, M, tracks: [...main.tracks.values()].filter(tr => ownerP(tr.el) === T) }];
     const periods = [...new Set([...svg.querySelectorAll('[data-bake-period]')].map(e => +e.getAttribute('data-bake-period')).filter(p => p > 0 && Math.abs(p - T) > 1e-6))];
     for (const P of periods) {
       const host = svg.querySelector(`[data-bake-period="${P}"]`);
       const f = +(host && host.getAttribute('data-bake-fps')) || Math.min(fps, Math.max(4, 1440 / P));
       const n = Math.max(8, Math.round(P * f));
       const pass = yield* recordPass(svg, render, cfg.start, n, P / n, stats);
-      groups.push({ P, step: P / n, n, tracks: [...pass.tracks.values()].filter(tr => ownerP(tr.el) === P) });
+      groups.push({ P, step: P / n, n, M: 0, tracks: [...pass.tracks.values()].filter(tr => ownerP(tr.el) === P) });
     }
     stats.ms.record = Math.round(now() - t0);
 
     // ---- 3. expand + parse; find non-closing, never-wrapping channels that need a long-horizon probe
     const units = [];
     for (const g of groups) for (const tr of g.tracks) {
-      const vals = expand(tr, g.n + 1);
+      const vals = expand(tr, g.n + g.M + 1);
       if (tr.attr === 'style') { for (const [prop, pv] of splitStyle(vals)) units.push(makeUnit(tr.el, 'style:' + prop, pv, g, cfg)); }
       else units.push(makeUnit(tr.el, tr.attr, vals, g, cfg, tr.ns));
     }
@@ -217,32 +222,34 @@ function splitStyle(vals) {
 // ------------------------------------------------------------------------------------------------ parsing into units
 // unit = { el, attr, kind: 'xf'|'num'|'discrete'|'d', comps?, chans?, strings?, n, P, step, constant }
 function makeUnit(el, attr, vals, g, cfg, ns) {
-  const n = vals.length, base = { el, attr, ns, n, P: g.P, step: g.step };
-  if (vals.every(v => v === vals[0])) return { ...base, constant: true };
-  const tol = cfg.tol;
+  const M = g.M || 0, main = M ? vals.slice(M) : vals;
+  const n = main.length, base = { el, attr, ns, n, P: g.P, step: g.step, M };
+  if (main.every(v => v === main[0])) return { ...base, constant: true };
+  const tol = el.closest('#L-rider') ? cfg.tol : cfg.tolWorld;   // the rider is held tighter than the world
   const prop = attr.startsWith('style:') ? attr.slice(6) : attr;
   if (prop === 'transform' && !attr.startsWith('style:')) {
     const xf = parseTransforms(vals);
     if (xf) {
       const comps = xf.map(c => {
-        const chans = c.series.map((s, ci) => chanOf(s, chanTol(c.t, ci, tol), c.t === 'rotate' && ci === 0 ? 'angle' : c.t === 'translate' ? 'tile' : null));
+        const chans = c.series.map((s, ci) => chanOf(s, chanTol(c.t, ci, tol), c.t === 'rotate' && ci === 0 ? 'angle' : c.t === 'translate' ? 'tile' : null, M, c.t === 'rotate' && ci === 0 ? 360 : null));
         return { t: c.t, chans, constant: chans.every(ch => ch.constant) };
       });
       if (comps.every(c => c.constant)) return { ...base, constant: true };
       return { ...base, kind: 'xf', comps, chans: comps.flatMap(c => c.chans) };
     }
-    return { ...base, kind: 'discrete', strings: vals };
+    return { ...base, kind: 'discrete', strings: main };
   }
-  if (DISCRETE_ATTRS.has(prop)) return { ...base, kind: 'discrete', strings: vals };
+  if (DISCRETE_ATTRS.has(prop)) return { ...base, kind: 'discrete', strings: main };
   const tpl = numTemplate(vals);
   if (tpl) {
     const isD = prop === 'd' || prop === 'points';
     const t = isD ? tol.d : prop.includes('opacity') ? tol.opacity : prop === 'stroke-dashoffset' ? tol.dash : /^(x|y|width|height|rx|ry|cx|cy|r|x1|x2|y1|y2|stroke-width)$/.test(prop) ? tol.len : tol.num;
-    const chans = tpl.series.map(s => chanOf(s, t, prop === 'stroke-dashoffset' ? 'angle' : null));
+    const dp = prop === 'stroke-dashoffset' ? dashPeriod(el) : null;
+    const chans = tpl.series.map(s => chanOf(s, t, prop === 'stroke-dashoffset' ? 'angle' : null, M, dp));
     if (chans.every(c => c.constant)) return { ...base, constant: true };
     return { ...base, kind: isD ? 'd' : 'num', tpl: tpl.parts, chans };
   }
-  return { ...base, kind: 'discrete', strings: vals };
+  return { ...base, kind: 'discrete', strings: main };
 }
 function chanTol(type, ci, tol) {
   if (type === 'translate') return tol.len;
@@ -254,15 +261,29 @@ function chanTol(type, ci, tol) {
 //   wrapKind 'angle': values are equivalent mod W (rotation 360°, dash offsets mod the pattern) → unwrap freely;
 //   wrapKind 'tile' : translations; wraps are emitted faithfully with break keyframes; a long-horizon trend is only
 //                     used when the channel does not close within the loop (parallax art is W-periodic by contract).
-function chanOf(series, tol, wrapKind) {
-  const x = Float64Array.from(series);
+function unwrapFixed(x, W) {
+  const u = Float64Array.from(x); let off = 0, wraps = 0;
+  for (let i = 1; i < x.length; i++) { const d = x[i] - x[i - 1], k = Math.round(d / W); if (k && Math.abs(d) > W / 2) { off -= k * W; wraps++; } u[i] = x[i] + off; }
+  return { u, wraps };
+}
+function chanOf(series, tol, wrapKind, M = 0, W0 = null) {
+  const full = Float64Array.from(series), x = full.subarray(M);
   let mn = Infinity, mx = -Infinity;
   for (const v of x) { if (v < mn) mn = v; if (v > mx) mx = v; }
-  const c = { x, u: x, tol, wrapKind, constant: mx - mn <= tol * 0.5, lo: mn, hi: mx, W: null, closes: true };
+  const c = { x, u: x, preX: full.subarray(0, M + 1), preU: full.subarray(0, M + 1), M, tol, wrapKind, constant: mx - mn <= tol * 0.5, lo: mn, hi: mx, W: null, closes: true };
   if (c.constant) return c;
-  const uw = wrapKind ? unwrap(x, tol) : null;
+  c.W0 = W0;
+  if (wrapKind === 'angle' && W0) {
+    const uf = unwrapFixed(full, W0);
+    c.u = uf.u.subarray(M); c.preU = uf.u.subarray(0, M + 1); c.W = W0; c.wraps = uf.wraps;
+    const e0 = x[x.length - 1] - x[0];
+    c.closes = Math.abs(e0) <= tol || Math.abs(c.u[c.u.length - 1] - c.u[0]) <= tol || Math.abs(e0 - Math.round(e0 / W0) * W0) <= tol && Math.abs(c.u[c.u.length - 1] - c.u[0]) <= tol;
+    return c;
+  }
+  const uw = wrapKind ? unwrap(full, tol) : null;
   c.W = uw && uw.W ? uw.W : null;
-  c.u = uw && uw.W ? uw.u : x;
+  c.wraps = uw && uw.W ? 1 : 0;
+  if (c.W) { c.u = uw.u.subarray(M); c.preU = uw.u.subarray(0, M + 1); }
   const e = x[x.length - 1] - x[0];
   c.closes = Math.abs(e) <= tol || (wrapKind === 'angle' && Math.abs(c.u[c.u.length - 1] - c.u[0]) <= tol) || !!(c.W && Math.abs(e - Math.round(e / c.W) * c.W) <= tol);
   return c;
@@ -410,22 +431,29 @@ function analyseGroup(chans, type, P, step, n, Tc, cfg, stats, u) {
   const isRot = type === 'rotate', isAngleAttr = u.attr === 'stroke-dashoffset';
   // (a) linear advance of unwrappable channels (rotation angle, dash offset): exact 2-keyframe loop over whole turns
   const res = chans.map(c => c.u.slice());
-  const trends = [];
+  const trends = [], rateOf = {};
   chans.forEach((c, ci) => {
     if (c.constant) return;
     const Δ = c.u[n] - c.u[0];
     const angleLike = (isRot && ci === 0) || isAngleAttr;
     if (Math.abs(Δ) <= 2 * c.tol) return;
     if (!angleLike && !(c.wrapKind === 'tile' && c.W && !c.closes)) return;
-    let W = angleLike ? (c.W || (isRot ? 360 : null)) : c.W;
-    if (isAngleAttr) { const pw = dashPeriod(u.el); if (pw) W = pw; }   // any whole dash pattern is invisible
+    const W = angleLike ? (c.W0 || c.W) : c.W;         // rotations: 360°; dash offsets: the whole dash pattern
     if (!W) return;
     const r = Δ / P;
+    let resMax = 0;
+    for (let i = 0; i <= n; i++) { res[ci][i] = c.u[i] - (c.u[0] + r * i * step); resMax = Math.max(resMax, Math.abs(res[ci][i])); }
+    // only genuine advance becomes a trend: wheels, cranks, chains, parallax tiles, drifting far layers. A rocking or
+    // bobbing channel that merely fails to close is cross-faded instead; a wrapping translation whose motion is not
+    // linear (respawning particles) stays faithful, because its wraps would no longer line up with the ramp's breaks.
+    const ok = angleLike ? (c.wraps || Math.abs(Δ) >= W / 4) && resMax <= Math.max(0.5 * Math.abs(Δ), c.tol)
+      : resMax / Math.abs(r) <= 0.05;
+    if (!ok) { res[ci] = c.u.slice(); return; }
     const D = pickTrendPeriod(r, W, P, Tc, step);
-    for (let i = 0; i <= n; i++) res[ci][i] = c.u[i] - (c.u[0] + r * i * step);
     const turns = Math.round((r * D) / W) || Math.sign(r);
     const amp = turns * W;
     trends.push({ ci, r, D, W, amp, start: c.u[0], tile: !angleLike, lo: c.lo, hi: c.hi });
+    rateOf[ci] = r;
     stats.trends.push(`${label}[${ci}] ${fmtN(amp, 3)} per ${fmtN(D, 4)}s (W=${fmtN(W, 3)})`);
   });
   // (b) residual (or the whole signal): tile channels stay wrapped (faithful, break keyframes at the wraps)
@@ -467,8 +495,21 @@ function analyseGroup(chans, type, P, step, n, Tc, cfg, stats, u) {
       const nd = neighbourDelta(s, n);
       if (Math.abs(e) > 6 * Math.max(nd, chans[ci].tol)) jumpEnd = true;
       stats.nonClosing.push(`${label}[${ci}] Δ=${fmtN(e, 3)}`);
-      const f = s.slice();
-      for (let i = 0; i <= n; i++) s[i] = f[i] - e * (i / n);
+      const c = chans[ci], M = Math.min(c.M || 0, n);
+      if (M > 1) {
+        // cross-fade into the channel's own motion one loop earlier (value- and velocity-continuous seam)
+        for (let i = n - M; i <= n; i++) {
+          const j = i - (n - M), tp = (j - M) * step;         // pre-roll sample at τ − P
+          let pre = trended.has(ci) ? c.preU[j] - (c.u[0] + rateOf[ci] * tp) : c.wrapKind === 'tile' ? c.preX[j] : c.preU[j];
+          if (!trended.has(ci) && c.wrapKind === 'tile' && c.W) pre += Math.round((s[i] - pre) / c.W) * c.W;
+          const w = smooth(j / M);
+          s[i] = (1 - w) * s[i] + w * pre;
+        }
+        stats.blended = (stats.blended || 0) + 1;
+      } else {
+        const f = s.slice();
+        for (let i = 0; i <= n; i++) s[i] = f[i] - e * (i / n);
+      }
     }
     s[n] = s[0];
   });
@@ -490,6 +531,7 @@ function dashPeriod(el) {
   const v = a.map(Number), sum = v.reduce((x, y) => x + y, 0);
   return sum > 0 ? (v.length % 2 ? 2 * sum : sum) : null;
 }
+const smooth = x => x * x * (3 - 2 * x);
 function neighbourDelta(s, n) { return Math.max(Math.abs(s[n] - s[n - 1] || 0), Math.abs(s[1] - s[0] || 0)); }
 function pickTrendPeriod(r, W, P, Tc, step) {
   const cands = [];
@@ -501,10 +543,9 @@ function pickTrendPeriod(r, W, P, Tc, step) {
   const geq = good.filter(D => D >= Tc - 1e-9);
   if (geq.length) return geq[0];
   if (good.length) return good[good.length - 1];
-  // slow far layer: its own loop, snapped to a whole number of master loops (speed error ≤ P/2D, e.g. 1.2 % for a
-  // 160 s cloud loop) so every animation in the file shares the master loop as a common period divisor
-  const Dw = Math.abs(W / r);
-  return Math.max(1, Math.round(Dw / P)) * P;
+  // no whole number of wraps fits the master loop (slow far layers; the chain's master link at 100 links vs 48 per
+  // crank turn): the channel gets its own exact loop, seamless forever and independent of the master loop
+  return Math.abs(W / r);
 }
 // Linear ramp start → start+amp over [0,1], wrapped into [lo, hi] (span W) with zero-length breaks at the boundary.
 function rampWithBreaks(start, amp, lo, hi, W) {
@@ -730,7 +771,7 @@ export function minPath(d, dec = 2, forceRel = false) {
   return out;
 }
 function labelOf(u) { const e = u.el; return (e.id || e.getAttribute('data-ref') || e.tagName) + '.' + u.attr; }
-const ktStr = kt => kt.map(t => fmtN(Math.min(1, Math.max(0, t)), 5)).join(';');
+const ktStr = (kt, dec = 5) => kt.map(t => short(fmtN(Math.min(1, Math.max(0, t)), dec))).join(';');
 const durStr = d => fmtN(d, 6) + 's';
 
 // ------------------------------------------------------------------------------------------------ emission
@@ -766,7 +807,7 @@ function emit(target, u, anims, cfg, stats, cssRules) {
       el.setAttribute('attributeName', attr);
       if (isXf) el.setAttribute('type', a.type);
       el.setAttribute('values', a.values.join(';'));
-      if (a.keyTimes && a.values.length > 1) el.setAttribute('keyTimes', ktStr(a.keyTimes));
+      if (a.keyTimes && a.values.length > 1) el.setAttribute('keyTimes', ktStr(a.keyTimes, Math.min(6, Math.ceil(Math.log10(a.dur * cfg.fps * 4)) + 1)));
       if (a.calcMode) el.setAttribute('calcMode', a.calcMode);
       el.setAttribute('dur', durStr(a.dur));
       el.setAttribute('repeatCount', 'indefinite');
@@ -787,6 +828,56 @@ function groupOf(el) {
 }
 
 // ------------------------------------------------------------------------------------------------ document
+// Halftone dots drawn as two-arc circles ("M x y a r r 0 1 0 2r 0 a r r 0 1 0 −2r 0", ~40 bytes each) are re-encoded
+// as zero-length round-capped strokes ("m dx dy h0", ~9 bytes): the same discs in the same ink. Only for paths that are
+// nothing but such dots, painted with a flat fill and no stroke/class/animation, outside clip paths.
+function dotsToStrokes(clone, origOf, stats) {
+  const N = '([-+]?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][-+]?\\d+)?)', S = '[\\s,]*';
+  const DOT = new RegExp(`^${S}([Mm])${S}${N}${S}${N}${S}[Aa]${S}${N}${S}${N}${S}${N}${S}([01])${S}([01])${S}${N}${S}${N}${S}[Aa]?${S}${N}${S}${N}${S}${N}${S}([01])${S}([01])${S}${N}${S}${N}${S}[Zz]?`);
+  let n = 0, saved = 0;
+  for (const p of [...clone.querySelectorAll('path[d]')]) {
+    if (p.closest('clipPath') || p.id || p.getAttribute('class') || p.getAttribute('style') || p.querySelector('animate,animateTransform,set')) continue;
+    const o = origOf.get(p); if (!o) continue;
+    let d = p.getAttribute('d');
+    if (!/[Aa]/.test(d) || d.length < 200) continue;
+    const cs = getComputedStyle(o);
+    if (cs.stroke !== 'none' || !/^(rgb|#)/.test(cs.fill)) continue;
+    // absolute-arc and relative-arc both describe relative endpoints here only when lowercase; require lowercase arcs
+    const dots = []; let cx = 0, cy = 0, ok = true, rest = d;
+    while (rest.trim().length) {
+      const m = DOT.exec(rest);
+      if (!m) { ok = false; break; }
+      const [, M, x, y, rx, ry, , , , dx, dy, rx2, ry2, , , , dx2, dy2] = m;
+      const arcs = m[0].match(/[Aa]/g);
+      if (arcs.some(a => a === 'A')) { ok = false; break; }
+      const X = +x + (M === 'm' ? cx : 0), Y = +y + (M === 'm' ? cy : 0), r = +rx;
+      if (Math.abs(+ry - r) > 1e-6 || Math.abs(+rx2 - r) > 1e-6 || Math.abs(+ry2 - r) > 1e-6 || Math.abs(Math.abs(+dx) - 2 * r) > 0.02 || Math.abs(+dy) > 0.01 || Math.abs(+dx2 + +dx) > 0.02 || Math.abs(+dy2) > 0.01) { ok = false; break; }
+      dots.push([X + +dx / 2, Y, r]);
+      cx = X + +dx + +dx2; cy = Y;             // after the two arcs the pen is back at the start
+      if (/[Zz]\s*$/.test(m[0])) { cx = X; cy = Y; }
+      rest = rest.slice(m[0].length);
+    }
+    if (!ok || !dots.length) continue;
+    const byR = new Map();
+    for (const [x, y, r] of dots) { const k = +r.toFixed(3); if (!byR.has(k)) byR.set(k, []); byR.get(k).push([x, y]); }
+    const fo = parseFloat(cs.fillOpacity);
+    let bytes = 0;
+    for (const [r, pts] of byR) {
+      let dd = '', px = 0, py = 0;
+      pts.forEach(([x, y], i) => { dd += (i ? `m${x - px} ${y - py}` : `M${x} ${y}`) + 'h0'; px = x; py = y; });
+      const q = p.cloneNode(false);
+      for (const a of ['fill', 'fill-rule', 'fill-opacity', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-opacity']) q.removeAttribute(a);
+      q.setAttribute('d', minPath(dd, 2));
+      q.setAttribute('fill', 'none'); q.setAttribute('stroke', cs.fill); q.setAttribute('stroke-width', fmtN(2 * r, 3)); q.setAttribute('stroke-linecap', 'round');
+      if (fo < 1) q.setAttribute('stroke-opacity', fmtN(fo, 3));
+      p.parentNode.insertBefore(q, p); origOf.set(q, o);
+      bytes += q.getAttribute('d').length + 60;
+    }
+    saved += d.length - bytes; n++;
+    p.remove();
+  }
+  stats.dots = { paths: n, savedBytes: saved };
+}
 function finish(svg, clone, cfg, stats, cssRules, origOf) {
   // 1. inks: every var(--x) resolved from the live root (palette) / computed style
   const vars = {};
@@ -816,6 +907,7 @@ function finish(svg, clone, cfg, stats, cssRules, origOf) {
   // static geometry on a decimal grid chosen from the element's on-screen scale (≤ 0.05 u error at the wide camera)
   let dBefore = 0, dAfter = 0, rootScale = 1;
   try { const r = svg.getScreenCTM(); rootScale = Math.sqrt(Math.abs(r.a * r.d - r.b * r.c)) || 1; } catch (e) { /* 1 */ }
+  if (cfg.dots !== false) dotsToStrokes(clone, origOf, stats);
   for (const p of clone.querySelectorAll('path[d]')) {
     const o = origOf.get(p), d0 = p.getAttribute('d');
     let dec = 2;

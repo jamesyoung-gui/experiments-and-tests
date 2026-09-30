@@ -3,6 +3,7 @@ export const meta = {
   description: 'Pelican Bay fast build in style C: 12 module builders, integration, 14 rubric judges (13 dimensions + G-DETAIL), one fix round, adversarial verification',
   phases: [
     { title: 'Build', detail: '12 builders, each owning its own files, style C, detail quotas, visual self-check' },
+    { title: 'Journey', detail: 'long non-repeating route + easter eggs (new user requirements)' },
     { title: 'Integrate', detail: 'wire modules, zero console errors, dist, bake, perf' },
     { title: 'Review', detail: 'one fresh judge per rubric dimension + G-DETAIL judge' },
     { title: 'Fix', detail: 'one fix round per owner' },
@@ -145,10 +146,77 @@ DETAIL QUOTA: ${b.quota}
 BRIEF: ${b.brief}`, { label: `build:${b.id}`, phase: 'Build', schema: REPORT })))).filter(Boolean)
 log(`builders done: ${reports.map(r => `${r.owner}(${r.detailCount ?? '-'})`).join(' ')}`)
 
+// ─── New user requirements (added mid-run): the background must be LONG and not visibly repeat; there must be easter eggs.
+const USERREQ = `NEW USER REQUIREMENTS (verbatim, in Chinese): "我希望后面的背景足够长，不要很快就开始重复" (the background must be long enough that it doesn't start repeating quickly) and "要有小彩蛋" (there must be little easter eggs) and "要有有趣的变化" (there must be interesting variation and changes over time).`
+phase('Journey')
+const journey = (await parallel([
+  () => agent(`${COMMON.replaceAll('<your-id>', 'journey')}
+
+${USERREQ}
+YOUR ROLE: journey (world route). FILES YOU OWN: src/world/land.js, src/world/sea.js, a new src/world/route.js, and (for the far layers only) the cloud and flock placement in src/world/sky.js. You may edit src/contract.js to add route constants.
+Problem: every near layer is a single static tile that repeats once per crank turn (TILE.road = 1885 u, about 1 s at 60 rpm), and the far layers repeat within seconds. Viewers notice immediately.
+Build a LONG coastal JOURNEY that doesn't repeat:
+- ≥ 4 minutes of cruising at 60 rpm before anything repeats exactly (≈ 450,000 u of road). Ideally it never repeats: a deterministic, seeded stream keyed by segment index.
+- Structure it as a route script (route.js) of distinct stretches, each with its own set pieces, in style C:
+  - the Pelican Bay village with beach huts and a fish market
+  - a long pier with fishermen
+  - a harbour with moored boats and cranes
+  - a lighthouse headland
+  - cliffs with a tunnel or rock arch
+  - dunes with palms
+  - a seaside amusement pier (Ferris wheel, carousel)
+  - a railway line with a steam train that races the pelican for a while
+  - a bridge over a river mouth
+  - an old fort or bathhouse
+  - a stretch of pine or cypress trees
+  - kilometre stones counting up (鹈鹕湾 0 km → 灯塔角 12 km → …)
+  - and then a loop back to the village
+- Signposts announce what's coming.
+- Near layers (road, roadside, foreground): a pooled STREAMING system. Spawn and recycle a fixed pool of prebuilt <symbol>/<use> props by world position (distance × depth), with per-instance variation (seeded: flips, scale, ink variant, prop choice). No DOM churn per frame: only transforms and href swaps when a pool slot recycles off screen. Road markings and kerbs can stay tiled, but vary the road furniture.
+- Far layers (sea, headlands, town skyline, sky clouds, flocks): make them long panoramas (≥ 20,000 u of unique far skyline, sliding slowly by depth) or streamed too, so the horizon changes as you ride (the lighthouse is passed, then the harbour town, then the cliffs, …).
+- Keep every existing detail item (don't lose data-detail items). New set pieces add new detail items, but only count items visible in the default hero/close shots; judges check.
+- Keep the baked SVG working: in bake mode (window.__pb.renderAt with a bake flag, coordinate via contractRequests; the baker owns src/bake), a short seamless loop is fine. Document how.
+- Perf budget unchanged (fps ≥ 58, JS p95 ≤ 2 ms, DOM ≤ 6000).
+Verify by rendering many frames far apart (e.g. t = 0, 15, 30, 60, 90, 120, 180, 240 s at 60 rpm via renderAt) into a sheet, reading it, and confirming each looks like a different place with no obvious repetition. Also verify the seams at recycle boundaries.`, { label: 'journey:route', phase: 'Journey', schema: REPORT }),
+  () => agent(`${COMMON.replaceAll('<your-id>', 'eggs')}
+
+${USERREQ}
+YOUR ROLE: easter eggs. FILES YOU OWN: a new src/fx/eggs.js (register it in src/main.js with a minimal edit, following the module interface: build/attach/update, layers and slots only via the scene), plus a new "found eggs" display, which you may add to src/ui/ui.js with minimal, clearly-scoped edits.
+Design and implement ≥ 10 delightful, discoverable, in-style (style C) easter eggs. They should reward curiosity, and be deterministic and testable. Ideas (pick the best, add your own):
+1. The Konami code (↑↑↓↓←→←→BA) swaps the rider to Simon Willison's stricter benchmark: a California brown pelican in full breeding plumage (a grey-brown body, chestnut hindneck, yellow crown, red pouch base), via a material/ink override.
+2. A "Velocipedia" toggle (typing "velo"): a Gianluca Gimini-style impossible bike (the chain goes to the front hub). The rig visibly jams, the pelican shrugs, then everything snaps back. Credit Gimini in a tiny caption.
+3. An orange cat on a bench that snatches a fish from the basket if you ring the bell near it.
+4. At the 1.000 km (or 4.2 km) odometer milestone a confetti poster pop appears: "42!".
+5. A second pelican on a tandem (or a pelican family on a bike train) overtakes at high cadence and nods.
+6. Clicking the sun or moon makes it wink.
+7. A UFO at night that beams up a fish.
+8. Ringing the bell 7 times fast makes gulls answer in chorus.
+9. Hopping over a puddle makes a splash.
+10. Coasting 10 s makes the pelican put its wings behind its head ("look, no hands!").
+11. A message in a bottle floating in the sea: click it to read a tiny note (bilingual).
+12. A shooting-star wish at night.
+13. Typing "pelican" makes the title letters do a wave.
+14. The lighthouse keeper waves back when you wave (W) near the lighthouse.
+Show a small "彩蛋 x/N" counter (in the UI ticket style) that reveals nothing until the first egg is found. Keep an honest list of eggs in docs/EGGS.md (spoilers) for the README. Every egg must be triggerable in tests: expose window.__pb.eggs = {list, trigger(id), found} and add a Playwright check script tools/check-eggs.mjs that triggers each one and screenshots it into shots/eggs/, then Read those shots. Detail items: tag egg visuals with data-detail only if visible in default shots (most aren't; that's fine). Zero console errors. Perf budget unchanged.`, { label: 'journey:eggs', phase: 'Journey', schema: REPORT }),
+  () => agent(`${COMMON.replaceAll('<your-id>', 'director')}
+
+${USERREQ}
+YOUR ROLE: director of "interesting variation over time". FILES YOU OWN: a new src/world/director.js (a pure, seeded schedule keyed by distance and time, plus its runtime module) and a new src/world/weather.js (weather layer art). Register both in src/main.js with minimal edits. You may emit rig events through the existing event list (frame.events / bus 'rig:event'). Coordinate with the journey agent's src/world/route.js by READING it (don't edit it); if it isn't there yet, read the stretches from its report or define hooks.
+Make the ride feel alive and surprising over minutes, not seconds. The rider reacts to what happens. Implement, in style C (flat inks, screen-print rain lines, halftone fog):
+- WEATHER that changes along the route: clear → breezy (the scarf streams, palms bend, clouds race) → a passing shower (rain streaks, puddles with ripples; the pelican squints and opens its pouch to drink the rain, a gag) → a rainbow in deco bands → sea fog rolling in on the headland (the lighthouse beam cuts through) → clearing. Wind affects the scarf, crest and palms through frame fields that the art already reads, or through new frame.weather fields (document them).
+- ENCOUNTERS scheduled along the route: another cyclist or a pelican friend passes the other way and waves (trigger the rig 'wave' event automatically), a crossing cat makes the pelican ring the bell (auto 'bell'), a puddle or pothole makes it hop (auto 'hop'), a fish leaps from the sea and the pelican gulps it mid-air (auto 'gulp'), gulls try to steal from the basket, a kite festival, a lighthouse keeper, a train racing alongside, fireworks over the amusement pier at night.
+- PACING: an automatic, gentle cadence variation (sprint on the flat, coasting "wheee" on a downhill stretch, marked by signage and rider posture; don't tilt the road geometry), and an optional auto time-of-day cycle so the day passes during a long ride (UI toggle exists: ui:tod auto).
+- A deterministic schedule (seeded, reproducible via renderAt), so screenshots at a given t are stable, plus window.__pb.director = {timeline, at(t)} for tests.
+- Never block the rider, never fight user input (user actions take priority, and auto events back off for 10 s after user input). Respect reduced motion (no rain streaks; static fog).
+Verify with a filmstrip of 16 frames across 0–300 s and event close-ups, Read them, and make sure there are zero console errors and the perf budget still holds.`, { label: 'journey:director', phase: 'Journey', schema: REPORT }),
+])).filter(Boolean)
+reports.push(...journey)
+
 phase('Integrate')
 const integ = await agent(`${COMMON.replaceAll('<your-id>', 'integrator')}
 
 YOUR ROLE: integrator. You MAY edit any file, but keep edits minimal and respect each module's design. Builder reports (including contractRequests): ${JSON.stringify(reports)}
+Also honour the new user requirements: ${USERREQ} Check that the route doesn't repeat within 4 minutes (render frames far apart) and that node tools/check-eggs.mjs passes.
 Tasks:
 1. Satisfy reasonable contractRequests, e.g. new pose fields consumed by the art, bake conventions, main.js wiring.
 2. Make these all pass with zero console errors: node tools/check-rig.mjs, node tools/lint.mjs, node tools/build.mjs, node tools/shoot.mjs, and node tools/shoot.mjs --dist --set hero,frames,tods,cams,events,zoom,mobile --sheet.
@@ -159,6 +227,9 @@ Tasks:
 Report what you changed.`, { label: 'integrate', phase: 'Integrate', schema: REPORT })
 
 const OWNER_FILES = Object.fromEntries(BUILDERS.map(b => [b.id, b.files]))
+OWNER_FILES.journey = 'src/world/route.js, src/world/land.js, src/world/sea.js'
+OWNER_FILES.eggs = 'src/fx/eggs.js, tools/check-eggs.mjs, docs/EGGS.md'
+OWNER_FILES.director = 'src/world/director.js, src/world/weather.js'
 OWNER_FILES.lead = 'src/main.js, src/scene.js, src/core/{camera,svg,bus,math,bakekit}.js, src/page.css, src/index.dev.html, tools/{build,shoot,serve,lint,render,sheet,detail-inventory}.mjs, README.md'
 
 const SCORE = {
@@ -169,7 +240,7 @@ const SCORE = {
     criteria: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, score: { type: 'number' }, evidence: { type: 'string' } }, required: ['id', 'score', 'evidence'] } },
     gatesFailed: { type: 'array', items: { type: 'string' } },
     findings: { type: 'array', items: { type: 'object', properties: {
-      owner: { type: 'string', description: 'rig | bike | pelican-body | pelican-limbs | sky | sea | land | fx | print | ui | audio | baker | lead' },
+      owner: { type: 'string', description: 'rig | bike | pelican-body | pelican-limbs | sky | sea | land | fx | print | ui | audio | baker | journey | eggs | director | lead' },
       severity: { type: 'string', enum: ['blocker', 'major', 'minor'] },
       issue: { type: 'string' }, evidence: { type: 'string' }, fix: { type: 'string' } },
       required: ['owner', 'severity', 'issue', 'fix'] } },
@@ -183,6 +254,7 @@ const judged = (await parallel(DIMS.map(d => () => agent(`You are a fresh, stric
 1. Print your dimension: node ${ROOT}/tools/rubric.mjs ${d} --anchors 2,5,8,10 (and --gates for the gate list).
 2. Produce evidence: node ${ROOT}/tools/build.mjs && node ${ROOT}/tools/shoot.mjs --dist --out shots/judge-${d} --set hero,frames,tods,cams,events,zoom,mobile --sheet. Where your criteria need them, add extra Playwright screenshots, key-press drivers, --perf, check-rig, detail-inventory, the baked SVG in dist/pelican-bicycle.svg, or code reading.
 3. READ the images carefully. Score every criterion against its anchors, citing concrete evidence (file and what you saw). Scores ≥ 9 need exceptional evidence. Be calibrated, not generous: this is judged against the best entries ever made.
+The user has also added two requirements, which every judge must weigh where relevant (D7/D8/D13 especially): ${USERREQ} Check them: render frames far apart in time (renderAt t = 0, 30, 60, 120, 240 s) to look for repetition, and read docs/EGGS.md + run node tools/check-eggs.mjs for the eggs.
 4. Give actionable findings (max 12, most valuable first), each routed to exactly one owner. Owner-to-file map: ${JSON.stringify(OWNER_FILES)}.
 Do NOT edit any files except your own shots folder.`, { label: `judge:${d}`, phase: 'Review', schema: SCORE })).concat([() => agent(`You are the G-DETAIL judge for "Pelican Bay" (style C). The user requires FAR more detail than the draft. Project: ${ROOT}.
 1. node ${ROOT}/tools/build.mjs && node ${ROOT}/tools/detail-inventory.mjs --json docs/eval/detail-inventory.json --verbose
@@ -207,7 +279,7 @@ phase('Verify')
 const DEFECTS = { type: 'object', properties: { defects: { type: 'array', items: { type: 'object', properties: {
   severity: { type: 'string', enum: ['blocker', 'major', 'minor'] }, owner: { type: 'string' }, issue: { type: 'string' }, evidence: { type: 'string' }, fix: { type: 'string' } },
   required: ['severity', 'issue', 'evidence', 'fix'] } } }, required: ['defects'] }
-const hunt = await agent(`You are an adversarial reviewer for "Pelican Bay" at ${ROOT}. Assume there are defects and find AT LEAST 5 real ones, the kind an expert evaluator would dock points for. Look at: a foot leaving a pedal, a limb seam at 3× zoom, a leg bleeding through the frame, a wheel spinning the wrong way, a chain on the wrong side, a pelican feature that is wrong for the species, the title covering the rider, gaps at the edges, a broken time of day, console errors, broken keys, the baked SVG not animating, off-style colours, padded detail. Build and shoot everything (node tools/build.mjs && node tools/shoot.mjs --dist --out shots/verify --set hero,frames,tods,cams,events,zoom,mobile --sheet, plus --perf, check-rig, detail-inventory, check-baked), READ the images, and drive the UI with Playwright. Report each defect with evidence and a fix. Do not edit files.`, { label: 'verify:hunt', phase: 'Verify', schema: DEFECTS })
+const hunt = await agent(`You are an adversarial reviewer for "Pelican Bay" at ${ROOT}. Assume there are defects and find AT LEAST 5 real ones, the kind an expert evaluator would dock points for. Look at: a foot leaving a pedal, a limb seam at 3× zoom, a leg bleeding through the frame, a wheel spinning the wrong way, a chain on the wrong side, a pelican feature that is wrong for the species, the title covering the rider, gaps at the edges, a broken time of day, console errors, broken keys, the baked SVG not animating, off-style colours, padded detail, the background repeating within 4 minutes (a user requirement: render t = 0…240 s), an easter egg that doesn't work (node tools/check-eggs.mjs; docs/EGGS.md). Build and shoot everything (node tools/build.mjs && node tools/shoot.mjs --dist --out shots/verify --set hero,frames,tods,cams,events,zoom,mobile --sheet, plus --perf, check-rig, detail-inventory, check-baked), READ the images, and drive the UI with Playwright. Report each defect with evidence and a fix. Do not edit files.`, { label: 'verify:hunt', phase: 'Verify', schema: DEFECTS })
 const final = await agent(`${COMMON.replaceAll('<your-id>', 'final')}
 
 YOUR ROLE: final fixer. You MAY edit any file (keep changes surgical). Fix every blocker and major from this adversarial review, and minors where they're cheap: ${JSON.stringify(hunt)}

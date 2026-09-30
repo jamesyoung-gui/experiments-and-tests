@@ -1,19 +1,19 @@
 {
  "file": "dist/pelican-bicycle.svg",
- "bytes": 1948870,
- "gzip": 365658,
- "sha256": "000381ed95bca0722dfa118820cf51104bc4ad55b3352bb3b1691008ed01bda7",
- "bakeMs": 9394,
+ "bytes": 1483905,
+ "gzip": 298267,
+ "sha256": "19b07d3caa70d082b5e11cac4e53234a1f09cb2214e2d4cd1697e471e9aab66d",
+ "bakeMs": 9555,
  "opts": {},
  "stats": {
   "period": 4,
   "fps": 60,
   "start": 24,
-  "samples": 2160,
-  "tracks": 339,
+  "samples": 2220,
+  "tracks": 340,
   "animated": 312,
-  "anims": 600,
-  "keyframes": 23222,
+  "anims": 519,
+  "keyframes": 17184,
   "warnings": [],
   "nonClosing": [
    "j-wingFarUpper.transform:translate[1] Δ=-0.12",
@@ -34,58 +34,69 @@
    "j-wingNearLower.transform:translate[1] Δ=-0.14",
    "j-wingNearLower.transform:rotate[0] Δ=0.11",
    "sky-shipG.transform:translate[1] Δ=-2.42",
-   "sky-skein.transform:translate[1] Δ=0.25",
    "sky-flockG.transform:translate[1] Δ=7.63",
    "sky-plane.transform:translate[1] Δ=-1.44",
+   "sky-plane.transform:rotate[0] Δ=-2.11",
+   "sky-pan0.transform:rotate[0] Δ=0.733",
    "sky-pan0.transform:skewX[0] Δ=0.733",
    "sky-pan1.transform:translate[1] Δ=-3.63",
+   "sky-pan1.transform:rotate[0] Δ=-4.455",
    "sky-pan1.transform:skewX[0] Δ=-4.455",
    "sky-pan2.transform:translate[1] Δ=-11",
+   "sky-pan2.transform:rotate[0] Δ=-9.722",
    "sky-pan2.transform:skewX[0] Δ=-9.722",
    "sky-pan3.transform:translate[1] Δ=1.83",
+   "sky-pan3.transform:rotate[0] Δ=-3.616",
    "sky-pan3.transform:skewX[0] Δ=-3.616",
-   "sky-pan3.transform:scale[0] Δ=0.002",
-   "sky-pan3.transform:scale[1] Δ=-0.002",
    "sky-pan4.transform:translate[1] Δ=46.34",
+   "sky-pan4.transform:rotate[0] Δ=12.267",
    "sky-pan4.transform:skewX[0] Δ=12.267",
    "sky-pan4.transform:scale[0] Δ=-0.006",
    "sky-pan4.transform:scale[1] Δ=0.006",
-   "sea-w0.transform:translate[1] Δ=-0.16",
    "sea-w1.transform:translate[1] Δ=1.24",
    "sea-w2.transform:translate[1] Δ=0.48",
-   "sea-w3.transform:translate[1] Δ=0.09",
-   "sea-sg0.transform:translate[0] Δ=-3.75",
    "sea-sg1.transform:translate[0] Δ=1.74",
    "sea-sg2.transform:translate[0] Δ=5.49",
-   "sea-spk0.transform:scale[0] Δ=-0.04",
-   "sea-spk0.transform:scale[1] Δ=-0.04",
-   "sea-spk1.transform:scale[0] Δ=-0.52",
-   "sea-spk1.transform:scale[1] Δ=-0.52",
    "sea-foam.transform:translate[1] Δ=0.9",
+   "sea-sealHead.transform:rotate[0] Δ=-1.89",
    "sea-o-steamer.transform:translate[1] Δ=0.87",
+   "sea-o-steamer.transform:rotate[0] Δ=-0.75",
+   "sea-smoke0.transform:translate[1] Δ=-2.66",
    "sea-smoke0.transform:scale[0] Δ=0.31",
    "sea-smoke0.transform:scale[1] Δ=0.31",
+   "sea-smoke1.transform:translate[1] Δ=-3.7",
    "sea-smoke1.transform:scale[0] Δ=0.31",
    "sea-smoke1.transform:scale[1] Δ=0.31",
+   "sea-smoke2.transform:translate[1] Δ=11.68",
    "sea-smoke2.transform:scale[0] Δ=-0.94",
    "sea-smoke2.transform:scale[1] Δ=-0.94",
-   "sea-smoke2.opacity[0] Δ=0.6",
+   "sea-smoke3.transform:translate[1] Δ=-6.01",
    "sea-smoke3.transform:scale[0] Δ=0.32",
    "sea-smoke3.transform:scale[1] Δ=0.32",
+   "sea-smoke4.transform:translate[1] Δ=-3.77",
    "sea-smoke4.transform:scale[0] Δ=0.31",
    "sea-smoke4.transform:scale[1] Δ=0.31",
-   "sea-o-yawl.transform:translate[1] Δ=0.08",
-   "sea-o-trawler.transform:translate[1] Δ=0.09",
+   "sea-o-sloop.transform:rotate[0] Δ=-2.52",
+   "sea-o-yawl.transform:rotate[0] Δ=2.7",
+   "sea-o-trawler.transform:rotate[0] Δ=0.76",
+   "sea-gA.transform:scale[1] Δ=1",
    "sea-gB.transform:scale[1] Δ=-0.75",
    "sea-o-near.transform:translate[1] Δ=2.41",
-   "sea-burgee.transform:scale[0] Δ=-0.12",
-   "sea-burgee.transform:scale[1] Δ=0.08",
+   "sea-o-near.transform:rotate[0] Δ=-2.69",
    "sea-ensign.transform:skewY[0] Δ=5.92",
    "sea-ensign.transform:scale[0] Δ=0.07",
    "sea-o-can.transform:translate[1] Δ=0.87",
+   "sea-o-can.transform:rotate[0] Δ=-0.41",
    "sea-o-bell.transform:translate[1] Δ=-0.5",
+   "sea-o-bell.transform:rotate[0] Δ=-3.95",
    "sea-o-pots.transform:translate[1] Δ=1.85",
-   "sea-sealUp.transform:translate[1] Δ=0.15",
+   "sea-o-pots.transform:rotate[0] Δ=-1.45",
+   "g.transform:rotate[0] Δ=-2.84",
+   "g.transform:rotate[0] Δ=-2.84",
+   "g.transform:rotate[0] Δ=-2.84",
+   "g.transform:rotate[0] Δ=-0.93",
+   "g.transform:rotate[0] Δ=-0.93",
+   "g.transform:rotate[0] Δ=-0.93",
    "g.transform:skewX[0] Δ=3.59",
    "g.transform:skewX[0] Δ=3.59",
    "g.transform:skewX[0] Δ=3.59",
@@ -103,34 +114,37 @@
    "g.transform:scale[1] Δ=0.14",
    "g.transform:translate[0] Δ=-3.71",
    "g.transform:translate[1] Δ=-2.99",
+   "g.transform:rotate[0] Δ=-12.25",
    "g.transform:translate[0] Δ=-3.71",
    "g.transform:translate[1] Δ=-2.99",
+   "g.transform:rotate[0] Δ=-12.25",
    "g.transform:translate[0] Δ=-3.71",
    "g.transform:translate[1] Δ=-2.99",
-   "g.transform:translate[0] Δ=7",
-   "g.transform:translate[1] Δ=-0.39",
-   "g.transform:translate[0] Δ=7",
-   "g.transform:translate[1] Δ=-0.39",
-   "g.transform:translate[0] Δ=7",
-   "g.transform:translate[1] Δ=-0.39",
+   "g.transform:rotate[0] Δ=-12.25",
    "g.transform:translate[1] Δ=-1.5",
    "g.transform:translate[1] Δ=-1.5",
    "g.transform:translate[1] Δ=-1.5",
-   "fx-sh-tail.transform:translate[1] Δ=-0.13",
-   "fx-sh-wingFarUpper.transform:translate[1] Δ=-0.12",
-   "fx-sh-thighFar.transform:translate[1] Δ=-0.12",
-   "fx-sh-body.transform:translate[1] Δ=-0.12",
+   "g.transform:rotate[0] Δ=3.96",
+   "g.transform:rotate[0] Δ=3.96",
+   "g.transform:rotate[0] Δ=3.96",
+   "g.transform:rotate[0] Δ=3.22",
+   "g.transform:rotate[0] Δ=3.22",
+   "g.transform:rotate[0] Δ=3.22",
+   "g.transform:rotate[0] Δ=-4.35",
+   "g.transform:rotate[0] Δ=-4.35",
+   "g.transform:rotate[0] Δ=-4.35",
+   "g.transform:rotate[0] Δ=-8.62",
+   "g.transform:rotate[0] Δ=-8.62",
+   "g.transform:rotate[0] Δ=-8.62",
+   "g.transform:rotate[0] Δ=-6.37",
+   "g.transform:rotate[0] Δ=-6.37",
+   "g.transform:rotate[0] Δ=-6.37",
    "fx-sh-body.transform:scale[1] Δ=0.01",
    "fx-sh-crest.transform:translate[1] Δ=-0.52",
    "fx-sh-head.transform:translate[1] Δ=-0.52",
    "fx-sh-pouch.transform:translate[1] Δ=-0.52",
    "fx-sh-billLower.transform:translate[1] Δ=-0.52",
    "fx-sh-billUpper.transform:translate[1] Δ=-0.52",
-   "fx-sh-thighNear.transform:translate[1] Δ=-0.12",
-   "fx-sh-wingNearUpper.transform:translate[1] Δ=-0.13",
-   "fx-sh-wingNearLower.transform:translate[1] Δ=-0.14",
-   "fx-sh-wingNearLower.transform:rotate[0] Δ=0.11",
-   "fx-shNeck.d[3] Δ=-0.3",
    "fx-shNeck.d[5] Δ=-0.6",
    "fx-gfar0.transform:translate[1] Δ=-3.7",
    "fx-gfar1.transform:translate[1] Δ=5.1",
@@ -141,22 +155,19 @@
    "fx-gfar6.transform:translate[1] Δ=11.2",
    "fx-esc0.transform:translate[0] Δ=19.1",
    "fx-esc0.transform:translate[1] Δ=-3.1",
+   "fx-esc0.transform:rotate[0] Δ=6",
    "fx-dust0.transform:translate[0] Δ=-90",
    "fx-dust0.transform:translate[1] Δ=-9.7",
    "fx-dust0.transform:scale[0] Δ=-1.25",
    "fx-dust0.transform:scale[1] Δ=-1.25",
-   "fx-dust1.transform:translate[0] Δ=-120.4",
-   "fx-dust1.transform:translate[1] Δ=-29.4",
-   "fx-dust1.transform:scale[0] Δ=-1.23",
-   "fx-dust1.transform:scale[1] Δ=-1.23",
-   "fx-dust2.transform:translate[0] Δ=-164.4",
-   "fx-dust2.transform:translate[1] Δ=-36",
-   "fx-dust2.transform:scale[0] Δ=-0.93",
-   "fx-dust2.transform:scale[1] Δ=-0.93",
-   "fx-dust7.transform:translate[0] Δ=72.7",
-   "fx-dust7.transform:translate[1] Δ=13.8",
-   "fx-dust7.transform:scale[0] Δ=0.46",
-   "fx-dust7.transform:scale[1] Δ=0.46",
+   "fx-dust4.transform:translate[0] Δ=75.6",
+   "fx-dust4.transform:translate[1] Δ=35.2",
+   "fx-dust4.transform:scale[0] Δ=0.96",
+   "fx-dust4.transform:scale[1] Δ=0.96",
+   "fx-dust6.transform:translate[0] Δ=95.5",
+   "fx-dust6.transform:translate[1] Δ=24.7",
+   "fx-dust6.transform:scale[0] Δ=1.44",
+   "fx-dust6.transform:scale[1] Δ=1.44",
    "fx-dust8.transform:translate[0] Δ=46.3",
    "fx-dust8.transform:translate[1] Δ=11.5",
    "fx-dust8.transform:scale[0] Δ=-0.11",
@@ -165,42 +176,54 @@
    "fx-dust9.transform:translate[1] Δ=15.6",
    "fx-dust9.transform:scale[0] Δ=-0.24",
    "fx-dust9.transform:scale[1] Δ=-0.24",
-   "fx-grit6.transform:translate[0] Δ=-12.5",
-   "fx-grit6.transform:translate[1] Δ=8.1",
    "fx-grit8.transform:translate[0] Δ=6.4",
    "fx-grit8.transform:translate[1] Δ=15.3",
-   "fx-grit9.transform:translate[0] Δ=-19.6",
-   "fx-grit9.transform:translate[1] Δ=-4",
+   "fx-grit8.transform:rotate[0] Δ=-110",
    "fx-curl0.transform:translate[1] Δ=27.8",
    "fx-curl0.transform:scale[0] Δ=0.1",
    "fx-curl0.transform:scale[1] Δ=0.1",
+   "fx-curl1.transform:translate[0] Δ=353.8",
    "fx-curl1.transform:translate[1] Δ=-22.6",
    "fx-curl1.transform:scale[0] Δ=-0.11",
    "fx-curl1.transform:scale[1] Δ=-0.11",
+   "fx-curl2.transform:translate[0] Δ=-170.6",
+   "fx-curl2.transform:translate[1] Δ=-49.3",
    "fx-curl2.transform:scale[0] Δ=-0.14",
    "fx-curl2.transform:scale[1] Δ=-0.14",
    "fx-fea0.transform:translate[0] Δ=-731.1",
    "fx-fea0.transform:translate[1] Δ=295",
+   "fx-fea0.transform:rotate[0] Δ=50.8",
+   "fx-fea0.opacity[0] Δ=-1",
    "fx-fea2.transform:translate[0] Δ=589",
+   "fx-fea2.transform:translate[1] Δ=-128.9",
+   "fx-fea2.transform:rotate[0] Δ=-57.5",
    "fx-seed0.transform:translate[1] Δ=55.1",
+   "fx-seed0.transform:rotate[0] Δ=-27.6",
    "fx-seed1.transform:translate[1] Δ=-53.3",
+   "fx-seed1.transform:rotate[0] Δ=-7.1",
    "fx-seed2.transform:translate[1] Δ=-14.8",
+   "fx-seed2.transform:rotate[0] Δ=20",
    "fx-seed3.transform:translate[1] Δ=72.7",
+   "fx-seed3.transform:rotate[0] Δ=28.6",
    "fx-bf0.transform:translate[0] Δ=13",
    "fx-bf0.transform:translate[1] Δ=-1.4",
+   "fx-bf0.transform:rotate[0] Δ=1.8",
    "fx-bfw0.transform:scale[1] Δ=-0.11",
    "fx-bf1.transform:translate[0] Δ=30.4",
    "fx-bf1.transform:translate[1] Δ=4.9",
+   "fx-bf1.transform:rotate[0] Δ=6.4",
    "fx-dfly.transform:translate[0] Δ=-141.7",
    "fx-dfly.transform:translate[1] Δ=-30.9",
    "fx-dflyW.transform:scale[1] Δ=0.14",
    "fx-fly.transform:translate[0] Δ=-27.2",
    "fx-fly.transform:translate[1] Δ=23.7",
+   "fx-flyW.transform:rotate[0] Δ=31.1",
+   "fx-glB.transform:rotate[0] Δ=-8.9",
    "fx-glB.transform:scale[0] Δ=-0.15",
    "fx-glB.transform:scale[1] Δ=-0.15",
+   "fx-glR.transform:rotate[0] Δ=-32",
    "fx-glR.transform:scale[0] Δ=0.18",
    "fx-glR.transform:scale[1] Δ=0.18",
-   "pb-neck.d[21] Δ=-0.28",
    "pb-neck.d[23] Δ=-0.31",
    "pb-neck.d[25] Δ=-0.33",
    "pb-neck.d[27] Δ=-0.34",
@@ -229,11 +252,6 @@
    "pb-neck.d[73] Δ=-0.37",
    "pb-neck.d[75] Δ=-0.34",
    "pb-neck.d[77] Δ=-0.31",
-   "pb-neck.d[79] Δ=-0.29",
-   "pb-neck.d[81] Δ=-0.26",
-   "pb-neckFlow.d[13] Δ=-0.28",
-   "pb-neckFlow.d[15] Δ=-0.26",
-   "pb-neckFlow.d[17] Δ=-0.28",
    "pb-neckFlow.d[19] Δ=-0.34",
    "pb-neckFlow.d[21] Δ=-0.31",
    "pb-neckFlow.d[23] Δ=-0.34",
@@ -252,9 +270,7 @@
    "pb-neckFlow.d[49] Δ=-0.53",
    "pb-neckFlow.d[51] Δ=-0.56",
    "pb-neckFlow.d[53] Δ=-0.61",
-   "pb-neckFlow2.d[7] Δ=-0.26",
    "pb-neckFlow2.d[13] Δ=-0.31",
-   "pb-neckFlow2.d[15] Δ=-0.29",
    "pb-neckFlow2.d[17] Δ=-0.31",
    "pb-neckFlow2.d[19] Δ=-0.36",
    "pb-neckFlow2.d[21] Δ=-0.34",
@@ -274,10 +290,6 @@
    "pb-neckFlow2.d[49] Δ=-0.47",
    "pb-neckFlow2.d[51] Δ=-0.5",
    "pb-neckFlow2.d[53] Δ=-0.54",
-   "pb-neckCrease.d[19] Δ=-0.26",
-   "pb-neckCrease.d[21] Δ=-0.28",
-   "pb-neckCrease.d[23] Δ=-0.28",
-   "pb-neckCrease.d[25] Δ=-0.29",
    "pb-neckCrease.d[27] Δ=-0.3",
    "pb-neckCrease.d[29] Δ=-0.3",
    "pb-neckCrease.d[31] Δ=-0.32",
@@ -290,9 +302,6 @@
    "pb-neckCrease.d[45] Δ=-0.37",
    "pb-neckCrease.d[47] Δ=-0.37",
    "pb-neckCrease.d[49] Δ=-0.38",
-   "pb-neckRimF.d[9] Δ=-0.27",
-   "pb-neckRimF.d[11] Δ=-0.27",
-   "pb-neckRimF.d[13] Δ=-0.28",
    "pb-neckRimF.d[15] Δ=-0.31",
    "pb-neckRimF.d[17] Δ=-0.31",
    "pb-neckRimF.d[19] Δ=-0.33",
@@ -311,10 +320,6 @@
    "pb-neckRimF.d[45] Δ=-0.41",
    "pb-neckRimF.d[47] Δ=-0.41",
    "pb-neckRimF.d[49] Δ=-0.4",
-   "pb-neckRimB.d[7] Δ=-0.26",
-   "pb-neckRimB.d[9] Δ=-0.28",
-   "pb-neckRimB.d[11] Δ=-0.28",
-   "pb-neckRimB.d[13] Δ=-0.3",
    "pb-neckRimB.d[15] Δ=-0.33",
    "pb-neckRimB.d[17] Δ=-0.33",
    "pb-neckRimB.d[19] Δ=-0.36",
@@ -333,9 +338,6 @@
    "pb-neckRimB.d[45] Δ=-0.61",
    "pb-neckRimB.d[47] Δ=-0.61",
    "pb-neckRimB.d[49] Δ=-0.63",
-   "pb-neckShade.d[13] Δ=-0.27",
-   "pb-neckShade.d[15] Δ=-0.29",
-   "pb-neckShade.d[17] Δ=-0.29",
    "pb-neckShade.d[19] Δ=-0.3",
    "pb-neckShade.d[21] Δ=-0.31",
    "pb-neckShade.d[23] Δ=-0.31",
@@ -639,9 +641,7 @@
    "pb-snKnit.d[84] Δ=-1.06",
    "pb-snKnit.d[85] Δ=-0.78",
    "pb-snKnit.d[86] Δ=-1.2",
-   "pb-snKnit.d[87] Δ=-0.29",
    "pb-snKnit.d[88] Δ=-1.2",
-   "pb-snKnit.d[89] Δ=-0.29",
    "pb-snKnit.d[90] Δ=-1.35",
    "pb-snKnit.d[92] Δ=-1.57",
    "pb-snKnit.d[93] Δ=0.74",
@@ -908,7 +908,6 @@
    "pb-shFill.d[0] Δ=-1.82",
    "pb-shFill.d[1] Δ=-0.84",
    "pb-shFill.d[2] Δ=-1.56",
-   "pb-shFill.d[3] Δ=-0.26",
    "pb-shFill.d[4] Δ=-1.37",
    "pb-shFill.d[6] Δ=-1.2",
    "pb-shFill.d[7] Δ=0.5",
@@ -967,7 +966,6 @@
    "pb-shFill.d[65] Δ=1.28",
    "pb-shFill.d[66] Δ=-0.47",
    "pb-shFill.d[67] Δ=1.14",
-   "pb-shFill.d[68] Δ=-0.3",
    "pb-shFill.d[69] Δ=1.25",
    "pb-shFill.d[71] Δ=1.35",
    "pb-shFill.d[73] Δ=1.44",
@@ -995,7 +993,6 @@
    "pb-shStripe.d[0] Δ=-1.68",
    "pb-shStripe.d[1] Δ=-0.55",
    "pb-shStripe.d[2] Δ=-1.56",
-   "pb-shStripe.d[3] Δ=-0.26",
    "pb-shStripe.d[4] Δ=-1.37",
    "pb-shStripe.d[6] Δ=-1.2",
    "pb-shStripe.d[7] Δ=0.5",
@@ -1019,7 +1016,6 @@
    "pb-shStripe.d[27] Δ=4.03",
    "pb-shStripe.d[28] Δ=0.83",
    "pb-shStripe.d[29] Δ=4.24",
-   "pb-shStripe.d[30] Δ=-0.3",
    "pb-shStripe.d[31] Δ=1.25",
    "pb-shStripe.d[33] Δ=1.35",
    "pb-shStripe.d[35] Δ=1.44",
@@ -1069,164 +1065,85 @@
    "pb-shFringe.d[23] Δ=-2.12",
    "pl-Near-prims.transform:rotate[0] Δ=-0.09",
    "pl-Far-prims.transform:rotate[0] Δ=-0.09",
-   "sea-gA.transform:scale[1] Δ=1",
+   "sea-sg0.transform:translate[0] Δ=-3.75",
+   "sea-burgee.transform:scale[0] Δ=-0.12",
+   "sea-burgee.transform:scale[1] Δ=0.08",
+   "sea-spk0.transform:scale[0] Δ=-0.04",
+   "sea-spk0.transform:scale[1] Δ=-0.04",
+   "fx-dust1.transform:translate[0] Δ=-120.4",
+   "fx-dust1.transform:translate[1] Δ=-29.4",
+   "fx-dust1.transform:scale[0] Δ=-1.23",
+   "fx-dust1.transform:scale[1] Δ=-1.23",
+   "fx-grit1.transform:translate[0] Δ=-41.5",
+   "fx-grit1.transform:translate[1] Δ=5.7",
+   "fx-grit1.transform:rotate[0] Δ=-44.7",
+   "fx-grit2.transform:translate[0] Δ=52.8",
+   "fx-grit2.transform:translate[1] Δ=7.1",
+   "fx-grit2.transform:rotate[0] Δ=90.1",
+   "fx-dust2.transform:translate[0] Δ=-164.4",
+   "fx-dust2.transform:translate[1] Δ=-36",
+   "fx-dust2.transform:scale[0] Δ=-0.93",
+   "fx-dust2.transform:scale[1] Δ=-0.93",
+   "sky-corona.transform:rotate[0] Δ=-8.8",
+   "fx-grit3.transform:translate[0] Δ=-16",
+   "fx-grit3.transform:translate[1] Δ=1.2",
+   "fx-grit3.transform:rotate[0] Δ=-18.8",
+   "fx-grit4.transform:translate[0] Δ=54.6",
+   "fx-grit4.transform:translate[1] Δ=5.1",
+   "fx-grit4.transform:rotate[0] Δ=-33.9",
+   "fx-grit6.transform:translate[0] Δ=-12.5",
+   "fx-grit6.transform:translate[1] Δ=8.1",
+   "fx-grit6.transform:rotate[0] Δ=17.1",
+   "fx-escWn0.transform:scale[1] Δ=-0.02",
+   "fx-escWf0.transform:scale[1] Δ=-0.02",
+   "fx-dust5.transform:translate[0] Δ=0.7",
+   "fx-dust5.transform:translate[1] Δ=0.5",
+   "fx-grit9.transform:translate[0] Δ=-19.6",
+   "fx-grit9.transform:translate[1] Δ=-4",
+   "fx-grit9.transform:rotate[0] Δ=26.7",
+   "fx-grit0.transform:translate[0] Δ=138.5",
+   "fx-grit0.transform:translate[1] Δ=2.6",
+   "fx-grit0.transform:rotate[0] Δ=74.5",
+   "sea-smoke2.opacity[0] Δ=0.6",
+   "fx-dust7.transform:translate[0] Δ=72.7",
+   "fx-dust7.transform:translate[1] Δ=13.8",
+   "fx-dust7.transform:scale[0] Δ=0.46",
+   "fx-dust7.transform:scale[1] Δ=0.46",
+   "bike-tailB.transform:rotate[0] Δ=5.2",
+   "fx-grit5.transform:translate[0] Δ=76.6",
+   "fx-grit5.transform:translate[1] Δ=-1.3",
+   "fx-grit5.transform:rotate[0] Δ=-63.9",
+   "sea-spk1.transform:scale[0] Δ=-0.52",
+   "sea-spk1.transform:scale[1] Δ=-0.52",
+   "g.transform:translate[0] Δ=7",
+   "g.transform:translate[1] Δ=-0.39",
+   "g.transform:translate[0] Δ=7",
+   "g.transform:translate[1] Δ=-0.39",
+   "g.transform:translate[0] Δ=7",
+   "g.transform:translate[1] Δ=-0.39",
    "fx-dust3.transform:translate[0] Δ=363.3",
    "fx-dust3.transform:translate[1] Δ=739.8",
    "fx-dust3.transform:scale[0] Δ=-0.69",
    "fx-dust3.transform:scale[1] Δ=-0.69",
-   "fx-escWn0.transform:scale[1] Δ=-0.02",
-   "fx-escWf0.transform:scale[1] Δ=-0.02",
-   "fx-grit2.transform:translate[0] Δ=318.7",
-   "fx-grit2.transform:translate[1] Δ=787.4",
-   "fx-dust4.transform:translate[0] Δ=19.1",
-   "fx-dust4.transform:translate[1] Δ=4.8",
-   "fx-dust4.transform:scale[0] Δ=0.29",
-   "fx-dust4.transform:scale[1] Δ=0.29",
-   "sky-w0.d[0] Δ=3.93",
-   "sky-w0.d[2] Δ=3.81",
-   "sky-w0.d[3] Δ=-121.41",
-   "sky-w0.d[4] Δ=2137.41",
-   "sky-w0.d[6] Δ=16.3",
-   "sky-w0.d[8] Δ=240.36",
-   "sky-w0.d[10] Δ=125.67",
-   "sky-w0.d[12] Δ=8.52",
-   "sky-w0.d[14] Δ=3.46",
-   "sky-w0.d[16] Δ=51.05",
-   "sky-w0.d[18] Δ=38.93",
-   "sky-w0.d[20] Δ=2.64",
-   "sky-w0.d[22] Δ=1.72",
-   "sky-w0.d[24] Δ=25.39",
-   "sky-w0.d[26] Δ=22.25",
-   "sky-w0.d[28] Δ=1.51",
-   "sky-w0.d[30] Δ=1.25",
-   "sky-w0.d[32] Δ=18.42",
-   "sky-w0.d[34] Δ=17.64",
-   "sky-w0.d[36] Δ=1.19",
-   "sky-w0.d[38] Δ=1.19",
-   "sky-w0.d[40] Δ=17.45",
-   "sky-w0.d[42] Δ=18.04",
-   "sky-w0.d[44] Δ=1.23",
-   "sky-w0.d[46] Δ=1.44",
-   "sky-w0.d[48] Δ=21.26",
-   "sky-w0.d[50] Δ=23.94",
-   "sky-w0.d[52] Δ=1.63",
-   "sky-w0.d[54] Δ=2.4",
-   "sky-w0.d[56] Δ=35.33",
-   "sky-w0.d[58] Δ=45.23",
-   "sky-w0.d[60] Δ=3.06",
-   "sky-w0.d[62] Δ=6.89",
-   "sky-w0.d[64] Δ=101.5",
-   "sky-w0.d[66] Δ=177.9",
-   "sky-w0.d[68] Δ=12.07",
-   "sky-w0.d[70] Δ=215.04",
-   "sky-w0.d[72] Δ=9.32",
-   "sky-w0.d[73] Δ=121.11",
-   "sky-w0.d[74] Δ=-1.58",
-   "sky-w1.d[2] Δ=-12.84",
-   "sky-w1.d[4] Δ=-6.71",
-   "sky-w1.d[8] Δ=-2.73",
-   "sky-w1.d[10] Δ=-2.08",
-   "sky-w1.d[14] Δ=-1.36",
-   "sky-w1.d[16] Δ=-1.19",
-   "sky-w1.d[20] Δ=-0.98",
-   "sky-w1.d[22] Δ=-0.95",
-   "sky-w1.d[26] Δ=-0.93",
-   "sky-w1.d[28] Δ=-0.97",
-   "sky-w1.d[32] Δ=-1.14",
-   "sky-w1.d[34] Δ=-1.27",
-   "sky-w1.d[38] Δ=-1.89",
-   "sky-w1.d[40] Δ=-2.41",
-   "sky-w1.d[44] Δ=-5.42",
-   "sky-w1.d[46] Δ=-9.5",
-   "sky-w1.d[50] Δ=-169.33",
-   "sky-w1.d[52] Δ=1.83",
-   "sky-w1.d[54] Δ=3.95",
-   "sky-w1.d[56] Δ=2183.25",
-   "sky-w1.d[60] Δ=16.65",
-   "sky-w1.d[62] Δ=8.7",
-   "sky-w1.d[66] Δ=3.53",
-   "sky-w1.d[68] Δ=2.7",
-   "sky-w1.d[72] Δ=1.76",
-   "sky-w1.d[74] Δ=1.54",
-   "sky-w1.d[78] Δ=1.28",
-   "sky-w1.d[80] Δ=1.22",
-   "sky-w1.d[84] Δ=1.21",
-   "sky-w1.d[86] Δ=1.25",
-   "sky-w1.d[90] Δ=1.47",
-   "sky-w1.d[92] Δ=1.66",
-   "sky-w1.d[96] Δ=2.45",
-   "sky-w1.d[98] Δ=3.13",
-   "sky-w1.d[102] Δ=7.03",
-   "sky-w1.d[104] Δ=12.32",
-   "sky-w1.d[108] Δ=219.65",
-   "sky-w1.d[110] Δ=-1.56",
-   "sky-w1.d[112] Δ=-3.68",
-   "sky-w1.d[114] Δ=-1683",
-   "sky-rpsky1.d[2] Δ=-12.84",
-   "sky-rpsky1.d[4] Δ=-6.71",
-   "sky-rpsky1.d[8] Δ=-2.73",
-   "sky-rpsky1.d[10] Δ=-2.08",
-   "sky-rpsky1.d[14] Δ=-1.36",
-   "sky-rpsky1.d[16] Δ=-1.19",
-   "sky-rpsky1.d[20] Δ=-0.98",
-   "sky-rpsky1.d[22] Δ=-0.95",
-   "sky-rpsky1.d[26] Δ=-0.93",
-   "sky-rpsky1.d[28] Δ=-0.97",
-   "sky-rpsky1.d[32] Δ=-1.14",
-   "sky-rpsky1.d[34] Δ=-1.27",
-   "sky-rpsky1.d[38] Δ=-1.89",
-   "sky-rpsky1.d[40] Δ=-2.41",
-   "sky-rpsky1.d[44] Δ=-5.42",
-   "sky-rpsky1.d[46] Δ=-9.5",
-   "sky-rpsky1.d[50] Δ=-169.33",
-   "sky-rpsky1.d[52] Δ=1.83",
-   "sky-rpsky1.d[54] Δ=3.95",
-   "sky-rpsky1.d[56] Δ=2183.25",
-   "sky-rpsky1.d[60] Δ=16.65",
-   "sky-rpsky1.d[62] Δ=8.7",
-   "sky-rpsky1.d[66] Δ=3.53",
-   "sky-rpsky1.d[68] Δ=2.7",
-   "sky-rpsky1.d[72] Δ=1.76",
-   "sky-rpsky1.d[74] Δ=1.54",
-   "sky-rpsky1.d[78] Δ=1.28",
-   "sky-rpsky1.d[80] Δ=1.22",
-   "sky-rpsky1.d[84] Δ=1.21",
-   "sky-rpsky1.d[86] Δ=1.25",
-   "sky-rpsky1.d[90] Δ=1.47",
-   "sky-rpsky1.d[92] Δ=1.66",
-   "sky-rpsky1.d[96] Δ=2.45",
-   "sky-rpsky1.d[98] Δ=3.13",
-   "sky-rpsky1.d[102] Δ=7.03",
-   "sky-rpsky1.d[104] Δ=12.32",
-   "sky-rpsky1.d[108] Δ=219.65",
-   "sky-rpsky1.d[110] Δ=-1.56",
-   "sky-rpsky1.d[112] Δ=-3.68",
-   "sky-rpsky1.d[114] Δ=-1683",
    "sea-smoke1.opacity[0] Δ=-0.8",
-   "fx-grit5.transform:translate[0] Δ=101.8",
-   "fx-grit5.transform:translate[1] Δ=10.9",
-   "fx-dust6.transform:translate[0] Δ=15.6",
-   "fx-dust6.transform:translate[1] Δ=-0.5",
    "fx-grit7.transform:translate[0] Δ=447.3",
    "fx-grit7.transform:translate[1] Δ=754.5",
+   "fx-grit7.transform:rotate[0] Δ=-51.8",
+   "sea-fish0.transform:translate[0] Δ=14.29",
    "sea-fish0.transform:translate[1] Δ=-1.79",
-   "fx-grit0.transform:translate[0] Δ=543",
-   "fx-grit0.transform:translate[1] Δ=788",
-   "fx-grit1.transform:translate[0] Δ=319.3",
-   "fx-grit1.transform:translate[1] Δ=787.9",
+   "sea-fish0.transform:rotate[0] Δ=47.62",
    "fx-fea2.opacity[0] Δ=-0.1",
-   "fx-dust5.transform:translate[0] Δ=-37.6",
-   "fx-dust5.transform:translate[1] Δ=-13.8",
-   "fx-dust5.transform:scale[0] Δ=-1.45",
-   "fx-dust5.transform:scale[1] Δ=-1.45",
-   "fx-grit3.transform:translate[0] Δ=322.1",
-   "fx-grit3.transform:translate[1] Δ=786.4",
-   "fx-grit4.transform:translate[0] Δ=71.3",
-   "fx-grit4.transform:translate[1] Δ=22.4",
+   "bike-tailC.transform:rotate[0] Δ=-4.2",
+   "sea-bell.transform:rotate[0] Δ=7",
+   "sea-fish1.transform:translate[0] Δ=49",
+   "sea-fish1.transform:translate[1] Δ=-6",
+   "sea-fish1.transform:rotate[0] Δ=50",
    "pb-nict.transform:translate[0] Δ=11.3",
+   "sea-dolph.transform:translate[0] Δ=58.77",
+   "sea-dolph.transform:translate[1] Δ=4.13",
+   "sea-dolph.transform:rotate[0] Δ=56.62",
    "sea-spl0.transform:scale[0] Δ=0.19",
    "sea-spl0.transform:scale[1] Δ=0.19",
-   "fx-fea0.opacity[0] Δ=-1",
    "sea-spl1.transform:scale[0] Δ=0.13",
    "sea-spl1.transform:scale[1] Δ=0.13"
   ],
@@ -1237,252 +1154,172 @@
    "j-cog.transform:rotate[0] 1080 per 1s (W=360)",
    "j-chainring.transform:rotate[0] 360 per 1s (W=360)",
    "j-crankNear.transform:rotate[0] 360 per 1s (W=360)",
-   "sky-cl0.transform:translate[0] -3200 per 52s (W=3200)",
-   "sky-cl1.transform:translate[0] -3200 per 52s (W=3200)",
-   "sky-cl2.transform:translate[0] -3200 per 52s (W=3200)",
-   "sky-cl3.transform:translate[0] -3200 per 52s (W=3200)",
-   "sky-cl4.transform:translate[0] -3200 per 52s (W=3200)",
-   "sky-cl5.transform:translate[0] -3200 per 52s (W=3200)",
-   "sky-cl6.transform:translate[0] -3200 per 52s (W=3200)",
-   "sky-cl7.transform:translate[0] -3200 per 52s (W=3200)",
-   "sky-cl8.transform:translate[0] -3200 per 52s (W=3200)",
-   "sky-cl9.transform:translate[0] -3200 per 52s (W=3200)",
-   "sky-shipG.transform:translate[0] -2600 per 168s (W=2600)",
-   "sky-skein.transform:translate[0] -2600 per 68s (W=2600)",
-   "sky-flockG.transform:translate[0] -2600 per 164s (W=2600)",
-   "sky-plane.transform:translate[0] 3000 per 124s (W=3000)",
-   "sky-plane.transform:rotate[0] -360 per 684s (W=360)",
-   "sky-pan0.transform:rotate[0] 360 per 1964s (W=360)",
-   "sky-pan1.transform:rotate[0] -360 per 324s (W=360)",
-   "sky-pan2.transform:rotate[0] -360 per 148s (W=360)",
-   "sky-pan3.transform:rotate[0] -360 per 400s (W=360)",
-   "sky-pan4.transform:rotate[0] 360 per 116s (W=360)",
-   "sea-hills.transform:translate[0] -4712.39 per 52s (W=4712.39)",
-   "sea-cape.transform:translate[0] -4486.2 per 32s (W=4486.2)",
-   "sea-w0.transform:translate[0] -2450.44 per 12s (W=2450.44)",
-   "sea-w1.transform:translate[0] -2488.14 per 12s (W=2488.14)",
-   "sea-w2.transform:translate[0] -2638.93 per 8s (W=2638.93)",
-   "sea-w3.transform:translate[0] -2563.54 per 8s (W=2563.54)",
+   "sky-cl0.transform:translate[0] -3200 per 52.8511s (W=3200)",
+   "sky-cl1.transform:translate[0] -3200 per 52.8511s (W=3200)",
+   "sky-cl2.transform:translate[0] -3200 per 52.8511s (W=3200)",
+   "sky-cl3.transform:translate[0] -3200 per 52.8511s (W=3200)",
+   "sky-cl4.transform:translate[0] -3200 per 52.8511s (W=3200)",
+   "sky-cl5.transform:translate[0] -3200 per 52.8511s (W=3200)",
+   "sky-cl6.transform:translate[0] -3200 per 52.8511s (W=3200)",
+   "sky-cl7.transform:translate[0] -3200 per 52.8511s (W=3200)",
+   "sky-cl8.transform:translate[0] -3200 per 52.8511s (W=3200)",
+   "sky-cl9.transform:translate[0] -3200 per 52.8511s (W=3200)",
+   "sky-shipG.transform:translate[0] -2600 per 166.4533s (W=2600)",
+   "sky-skein.transform:translate[0] -2600 per 69.7518s (W=2600)",
+   "sky-flockG.transform:translate[0] -2600 per 165.6051s (W=2600)",
+   "sky-plane.transform:translate[0] 3000 per 125s (W=3000)",
+   "sea-hills.transform:translate[0] -4712.39 per 50.0002s (W=4712.39)",
+   "sea-cape.transform:translate[0] -4486.2 per 33.9999s (W=4486.2)",
+   "sea-w0.transform:translate[0] -2450.44 per 12.7964s (W=2450.44)",
+   "sea-w1.transform:translate[0] -2488.14 per 10.7621s (W=2488.14)",
+   "sea-w2.transform:translate[0] -2638.93 per 9.7416s (W=2638.93)",
+   "sea-w3.transform:translate[0] -2563.54 per 7.7814s (W=2563.54)",
    "sea-harbour.transform:translate[0] -5428.67 per 24s (W=5428.67)",
-   "sea-millSails.transform:rotate[0] 360 per 8s (W=360)",
-   "sea-rocks.transform:translate[0] -4486.2 per 16s (W=4486.2)",
-   "sea-sealHead.transform:rotate[0] -360 per 760s (W=360)",
-   "sea-o-steamer.transform:translate[0] -4300.005 per 20s (W=4300.005)",
-   "sea-o-steamer.transform:rotate[0] -360 per 1920s (W=360)",
-   "sea-smoke0.transform:translate[0] 58 per 4s (W=58)",
-   "sea-smoke0.transform:translate[1] -18.03 per 4s (W=18.03)",
-   "sea-smoke1.transform:translate[0] 58 per 4s (W=58)",
-   "sea-smoke1.transform:translate[1] -18.03 per 4s (W=18.03)",
-   "sea-smoke2.transform:translate[0] 58 per 4s (W=58)",
-   "sea-smoke2.transform:translate[1] -18.04 per 4s (W=18.04)",
-   "sea-smoke3.transform:translate[0] 58 per 4s (W=58)",
-   "sea-smoke3.transform:translate[1] -18.06 per 4s (W=18.06)",
-   "sea-smoke4.transform:translate[0] 58 per 4s (W=58)",
-   "sea-smoke4.transform:translate[1] -18.02 per 4s (W=18.02)",
-   "sea-o-sloop.transform:translate[0] -3600 per 20s (W=3600)",
-   "sea-o-sloop.transform:rotate[0] -360 per 572s (W=360)",
-   "sea-o-yawl.transform:translate[0] -4100 per 20s (W=4100)",
-   "sea-o-yawl.transform:rotate[0] 360 per 532s (W=360)",
-   "sea-o-trawler.transform:translate[0] -3900 per 16s (W=3900)",
-   "sea-o-trawler.transform:rotate[0] 360 per 1896s (W=360)",
-   "sea-o-near.transform:translate[0] -3700 per 16s (W=3700)",
-   "sea-o-near.transform:rotate[0] -360 per 536s (W=360)",
-   "sea-o-can.transform:translate[0] -3300 per 12s (W=3300)",
-   "sea-o-can.transform:rotate[0] -360 per 3512s (W=360)",
-   "sea-o-bell.transform:translate[0] -3500 per 12s (W=3500)",
-   "sea-o-bell.transform:rotate[0] -360 per 364s (W=360)",
-   "sea-o-pots.transform:translate[0] -3099.99 per 12s (W=3099.99)",
-   "sea-o-pots.transform:rotate[0] -360 per 992s (W=360)",
-   "sea-o-dolphin.transform:translate[0] -3400 per 12s (W=3400)",
-   "sea-o-fish.transform:translate[0] -3000 per 12s (W=3000)",
-   "sea-o-sealhead.transform:translate[0] -3200 per 12s (W=3200)",
-   "g.transform:rotate[0] -360 per 508s (W=360)",
-   "g.transform:rotate[0] -360 per 508s (W=360)",
-   "g.transform:rotate[0] -360 per 508s (W=360)",
-   "g.transform:rotate[0] -360 per 1548s (W=360)",
-   "g.transform:rotate[0] -360 per 1548s (W=360)",
-   "g.transform:rotate[0] -360 per 1548s (W=360)",
-   "g.transform:rotate[0] -360 per 116s (W=360)",
-   "g.transform:rotate[0] -360 per 116s (W=360)",
-   "g.transform:rotate[0] -360 per 116s (W=360)",
-   "g.transform:rotate[0] -4.59 per 28s (W=4.59)",
-   "g.transform:rotate[0] -4.59 per 28s (W=4.59)",
-   "g.transform:rotate[0] -4.59 per 28s (W=4.59)",
-   "g.transform:rotate[0] 360 per 448s (W=360)",
-   "g.transform:rotate[0] 360 per 448s (W=360)",
-   "g.transform:rotate[0] 360 per 448s (W=360)",
-   "g.transform:rotate[0] -360 per 332s (W=360)",
-   "g.transform:rotate[0] -360 per 332s (W=360)",
-   "g.transform:rotate[0] -360 per 332s (W=360)",
-   "g.transform:rotate[0] -360 per 168s (W=360)",
-   "g.transform:rotate[0] -360 per 168s (W=360)",
-   "g.transform:rotate[0] -360 per 168s (W=360)",
-   "g.transform:rotate[0] -360 per 228s (W=360)",
-   "g.transform:rotate[0] -360 per 228s (W=360)",
-   "g.transform:rotate[0] -360 per 228s (W=360)",
-   "fx-gfar0.transform:translate[0] -2800 per 24s (W=2800)",
-   "fx-gfar1.transform:translate[0] -2800 per 24s (W=2800)",
-   "fx-gfar2.transform:translate[0] -2800 per 24s (W=2800)",
-   "fx-gfar3.transform:translate[0] -2800.1 per 24s (W=2800.1)",
-   "fx-gfar4.transform:translate[0] -2800 per 24s (W=2800)",
-   "fx-gfar5.transform:translate[0] -2800 per 24s (W=2800)",
-   "fx-gfar6.transform:translate[0] -2800 per 24s (W=2800)",
-   "fx-esc0.transform:rotate[0] 360 per 240s (W=360)",
-   "fx-grit6.transform:rotate[0] 360 per 84s (W=360)",
-   "fx-grit8.transform:rotate[0] -360 per 12s (W=360)",
-   "fx-grit9.transform:rotate[0] 360 per 52s (W=360)",
-   "fx-curl0.transform:translate[0] -1044.5 per 4s (W=522.25)",
-   "fx-curl0p0.stroke-dashoffset[0] -4 per 4s (W=2)",
-   "fx-curl0p1.stroke-dashoffset[0] -4 per 4s (W=2)",
-   "fx-curl1.transform:translate[0] 525.9 per 4s (W=525.9)",
-   "fx-curl1p0.stroke-dashoffset[0] -4 per 4s (W=2)",
-   "fx-curl1p1.stroke-dashoffset[0] -4 per 4s (W=2)",
-   "fx-curl2.transform:translate[0] -544.2 per 4s (W=544.2)",
-   "fx-curl2.transform:translate[1] -27.8 per 4s (W=27.8)",
-   "fx-curl2p1.stroke-dashoffset[0] -2 per 12s (W=2)",
-   "fx-fea0.transform:rotate[0] 360 per 28s (W=360)",
-   "fx-fea2.transform:translate[1] 281.5 per 8s (W=281.5)",
-   "fx-fea2.transform:rotate[0] -45 per 4s (W=15)",
-   "fx-seed0.transform:translate[0] -2000 per 16s (W=2000)",
-   "fx-seed0.transform:rotate[0] -360 per 52s (W=360)",
-   "fx-seed1.transform:translate[0] -2000 per 12s (W=2000)",
-   "fx-seed1.transform:rotate[0] -360 per 204s (W=360)",
-   "fx-seed2.transform:translate[0] -2000 per 16s (W=2000)",
-   "fx-seed2.transform:rotate[0] 360 per 72s (W=360)",
-   "fx-seed3.transform:translate[0] -2000 per 16s (W=2000)",
-   "fx-seed3.transform:rotate[0] 360 per 52s (W=360)",
-   "fx-bf0.transform:rotate[0] 360 per 800s (W=360)",
-   "fx-bf1.transform:rotate[0] 360 per 224s (W=360)",
-   "fx-dfly.transform:rotate[0] 360 per 4800s (W=360)",
-   "fx-flyW.transform:rotate[0] 360 per 48s (W=360)",
-   "fx-flyTrail.stroke-dashoffset[0] -626.32 per 4s (W=313.16)",
-   "fx-glB.transform:rotate[0] -360 per 160s (W=360)",
-   "fx-glR.transform:rotate[0] -360 per 44s (W=360)",
-   "bike-chainfx.stroke-dashoffset[0] -200 per 4s (W=100)",
+   "sea-millSails.transform:rotate[0] 360 per 9s (W=360)",
+   "sea-rocks.transform:translate[0] -4486.2 per 14s (W=4486.2)",
+   "sea-o-steamer.transform:translate[0] -4300.005 per 20.3727s (W=4300.005)",
+   "sea-smoke0.transform:translate[0] 58 per 3.2s (W=58)",
+   "sea-smoke1.transform:translate[0] 58 per 3.2s (W=58)",
+   "sea-smoke2.transform:translate[0] 58 per 3.2s (W=58)",
+   "sea-smoke3.transform:translate[0] 58 per 3.2s (W=58)",
+   "sea-smoke4.transform:translate[0] 58 per 3.2s (W=58)",
+   "sea-o-sloop.transform:translate[0] -3600 per 18.7198s (W=3600)",
+   "sea-o-yawl.transform:translate[0] -4100 per 20.4438s (W=4100)",
+   "sea-o-trawler.transform:translate[0] -3900 per 17.0716s (W=3900)",
+   "sea-o-near.transform:translate[0] -3700 per 15.625s (W=3700)",
+   "sea-o-can.transform:translate[0] -3300 per 12.2255s (W=3300)",
+   "sea-o-bell.transform:translate[0] -3500 per 11.8494s (W=3500)",
+   "sea-o-pots.transform:translate[0] -3099.99 per 10.6172s (W=3099.99)",
+   "sea-o-dolphin.transform:translate[0] -3400 per 12.7564s (W=3400)",
+   "sea-o-fish.transform:translate[0] -3000 per 10.1567s (W=3000)",
+   "sea-o-sealhead.transform:translate[0] -3200 per 10.9597s (W=3200)",
+   "fx-gfar0.transform:translate[0] -2800 per 24.8337s (W=2800)",
+   "fx-gfar1.transform:translate[0] -2800 per 24.8337s (W=2800)",
+   "fx-gfar2.transform:translate[0] -2800 per 24.8337s (W=2800)",
+   "fx-gfar3.transform:translate[0] -2800.1 per 24.8291s (W=2800.1)",
+   "fx-gfar4.transform:translate[0] -2800 per 24.8337s (W=2800)",
+   "fx-gfar5.transform:translate[0] -2800 per 24.8337s (W=2800)",
+   "fx-gfar6.transform:translate[0] -2800 per 24.8337s (W=2800)",
+   "fx-curl0.transform:translate[0] -522 per 1.6803s (W=522)",
+   "fx-curl0p1.stroke-dashoffset[0] -2 per 1.626s (W=2)",
+   "fx-curl1p0.stroke-dashoffset[0] -2 per 1.7058s (W=2)",
+   "fx-curl1p1.stroke-dashoffset[0] -2 per 1.7817s (W=2)",
+   "fx-curl2p0.stroke-dashoffset[0] -2 per 3.0769s (W=2)",
+   "fx-curl2p1.stroke-dashoffset[0] -2 per 2.9412s (W=2)",
+   "fx-seed0.transform:translate[0] -2000 per 15.8636s (W=2000)",
+   "fx-seed1.transform:translate[0] -2000 per 13.2626s (W=2000)",
+   "fx-seed2.transform:translate[0] -2000 per 15.7171s (W=2000)",
+   "fx-seed3.transform:translate[0] -2000 per 14.0746s (W=2000)",
+   "fx-flyTrail.stroke-dashoffset[0] -313.16 per 1.8959s (W=313.16)",
+   "bike-chainfx.stroke-dashoffset[0] -100 per 2.0833s (W=100)",
    "bike-teeth.transform:rotate[0] 360 per 1s (W=360)",
-   "bike-tailB.transform:rotate[0] 360 per 276s (W=360)",
-   "fx-grit2.transform:rotate[0] 360 per 24s (W=360)",
-   "sky-corona.transform:rotate[0] -360 per 164s (W=360)",
-   "fx-curl2p0.stroke-dashoffset[0] -2 per 12s (W=2)",
-   "fx-grit5.transform:rotate[0] -360 per 24s (W=360)",
-   "fx-grit7.transform:rotate[0] -360 per 28s (W=360)",
-   "sea-fish0.transform:translate[0] 30 per 4s (W=15)",
-   "sea-fish0.transform:rotate[0] 100 per 4s (W=50)",
-   "fx-grit1.transform:rotate[0] -360 per 12s (W=360)",
-   "bike-tailC.transform:rotate[0] -360 per 344s (W=360)",
-   "sea-bell.transform:rotate[0] 360 per 204s (W=360)",
-   "fx-grit3.transform:rotate[0] 360 per 36s (W=360)",
-   "fx-grit4.transform:rotate[0] -360 per 88s (W=360)",
-   "sea-fish1.transform:translate[0] 38 per 4s (W=19)",
-   "sea-fish1.transform:rotate[0] 50 per 2s (W=50)",
-   "sea-dolph.transform:translate[0] 119.38 per 4s (W=59.69)",
-   "sea-dolph.transform:translate[1] -5.53 per 16s (W=5.53)",
-   "sea-dolph.transform:rotate[0] 360 per 24s (W=360)"
+   "fx-curl0p0.stroke-dashoffset[0] -2 per 1.6563s (W=2)"
   ],
   "subPeriods": {
-   "1": 23,
+   "1": 25,
    "2": 1,
    "0.5": 2,
    "1.333": 1,
-   "0.1": 3,
-   "0.167": 1
+   "0.133": 1,
+   "0.1": 2
   },
   "errMax": {
-   "xf": 1,
-   "opacity": 0.9999999999999997,
-   "d": 2.5600000000000023,
+   "xf": 0.9999999999999994,
+   "opacity": 0.9895833333333307,
+   "d": 3.9888888888888614,
    "stroke-dashoffset": 0.9999999999999432
   },
   "bytesByGroup": {
-   "slot:wingFarUpper": 2871,
-   "slot:wingFarLower": 12874,
-   "slot:wingFarHand": 1369,
-   "slot:pedalFar": 1313,
-   "slot:footFar": 2272,
-   "slot:shankFar": 7502,
-   "slot:thighFar": 3828,
+   "slot:wingFarUpper": 2459,
+   "slot:wingFarLower": 11278,
+   "slot:wingFarHand": 1077,
+   "slot:pedalFar": 1186,
+   "slot:footFar": 2042,
+   "slot:shankFar": 6441,
+   "slot:thighFar": 3215,
    "slot:crankFar": 192,
-   "slot:wheelRear": 195,
-   "slot:wheelFront": 194,
-   "slot:bars": 1607,
-   "slot:cog": 195,
-   "slot:chainring": 190,
-   "slot:crankNear": 190,
-   "slot:tail": 3469,
-   "slot:body": 341911,
-   "slot:pedalNear": 1309,
-   "slot:shankNear": 7631,
-   "slot:footNear": 2233,
-   "slot:thighNear": 3972,
-   "slot:pouch": 1801,
-   "slot:billLower": 1365,
-   "slot:billUpper": 1408,
-   "slot:head": 1294,
-   "slot:eye": 2189,
-   "slot:crest": 9272,
-   "slot:wingNearUpper": 2823,
-   "slot:wingNearLower": 50670,
-   "slot:wingNearHand": 1368,
-   "L-clouds": 33609,
-   "L-hills-far": 158,
-   "L-lighthouse": 156,
-   "L-sea": 6686,
-   "L-boats": 33019,
-   "L-shore": 29908,
-   "L-roadside": 11538,
-   "L-road": 186,
-   "L-foreground": 191,
-   "L-shadow": 51322,
-   "L-gulls-far": 7633,
-   "L-fx-back": 8183,
-   "L-fx-front": 106167,
-   "slot:chain": 288,
-   "slot:fork": 2680,
-   "slot:neck": 74370,
-   "L-sky": 150690,
-   "L-sunmoon": 221
+   "slot:wheelRear": 198,
+   "slot:wheelFront": 197,
+   "slot:bars": 1131,
+   "slot:cog": 198,
+   "slot:chainring": 192,
+   "slot:crankNear": 192,
+   "slot:tail": 3170,
+   "slot:body": 235655,
+   "slot:pedalNear": 1172,
+   "slot:shankNear": 6454,
+   "slot:footNear": 2012,
+   "slot:thighNear": 3314,
+   "slot:pouch": 1411,
+   "slot:billLower": 1095,
+   "slot:billUpper": 1099,
+   "slot:head": 1110,
+   "slot:eye": 1963,
+   "slot:crest": 8853,
+   "slot:wingNearUpper": 2334,
+   "slot:wingNearLower": 47582,
+   "slot:wingNearHand": 1061,
+   "L-clouds": 19761,
+   "L-hills-far": 154,
+   "L-lighthouse": 154,
+   "L-sea": 5237,
+   "L-boats": 25909,
+   "L-shore": 16507,
+   "L-roadside": 5591,
+   "L-road": 181,
+   "L-foreground": 181,
+   "L-shadow": 24148,
+   "L-gulls-far": 6171,
+   "L-fx-back": 6572,
+   "L-fx-front": 86832,
+   "slot:chain": 290,
+   "slot:neck": 78736,
+   "L-sky": 62496,
+   "L-sunmoon": 295,
+   "slot:fork": 2424
   },
   "ms": {
-   "record": 880,
-   "probe": 7527,
-   "analyse": 414,
-   "total": 9121
+   "record": 1130,
+   "probe": 7470,
+   "analyse": 396,
+   "total": 9312
   },
+  "blended": 1130,
   "byUnit": [
    [
     "j-wingFarUpper.transform",
-    2871,
-    "81@4,78@4"
+    2459,
+    "73@4,70@4"
    ],
    [
     "j-wingFarLower.transform",
-    3345,
-    "92@4,98@4"
+    2725,
+    "78@4,85@4"
    ],
    [
     "j-wingFarHand.transform",
-    1369,
-    "12@4,72@4"
+    1077,
+    "9@4,57@4"
    ],
    [
     "j-pedalFar.transform",
-    1313,
-    "61@1,29@1"
+    1186,
+    "61@1,26@1"
    ],
    [
     "j-footFar.transform",
-    1384,
-    "61@1,29@1"
+    1209,
+    "61@1,26@1"
    ],
    [
     "j-shankFar.transform",
-    7502,
-    "233@4,187@4"
+    6441,
+    "211@4,173@4"
    ],
    [
     "j-thighFar.transform",
-    3828,
-    "60@4,181@4"
+    3215,
+    "50@4,158@4"
    ],
    [
     "j-crankFar.transform",
@@ -1491,878 +1328,848 @@
    ],
    [
     "j-wheelRear.transform",
-    195,
+    198,
     "1@4,2@1"
    ],
    [
     "j-wheelFront.transform",
-    194,
+    197,
     "1@4,2@1"
    ],
    [
     "j-bars.transform",
-    1607,
-    "58@4,31@4"
+    1131,
+    "41@4,25@4"
    ],
    [
     "j-cog.transform",
-    195,
+    198,
     "1@4,2@1"
    ],
    [
     "j-chainring.transform",
-    190,
+    192,
     "1@4,2@1"
    ],
    [
     "j-crankNear.transform",
-    190,
+    192,
     "1@4,2@1"
    ],
    [
     "j-tail.transform",
-    3469,
-    "51@4,167@4"
+    3170,
+    "48@4,156@4"
    ],
    [
     "j-body.transform",
-    1783,
-    "54@4,14@1,12@4"
+    1585,
+    "49@4,13@1,15@4"
    ],
    [
     "j-pedalNear.transform",
-    1309,
-    "61@1,29@1"
+    1172,
+    "61@1,25@1"
    ],
    [
     "j-shankNear.transform",
-    7631,
-    "237@4,187@4"
+    6454,
+    "214@4,168@4"
    ],
    [
     "j-footNear.transform",
-    1380,
-    "61@1,29@1"
+    1195,
+    "61@1,25@1"
    ],
    [
     "j-thighNear.transform",
-    3972,
-    "67@4,181@4"
+    3314,
+    "49@4,168@4"
    ],
    [
     "j-pouch.transform",
-    1801,
-    "33@4,56@4,9@0.5"
+    1411,
+    "25@4,44@4,9@0.5"
    ],
    [
     "j-billLower.transform",
-    1365,
-    "27@4,46@4"
+    1095,
+    "23@4,36@4"
    ],
    [
     "j-billUpper.transform",
-    1408,
-    "29@4,46@4"
+    1099,
+    "23@4,36@4"
    ],
    [
     "j-head.transform",
-    1167,
-    "19@4,46@4"
+    983,
+    "18@4,36@4"
    ],
    [
     "j-eye.transform",
-    1545,
-    "24@4,46@4,13@4"
+    1316,
+    "21@4,36@4,13@4"
    ],
    [
     "j-crest.transform",
-    3655,
-    "28@4,206@4"
+    3445,
+    "25@4,199@4"
    ],
    [
     "j-wingNearUpper.transform",
-    2823,
-    "83@4,71@4"
+    2334,
+    "72@4,62@4"
    ],
    [
     "j-wingNearLower.transform",
-    3292,
-    "90@4,97@4"
+    2700,
+    "77@4,84@4"
    ],
    [
     "j-wingNearHand.transform",
-    1368,
-    "12@4,72@4"
+    1061,
+    "8@4,57@4"
    ],
    [
     "sky-cl0.transform",
-    158,
-    "4@52"
+    150,
+    "4@52.851"
    ],
    [
     "sky-cl1.transform",
-    158,
-    "4@52"
+    156,
+    "4@52.851"
    ],
    [
     "sky-cl2.transform",
-    159,
-    "4@52"
+    155,
+    "4@52.851"
    ],
    [
     "sky-cl3.transform",
-    157,
-    "4@52"
+    153,
+    "4@52.851"
    ],
    [
     "sky-cl4.transform",
-    158,
-    "4@52"
+    156,
+    "4@52.851"
    ],
    [
     "sky-cl5.transform",
-    160,
-    "4@52"
+    156,
+    "4@52.851"
    ],
    [
     "sky-cl6.transform",
-    160,
-    "4@52"
+    156,
+    "4@52.851"
    ],
    [
     "sky-cl7.transform",
-    158,
-    "4@52"
+    154,
+    "4@52.851"
    ],
    [
     "sky-cl8.transform",
-    160,
-    "4@52"
+    156,
+    "4@52.851"
    ],
    [
     "sky-cl9.transform",
-    157,
-    "4@52"
+    153,
+    "4@52.851"
    ],
    [
     "sky-shipG.transform",
-    324,
-    "4@168,5@4"
+    315,
+    "4@166.453,5@4"
    ],
    [
     "sky-skein.transform",
-    332,
-    "4@68,5@4"
+    300,
+    "4@69.752,4@4"
    ],
    [
     "sky-flockG.transform",
-    343,
-    "4@164,6@4"
+    326,
+    "4@165.605,6@4"
    ],
    [
-    "sky-b3.href",
-    863,
-    "43@4"
+    "sky-b2.href",
+    845,
+    "42@4"
    ],
    [
     "sky-plane.transform",
-    608,
-    "4@124,9@4,2@684,4@4"
+    437,
+    "4@125,6@4,3@4"
    ],
    [
     "sky-pan0.transform",
-    1855,
-    "1@4,2@1964,56@4,56@4,1@4"
+    900,
+    "1@4,25@4,25@4,1@4"
    ],
    [
     "sky-pan1.transform",
-    3187,
-    "57@4,2@324,75@4,75@4,7@1.333"
+    1453,
+    "29@4,31@4,31@4,1@4"
    ],
    [
     "sky-pan2.transform",
-    4829,
-    "106@4,2@148,103@4,103@4,21@4"
+    2098,
+    "56@4,43@4,43@4,2@1.333"
    ],
    [
     "sky-pan3.transform",
-    6329,
-    "173@4,2@400,118@4,118@4,21@4"
+    2874,
+    "71@4,57@4,57@4,19@4"
    ],
    [
     "sky-pan4.transform",
-    8248,
-    "204@4,2@116,141@4,141@4,55@4"
+    3544,
+    "109@4,60@4,60@4,20@4"
    ],
    [
     "sea-hills.transform",
-    158,
-    "4@52"
+    154,
+    "4@50"
    ],
    [
     "sea-cape.transform",
-    156,
-    "4@32"
+    154,
+    "4@34"
    ],
    [
     "sea-w0.transform",
-    318,
-    "4@12,5@4"
+    282,
+    "4@12.796,3@4"
    ],
    [
     "sea-w1.transform",
-    349,
-    "4@12,7@4"
+    293,
+    "4@10.762,4@4"
    ],
    [
     "sea-w2.transform",
-    388,
-    "4@8,9@4"
+    310,
+    "4@9.742,5@4"
    ],
    [
     "sea-w3.transform",
-    397,
-    "4@8,11@4"
-   ],
-   [
-    "sea-sg0.transform",
-    346,
-    "18@4"
+    289,
+    "2@7.781,6@4"
    ],
    [
     "sea-sg1.transform",
-    406,
-    "22@4"
+    236,
+    "11@4"
    ],
    [
     "sea-sg2.transform",
-    483,
-    "27@4"
+    304,
+    "16@4"
    ],
    [
-    "sea-spk0.transform",
-    977,
-    "69@4"
-   ],
-   [
-    "sea-spk1.transform",
-    1177,
-    "85@4"
+    "sea-spk2.transform",
+    646,
+    "49@4"
    ],
    [
     "sea-harbour.transform",
-    155,
+    151,
     "4@24"
    ],
    [
     "sea-millSails.transform",
     97,
-    "2@8"
+    "2@9"
    ],
    [
     "sea-rocks.transform",
-    252,
-    "4@16,1@4"
+    246,
+    "4@14,1@4"
    ],
    [
     "sea-foam.transform",
-    284,
-    "14@4"
+    210,
+    "9@4"
    ],
    [
     "sea-sealHead.transform",
-    365,
-    "2@760,14@4"
+    215,
+    "11@4"
    ],
    [
     "sea-o-steamer.transform",
-    783,
-    "4@20,10@4,2@1920,8@4,1@4"
+    590,
+    "4@20.373,7@4,6@4,1@4"
    ],
    [
     "sea-smoke0.transform",
-    2835,
-    "4@4,4@4,11@4,172@4"
+    2182,
+    "4@3.2,11@4,141@4"
    ],
    [
     "sea-smoke1.transform",
-    2874,
-    "4@4,4@4,14@4,171@4"
+    2162,
+    "4@3.2,10@4,140@4"
    ],
    [
     "sea-smoke2.transform",
-    2937,
-    "4@4,4@4,15@4,175@4"
-   ],
-   [
-    "sea-smoke2.opacity",
-    337,
-    "19@4"
+    2288,
+    "4@3.2,17@4,142@4"
    ],
    [
     "sea-smoke3.transform",
-    2881,
-    "4@4,4@4,14@4,171@4"
+    2210,
+    "2@3.2,13@4,143@4"
+   ],
+   [
+    "sea-smoke3.opacity",
+    158,
+    "7@4"
    ],
    [
     "sea-smoke4.transform",
-    2887,
-    "4@4,4@4,15@4,171@4"
+    2147,
+    "2@3.2,11@4,140@4"
+   ],
+   [
+    "sea-smoke4.opacity",
+    155,
+    "7@4"
    ],
    [
     "sea-o-sloop.transform",
-    745,
-    "4@20,7@4,2@572,8@4,1@4"
+    520,
+    "4@18.72,3@4,5@4,1@4"
    ],
    [
     "sea-o-yawl.transform",
-    724,
-    "4@20,7@4,2@532,7@4,1@4"
+    537,
+    "4@20.444,4@4,5@4,1@4"
    ],
    [
     "sea-o-trawler.transform",
-    783,
-    "4@16,10@4,2@1896,8@4,1@4"
+    553,
+    "4@17.072,5@4,5@4,1@4"
+   ],
+   [
+    "sea-gA.transform",
+    1431,
+    "96@4"
    ],
    [
     "sea-gB.transform",
-    1151,
-    "71@4"
+    1256,
+    "83@4"
    ],
    [
     "sea-o-near.transform",
-    963,
-    "4@16,16@4,2@536,15@4,1@4"
-   ],
-   [
-    "sea-burgee.transform",
-    312,
-    "12@4"
+    651,
+    "4@15.625,10@4,7@4,1@4"
    ],
    [
     "sea-ensign.transform",
-    640,
-    "19@4,15@4"
+    836,
+    "20@4,30@4"
    ],
    [
     "sea-o-can.transform",
-    946,
-    "4@12,14@4,2@3512,15@4,1@4"
+    660,
+    "4@12.226,9@4,9@4,1@4"
    ],
    [
     "sea-o-bell.transform",
-    999,
-    "4@12,16@4,2@364,17@4,1@4"
+    655,
+    "4@11.849,9@4,9@4,1@4"
    ],
    [
     "sea-o-pots.transform",
-    938,
-    "4@12,16@4,2@992,13@4,1@4"
+    620,
+    "4@10.617,10@4,5@4,1@4"
    ],
    [
     "sea-o-dolphin.transform",
-    252,
-    "4@12,1@4"
+    248,
+    "4@12.756,1@4"
    ],
    [
     "sea-o-fish.transform",
-    252,
-    "4@12,1@4"
+    248,
+    "4@10.157,1@4"
    ],
    [
     "sea-o-sealhead.transform",
-    250,
-    "4@12,1@4"
+    242,
+    "4@10.96,1@4"
    ],
    [
     "sea-sealUp.transform",
-    179,
-    "6@4"
+    131,
+    "3@4"
    ],
    [
     "land-shore.transform",
-    193,
+    187,
     "6@2"
    ],
    [
     "land-roadside.transform",
-    186,
+    179,
     "6@1"
    ],
    [
     "land-road.transform",
-    186,
+    181,
     "6@1"
    ],
    [
     "land-fg.transform",
-    191,
+    181,
     "6@1"
    ],
    [
     "g.transform",
-    351,
-    "2@508,13@4"
+    180,
+    "8@4"
    ],
    [
     "g.transform",
-    351,
-    "2@508,13@4"
+    180,
+    "8@4"
    ],
    [
     "g.transform",
-    351,
-    "2@508,13@4"
+    180,
+    "8@4"
    ],
    [
     "g.transform",
-    401,
-    "2@1548,17@4"
+    180,
+    "8@4"
    ],
    [
     "g.transform",
-    401,
-    "2@1548,17@4"
+    180,
+    "8@4"
    ],
    [
     "g.transform",
-    401,
-    "2@1548,17@4"
+    180,
+    "8@4"
    ],
    [
     "g.transform",
-    1293,
-    "92@4"
+    572,
+    "41@4"
    ],
    [
     "g.transform",
-    1293,
-    "92@4"
+    572,
+    "41@4"
    ],
    [
     "g.transform",
-    1293,
-    "92@4"
+    572,
+    "41@4"
    ],
    [
     "g.transform",
-    1416,
-    "105@4"
-   ],
-   [
-    "g.transform",
-    1416,
-    "105@4"
-   ],
-   [
-    "g.transform",
-    1416,
-    "105@4"
-   ],
-   [
-    "g.transform",
-    1703,
-    "128@4"
-   ],
-   [
-    "g.transform",
-    1703,
-    "128@4"
-   ],
-   [
-    "g.transform",
-    1703,
-    "128@4"
-   ],
-   [
-    "g.transform",
-    3061,
-    "159@4"
-   ],
-   [
-    "g.transform",
-    3061,
-    "159@4"
-   ],
-   [
-    "g.transform",
-    3061,
-    "159@4"
-   ],
-   [
-    "g.transform",
-    835,
-    "16@4,2@116,23@4"
-   ],
-   [
-    "g.transform",
-    835,
-    "16@4,2@116,23@4"
-   ],
-   [
-    "g.transform",
-    835,
-    "16@4,2@116,23@4"
-   ],
-   [
-    "g.transform",
-    1239,
-    "66@4"
-   ],
-   [
-    "g.transform",
-    1239,
-    "66@4"
-   ],
-   [
-    "g.transform",
-    1239,
-    "66@4"
-   ],
-   [
-    "g.transform",
-    358,
-    "19@4"
-   ],
-   [
-    "g.transform",
-    358,
-    "19@4"
-   ],
-   [
-    "g.transform",
-    358,
-    "19@4"
-   ],
-   [
-    "g.transform",
-    854,
-    "2@28,52@4"
-   ],
-   [
-    "g.transform",
-    854,
-    "2@28,52@4"
-   ],
-   [
-    "g.transform",
-    854,
-    "2@28,52@4"
-   ],
-   [
-    "g.transform",
-    542,
-    "2@448,29@4"
-   ],
-   [
-    "g.transform",
-    542,
-    "2@448,29@4"
-   ],
-   [
-    "g.transform",
-    542,
-    "2@448,29@4"
-   ],
-   [
-    "g.transform",
-    539,
-    "2@332,29@4"
-   ],
-   [
-    "g.transform",
-    539,
-    "2@332,29@4"
-   ],
-   [
-    "g.transform",
-    539,
-    "2@332,29@4"
-   ],
-   [
-    "g.transform",
-    552,
-    "2@168,30@4"
-   ],
-   [
-    "g.transform",
-    552,
-    "2@168,30@4"
-   ],
-   [
-    "g.transform",
-    552,
-    "2@168,30@4"
-   ],
-   [
-    "g.transform",
-    545,
-    "2@228,29@4"
-   ],
-   [
-    "g.transform",
-    545,
-    "2@228,29@4"
-   ],
-   [
-    "g.transform",
-    545,
-    "2@228,29@4"
-   ],
-   [
-    "fx-sh-tail.transform",
-    3469,
-    "51@4,167@4"
-   ],
-   [
-    "fx-sh-wingFarUpper.transform",
-    2871,
-    "81@4,78@4"
-   ],
-   [
-    "fx-sh-thighFar.transform",
-    3828,
-    "60@4,181@4"
-   ],
-   [
-    "fx-sh-shankFar.transform",
-    7502,
-    "233@4,187@4"
-   ],
-   [
-    "fx-sh-footFar.transform",
-    1384,
-    "61@1,29@1"
-   ],
-   [
-    "fx-sh-body.transform",
-    1783,
-    "54@4,14@1,12@4"
-   ],
-   [
-    "fx-sh-crest.transform",
-    3655,
-    "28@4,206@4"
-   ],
-   [
-    "fx-sh-head.transform",
-    1167,
-    "19@4,46@4"
-   ],
-   [
-    "fx-sh-pouch.transform",
-    1801,
-    "33@4,56@4,9@0.5"
-   ],
-   [
-    "fx-sh-billLower.transform",
-    1365,
-    "27@4,46@4"
-   ],
-   [
-    "fx-sh-billUpper.transform",
-    1408,
-    "29@4,46@4"
-   ],
-   [
-    "fx-sh-thighNear.transform",
-    3972,
-    "67@4,181@4"
-   ],
-   [
-    "fx-sh-shankNear.transform",
-    7631,
-    "237@4,187@4"
-   ],
-   [
-    "fx-sh-footNear.transform",
-    1380,
-    "61@1,29@1"
-   ],
-   [
-    "fx-sh-wingNearUpper.transform",
-    2823,
-    "83@4,71@4"
-   ],
-   [
-    "fx-sh-wingNearLower.transform",
-    3292,
-    "90@4,97@4"
-   ],
-   [
-    "fx-shNeck.d",
-    1991,
+    663,
     "49@4"
    ],
    [
+    "g.transform",
+    663,
+    "49@4"
+   ],
+   [
+    "g.transform",
+    663,
+    "49@4"
+   ],
+   [
+    "g.transform",
+    741,
+    "56@4"
+   ],
+   [
+    "g.transform",
+    741,
+    "56@4"
+   ],
+   [
+    "g.transform",
+    741,
+    "56@4"
+   ],
+   [
+    "g.transform",
+    2264,
+    "128@4"
+   ],
+   [
+    "g.transform",
+    2264,
+    "128@4"
+   ],
+   [
+    "g.transform",
+    2264,
+    "128@4"
+   ],
+   [
+    "g.transform",
+    460,
+    "9@4,13@4"
+   ],
+   [
+    "g.transform",
+    460,
+    "9@4,13@4"
+   ],
+   [
+    "g.transform",
+    460,
+    "9@4,13@4"
+   ],
+   [
+    "g.transform",
+    183,
+    "7@4"
+   ],
+   [
+    "g.transform",
+    183,
+    "7@4"
+   ],
+   [
+    "g.transform",
+    183,
+    "7@4"
+   ],
+   [
+    "g.transform",
+    364,
+    "24@4"
+   ],
+   [
+    "g.transform",
+    364,
+    "24@4"
+   ],
+   [
+    "g.transform",
+    364,
+    "24@4"
+   ],
+   [
+    "g.transform",
+    279,
+    "17@4"
+   ],
+   [
+    "g.transform",
+    279,
+    "17@4"
+   ],
+   [
+    "g.transform",
+    279,
+    "17@4"
+   ],
+   [
+    "g.transform",
+    266,
+    "16@4"
+   ],
+   [
+    "g.transform",
+    266,
+    "16@4"
+   ],
+   [
+    "g.transform",
+    266,
+    "16@4"
+   ],
+   [
+    "g.transform",
+    266,
+    "16@4"
+   ],
+   [
+    "g.transform",
+    266,
+    "16@4"
+   ],
+   [
+    "g.transform",
+    266,
+    "16@4"
+   ],
+   [
+    "g.transform",
+    269,
+    "16@4"
+   ],
+   [
+    "g.transform",
+    269,
+    "16@4"
+   ],
+   [
+    "g.transform",
+    269,
+    "16@4"
+   ],
+   [
+    "fx-sh-tail.transform",
+    1459,
+    "22@4,70@4"
+   ],
+   [
+    "fx-sh-wingFarUpper.transform",
+    1408,
+    "46@4,31@4"
+   ],
+   [
+    "fx-sh-thighFar.transform",
+    1536,
+    "24@4,75@4"
+   ],
+   [
+    "fx-sh-shankFar.transform",
+    3751,
+    "137@4,83@4"
+   ],
+   [
+    "fx-sh-footFar.transform",
+    927,
+    "33@1,12@1"
+   ],
+   [
+    "fx-sh-body.transform",
+    880,
+    "19@4,6@1,14@4"
+   ],
+   [
+    "fx-sh-crest.transform",
+    2170,
+    "16@4,130@4"
+   ],
+   [
+    "fx-sh-head.transform",
+    515,
+    "8@4,16@4"
+   ],
+   [
+    "fx-sh-pouch.transform",
+    898,
+    "14@4,22@4,9@0.5"
+   ],
+   [
+    "fx-sh-billLower.transform",
+    638,
+    "14@4,16@4"
+   ],
+   [
+    "fx-sh-billUpper.transform",
+    638,
+    "14@4,16@4"
+   ],
+   [
+    "fx-sh-thighNear.transform",
+    802,
+    "20@4,19@1"
+   ],
+   [
+    "fx-sh-shankNear.transform",
+    2886,
+    "131@4,21@1"
+   ],
+   [
+    "fx-sh-footNear.transform",
+    924,
+    "33@1,12@1"
+   ],
+   [
+    "fx-sh-wingNearUpper.transform",
+    1322,
+    "44@4,27@4"
+   ],
+   [
+    "fx-sh-wingNearLower.transform",
+    1605,
+    "49@4,44@4"
+   ],
+   [
+    "fx-shNeck.d",
+    1789,
+    "44@4"
+   ],
+   [
     "fx-gfar0.transform",
-    619,
-    "4@24,15@4,1@4"
+    445,
+    "4@24.834,7@4,1@4"
    ],
    [
     "fx-gfar1.transform",
-    627,
-    "4@24,16@4,1@4"
+    440,
+    "4@24.834,7@4,1@4"
    ],
    [
     "fx-gfar2.transform",
-    629,
-    "4@24,16@4,1@4"
+    450,
+    "4@24.834,8@4,1@4"
    ],
    [
     "fx-gfar3.transform",
-    766,
-    "4@24,23@4,1@4"
+    473,
+    "4@24.829,9@4,1@4"
    ],
    [
     "fx-gfar4.transform",
-    758,
-    "4@24,23@4,1@4"
+    445,
+    "4@24.834,7@4,1@4"
    ],
    [
     "fx-gfar5.transform",
-    700,
-    "4@24,19@4,1@4"
+    437,
+    "4@24.834,7@4,1@4"
    ],
    [
     "fx-gfar6.transform",
-    493,
-    "4@24,9@4,1@4"
+    440,
+    "4@24.834,7@4,1@4"
    ],
    [
     "fx-esc0.transform",
-    1472,
-    "26@4,2@240,46@4,1@4"
+    673,
+    "17@4,7@4,1@4"
    ],
    [
     "fx-dust0.transform",
-    3230,
-    "76@4,116@4"
+    2642,
+    "56@4,117@4"
    ],
    [
-    "fx-dust1.transform",
-    2556,
-    "63@4,84@4"
+    "fx-dust4.transform",
+    2259,
+    "55@4,86@4"
    ],
    [
-    "fx-dust2.transform",
-    4137,
-    "102@4,146@4"
-   ],
-   [
-    "fx-dust7.transform",
-    2370,
-    "56@4,79@4"
+    "fx-dust6.transform",
+    2955,
+    "69@4,124@4"
    ],
    [
     "fx-dust8.transform",
-    4144,
-    "100@4,147@4"
+    3352,
+    "78@4,142@4"
    ],
    [
     "fx-dust9.transform",
-    2431,
-    "60@4,79@4"
-   ],
-   [
-    "fx-grit6.transform",
-    2505,
-    "89@4,2@84,29@4"
+    2166,
+    "53@4,82@4"
    ],
    [
     "fx-grit8.transform",
-    2985,
-    "106@4,2@12,39@4"
-   ],
-   [
-    "fx-grit9.transform",
-    2295,
-    "82@4,2@52,25@4"
+    3427,
+    "144@4,46@4"
    ],
    [
     "fx-curl0.transform",
-    1170,
-    "6@4,36@4,10@4"
-   ],
-   [
-    "fx-curl0p0.stroke-dashoffset",
-    346,
-    "2@4,13@4"
+    780,
+    "2@1.68,22@4,11@4"
    ],
    [
     "fx-curl0p1.stroke-dashoffset",
-    360,
-    "2@4,15@4"
+    292,
+    "2@1.626,10@4"
    ],
    [
     "fx-curl1.transform",
-    1067,
-    "4@4,28@4,14@4"
+    977,
+    "33@4,15@4"
    ],
    [
     "fx-curl1p0.stroke-dashoffset",
-    345,
-    "2@4,13@4"
+    306,
+    "2@1.706,11@4"
    ],
    [
     "fx-curl1p1.stroke-dashoffset",
-    357,
-    "2@4,14@4"
+    308,
+    "2@1.782,11@4"
    ],
    [
     "fx-curl2.transform",
-    729,
-    "4@4,2@4,12@4,6@4"
+    804,
+    "27@4,10@4"
+   ],
+   [
+    "fx-curl2p0.stroke-dashoffset",
+    258,
+    "2@3.077,7@4"
    ],
    [
     "fx-curl2p1.stroke-dashoffset",
-    343,
-    "2@12,13@4"
+    260,
+    "2@2.941,7@4"
    ],
    [
     "fx-fea0.transform",
-    2824,
-    "68@4,2@28,80@4,1@4"
+    2009,
+    "68@4,40@4,1@4"
+   ],
+   [
+    "fx-fea0.opacity",
+    176,
+    "8@4"
    ],
    [
     "fx-fea2.transform",
-    1657,
-    "4@8,31@4,2@4,39@4,1@4"
+    1550,
+    "47@4,32@4,1@4"
    ],
    [
     "fx-seed0.transform",
-    1589,
-    "4@16,31@4,2@52,39@4,1@4"
+    1058,
+    "4@15.864,27@4,19@4,1@4"
    ],
    [
     "fx-seed1.transform",
-    1994,
-    "4@12,38@4,2@204,55@4,1@4"
+    960,
+    "4@13.263,20@4,18@4,1@4"
    ],
    [
     "fx-seed2.transform",
-    1943,
-    "4@16,39@4,2@72,52@4,1@4"
+    957,
+    "4@15.717,23@4,15@4,1@4"
    ],
    [
     "fx-seed3.transform",
-    1832,
-    "4@16,34@4,2@52,53@4,1@4"
+    1062,
+    "4@14.075,25@4,21@4,1@4"
    ],
    [
     "fx-bf0.transform",
-    2543,
-    "70@4,2@800,52@4,1@4"
+    1189,
+    "39@4,14@4,1@4"
    ],
    [
     "fx-bfw0.transform",
-    2978,
-    "1@4,182@4,1@4"
+    363,
+    "1@4,7@0.133,1@4"
    ],
    [
     "fx-bf1.transform",
-    2385,
-    "67@4,2@224,49@4,1@4"
+    1136,
+    "38@4,14@4,1@4"
    ],
    [
     "fx-bfw1.transform",
@@ -2371,253 +2178,223 @@
    ],
    [
     "fx-dfly.transform",
-    2642,
-    "85@4,2@4800,34@4,1@4"
+    1656,
+    "60@4,17@4,1@4"
    ],
    [
     "fx-dflyW.transform",
-    3892,
-    "1@4,243@4,1@4"
+    3667,
+    "1@4,240@4,1@4"
    ],
    [
     "fx-fly.transform",
-    5297,
-    "235@4,1@4"
+    3540,
+    "172@4,1@4"
    ],
    [
     "fx-flyW.transform",
-    5546,
-    "2@48,268@4"
+    5137,
+    "266@4"
    ],
    [
     "fx-flyTrail.stroke-dashoffset",
-    1972,
-    "2@4,140@4"
+    1428,
+    "2@1.896,106@4"
    ],
    [
     "fx-glB.transform",
-    1978,
-    "1@4,2@160,46@4,81@4"
+    1163,
+    "1@4,12@4,62@4"
    ],
    [
     "fx-glR.transform",
-    1111,
-    "1@4,2@44,2@0.1,57@4"
+    977,
+    "1@4,10@4,47@4"
    ],
    [
     "bike-chainfx.stroke-dashoffset",
     98,
-    "2@4"
+    "2@2.083"
    ],
    [
     "bike-teeth.transform",
-    190,
+    192,
     "1@4,2@1"
    ],
    [
-    "bike-tailB.transform",
-    928,
-    "2@276,40@4"
-   ],
-   [
     "pb-neck.d",
-    21336,
-    "51@4"
+    22178,
+    "53@4"
    ],
    [
     "pb-neckFlow.d",
-    11539,
-    "49@4"
+    12494,
+    "53@4"
    ],
    [
     "pb-neckFlow2.d",
-    11215,
-    "47@4"
+    11897,
+    "50@4"
    ],
    [
     "pb-neckCrease.d",
-    7423,
-    "48@4"
+    7716,
+    "50@4"
    ],
    [
     "pb-neckRimF.d",
-    7649,
+    7669,
     "48@4"
    ],
    [
     "pb-neckRimB.d",
-    7915,
-    "46@4"
+    8758,
+    "51@4"
    ],
    [
     "pb-neckShade.d",
-    7293,
-    "46@4"
+    8024,
+    "51@4"
    ],
    [
     "pb-seat.transform",
-    2364,
+    2130,
     "121@4"
    ],
    [
     "pb-scarfA.transform",
-    1748,
-    "29@4,67@4"
+    1424,
+    "21@4,60@4"
    ],
    [
     "pb-scarfB.transform",
-    1748,
-    "29@4,67@4"
+    1424,
+    "21@4,60@4"
    ],
    [
     "pb-scarfC.transform",
-    1748,
-    "29@4,67@4"
+    1424,
+    "21@4,60@4"
    ],
    [
     "pb-snFill.d",
-    58404,
-    "121@4"
+    38726,
+    "81@4"
    ],
    [
     "pb-snStripe.d",
-    35073,
-    "118@4"
+    23267,
+    "81@4"
    ],
    [
     "pb-snKnit.d",
-    40433,
-    "121@4"
+    27036,
+    "81@4"
    ],
    [
     "pb-snFringe.d",
-    11269,
-    "111@4"
+    7841,
+    "77@4"
    ],
    [
     "pb-sfFill.d",
-    63845,
-    "121@4"
+    42575,
+    "81@4"
    ],
    [
     "pb-sfStripe.d",
-    36461,
-    "113@4"
+    25429,
+    "81@4"
    ],
    [
     "pb-sfFringe.d",
-    11120,
-    "108@4"
+    7938,
+    "78@4"
    ],
    [
     "pb-shFill.d",
-    39712,
-    "110@4"
+    28291,
+    "78@4"
    ],
    [
     "pb-shStripe.d",
-    25802,
-    "106@4"
+    18841,
+    "77@4"
    ],
    [
     "pb-shFringe.d",
-    10401,
-    "104@4"
+    7724,
+    "78@4"
    ],
    [
     "pb-crestShort.transform",
-    2687,
-    "210@4"
+    2564,
+    "200@4"
    ],
    [
     "pb-crestLong.transform",
-    2930,
-    "226@4"
+    2844,
+    "219@4"
    ],
    [
     "pl-Near-prop.d",
-    5883,
-    "60@4"
+    5319,
+    "54@4"
    ],
    [
     "pl-Near-clipP.d",
-    5883,
-    "60@4"
+    5319,
+    "54@4"
    ],
    [
     "pl-Near-marg.d",
-    11763,
-    "52@4"
+    11536,
+    "51@4"
    ],
    [
     "pl-Near-key.d",
-    8629,
+    8635,
     "50@4"
    ],
    [
     "pl-Near-keyThin.d",
-    4292,
-    "55@4"
+    4055,
+    "52@4"
    ],
    [
     "pl-Near-rim.d",
-    7372,
-    "52@4"
+    7218,
+    "51@4"
    ],
    [
     "pl-Near-prims.transform",
-    2706,
-    "149@4"
+    2330,
+    "128@4"
    ],
    [
     "pl-Near-gc.transform",
-    850,
-    "52@4"
+    470,
+    "28@4"
    ],
    [
     "pl-Near-toes.transform",
-    327,
-    "14@1"
+    293,
+    "12@1"
    ],
    [
     "pl-Far-prop.d",
-    6185,
-    "63@4"
+    5779,
+    "59@4"
    ],
    [
     "pl-Far-prims.transform",
-    2494,
-    "134@4"
+    2304,
+    "124@4"
    ],
    [
     "pl-Far-gc.transform",
-    850,
-    "52@4"
-   ],
-   [
-    "sky-b1.href",
-    863,
-    "43@4"
-   ],
-   [
-    "sky-b5.href",
-    863,
-    "43@4"
-   ],
-   [
-    "sea-gA.transform",
-    1310,
-    "81@4"
-   ],
-   [
-    "pl-Near-webs.transform",
-    526,
-    "4@1,22@1"
-   ],
-   [
-    "sky-b4.href",
-    845,
-    "42@4"
+    470,
+    "28@4"
    ],
    [
     "sky-b0.href",
@@ -2625,34 +2402,74 @@
     "42@4"
    ],
    [
-    "fx-dust3.visibility",
-    205,
-    "8@4"
-   ],
-   [
-    "fx-dust3.transform",
-    3307,
-    "85@4,110@4"
-   ],
-   [
-    "sky-b2.href",
+    "sky-b4.href",
     845,
     "42@4"
    ],
    [
-    "fx-escWn0.transform",
-    768,
-    "46@4"
+    "sea-sg0.transform",
+    208,
+    "9@4"
    ],
    [
-    "fx-escWf0.transform",
-    768,
-    "46@4"
+    "sea-burgee.transform",
+    678,
+    "33@4"
    ],
    [
-    "sky-b6.href",
-    845,
-    "42@4"
+    "pl-Near-webs.transform",
+    524,
+    "4@1,22@1"
+   ],
+   [
+    "sky-b3.href",
+    863,
+    "43@4"
+   ],
+   [
+    "sea-spk0.transform",
+    778,
+    "57@4"
+   ],
+   [
+    "fx-dust1.visibility",
+    176,
+    "6@4"
+   ],
+   [
+    "fx-dust1.transform",
+    2487,
+    "54@4,109@4"
+   ],
+   [
+    "fx-grit1.visibility",
+    190,
+    "7@4"
+   ],
+   [
+    "fx-grit1.transform",
+    1949,
+    "79@4,25@4"
+   ],
+   [
+    "sky-b1.href",
+    863,
+    "43@4"
+   ],
+   [
+    "fx-dust4.visibility",
+    176,
+    "6@4"
+   ],
+   [
+    "sky-b5.href",
+    863,
+    "43@4"
+   ],
+   [
+    "fx-curl0p0.stroke-dashoffset",
+    307,
+    "2@1.656,11@4"
    ],
    [
     "fx-grit2.visibility",
@@ -2661,43 +2478,38 @@
    ],
    [
     "fx-grit2.transform",
-    2989,
-    "114@4,2@24,31@4"
+    2933,
+    "122@4,40@4"
    ],
    [
-    "fx-grit8.visibility",
-    263,
-    "12@4"
+    "sky-b6.href",
+    845,
+    "42@4"
    ],
    [
-    "fx-dust4.visibility",
-    176,
-    "6@4"
+    "fx-dust2.visibility",
+    220,
+    "9@4"
    ],
    [
-    "fx-dust4.transform",
-    2497,
-    "61@4,82@4"
-   ],
-   [
-    "fx-grit9.visibility",
-    249,
-    "11@4"
+    "fx-dust2.transform",
+    3206,
+    "74@4,137@4"
    ],
    [
     "sky-w0.d",
-    37042,
-    "97@4"
+    8874,
+    "24@4"
    ],
    [
     "sky-w1.d",
-    40118,
-    "97@4"
+    10105,
+    "24@4"
    ],
    [
     "sky-rpsky1.d",
-    40118,
-    "97@4"
+    10105,
+    "24@4"
    ],
    [
     "sky-w2.d",
@@ -2721,53 +2533,28 @@
    ],
    [
     "sky-corona.transform",
-    221,
-    "2@164,3@0.167"
+    295,
+    "16@4"
    ],
    [
-    "sea-smoke1.opacity",
-    357,
-    "22@4"
-   ],
-   [
-    "fx-dust7.visibility",
-    191,
-    "7@4"
-   ],
-   [
-    "fx-grit6.visibility",
-    220,
+    "fx-grit3.visibility",
+    219,
     "9@4"
    ],
    [
-    "fx-curl2p0.stroke-dashoffset",
-    325,
-    "2@12,12@4"
+    "fx-grit3.transform",
+    2233,
+    "86@4,36@4"
    ],
    [
-    "fx-grit5.visibility",
-    306,
-    "15@4"
+    "fx-grit4.visibility",
+    190,
+    "7@4"
    ],
    [
-    "fx-grit5.transform",
-    3783,
-    "138@4,2@24,50@4"
-   ],
-   [
-    "fx-dust8.visibility",
-    249,
-    "11@4"
-   ],
-   [
-    "pl-Far-toes.transform",
-    344,
-    "15@1"
-   ],
-   [
-    "pl-Far-webs.transform",
-    544,
-    "6@1,22@1"
+    "fx-grit4.transform",
+    1924,
+    "77@4,27@4"
    ],
    [
     "fx-dust6.visibility",
@@ -2775,44 +2562,74 @@
     "10@4"
    ],
    [
-    "fx-dust6.transform",
-    3843,
-    "99@4,136@4"
+    "fx-grit8.visibility",
+    263,
+    "12@4"
+   ],
+   [
+    "pl-Far-toes.transform",
+    310,
+    "13@1"
+   ],
+   [
+    "pl-Far-webs.transform",
+    523,
+    "5@1,22@1"
+   ],
+   [
+    "fx-grit6.visibility",
+    220,
+    "9@4"
+   ],
+   [
+    "fx-grit6.transform",
+    2307,
+    "93@4,36@4"
+   ],
+   [
+    "pb-pupil.transform",
+    239,
+    "10@4"
+   ],
+   [
+    "fx-escWn0.transform",
+    737,
+    "46@4"
+   ],
+   [
+    "fx-escWf0.transform",
+    737,
+    "46@4"
+   ],
+   [
+    "fx-dust5.visibility",
+    190,
+    "7@4"
+   ],
+   [
+    "fx-dust5.transform",
+    2273,
+    "59@4,84@4"
+   ],
+   [
+    "fx-dust8.visibility",
+    249,
+    "11@4"
+   ],
+   [
+    "fx-grit9.visibility",
+    249,
+    "11@4"
+   ],
+   [
+    "fx-grit9.transform",
+    2309,
+    "88@4,40@4"
    ],
    [
     "fx-dust9.visibility",
     191,
     "7@4"
-   ],
-   [
-    "fx-grit7.visibility",
-    234,
-    "10@4"
-   ],
-   [
-    "fx-grit7.transform",
-    2399,
-    "85@4,2@28,31@4"
-   ],
-   [
-    "sea-fish0.visibility",
-    132,
-    "3@4"
-   ],
-   [
-    "sea-fish0.transform",
-    854,
-    "2@4,23@4,2@4,4@4"
-   ],
-   [
-    "sea-fishRing.visibility",
-    132,
-    "3@4"
-   ],
-   [
-    "fx-dust0.visibility",
-    205,
-    "8@4"
    ],
    [
     "fx-grit0.visibility",
@@ -2821,48 +2638,118 @@
    ],
    [
     "fx-grit0.transform",
-    2666,
-    "104@4,34@4"
+    2614,
+    "112@4,31@4"
    ],
    [
-    "fx-dust1.visibility",
-    176,
-    "6@4"
+    "sea-smoke2.opacity",
+    268,
+    "16@4"
    ],
    [
-    "fx-grit1.visibility",
-    190,
+    "fx-dust7.visibility",
+    191,
     "7@4"
    ],
    [
-    "fx-grit1.transform",
-    2135,
-    "76@4,2@12,24@4"
+    "fx-dust7.transform",
+    2027,
+    "46@4,81@4"
    ],
    [
-    "fx-dust2.visibility",
-    220,
-    "9@4"
+    "fx-dust0.visibility",
+    205,
+    "8@4"
+   ],
+   [
+    "bike-tailB.transform",
+    1060,
+    "56@4"
+   ],
+   [
+    "fx-grit5.visibility",
+    306,
+    "15@4"
+   ],
+   [
+    "fx-grit5.transform",
+    3308,
+    "141@4,46@4"
+   ],
+   [
+    "sea-spk1.transform",
+    972,
+    "73@4"
+   ],
+   [
+    "g.transform",
+    557,
+    "31@4"
+   ],
+   [
+    "g.transform",
+    557,
+    "31@4"
+   ],
+   [
+    "g.transform",
+    557,
+    "31@4"
+   ],
+   [
+    "fx-dust3.visibility",
+    205,
+    "8@4"
+   ],
+   [
+    "fx-dust3.transform",
+    3061,
+    "91@4,105@4"
+   ],
+   [
+    "sea-smoke1.opacity",
+    214,
+    "12@4"
+   ],
+   [
+    "fx-grit7.visibility",
+    234,
+    "10@4"
+   ],
+   [
+    "fx-grit7.transform",
+    2285,
+    "101@4,28@4"
+   ],
+   [
+    "sea-fish0.visibility",
+    132,
+    "3@4"
+   ],
+   [
+    "sea-fish0.transform",
+    652,
+    "20@4,17@4"
+   ],
+   [
+    "sea-fishRing.visibility",
+    132,
+    "3@4"
    ],
    [
     "fx-fea2.opacity",
-    390,
-    "24@4"
+    265,
+    "16@4"
    ],
    [
     "bike-tailC.transform",
-    1158,
-    "2@344,47@4"
-   ],
-   [
-    "sea-spk2.transform",
-    692,
-    "53@4"
+    806,
+    "38@4"
    ],
    [
     "sea-bell.transform",
-    660,
-    "2@204,38@4"
+    281,
+    "18@4"
    ],
    [
     "fx-gfar0.href",
@@ -2885,54 +2772,14 @@
     "48@4"
    ],
    [
-    "fx-dust5.visibility",
-    190,
-    "7@4"
-   ],
-   [
-    "fx-dust5.transform",
-    2649,
-    "66@4,87@4"
-   ],
-   [
     "bike-tailA.transform",
-    594,
-    "30@4"
-   ],
-   [
-    "fx-grit3.visibility",
-    219,
-    "9@4"
-   ],
-   [
-    "fx-grit3.transform",
-    2008,
-    "71@4,2@36,23@4"
+    558,
+    "28@4"
    ],
    [
     "fx-gfar3.href",
     929,
     "56@4"
-   ],
-   [
-    "fx-grit4.visibility",
-    190,
-    "7@4"
-   ],
-   [
-    "fx-grit4.transform",
-    1530,
-    "50@4,2@88,17@4"
-   ],
-   [
-    "pb-pupil.transform",
-    276,
-    "11@4"
-   ],
-   [
-    "sea-smoke4.opacity",
-    237,
-    "14@4"
    ],
    [
     "sea-fish1.visibility",
@@ -2941,8 +2788,8 @@
    ],
    [
     "sea-fish1.transform",
-    937,
-    "4@4,28@4,2@2,4@4"
+    697,
+    "22@4,18@4"
    ],
    [
     "fx-fea2.visibility",
@@ -2956,18 +2803,13 @@
    ],
    [
     "pb-nict.transform",
-    241,
-    "11@4"
+    281,
+    "15@4"
    ],
    [
     "pb-lidClosed.style:display",
     127,
     "3@4"
-   ],
-   [
-    "sea-smoke3.opacity",
-    217,
-    "12@4"
    ],
    [
     "sea-dolph.visibility",
@@ -2976,8 +2818,8 @@
    ],
    [
     "sea-dolph.transform",
-    1930,
-    "2@4,2@16,35@4,2@24,55@4"
+    1019,
+    "32@4,27@4"
    ],
    [
     "sea-spl0.visibility",
@@ -2986,13 +2828,8 @@
    ],
    [
     "sea-spl0.transform",
-    295,
-    "2@0.1,9@4"
-   ],
-   [
-    "fx-fea0.opacity",
-    313,
-    "18@4"
+    346,
+    "2@0.1,14@4"
    ],
    [
     "sea-spl1.visibility",
@@ -3001,8 +2838,8 @@
    ],
    [
     "sea-spl1.transform",
-    618,
-    "2@0.1,34@4"
+    338,
+    "2@0.1,13@4"
    ],
    [
     "fx-gfar1.href",
@@ -3010,10 +2847,14 @@
     "8@4"
    ]
   ],
-  "pathBytes": {
-   "before": 1073146,
-   "after": 733567
+  "dots": {
+   "paths": 84,
+   "savedBytes": 185877
   },
-  "bytes": 1948739
+  "pathBytes": {
+   "before": 867589,
+   "after": 565539
+  },
+  "bytes": 1483774
  }
 }
