@@ -35,3 +35,23 @@ export function linToHex(rgb) {
 export const mixLin = (a, b, t) => a.map((v, i) => lerp(v, b[i], t));
 export const mulLin = (a, b) => a.map((v, i) => v * b[i]);
 export const mixHex = (a, b, t) => linToHex(mixLin(hexToLin(a), hexToLin(b), t));
+
+// Fast, exact String(Math.round(x * 100) / 100) and String(Math.round(x * 10) / 10): the per-frame attribute strings are
+// built from a rounded integer (≈2.4× faster than formatting the double), byte-identical output (NaN / ±Inf / huge
+// values fall back to the double path).
+export const fmt2 = x => {
+  let r = Math.round(x * 100);
+  if (r === 0) return '0';
+  if (!(Math.abs(r) < 1e15)) return String(r / 100);
+  let s = ''; if (r < 0) { s = '-'; r = -r; }
+  const i = Math.floor(r / 100), c = r - i * 100;
+  return c === 0 ? s + i : c % 10 === 0 ? s + i + '.' + c / 10 : s + i + (c < 10 ? '.0' : '.') + c;
+};
+export const fmt1 = x => {
+  let r = Math.round(x * 10);
+  if (r === 0) return '0';
+  if (!(Math.abs(r) < 1e15)) return String(r / 10);
+  let s = ''; if (r < 0) { s = '-'; r = -r; }
+  const i = Math.floor(r / 10), c = r - i * 10;
+  return c === 0 ? s + i : s + i + '.' + c;
+};

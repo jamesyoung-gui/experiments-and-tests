@@ -19,6 +19,7 @@
 //   bottle     click the message in a bottle bobbing in the bay: a bilingual note unfolds
 //   wish       click a shooting star while it is still glowing: make a wish
 //   flight     type BIRD: a V of great white pelicans flies over the bay
+import { fmt1, fmt2 } from '../core/math.js';
 import { GROUND_Y, RIDER_X, BIKE, DIST_PER_REV } from '../contract.js';
 import { h, refs } from '../core/svg.js';
 import { TIMING } from '../rig/solve.js';
@@ -48,8 +49,8 @@ const DUR = { brown: 6, velo: 3.4, cat: 2.6, km: 3.4, fortytwo: 4, sunwink: 2.4,
 export const detailItems = [];   // eggs are hidden in the default shots (see docs/EGGS.md); nothing counted
 
 // ------------------------------------------------------------------------------------------------ helpers
-const f = x => { const r = Math.round(x * 10) / 10; return (r === 0 ? 0 : r).toString(); };
-const f2 = x => { const r = Math.round(x * 100) / 100; return (r === 0 ? 0 : r).toString(); };
+const f = fmt1;   // = String(Math.round(x * 10) / 10), fast (core/math.js)
+const f2 = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
 const TAU = Math.PI * 2, D2R = Math.PI / 180;
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -444,8 +445,8 @@ const KM_UNITS = 1000 / (0.34 / BIKE.R);            // odometer: wheel R = 100 u
 let inst = null;
 export function attach(svg, ctx) {
   const r = refs(svg, 'egg-');
-  const st = {};    // last written attribute values (write only on change)
-  const set = (el, k, val) => { const key = el.dataset.ref + k; if (st[key] !== val) { st[key] = val; el.setAttribute(k, val); } };
+  const st = new WeakMap();    // last written attribute values per element (write only on change)
+  const set = (el, k, val) => { let m = st.get(el); if (!m) st.set(el, m = {}); if (m[k] !== val) { m[k] = val; el.setAttribute(k, val); } };
   const vis = (el, on) => set(el, 'visibility', on ? 'inherit' : 'hidden');   // 'inherit': a shown child never overrides a hidden egg group
   const reduced = ctx.reduced;
   const E = {};                  // id -> { t0, ...params }

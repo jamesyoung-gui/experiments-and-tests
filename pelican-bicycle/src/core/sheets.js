@@ -24,7 +24,7 @@ export function createSheets(wrapper, svg, opts) {
   const P = doc.defaultView.Element.prototype;
   const nSet = P.setAttribute, nGet = P.getAttribute, nRem = P.removeAttribute;
   const rootAttrs = { id: svg.getAttribute('id'), role: svg.getAttribute('role') };
-  let parts = [svg], origOf = new Map(), clonesOf = new Map(), sheets = [], mo = null, isSplit = false;
+  let parts = [svg], origOf = new Map(), clonesOf = new Map(), homeOf = new Map(), sheets = [], mo = null, isSplit = false;
   let s = 1, dpr = 1, lastCam = null;
 
   const newPart = tag => {
@@ -61,25 +61,37 @@ export function createSheets(wrapper, svg, opts) {
   };
   const nextAfter = (cur, el) => { let n = el; while (n !== cur && !n.nextSibling) n = n.parentNode; return n === cur ? null : n.nextSibling; };
 
-  // ---- hoisting: the sheet element's translate lives in JS + CSS while split, in the attribute while unsplit
+  // ---- hoisting: while split, a strip's transform lives in JS: a pure translate goes to the CSS transform of its
+  // <svg> (compositor move); any other transform (a scaled pass of a cloud …) is written to the element as usual and
+  // painted, until the next pure translate hoists it again. getAttribute answers the logical value either way.
   function hoist(sh) {
     const el = sh.el;
     if (!el.__pbSheet) {
-      el.__pbSheet = sh;
-      el.setAttribute = function (k, v) { const h = this.__pbSheet; if (k === 'transform' && h.on && isSplit) { const m = TR.exec(v); if (m) { h.x = +m[1]; h.y = +(m[2] || 0); h.attr = String(v); return; } unhoist(h); } return nSet.call(this, k, v); };
-      el.getAttribute = function (k) { const h = this.__pbSheet; return k === 'transform' && h.on && isSplit ? h.attr : nGet.call(this, k); };
-      el.removeAttribute = function (k) { const h = this.__pbSheet; if (k === 'transform' && h.on && isSplit) { h.x = h.y = 0; h.attr = null; return; } return nRem.call(this, k); };
-    } else el.__pbSheet = sh;
-    const a = nGet.call(el, 'transform'), m = a === null ? [] : TR.exec(a);
-    if (!m) { console.warn('[sheets] not a pure translate, left in the SVG:', el.getAttribute('data-ref'), a); return; }
-    sh.x = +(m[1] || 0); sh.y = +(m[2] || 0); sh.attr = a; sh.on = true;
-    if (a !== null) nRem.call(el, 'transform');
+      el.setAttribute = function (k, v) { const h = this.__pbSheet; if (k === 'transform' && h.live) return put(h, String(v)); return nSet.call(this, k, v); };
+      el.getAttribute = function (k) { const h = this.__pbSheet; return k === 'transform' && h.live ? h.attr : nGet.call(this, k); };
+      el.removeAttribute = function (k) { const h = this.__pbSheet; if (k === 'transform' && h.live) return put(h, null); return nRem.call(this, k); };
+    }
+    el.__pbSheet = sh;
+    sh.live = true; sh.on = false; sh.attr = undefined;
+    put(sh, nGet.call(el, 'transform'));
+  }
+  function put(sh, v) {
+    if (v === sh.attr) return;
+    sh.attr = v;
+    const m = v === null ? [] : TR.exec(v);
+    if (m) {
+      if (!sh.on) { sh.on = true; if (nGet.call(sh.el, 'transform') !== null) nRem.call(sh.el, 'transform'); }
+      sh.x = +(m[1] || 0); sh.y = +(m[2] || 0);
+    } else {
+      sh.on = false; sh.x = sh.y = 0;
+      nSet.call(sh.el, 'transform', v);
+    }
   }
   function unhoist(sh) {
-    if (!sh.on) return;
-    sh.on = false;
-    if (sh.attr !== null) nSet.call(sh.el, 'transform', sh.attr);
-    sh.part.style.transform = ''; sh.css = '';
+    if (!sh.live) return;
+    sh.live = false;
+    if (sh.on) { if (sh.attr === null) nRem.call(sh.el, 'transform'); else nSet.call(sh.el, 'transform', sh.attr); }
+    sh.on = false; sh.part.style.transform = ''; sh.css = '';
   }
 
   function split() {
@@ -87,6 +99,8 @@ export function createSheets(wrapper, svg, opts) {
     const cuts = [];
     for (const id of opts.layers) { const el = svg.querySelector('#' + id); if (el && el.parentNode === svg) cuts.push([el, 'layer', id]); }
     for (const sel of opts.sheets) for (const el of svg.querySelectorAll(sel)) cuts.push([el, 'sheet', el.getAttribute('data-ref') || sel]);
+    for (const sel of opts.cuts || []) for (const el of svg.querySelectorAll(sel)) cuts.push([el, 'layer', el.id || el.getAttribute('data-ref') || sel]);
+    for (const sel of opts.isolate || []) for (const el of svg.querySelectorAll(sel)) cuts.push([el, 'isolate', el.getAttribute('data-ref') || el.id || sel]);
     cuts.sort((a, b) => (a[0].compareDocumentPosition(b[0]) & 4 ? -1 : 1));
     let cur = svg;
     for (const [el, kind, tag] of cuts) {
@@ -95,11 +109,12 @@ export function createSheets(wrapper, svg, opts) {
       if (sheets.some(sh => sh.el.contains(el))) continue;
       cur = cutBefore(cur, el, tag);
       const layer = el.closest('[data-depth]');
-      let bad = false;
-      for (let p = el.parentNode; p && p !== layer; p = p.parentNode) if (p.hasAttribute('transform')) bad = true;
-      const sh = { el, part: cur, depth: layer ? +layer.getAttribute('data-depth') || 0 : 0, x: 0, y: 0, attr: null, on: false, css: '' };
-      if (bad) console.warn('[sheets] transformed ancestor, not hoisted:', tag); else hoist(sh);
-      sheets.push(sh);
+      if (kind === 'sheet') {
+        let bad = false;
+        for (let p = el.parentNode; p && p !== layer; p = p.parentNode) if (p.hasAttribute('transform')) bad = true;
+        const sh = { el, part: cur, depth: layer ? +layer.getAttribute('data-depth') || 0 : 0, x: 0, y: 0, attr: null, on: false, live: false, css: '' };
+        if (bad) console.warn('[sheets] transformed ancestor, not hoisted:', tag); else { hoist(sh); sheets.push(sh); }
+      }
       const nx = nextAfter(cur, el);
       if (nx) cur = cutBefore(cur, nx, (layer && (origOf.get(layer) || layer).id) || 'rest');
     }
@@ -108,18 +123,33 @@ export function createSheets(wrapper, svg, opts) {
       for (const c of p.querySelectorAll('[data-pb-clone]')) { const o = origOf.get(c); origOf.delete(c); const l = clonesOf.get(o); l.splice(l.indexOf(c), 1); }
       p.remove(); parts.splice(parts.indexOf(p), 1);
     }
+    // elide clones that carry nothing (a plain owner / group wrapper: only its id was dropped): their children remember
+    // the original parent for unsplit(); saves DOM nodes (the camera transform lives on the layer clones, which stay).
+    // Should such an original gain an attribute later, the observer below re-splits (the new clones then carry it).
+    const elided = new Set();
+    for (const c of [...origOf.keys()]) {
+      if (c.attributes.length !== 1) continue;
+      const o = origOf.get(c);
+      elided.add(o);
+      for (const n of c.childNodes) if (!origOf.has(n)) homeOf.set(n, o);
+      c.replaceWith(...c.childNodes);
+      origOf.delete(c); const l = clonesOf.get(o); l.splice(l.indexOf(c), 1); if (!l.length) clonesOf.delete(o);
+    }
     // the first <svg> keeps title / desc / defs (and whatever precedes the first cut); the wrapper is the scene now
     nSet.call(svg, 'id', 'scene-root'); nSet.call(svg, 'role', 'presentation'); nSet.call(svg, 'aria-hidden', 'true');
     nSet.call(svg, 'class', 'pb-sheet'); nSet.call(svg, 'data-sheet', 'defs');
     nSet.call(wrapper, 'id', rootAttrs.id || 'scene');
     mo = new doc.defaultView.MutationObserver(recs => {
+      let resplit = false;
       for (const r of recs) {
         const k = r.attributeName; if (SKIP.has(k)) continue;
+        if (elided.has(r.target)) { resplit = true; continue; }
         const v = nGet.call(r.target, k), l = clonesOf.get(r.target);
         if (l) for (const c of l) v === null ? nRem.call(c, k) : nSet.call(c, k, v);
       }
+      if (resplit) { unsplit(); split(); }
     });
-    for (const o of clonesOf.keys()) mo.observe(o, { attributes: true });
+    for (const o of new Set([...clonesOf.keys(), ...elided])) mo.observe(o, { attributes: true });
     isSplit = true; lastCam = null;
     resize();
   }
@@ -128,9 +158,9 @@ export function createSheets(wrapper, svg, opts) {
     if (!isSplit) return;
     mo.takeRecords(); mo.disconnect(); mo = null;
     for (const sh of sheets) unhoist(sh);
-    const merge = (parent, box) => { for (const n of [...box.childNodes]) { const o = origOf.get(n); if (o) merge(o, n); else parent.appendChild(n); } };
+    const merge = (parent, box) => { for (const n of [...box.childNodes]) { const o = origOf.get(n); if (o) merge(o, n); else (homeOf.get(n) || parent).appendChild(n); } };
     for (const p of parts.slice(1)) { merge(svg, p); p.remove(); }
-    parts = [svg]; origOf = new Map(); clonesOf = new Map(); sheets = [];
+    parts = [svg]; origOf = new Map(); clonesOf = new Map(); homeOf = new Map(); sheets = [];
     nSet.call(wrapper, 'id', 'scene-wrap');
     nRem.call(svg, 'aria-hidden'); nRem.call(svg, 'class'); nRem.call(svg, 'data-sheet');
     rootAttrs.id === null ? nRem.call(svg, 'id') : nSet.call(svg, 'id', rootAttrs.id);
@@ -152,13 +182,12 @@ export function createSheets(wrapper, svg, opts) {
     lastCam = { zoom: cam.zoom, roll: cam.roll };
     const r = ((cam.roll || 0) * Math.PI) / 180, c = Math.cos(r), sn = Math.sin(r);
     for (const sh of sheets) {
-      if (!sh.on) continue;
       if (!camChanged && sh.x === sh.lx && sh.y === sh.ly) continue;
       sh.lx = sh.x; sh.ly = sh.y;
       const k = opts.scale(sh.depth, cam) * s;
       const px = Math.round(k * (c * sh.x - sn * sh.y) * dpr) / dpr, py = Math.round(k * (sn * sh.x + c * sh.y) * dpr) / dpr;
       const css = `translate(${px}px,${py}px)`;
-      if (css !== sh.css) { sh.css = css; sh.part.style.transform = css; }
+      if (css !== sh.css) { sh.css = css; sh.part.style.transform = px || py ? css : ''; }
     }
   }
   // run fn on the single, unsplit <svg> (bake / download), then split again

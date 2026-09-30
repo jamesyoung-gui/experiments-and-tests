@@ -25,6 +25,7 @@
 // chord area never "covers" what is underneath; detail lines nest inside the part they belong to.
 // Per frame: the propatagium outline (fixed command counts, skipped when the elbow angle moved < 0.15°) plus a
 // handful of cached transforms (primaries, alula, finger fan, toe curl, web press, covert lift).
+import { fmt2 } from '../core/math.js';
 import { SKEL } from '../contract.js';
 import { h, refs } from '../core/svg.js';
 
@@ -34,7 +35,7 @@ export const materials = { limbFarSkin: 'R', limbFarRim: 'P' };
 
 // ---------------------------------------------------------------- helpers (pure)
 const D2R = Math.PI / 180;
-const f = x => { const r = Math.round(x * 100) / 100; return (r === 0 ? 0 : r).toString(); };
+const f = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
 const pt = p => `${f(p[0])} ${f(p[1])}`;
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];

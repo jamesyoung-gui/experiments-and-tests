@@ -3,6 +3,7 @@
 // from contour-feather scallops (never large halftone), K bill/skin, O pouch, R nail/scarf, N darks.
 // Each slot is drawn in its joint-local frame (see CONTRACT.md "Slots"). Everything static is built once as markup;
 // update() only rewrites the neck + scarf ribbons (fixed command counts) and toggles a few opacities/transforms.
+import { fmt2 } from '../core/math.js';
 import { h, refs } from '../core/svg.js';
 import { SKEL } from '../contract.js';
 
@@ -11,7 +12,7 @@ export const materials = {};
 
 // ---------------------------------------------------------------- helpers (pure)
 const D2R = Math.PI / 180;
-const f = x => { const r = Math.round(x * 100) / 100; return (r === 0 ? 0 : r).toString(); };
+const f = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
 const pt = p => `${f(p[0])} ${f(p[1])}`;
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
@@ -46,7 +47,8 @@ function resample(P, k, closed = false) {
   const m = closed ? n : n - 1;
   for (let i = 0; i < m; i++) for (let j = 0; j < k; j++) {
     const t = j / k, t2 = t * t, t3 = t2 * t, p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2);
-    out.push([0, 1].map(c => 0.5 * (2 * p1[c] + (-p0[c] + p2[c]) * t + (2 * p0[c] - 5 * p1[c] + 4 * p2[c] - p3[c]) * t2 + (-p0[c] + 3 * p1[c] - 3 * p2[c] + p3[c]) * t3)));
+    const cr = c => 0.5 * (2 * p1[c] + (-p0[c] + p2[c]) * t + (2 * p0[c] - 5 * p1[c] + 4 * p2[c] - p3[c]) * t2 + (-p0[c] + 3 * p1[c] - 3 * p2[c] + p3[c]) * t3);
+    out.push([cr(0), cr(1)]);
   }
   out.push(closed ? P[0] : P[n - 1]); return out;
 }
@@ -161,13 +163,17 @@ function bodyPoly() {
   return pts;
 }
 // lowest belly point (pelvis-local) for a body rotation, on the exact spec ellipse (matches rig bellyLow)
+// (the ellipse samples are fixed: precomputed once; per call only the rotation runs, allocation-free, same arithmetic)
+let BELLY_E = null;
 function bellyLowLocal(bodyRot, sx = 1, sy = 1) {
-  let best = null;
-  for (let d = 70; d <= 170; d += 0.5) {
-    const t = d * D2R, e = rot([98 * Math.cos(t), 58 * Math.sin(t)], -18), q = [(32 + e[0]) * sx, (-50 + e[1]) * sy];
-    const y = rot(q, bodyRot)[1]; if (!best || y > best.y) best = { y, q };
+  if (!BELLY_E) { BELLY_E = []; for (let d = 70; d <= 170; d += 0.5) { const t = d * D2R; BELLY_E.push(rot([98 * Math.cos(t), 58 * Math.sin(t)], -18)); } }
+  const c = Math.cos(bodyRot * D2R), sn = Math.sin(bodyRot * D2R);
+  let by = 0, bx0 = 0, by0 = 0, has = false;
+  for (let i = 0; i < BELLY_E.length; i++) {
+    const e = BELLY_E[i], qx = (32 + e[0]) * sx, qy = (-50 + e[1]) * sy, y = qx * sn + qy * c;
+    if (!has || y > by) { has = true; by = y; bx0 = qx; by0 = qy; }
   }
-  return best.q;
+  return [bx0, by0];
 }
 const EL = (e, g) => { const p = rot([e * 98, g * 58], -18); return [32 + p[0], -50 + p[1]]; };   // ellipse param -> body-local
 
@@ -655,8 +661,8 @@ export const detailItems = [
 // ---------------------------------------------------------------- runtime
 export function attach(svg) {
   const r = refs(svg, 'pb-');
-  const st = {};
-  const set = (el, k, val) => { if (!el) return; const key = el.getAttribute('data-ref') + k; if (st[key] !== val) { st[key] = val; if (k === 'd') el.setAttribute('d', val); else if (k === 'op') el.style.opacity = val; else if (k === 'show') el.style.display = val ? '' : 'none'; else el.setAttribute(k, val); } };
+  const st = new WeakMap();   // per element, per attribute: last written value (no getAttribute / key strings per call)
+  const set = (el, k, val) => { if (!el) return; let m = st.get(el); if (!m) st.set(el, m = {}); if (m[k] !== val) { m[k] = val; if (k === 'd') el.setAttribute('d', val); else if (k === 'op') el.style.opacity = val; else if (k === 'show') el.style.display = val ? '' : 'none'; else el.setAttribute(k, val); } };
   let lastNeck = '';
   return {
     update(fr) {

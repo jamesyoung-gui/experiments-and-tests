@@ -4,6 +4,7 @@
 // constellations, twinkles and shooting stars, deco cumulus with flat bases, streaks, mares' tails, a mackerel sky,
 // a speed-line cloud, a biplane towing a fluttering "PELICAN BAY" banner, a far airship and migrating pelicans.
 // Everything is static markup; per frame we only write a handful of transforms / opacities.
+import { fmt1, fmt2 } from '../core/math.js';
 import { h, refs } from '../core/svg.js';
 import { hash } from './route.js';
 import { DIST_PER_REV as DIST_PER_REV_ } from '../contract.js';
@@ -11,8 +12,8 @@ import { DIST_PER_REV as DIST_PER_REV_ } from '../contract.js';
 export const id = 'sky';
 
 // ---------------------------------------------------------------------------------------------- helpers
-const f = x => { const r = Math.round(x * 100) / 100; return (r === 0 ? 0 : r).toString(); };
-const f1 = x => (Math.round(x * 10) / 10).toString();
+const f = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
+const f1 = fmt1;   // = String(Math.round(x * 10) / 10), fast (core/math.js)
 const lerp = (a, b, t) => a + (b - a) * t;
 const D2R = Math.PI / 180;
 const circ = (x, y, r) => `M${f(x - r)} ${f(y)}a${f(r)} ${f(r)} 0 1 0 ${f(2 * r)} 0a${f(r)} ${f(r)} 0 1 0 ${f(-2 * r)} 0Z`;
@@ -584,6 +585,11 @@ export function build(ctx) {
 }
 
 // ---------------------------------------------------------------------------------------------- attach
+// composited strips (see core/sheets.js): the clouds, the airship, the far skein and the pelican V drift by a pure
+// translate every frame, so the runtime moves each as its own compositor layer; the biplane (bob, roll, flapping banner)
+// gets a sheet of its own so its repaint doesn't redraw the clouds around it
+export const sheets = [...Array.from({ length: 16 }, (_, i) => `[data-ref="sky-cl${i}"]`), '[data-ref="sky-shipG"]', '[data-ref="sky-skein"]', '[data-ref="sky-flockG"]'];
+export const isolate = ['[data-ref="sky-plane"]'];
 export function attach(svg, ctx) {
   const r = refs(svg, 'sky-');
   const st = { sun: '', moon: '', moonVis: '', starVis: '', flap: [], sunVis: '' };

@@ -24,7 +24,8 @@ const errors = [];
 page.on('pageerror', e => errors.push(e.message));
 await page.goto(url + '?freeze&nohud');
 await page.waitForFunction(() => window.__pb && window.__pb.ready, null, { timeout: 20000 });
-await page.addStyleTag({ content: '#scene, #scene * { pointer-events: all !important } #ui { display: none !important }' });
+// #scene is a stack of full-size <svg> sheets (src/core/sheets.js): their own boxes must not catch the hit tests
+await page.addStyleTag({ content: '#scene, #scene * { pointer-events: all !important } #scene > svg { pointer-events: none !important } #ui { display: none !important }' });
 
 const views = [['wide', { t: 3.2, tod: 0.7, cam: 'wide' }], ['close', { t: 3.2, tod: 0.7, cam: 'close' }]];
 const found = new Map(); // key -> {views:[], area}

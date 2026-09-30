@@ -9,6 +9,7 @@
 // The few moving parts (palm crowns, towels, flags, crab, cat tail, hanging fish, night glows) live in a small
 // "anim" group that is real DOM in all three copies. Per frame we only write transforms (and a display flag at dusk).
 // Tile offset u = wrap((D − D0)·depth + W/2, W) − W/2, so the three copies always cover x ∈ [−0.5W−800, 1.5W+800].
+import { fmt1, fmt2 } from '../core/math.js';
 import { GROUND_Y, TILE, DIST_PER_REV, RIDER_X } from '../contract.js';
 import { h, refs, mount } from '../core/svg.js';
 import { LAP, KM, STRETCHES, SIGNS, KM_STONES, stretchAt, relTo, hash, ROUTE_GLYPHS } from './route.js';
@@ -21,8 +22,8 @@ const GL = {"0":["M46 -36.5Q46 -50.2 43.4 -55.8Q40.9 -61.4 34.8 -61.4Q28.8 -61.4
 
 // ---------------------------------------------------------------------------------------------- helpers
 const GLM = Object.assign({}, ROUTE_GLYPHS, GL);
-const f = x => { const r = Math.round(x * 100) / 100; return (r === 0 ? 0 : r).toString(); };
-const f1 = x => { const r = Math.round(x * 10) / 10; return (r === 0 ? 0 : r).toString(); };
+const f = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
+const f1 = fmt1;   // = String(Math.round(x * 10) / 10), fast (core/math.js)
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 const wrap = (x, m) => ((x % m) + m) % m;
@@ -1382,16 +1383,20 @@ const spAt = sp => SP_AT[SPK[sp.key] || sp.key];
 
 // ---------------------------------------------------------------------------------------------- attach
 // composited strips (see core/sheets.js): the tile copies scroll by a pure translate every frame, so the runtime moves
-// each one as its own compositor layer instead of repainting it
+// each one as its own compositor layer instead of repainting it instead of repainting it. The stream / set-piece / sign hosts are strips too: they scroll with their
+// layer (translate −(D·d mod 16384)) and their props sit in layer coordinates, so a prop is only rewritten when it is
+// re-seated (and every ~8 s when the offset wraps), not every frame.
 export const sheets = ['shore', 'roadside', 'road'].flatMap(k => [0, 1, 2].map(c => `[data-ref="land-b${k}${c}"]`).concat(`[data-ref="land-full${k}"]`))
-  .concat('[data-ref="land-t-fg"]');
+  .concat('[data-ref="land-t-fg"]', ...['shore', 'roadside', 'road', 'fg'].flatMap(k => [`[data-ref="land-sphost-${k}"]`, `[data-ref="land-pool-${k}"]`]), '[data-ref="land-fixed"]');
+const HOST_WRAP = 16384;   // host scroll offset wraps here (layer units): bounded coordinates, a rare full re-seat
 export function attach(svg, ctx) {
   const r = refs(svg, 'land-');
   const glows = [...svg.querySelectorAll('.land-glow')];
   let glowOn = null;
   const A = {};   // animated hooks: every class 'land-a-<name>' element
   for (const el of svg.querySelectorAll('[class^="land-a-"]')) (A[el.getAttribute('class').slice(7)] ||= []).push(el);
-  const set = (el, a, val) => { if (el && el.__lv !== val) { el.setAttribute(a, val); el.__lv = val; } };
+  // last written value per element AND attribute (one shared slot made display + transform rewrite each other every frame)
+  const set = (el, a, val) => { if (!el) return; const m = el.__lv || (el.__lv = {}); if (m[a] !== val) { m[a] = val; el.setAttribute(a, val); } };
   const setA = (name, val) => { const l = A[name]; if (l) for (const el of l) set(el, 'transform', val); };
   const since = (fr, type) => { let best = Infinity; for (const e of fr.events || []) if (e.type === type && fr.t >= e.t0) best = Math.min(best, fr.t - e.t0); return best; };
   const disp = (el, on) => set(el, 'display', on ? 'inline' : 'none');
@@ -1457,6 +1462,9 @@ export function attach(svg, ctx) {
   const legacy = on => {   // bake: the classic seamless loop (the hero tile + two copies), no stream / set pieces
     for (const k of ['shore', 'roadside', 'road']) for (let c = 0; c < 3; c++) { const u = r[`b${k}${c}`]; if (u) { u.setAttribute('href', on ? '#land-tile-' + k : '#land-base-' + k); u.__lv = undefined; } }
     for (const L of Object.keys(pools)) for (const s of pools[L]) { disp(s.el, false); s.j = null; }
+    // hosts: no scroll offset in the baked file (their props are hidden there); live writes start afresh
+    for (const L of Object.keys(DEP)) for (const el of [r['pool-' + L], r['sphost-' + L]]) if (el) { el.removeAttribute('transform'); el.__lv = undefined; }
+    if (r.fixed) { r.fixed.removeAttribute('transform'); r.fixed.__lv = undefined; }
     for (const s of fixedSlots) { disp(s.el, false); s.key = null; }
     for (const sp of SPS) if (sp.el) unmountSP(sp);
   };
@@ -1487,6 +1495,13 @@ export function attach(svg, ctx) {
         }
         disp(full, heroOn);
       }
+      // host scroll offsets per layer (layer units): props below are placed at x + off[L]
+      const off = {};
+      if (!baking) for (const L of Object.keys(DEP)) {
+        const base = D * DEP[L], o = base - Math.floor(base / HOST_WRAP) * HOST_WRAP, xf0 = `translate(${f(-o)} 0)`;
+        off[L] = o; set(r['pool-' + L], 'transform', xf0); set(r['sphost-' + L], 'transform', xf0);
+        if (L === 'roadside') set(r.fixed, 'transform', xf0);
+      }
       if (!baking) {
         // ---- stream pools
         for (const L of Object.keys(pools)) {
@@ -1506,7 +1521,7 @@ export function attach(svg, ctx) {
               disp(sl.el, true);
             }
             const it = sl.it; if (!it) continue;
-            const sx = it.A - base;
+            const sx = it.A - base + off[L];
             set(sl.el, 'transform', `translate(${f(sx)} ${gy}) scale(${f(it.fl * it.sc)} ${f(it.sc)}) translate(${f(-it.cx)} ${-gy})`);
           }
         }
@@ -1527,7 +1542,7 @@ export function attach(svg, ctx) {
             }
             disp(sl.el, true);
           }
-          set(sl.el, 'transform', `translate(${f(sx)} 0)`);
+          set(sl.el, 'transform', `translate(${f(sx + off.roadside)} 0)`);
         }
         // ---- set pieces
         for (const sp of SPS) {
@@ -1539,10 +1554,10 @@ export function attach(svg, ctx) {
           if (near && !sp.el) mountSP(sp);
           else if (!near && sp.el) { unmountSP(sp); continue; }
           if (!sp.el) continue;
-          if (sp.key === 'train') { this.train(sp, fr, D, t, red); continue; }
+          if (sp.key === 'train') { this.train(sp, fr, D, t, red, off[sp.layer]); continue; }
           disp(sp.el, on);
           if (!on) continue;
-          set(sp.el, 'transform', `translate(${f(sx)} 0)`);
+          set(sp.el, 'transform', `translate(${f(sx + off[sp.layer])} 0)`);
           this.animSP(sp.key, sx, t, red, fr);
         }
       }
@@ -1613,7 +1628,7 @@ export function attach(svg, ctx) {
       }
     },
     // the coast-railway train races the pelican through the railway stretch
-    train(sp, fr, D, t, red) {
+    train(sp, fr, D, t, red, o = 0) {
       const st = STRETCHES[4], p = relTo(D, st.a), u = p / (st.b - st.a);
       const on = u > -0.01 && u < 1.03;
       disp(sp.el, on);
@@ -1623,7 +1638,7 @@ export function attach(svg, ctx) {
       const [u0, x0] = K[i - 1], [u1, x1] = K[i], w = smooth01((u - u0) / (u1 - u0));
       const sx = lerp(x0, x1, w) + (u > 0.3 && u < 0.7 ? Math.sin(u * 40) * 26 : 0);
       const Aw = sx + D * 0.6;                    // train position along the layer: drives the wheels
-      set(sp.el, 'transform', `translate(${f(sx)} ${red ? 0 : f(Math.sin(Aw * 0.09) * 0.5)})`);
+      set(sp.el, 'transform', `translate(${f(sx + o)} ${red ? 0 : f(Math.sin(Aw * 0.09) * 0.5)})`);
       const radii = [12, 12, 7, 7, 7, 7, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5];
       for (let k = 0; k < 12; k++) set(r['sp-tw' + k], 'transform', `rotate(${f(wrap(Aw / radii[k] / D2R, 360))})`);
       const th = Aw / 12;

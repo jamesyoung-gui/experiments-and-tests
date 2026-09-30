@@ -5,6 +5,7 @@
 // Design coordinates = the hero frame (t = 3.2 s at 60 rpm): every object is drawn where it sits in that frame and is
 // scrolled by (distance − D0)·depth, wrapped over its own span. Everything is static markup built once; per frame we
 // only write transforms (and a few visibility flags).
+import { fmt1, fmt2 } from '../core/math.js';
 import { h, refs } from '../core/svg.js';
 import { HORIZON_Y, DIST_PER_REV } from '../contract.js';
 import { LAP, KM, stretchAt, relTo, hash } from './route.js';
@@ -12,8 +13,8 @@ import { LAP, KM, stretchAt, relTo, hash } from './route.js';
 export const id = 'sea';
 
 // ---------------------------------------------------------------------------------------------- helpers
-const f = x => { const r = Math.round(x * 100) / 100; return (r === 0 ? 0 : r).toString(); };
-const f1 = x => (Math.round(x * 10) / 10).toString();
+const f = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
+const f1 = fmt1;   // = String(Math.round(x * 10) / 10), fast (core/math.js)
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 const wrap = (x, m) => ((x % m) + m) % m;

@@ -216,8 +216,9 @@ if (!parse.error) {
 
   // ---------------------------------------------------------------- 3. rig probe (CTM of every slot)
   const probeN = quick ? 60 : 240;
-  const slotPts = `(() => { const out = {}; const root = document.querySelector(SEL); const R = root.getScreenCTM().inverse();
-    for (const g of root.querySelectorAll('[id^="j-"]')) { const m = R.multiply(g.getScreenCTM()); const P = (x, y) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]; out[g.id] = [P(0, 0), P(40, 0), P(17, 9)]; }
+  // the live #scene is a wrapper of stacked <svg> sheets (same viewBox): any sheet's CTM maps viewBox units to the screen
+  const slotPts = `(() => { const out = {}; const host = document.querySelector(SEL), root = host.localName === 'svg' ? host : host.querySelector('svg'); const R = root.getScreenCTM().inverse();
+    for (const g of host.querySelectorAll('[id^="j-"]')) { const m = R.multiply(g.getScreenCTM()); const P = (x, y) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]; out[g.id] = [P(0, 0), P(40, 0), P(17, 9)]; }
     return out; })()`;
   let maxErr = 0, worstSlot = '', footErr = 0, footErrLive = 0, handErr = 0;
   const bars = [114, -275];

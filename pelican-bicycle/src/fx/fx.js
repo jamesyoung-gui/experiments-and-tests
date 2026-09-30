@@ -15,6 +15,7 @@
 //                butterflies, a fly buzzing the fish basket, chrome glints, lamp flare + moths, event pops
 //                (DING! / HOP! / GULP! on R/O bursts), bell notes, gulp drips, hearts, a spat-out fish bone,
 //                wave action arcs
+import { fmt1, fmt2 } from '../core/math.js';
 import { GROUND_Y, RIDER_X, BIKE } from '../contract.js';
 import { h, refs, xf } from '../core/svg.js';
 import { TIMING } from '../rig/solve.js';
@@ -22,8 +23,8 @@ import { TIMING } from '../rig/solve.js';
 export const id = 'fx';
 
 // ------------------------------------------------------------------------------------------------ helpers
-const f = x => { const r = Math.round(x * 100) / 100; return (r === 0 ? 0 : r).toString(); };
-const f1 = x => { const r = Math.round(x * 10) / 10; return (r === 0 ? 0 : r).toString(); };
+const f = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
+const f1 = fmt1;   // = String(Math.round(x * 10) / 10), fast (core/math.js)
 const TAU = Math.PI * 2, D2R = Math.PI / 180;
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 const lerp = (a, b, t) => a + (b - a) * t;

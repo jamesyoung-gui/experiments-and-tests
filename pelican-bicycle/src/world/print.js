@@ -11,6 +11,7 @@
 //  · the cinematic letterbox: the paper margin itself grows into the bars (driven by frame.cam.letterbox); the logo
 //    and stamp move into the top bar and the ticket into the bottom bar.
 // All lettering is path data (print-glyphs.js, generated offline by print-glyphs.gen.mjs); no runtime fonts.
+import { fmt2 } from '../core/math.js';
 import { h } from '../core/svg.js';
 import { VIEW, RIDER_X, GROUND_Y, CAMERAS } from '../contract.js';
 import { LAT, ZH } from './print-glyphs.js';
@@ -18,7 +19,7 @@ import { LAT, ZH } from './print-glyphs.js';
 export const id = 'print';
 
 const TD = 'typography_frame';
-const f = x => String(Math.round(x * 100) / 100);
+const f = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
 const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
 const lerp = (a, b, t) => a + (b - a) * t;
 const easeOut = t => 1 - (1 - t) ** 3;

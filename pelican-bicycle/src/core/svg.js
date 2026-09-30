@@ -1,4 +1,5 @@
 // Markup helpers. Art modules return strings (testable in node); the DOM is only touched by main/scene.
+import { fmt2 } from './math.js';
 export const NS = 'http://www.w3.org/2000/svg';
 const esc = v => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 // h('circle', {cx: 0, r: 5, fill: v('bikeFrame')}, ...children) -> '<circle .../>'
@@ -8,7 +9,7 @@ export function h(tag, attrs = {}, ...kids) {
   const inner = kids.flat(Infinity).filter(k => k !== undefined && k !== null && k !== false).join('');
   return inner ? `<${tag}${a}>${inner}</${tag}>` : `<${tag}${a}/>`;
 }
-const n = x => Math.round(x * 100) / 100;
+const n = fmt2;   // same text as the rounded number, built faster
 // Joint transform -> SVG transform string.
 export function xf(j) {
   if (!j) return '';

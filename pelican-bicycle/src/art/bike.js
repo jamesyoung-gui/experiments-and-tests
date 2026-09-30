@@ -18,6 +18,7 @@
 // static two-ink motion swooshes per wheel fade in at speed (static, so they can never wagon-wheel).
 // Hit-testing honesty: large curved shapes are filled bands (not stroked arcs) and long curved strokes are split
 // into short quadratic pieces, so the detail inventory's elementFromPoint sampling sees what the eye sees.
+import { fmt2 } from '../core/math.js';
 import { BIKE, CHAIN_D } from '../contract.js';
 import { h, refs } from '../core/svg.js';
 
@@ -60,7 +61,7 @@ const GLYPHS = {
 
 // ---------------------------------------------------------------- pure helpers
 const D2R = Math.PI / 180, R2D = 180 / Math.PI;
-const f = x => { const r = Math.round(x * 100) / 100; return (r === 0 ? 0 : r).toString(); };
+const f = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
 const pt = p => `${f(p[0])} ${f(p[1])}`;
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];

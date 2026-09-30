@@ -65,9 +65,13 @@ if (dups.length) console.error('[scene] duplicate ids: ' + [...new Set(dups)].jo
 mount(svg.querySelector('#L-letterbox'), h('g', { id: 'lead-letterbox' },
   h('rect', { id: 'lead-lb-top', x: -10, y: -10, width: 1620, height: 0, fill: v('inkP') }),
   h('rect', { id: 'lead-lb-bot', x: -10, y: 900, width: 1620, height: 0, fill: v('inkP') })));
-// split into one <svg> per layer + one per moving strip (module export `sheets`); ?nosheets keeps the single <svg>
-const sheets = createSheets(svg, svgRoot, { layers: LAYERS.map(l => l[0]), sheets: mods.flatMap(m => m.sheets || []), scale: (d, cam) => layerZoom(cam, d) });
-if (!params.has('nosheets')) sheets.split();
+// split into one <svg> per layer, one per moving strip (module export `sheets`: hoisted translate) and one per busy prop
+// (module export `isolate`); the rider is cut into groups of slots (first slot of each group below: far wing · far leg ·
+// wheels · static frame/fork/bars · drivetrain · neck/tail/body · near leg · head · near wing), so a moving group
+// repaints only its own art. ?nosheets keeps the single <svg>.
+const RIDER_SHEETS = ['pedalFar', 'wheelRear', 'frame', 'cog', 'neck', 'pedalNear', 'pouch', 'wingNearUpper'];
+const sheets = createSheets(svg, svgRoot, { layers: LAYERS.map(l => l[0]), sheets: mods.flatMap(m => m.sheets || []), scale: (d, cam) => layerZoom(cam, d), cuts: RIDER_SHEETS.map(x => '#j-' + x),
+  isolate: mods.flatMap(m => m.isolate || []) });
 addEventListener('resize', () => sheets.resize());
 
 const layerEls = LAYERS.map(([id, depth]) => [svg.querySelector('#' + id), depth]);
@@ -77,7 +81,7 @@ const lbTop = svg.querySelector('#lead-lb-top'), lbBot = svg.querySelector('#lea
 // dirty-checked attribute writes: an unchanged transform string costs no style / paint invalidation
 const lastAttr = new WeakMap();
 const setA = (el, k, val) => { let m = lastAttr.get(el); if (!m) lastAttr.set(el, m = {}); if (m[k] !== val) { m[k] = val; el.setAttribute(k, val); } };
-let insetVB = 0;   // bottom sheet height (viewBox units), reported by the UI on portrait screens
+let insetVB = 0, lastCamKey = '', curCam = null;   // bottom sheet height (viewBox units), reported by the UI on portrait screens
 
 const extraMaterials = Object.assign({}, ...ART.map(m => m.materials || {}));
 const modPerf = params.has('modperf') ? {} : null;   // ?modperf: per-module update() ms totals in __pb.modPerf
@@ -143,9 +147,12 @@ function render(dt) {
   const pose = solvePose(state.t, { crank: state.crank, distance: state.distance, cadence: state.cadence, speed: state.speed, coasting: state.coasting, events: state.events, tod: state.tod, loopT: state.loopT });
   // portrait / narrow screens: fit the rider bbox (wheel to wheel + margin) above the bottom sheet
   const cam = fitAspect(camera.update(dt, state.t, reduced, state.events), innerWidth / Math.max(1, innerHeight), insetVB);
+  curCam = cam;
   palT += dt;
   if (palDirty && (palT > 0.1 || dt === 0)) { pal = samplePalette(state.tod, extraMaterials); applyPalette(svg, pal); palDirty = false; palT = 0; }
-  for (const [el, d] of layerEls) if (el && d !== null) setA(el, 'transform', layerTransform(cam, d));
+  // layer camera transforms: rebuilt only when the camera moved (wide / close are static between moves)
+  const camKey = `${cam.zoom} ${cam.fx} ${cam.fy} ${cam.roll}`;
+  if (camKey !== lastCamKey) { lastCamKey = camKey; for (const [el, d] of layerEls) if (el && d !== null) setA(el, 'transform', layerTransform(cam, d)); }
   const lb = cam.letterbox.toFixed(2);
   setA(lbTop, 'height', +lb + 10); setA(lbBot, 'y', 900 - lb); setA(lbBot, 'height', +lb + 10);
   const [rcx, rcy] = BIKE.rearContact;
@@ -195,6 +202,8 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 render(0);
+// split after the first render: every wrapper already carries the attributes the runtime writes (rider, layers)
+if (!params.has('nosheets')) { sheets.split(); sheets.update(curCam); }
 requestAnimationFrame(loop);
 document.addEventListener('visibilitychange', () => { last = performance.now(); });
 
