@@ -173,7 +173,7 @@ export function createAudio(bus, opts = {}) {
   function screenPan(sel, pick) {
     if (!hasDoc || offline) return null;
     try {
-      const svg = document.querySelector('svg#scene'); if (!svg) return null;
+      const svg = document.querySelector('#scene'); if (!svg) return null;
       let els = [...svg.querySelectorAll(sel)].filter(e => e.getAttribute('visibility') !== 'hidden');
       const W = innerWidth || 1600;
       const rects = els.map(e => e.getBoundingClientRect()).filter(r => (r.width || r.height) && r.right > 0 && r.left < W);

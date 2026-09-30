@@ -87,10 +87,12 @@ export function fitAspect(cam, aspect, insetVB = 0) {
   return { ...cam, zoom: aspect < 1.2 ? zoom : cam.zoom, fx, fy };
 }
 
+// zoom of a layer at parallax depth d
+export const layerZoom = (cam, d) => 1 + (cam.zoom - 1) * clamp(d, 0.15, 1);
 // SVG transform for a layer at parallax depth d (null = screen-fixed).
 export function layerTransform(cam, d) {
   if (d === null || d === undefined) return '';
-  const z = 1 + (cam.zoom - 1) * clamp(d, 0.15, 1);
+  const z = layerZoom(cam, d);
   const tx = VIEW.cx + (cam.fx - VIEW.cx) * Math.min(d, 1);
   const ty = VIEW.cy + (cam.fy - VIEW.cy) * clamp(d, 0.15, 1);
   const r = Math.round;

@@ -164,12 +164,16 @@ export function samplePalette(tod, extraMaterials = {}) {
   };
 }
 
-// Write palette as CSS custom properties on the scene root (call ≤ 10 Hz).
+// Write palette as CSS custom properties on the scene root (call ≤ 10 Hz). Only changed values are written: a custom
+// property write restyles the whole scene subtree, so an unchanged palette costs nothing.
+const written = new WeakMap();
 export function applyPalette(svg, pal) {
   const st = svg.style;
-  for (const [k, v] of Object.entries(pal.env)) st.setProperty('--pb-' + k, v);
-  for (const [k, v] of Object.entries(pal.mat)) st.setProperty('--pb-' + k, v);
-  for (const [k, v] of Object.entries(pal.num)) st.setProperty('--pb-n-' + k, v.toFixed(3));
+  let last = written.get(svg); if (!last) written.set(svg, last = {});
+  const put = (k, v) => { if (last[k] !== v) { last[k] = v; st.setProperty(k, v); } };
+  for (const k in pal.env) put('--pb-' + k, pal.env[k]);
+  for (const k in pal.mat) put('--pb-' + k, pal.mat[k]);
+  for (const k in pal.num) put('--pb-n-' + k, pal.num[k].toFixed(3));
 }
 
 // Token reference for markup: v('plume') -> 'var(--pb-plume)'; v('plume',{far:true}) -> 'var(--pb-plume-far)'

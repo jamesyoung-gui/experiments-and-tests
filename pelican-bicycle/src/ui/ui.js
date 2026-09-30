@@ -797,7 +797,9 @@ export function createUI(host, bus, init) {
   }
 
   // ---------- per-frame hook: all DOM work throttled to ≤10 Hz ----------
-  let acc = 1;
+  let acc = 1, dockDue = false;
+  const early = () => { if (dockDue) { dockDue = false; dock(false); } win.requestAnimationFrame(early); };
+  win.requestAnimationFrame(early);
   return {
     update(frame) {
       acc += frame.dt || 0;
@@ -807,7 +809,9 @@ export function createUI(host, bus, init) {
       sync();
       hud(frame);
       dockT += 1;
-      if (frame.dt === 0 || dockT % 3 === 0) dock(frame.dt === 0);
+      // deterministic renders dock at once; live, the rider box is read at the start of the next frame (early rAF,
+      // clean layout) instead of forcing a synchronous style + layout of this frame's scene writes
+      if (frame.dt === 0) dock(true); else if (dockT % 3 === 0) dockDue = true;
     },
     setOpen, openHelp, KEYMAP, STRINGS,
   };

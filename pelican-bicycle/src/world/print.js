@@ -495,6 +495,10 @@ export function attach(svg, ctx) {
     uiBox = [X(r.left) - 8, Y(r.top) - 8, X(r.right) + 8, Y(r.bottom) + 8];
   };
   view.addEventListener('resize', measureV);
+  // live: measure the card at the START of a frame (this rAF is registered before the runtime's loop), when layout is
+  // clean; a read inside update() would force a synchronous style + layout of the frame's pending scene writes
+  const early = () => { measureUI(false); view.requestAnimationFrame(early); };
+  view.requestAnimationFrame(early);
 
   // skip the intro on any key / click (deterministic: the skip is pinned to the sim time it happened at)
   let skipReq = false, skipAt = Infinity, lastT = 0, lastSig = '';
@@ -519,7 +523,7 @@ export function attach(svg, ctx) {
       const lb = Math.max(0, cam.letterbox || 0);
       const kc = easeInOut(clamp01((lb - M) / (LB_MAX - M)));      // 0 poster → 1 cinematic bars
       // integrator perf: after the intro nothing here moves unless the view, letterbox, UI card or (coarse) rider box changes
-      measureUI(frame.dt === 0);
+      if (frame.dt === 0) measureUI(true);
       const rbQ = riderBox(cam, frame.pose).map(v => Math.round(v / 6));
       const tiQ = t >= skipAt ? 99 : t;
       const sig = [V.w, V.h, V.x0, V.y0, f(lb), tiQ >= 4.3 ? 'post' : f(tiQ), reduced ? 1 : 0, rbQ.join(), uiBox ? uiBox.map(Math.round).join() : ''].join('|');

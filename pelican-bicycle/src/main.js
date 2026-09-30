@@ -5,7 +5,8 @@ import { rng, clamp, wrap } from './core/math.js';
 import { mount, xf, h } from './core/svg.js';
 import { createBus } from './core/bus.js';
 import { samplePalette, applyPalette, v } from './core/palette.js';
-import { createCamera, layerTransform, fitAspect } from './core/camera.js';
+import { createCamera, layerTransform, layerZoom, fitAspect } from './core/camera.js';
+import { createSheets } from './core/sheets.js';
 import { solvePose, TIMING } from './rig/solve.js';
 import { buildSceneMarkup, checkIds } from './scene.js';
 import * as bike from './art/bike.js';
@@ -50,8 +51,13 @@ const mods = (solo ? ART.filter(m => m.id === solo || ['sky'].includes(m.id) && 
 const { markup, problems } = buildSceneMarkup(mods, ctx);
 problems.forEach(p => console.error('[scene] ' + p));
 stage.innerHTML = '';
-mount(stage, markup);
-const svg = stage.querySelector('svg#scene');
+// #scene is a wrapper <div> holding a stack of composited <svg> sheets (core/sheets.js); modules get the wrapper as
+// their root (querySelector finds every element), the single <svg> comes back for the baker / downloads
+const svg = stage.appendChild(document.createElement('div'));
+svg.id = 'scene';
+svg.setAttribute('role', 'img'); svg.setAttribute('aria-labelledby', 'scene-title scene-desc');
+mount(svg, markup);
+const svgRoot = svg.querySelector('svg#scene');
 const dups = checkIds(svg);
 if (dups.length) console.error('[scene] duplicate ids: ' + [...new Set(dups)].join(', '));
 
@@ -59,6 +65,10 @@ if (dups.length) console.error('[scene] duplicate ids: ' + [...new Set(dups)].jo
 mount(svg.querySelector('#L-letterbox'), h('g', { id: 'lead-letterbox' },
   h('rect', { id: 'lead-lb-top', x: -10, y: -10, width: 1620, height: 0, fill: v('inkP') }),
   h('rect', { id: 'lead-lb-bot', x: -10, y: 900, width: 1620, height: 0, fill: v('inkP') })));
+// split into one <svg> per layer + one per moving strip (module export `sheets`); ?nosheets keeps the single <svg>
+const sheets = createSheets(svg, svgRoot, { layers: LAYERS.map(l => l[0]), sheets: mods.flatMap(m => m.sheets || []), scale: (d, cam) => layerZoom(cam, d) });
+if (!params.has('nosheets')) sheets.split();
+addEventListener('resize', () => sheets.resize());
 
 const layerEls = LAYERS.map(([id, depth]) => [svg.querySelector('#' + id), depth]);
 const riderEl = svg.querySelector('#rider');
@@ -153,6 +163,7 @@ function render(dt) {
   if (modPerf) { let t1 = performance.now(); for (const a of attached) if (a.update) { try { a.update(frame); } catch (e) { console.error(e); a.update = null; } const t2 = performance.now(); modPerf[a.__id] = (modPerf[a.__id] || 0) + t2 - t1; t1 = t2; } ui.update(frame); audio.update(frame); modPerf.ui = (modPerf.ui || 0) + performance.now() - t1; modPerf.n = (modPerf.n || 0) + 1; }
   else { for (const a of attached) if (a.update) try { a.update(frame); } catch (e) { console.error(e); a.update = null; }
   ui.update(frame); audio.update(frame); }
+  sheets.update(cam);
   return frame;
 }
 
@@ -182,8 +193,8 @@ document.addEventListener('visibilitychange', () => { last = performance.now(); 
 // ---------- export ----------
 function download(kind) {
   let blob, name;
-  if (kind === 'svg') { blob = new Blob([bakeSVG(svg, { cadence: 60, tod: state.tod, pose: solvePose, state })], { type: 'image/svg+xml' }); name = 'pelican-bicycle.svg'; }
-  else { blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' }); name = 'pelican-bay-frame.svg'; }
+  if (kind === 'svg') { blob = new Blob([sheets.whole(s => bakeSVG(s, { cadence: 60, tod: state.tod, pose: solvePose, state }))], { type: 'image/svg+xml' }); name = 'pelican-bicycle.svg'; }
+  else { blob = new Blob([sheets.whole(s => new XMLSerializer().serializeToString(s))], { type: 'image/svg+xml' }); name = 'pelican-bay-frame.svg'; }
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
@@ -210,5 +221,6 @@ window.__pb = {
   },
   play() { state.playing = true; last = performance.now(); },
   perf: () => fpsAcc, modPerf: () => modPerf,
-  bakeSVG: opts => bakeSVG(svg, { cadence: 60, tod: state.tod, pose: solvePose, state, ...opts }),
+  bakeSVG: opts => sheets.whole(s => bakeSVG(s, { cadence: 60, tod: state.tod, pose: solvePose, state, ...opts })),
+  sheets,
 };

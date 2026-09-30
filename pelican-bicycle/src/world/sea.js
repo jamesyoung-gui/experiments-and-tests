@@ -858,6 +858,9 @@ function buildBoats(v, I, rng, lampOn) {
 }
 
 // ---------------------------------------------------------------------------------------------- attach
+// composited strips (see core/sheets.js): far panorama, headland, the four rolling sea bands, harbour and rocks move by
+// a pure translate every frame; the runtime moves each one as its own compositor layer instead of repainting it
+export const sheets = ['hills', 'cape', 'w0', 'w1', 'w2', 'w3', 'harbour', 'rocks'].map(k => `[data-ref="sea-${k}"]`);
 export function attach(svg, ctx) {
   const r = refs(svg, 'sea-');
   const st = new WeakMap();

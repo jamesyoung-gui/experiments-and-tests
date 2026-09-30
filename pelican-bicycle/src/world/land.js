@@ -1381,6 +1381,10 @@ const SPK = { river: 'bridge', bridge: 'bridge' };   // set-piece key -> SP_AT k
 const spAt = sp => SP_AT[SPK[sp.key] || sp.key];
 
 // ---------------------------------------------------------------------------------------------- attach
+// composited strips (see core/sheets.js): the tile copies scroll by a pure translate every frame, so the runtime moves
+// each one as its own compositor layer instead of repainting it
+export const sheets = ['shore', 'roadside', 'road'].flatMap(k => [0, 1, 2].map(c => `[data-ref="land-b${k}${c}"]`).concat(`[data-ref="land-full${k}"]`))
+  .concat('[data-ref="land-t-fg"]');
 export function attach(svg, ctx) {
   const r = refs(svg, 'land-');
   const glows = [...svg.querySelectorAll('.land-glow')];
