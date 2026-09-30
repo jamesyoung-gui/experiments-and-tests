@@ -35,6 +35,7 @@
 import { fmt2 } from '../core/math.js';
 import { SKEL } from '../contract.js';
 import { h, refs } from '../core/svg.js';
+import { gouacheTile, glazeGrads, glaze as gz } from './gouache.js';
 
 export const id = 'pelican-limbs';
 
@@ -221,6 +222,7 @@ function wingUpper(I, far) {
   kids.push(fill(ter.map(t => t.d).join(''), I.S2, { transform: 'translate(0.8 2)', opacity: far ? 0.6 : 0.75 }));
   kids.push(G('tertials', 'O', far, [
     ...ter.map(t => fill(t.d, I.P, { stroke: I.ink, 'stroke-width': far ? 1 : 1.3, 'stroke-linejoin': 'round' })),
+    fill(ter.map(t => t.d).join(''), 'url(#pl-gw)', { class: 'gw-tex', opacity: far ? 0.6 : 1 }),
     // each tertial: a rose glaze along its shaded (trailing) web and a warm lit edge on the other
     G('tertial-rose-glaze', 'T', far, fill(ter.map((t, i) => ribbon([t.P(0.18, t.hw * 0.42), t.P(0.55, t.hw * 0.5), t.P(0.9, t.hw * 0.28)], t.hw * 0.75, 3, i)).join(''), I.S)),
     far ? '' : line(ter.map(t => `M${pt(t.P(0.6, 0))}L${pt(t.P(0.9, 0.2))}`).join(''), I.inkSoft, 0.7, { opacity: 0.8, 'data-detail': tag('T', 'tertial-shafts') }),
@@ -228,6 +230,11 @@ function wingUpper(I, far) {
   // the scapular cape covers the tertial bases and merges into the body side (no outline on the body side)
   kids.push(fill(cape, I.P));
   kids.push(fill(cape, 'url(#pl-mottle)', { opacity: far ? 0.4 : 0.7 }));
+  // gouache director: wet-in-wet glazes (rose pooled at the trailing edge, warm light on the top) + the blotch tile
+  kids.push(h('g', { 'clip-path': `url(#pl-capeclip${far ? 'F' : 'N'})`, 'data-detail': tag('T', (far ? 'far-' : '') + 'cape-wet-in-wet-glazes') },
+    h('clipPath', { id: `pl-capeclip${far ? 'F' : 'N'}` }, h('path', { d: cape })),
+    gz('pl', 'rose', 20, 14, 60, 9, -8, far ? 0.5 : 0.7), gz('pl', 'warm', 30, -12, 56, 7, -6, far ? 0.25 : 0.55), gz('pl', 'lite', 0, -6, 30, 8, -4, far ? 0.3 : 0.8),
+    fill(cape, 'url(#pl-gw)', { class: 'gw-tex', opacity: far ? 0.6 : 1 })));
   kids.push(G('scapular-shade-glaze', 'T', far, fill(ribbon([[-24, 11], [-8, 15.5], [14, 13.5], [40, 8.6], [66, 3], [82, -1]], 6.5, 3, 2), I.S)));
   const flow = norm([0.25, 1]);
   if (!far) kids.push(fill(dabs(9, -16, 60, -12, 4, 2.2, 5), I.glow, { 'data-detail': tag('T', 'cape-highlight-dabs') }));
@@ -278,6 +285,10 @@ function wingLower(I, far, side) {
   panel.push(h('clipPath', { id: ref('clip') }, h('path', { d: g0.fill, 'data-ref': ref('clipP') })));
   panel.push(h('g', { 'clip-path': `url(#${ref('clip')})` },
     h('rect', { x: -90, y: -60, width: 180, height: 70, fill: 'url(#pl-mottle)', opacity: far ? 0.4 : 0.7 }),
+    h('g', { 'data-detail': tag('T', (far ? 'far-' : '') + 'covert-wet-in-wet-glazes') },
+      gz('pl', 'rose', 14, -2, 70, 10, -2, far ? 0.5 : 0.75), gz('pl', 'deep', -30, 2, 26, 12, 0, far ? 0.3 : 0.4),
+      gz('pl', 'warm', 10, -34, 64, 9, -3, far ? 0.25 : 0.55), gz('pl', 'lite', 30, -24, 34, 7, -3, far ? 0.3 : 0.85),
+      h('rect', { class: 'gw-tex', x: -90, y: -60, width: 180, height: 70, fill: 'url(#pl-gw)', opacity: far ? 0.6 : 1 })),
     G('covert-under-glaze', 'T', far, fill(ribbon([[-40, -4], [-10, -3.4], [30, -4], [66, -5]], 6, 3, 6), I.S)),
     far ? '' : fill(dabs(14, -40, 60, -34, -10, 1.8, 9), I.glow, { 'data-detail': tag('T', 'covert-highlight-dabs') }),
     line(scallops(rowPts([-22, -14], [54, -15.4], 11), down, 1.7, 4) + scallops(rowPts([-30, -22], [42, -23.4], 12), down, 1.45, 5), I.S2, far ? 1 : 1.2, { 'data-detail': tag('T', (far ? 'far-' : '') + 'lesser-covert-rows'), 'data-tract': 'coverts' }),
@@ -563,7 +574,9 @@ export function build({ v }) {
     s['wing' + side + 'Lower'] = wingLower(I, far, side);
     s['wing' + side + 'Hand'] = wingHand(I, far, side);
   }
-  return { defs: mottle(v), slots: s };
+  const gw = gouacheTile('pl-gw', { size: 64, seed: 21, dark: v('plRoseDeep'), light: '#FFFDF7', kd: 0.12, kl: 0.3, nBlot: 11, nStroke: 9, nFleck: 16, ang: 12 });
+  const gzd = glazeGrads('pl', { rose: v('plRose'), deep: v('plRoseDeep'), warm: v('rim'), lite: '#FFFDF6' });
+  return { defs: mottle(v) + gw + gzd, slots: s };
 }
 
 // ================================================================ attach / update
@@ -648,6 +661,8 @@ export const detailItems = [
   ['tertial-rose-glaze', 'T', 'rose-grey glaze on the shaded web of every tertial'],
   ['tertial-shafts', 'T', 'soft brown shafts on the tertials'],
   ['scapular-cape', 'O', 'broad warm-white covert base over the body side; merges into the body at the shoulder'],
+  ['cape-wet-in-wet-glazes', 'T', 'soft glazes on the scapular cape: rose pooled at the trailing edge, warm light on top, and the painted-blotch gouache tile'],
+  ['covert-wet-in-wet-glazes', 'T', 'soft glazes over the covert panel: rose along the arm line, warm lit leading edge, painted-blotch gouache tile'],
   ['scapular-shade-glaze', 'T', 'tapered rose glaze where the cape overlaps the tertials'],
   ['scapular-scallops', 'T', 'painted scapular scallop row, tips toward the tail'],
   ['humeral-covert-scallops', 'T', 'finer humeral covert row nearest the shoulder'],

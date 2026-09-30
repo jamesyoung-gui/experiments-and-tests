@@ -43,6 +43,9 @@ const GLYPH = {
   DIG: ["M24 -36Q24 -39 26 -41Q28 -42 30 -42Q33 -42 34 -41Q36 -39 36 -36Q36 -34 34 -32Q33 -30 30 -30Q28 -30 26 -32Q24 -34 24 -36ZM30 -62Q25 -62 23 -56Q21 -50 21 -36Q21 -23 23 -17Q25 -11 30 -11Q35 -11 37 -17Q40 -23 40 -36Q40 -50 37 -56Q35 -62 30 -62ZM6 -36Q6 -55 12 -65Q18 -74 30 -74Q42 -74 48 -65Q54 -55 54 -36Q54 -17 48 -8Q42 1 30 1Q18 1 12 -8Q6 -17 6 -36Z","M9 -13L25 -13L25 -60L10 -56L10 -69L25 -73L39 -73L39 -13L55 -13L55 0L9 0Z","M21 -13L52 -13L52 0L6 0L6 -12L13 -21Q27 -35 30 -39Q34 -43 36 -46Q37 -50 37 -53Q37 -58 34 -60Q31 -63 26 -63Q22 -63 17 -61Q12 -60 7 -57L7 -70Q12 -72 17 -73Q22 -74 27 -74Q39 -74 45 -69Q52 -63 52 -54Q52 -50 50 -46Q49 -42 45 -38Q43 -34 31 -23Q25 -16 21 -13Z","M27 -33L19 -33L19 -45L27 -45Q32 -45 35 -47Q38 -50 38 -53Q38 -57 35 -60Q32 -62 27 -62Q23 -62 18 -61Q13 -60 8 -58L8 -71Q13 -73 18 -73Q23 -74 28 -74Q39 -74 46 -69Q52 -64 52 -55Q52 -49 48 -45Q45 -41 38 -39Q46 -38 50 -33Q54 -28 54 -20Q54 -10 47 -4Q40 1 27 1Q22 1 16 0Q11 0 6 -2L6 -16Q11 -13 16 -12Q21 -11 27 -11Q33 -11 36 -14Q40 -16 40 -21Q40 -27 36 -30Q33 -33 27 -33Z","M34 -57L15 -28L34 -28ZM33 -73L48 -73L48 -28L56 -28L56 -16L48 -16L48 0L34 0L34 -16L5 -16L5 -30Z","M9 -73L49 -73L49 -60L21 -60L21 -47Q23 -47 25 -48Q27 -48 29 -48Q40 -48 47 -41Q53 -34 53 -23Q53 -12 46 -5Q39 1 26 1Q22 1 17 1Q12 0 7 -2L7 -15Q11 -13 15 -12Q20 -11 24 -11Q31 -11 35 -14Q39 -17 39 -23Q39 -29 35 -33Q32 -36 25 -36Q21 -36 17 -35Q13 -34 9 -32Z","M31 -37Q27 -37 24 -33Q22 -30 22 -23Q22 -17 24 -13Q27 -10 31 -10Q36 -10 39 -13Q41 -17 41 -23Q41 -30 39 -33Q36 -37 31 -37ZM50 -71L50 -58Q46 -60 43 -61Q39 -62 36 -62Q28 -62 24 -57Q20 -52 20 -42Q22 -45 26 -47Q29 -48 34 -48Q44 -48 49 -42Q55 -36 55 -24Q55 -12 49 -5Q43 2 32 2Q18 2 12 -7Q6 -16 6 -36Q6 -55 14 -65Q21 -74 36 -74Q39 -74 43 -73Q47 -73 50 -71Z","M7 -73L53 -73L53 -63L28 0L13 0L37 -60L7 -60Z","M30 -33Q25 -33 22 -29Q19 -26 19 -21Q19 -16 22 -13Q25 -10 30 -10Q35 -10 38 -13Q41 -16 41 -21Q41 -26 38 -29Q35 -33 30 -33ZM19 -39Q14 -41 11 -45Q8 -49 8 -55Q8 -64 14 -69Q20 -74 30 -74Q40 -74 46 -69Q52 -64 52 -55Q52 -49 49 -45Q46 -41 41 -39Q47 -37 50 -32Q54 -27 54 -21Q54 -10 48 -4Q42 1 30 1Q19 1 13 -4Q6 -10 6 -21Q6 -27 10 -32Q13 -37 19 -39ZM21 -53Q21 -49 23 -47Q26 -44 30 -44Q34 -44 37 -47Q39 -49 39 -53Q39 -58 37 -60Q34 -63 30 -63Q26 -63 23 -60Q21 -58 21 -53Z","M10 -1L10 -14Q14 -12 17 -11Q21 -10 24 -10Q32 -10 36 -15Q40 -20 40 -30Q38 -27 34 -26Q31 -24 26 -24Q16 -24 11 -30Q5 -37 5 -48Q5 -60 11 -67Q17 -74 28 -74Q42 -74 48 -65Q54 -56 54 -36Q54 -17 46 -8Q39 2 24 2Q21 2 17 1Q14 0 10 -1ZM29 -36Q33 -36 36 -40Q38 -43 38 -49Q38 -56 36 -59Q33 -63 29 -63Q24 -63 22 -59Q19 -56 19 -49Q19 -43 22 -40Q24 -36 29 -36Z"],
 };
 
+// the two hanzi of 鹈鹕 as separate contour sets (split by the first x of each contour), to stack them vertically
+const HAN = (() => { const out = ['', '']; for (const c of GLYPH.HAN.d.split(/(?=M)/)) out[+(parseFloat(c.slice(1)) >= 100)] += c; return out; })();
+
 // ---------------------------------------------------------------- helpers (pure)
 const D2R = Math.PI / 180;
 const f = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
@@ -93,16 +96,42 @@ function splitQ(S) {
   for (let i = 1; i < S.length - 1; i++) d += `M${pt(m(i - 1))}Q${pt(S[i])} ${pt(m(i))}`;
   return d + `M${pt(m(S.length - 2))}L${pt(S[S.length - 1])}`;
 }
+// Point in polygon (even-odd)
+function inside(poly, [x, y]) {
+  let c = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+}
+// Closed polygon offset inward by d along the vertex normals (for rim bands: no clip path needed)
+function insetRing(P, d) {
+  const n = P.length, N = P.map((p, i) => perp(norm(sub(P[(i + 1) % n], P[(i + n - 1) % n]))));
+  let k = 0; for (let i = 1; i < n; i++) if (Math.abs(N[i][0]) + 0 > Math.abs(N[k][0])) k = i;
+  const sgn = inside(P, add(P[k], mul(N[k], 1))) ? 1 : -1;
+  return P.map((p, i) => add(p, mul(N[i], sgn * d)));
+}
 // Scallop arc: chord across the flow at c (width w), bulging by `depth` toward the flow direction u.
 const scallop = (c, u, w, depth) => {
   const n = perp(u), a = add(c, mul(n, -w / 2)), b = add(c, mul(n, w / 2)), q = add(c, mul(u, depth * 2));
   return `M${pt(a)}Q${pt(q)} ${pt(b)}`;
 };
+// explicit ticks across a polyline every `step` u (length `len`, centred): cheaper to raster than a dash pattern
+function ticks(P, step, len, off = 0) {
+  const S = resample(P, 4); let d = '', acc = step / 2;
+  for (let i = 1; i < S.length; i++) {
+    const a = S[i - 1], b = S[i], seg = Math.hypot(b[0] - a[0], b[1] - a[1]), u = norm(sub(b, a)), n = perp(u);
+    while (acc <= seg) { const c = add(lerp2(a, b, acc / seg), mul(n, off)); d += `M${pt(add(c, mul(n, -len / 2)))}L${pt(add(c, mul(n, len / 2)))}`; acc += step; }
+    acc -= seg;
+  }
+  return d;
+}
+const crv = pts => splitQ(resample(pts, 2));        // smooth open curve as slivers (no hit-test area)
 const line = (d, stroke, w, extra = {}) => h('path', { d, fill: 'none', stroke, 'stroke-width': w, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', ...extra });
 // stacked-stroke neon (NO filter): wide faint halo + mid glow + saturated tube + hot core
 const neon = (d, col, core, w = 1, extra = {}, op = 1) => h('g', { fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: op === 1 ? undefined : op, ...extra },
-  h('path', { d, stroke: col, 'stroke-width': f(w * 5.5), opacity: 0.13 }),
-  h('path', { d, stroke: col, 'stroke-width': f(w * 2.6), opacity: 0.32 }),
+  h('path', { d, stroke: col, 'stroke-width': f(w * 3.4), opacity: 0.28 }),
   h('path', { d, stroke: col, 'stroke-width': f(w * 1.2) }),
   h('path', { d, stroke: core, 'stroke-width': f(w * 0.45) }));
 // glyph run: path d at em 100 -> placed at (x, y) baseline-left, scaled to `size` em units
@@ -164,7 +193,7 @@ function neckDetail(n, bulge) {
   };
   const side = (sgn, inset, t0, t1) => {
     const p = []; for (let i = 0; i < 9; i++) p.push(at(sgn, inset, lerp(t0, t1, i / 8)).p);
-    return qline(p);
+    return splitQ(p);
   };
   const jack = at(-1, 3.4, 0.5);
   return {
@@ -237,17 +266,13 @@ export function build({ v }) {
   const lg = (gid, x1, y1, x2, y2, stops, extra = {}) => h('linearGradient', { id: gid, x1, y1, x2, y2, ...extra }, stops.map(a => stop(...a)));
   const rg = (gid, stops, extra = {}) => h('radialGradient', { id: gid, ...extra }, stops.map(a => stop(...a)));
   const defs = [
-    // rim bands: cyan from the back (left), magenta from the top-right; spill = the outside halo (both hues)
-    lg('pb-gCy', 0, 0, 1, 0, [[0, NE.cy], [0.2, NE.cy, 0.55], [0.4, NE.cy, 0]]),
-    lg('pb-gMg', 0, 1, 1, 0, [[0.5, NE.mag, 0], [0.74, NE.mag, 0.55], [1, NE.mag]]),
-    lg('pb-gMgTop', 0, 0, 0, 1, [[0, NE.mag], [0.3, NE.mag, 0.35], [0.55, NE.mag, 0]]),
-    lg('pb-gCyBot', 0, 0, 0, 1, [[0.45, NE.cy, 0], [0.8, NE.cy, 0.45], [1, NE.cy]]),
+    // spill = the outside neon halo (cyan behind, magenta ahead)
     lg('pb-gSpill', 0, 0, 1, 0, [[0, NE.cy], [0.35, NE.cy, 0], [0.62, NE.mag, 0], [1, NE.mag]]),
     // jacket satin: sheen at the top, deep at the hem
     lg('pb-gJk', 0.35, 0, 0.55, 1, [[0, HW.jkHi], [0.42, HW.jk], [1, HW.jkLo]]),
     // chrome (nail, earpiece, zipper pull): a hard horizon line reflection
     lg('pb-gChrome', 0, 0, 0, 1, [[0, HW.chromeHi], [0.38, HW.chrome], [0.5, HW.chromeDk], [0.62, HW.chromeMid], [1, HW.chromeHi]]),
-    lg('pb-gLens', 0, 0, 1, 0.3, [[0, HW.lensDk, 0.5], [0.5, HW.lens, 0.22], [1, NE.cyCore, 0.5]]),
+    lg('pb-gLens', 0, 0, 1, 0.3, [[0, HW.lensDk, 0.45], [0.45, HW.lens, 0.26], [1, NE.cyCore, 0.42]]),
     lg('pb-gPouchSh', 0, 0, 0, 1, [[0.35, Od, 0], [1, Od, 0.5]]),
     lg('pb-gBillSh', 0, 0, 0, 1, [[0, NE.hot, 0.35], [0.3, NE.hot, 0], [0.8, Re, 0], [1, Re, 0.5]]),
     lg('pb-gFab', 0, 0, 0, 1, [[0, HW.fabHi], [0.55, HW.fab], [1, HW.fabLo]]),
@@ -255,30 +280,50 @@ export function build({ v }) {
     rg('pb-rgMg', [[0, NE.magCore], [0.25, NE.mag, 0.75], [1, NE.mag, 0]]),
     rg('pb-rgAcid', [[0, NE.acidCore], [0.25, NE.acid, 0.75], [1, NE.acid, 0]]),
     rg('pb-rgRed', [[0, NE.magCore], [0.25, NE.red, 0.8], [1, NE.red, 0]]),
-    rg('pb-rgAmber', [[0, NE.amber, 0.55], [1, NE.amber, 0]]),
   ].join('');
   // dual rim for a static closed shape d, drawn INSIDE a clip of the same shape: band glow + bright edge per hue.
-  const rimIn = (d, w = 1, hues = ['pb-gCy', 'pb-gMg']) => hues.map(gid => h('path', { d, fill: 'none', stroke: `url(#${gid})`, 'stroke-width': f(9 * w), opacity: 0.3 })
-    + h('path', { d, fill: 'none', stroke: `url(#${gid})`, 'stroke-width': f(2.8 * w) })).join('');
-  const spill = (d, w = 1, op = 0.2) => h('path', { d, fill: 'none', stroke: 'url(#pb-gSpill)', 'stroke-width': f(8 * w), opacity: op, 'stroke-linejoin': 'round' });
+  // (outlines are passed as closed POINT LISTS and drawn as short C1 slivers (splitQ), so no stroke-only path ever
+  // encloses — and hit-tests over — the parts underneath)
+  const ring = pts => splitQ(resample([...pts, pts[0]], 2));
+  // rim = two inset rings (a soft 5 u band + a bright 1.5 u edge) stroked with the directional gradients: no clip
+  const HUE = { 'pb-gCy': [NE.cy, n => n[0] < -0.25], 'pb-gMg': [NE.mag, n => n[1] < -0.2 || n[0] > 0.55], 'pb-gMgTop': [NE.mag, n => n[1] < -0.5], 'pb-gCyBot': [NE.cy, n => n[1] > 0.5] };
+  // rim = the stretch of the outline that faces the light, inset: a soft band + a bright edge, in solid neon (no clip,
+  // no gradient); runs are split where the facing test fails, so each hue only lights its own side
+  const rimIn = (pts, w = 1, hues = ['pb-gCy', 'pb-gMg']) => {
+    const P = resample([...pts], 2, true).slice(0, -1), n = P.length;
+    const inG = insetRing(P, 2.4 * w), inE = insetRing(P, 0.9 * w);
+    const Nn = P.map((p, i) => { const q = sub(p, inE[i]); return norm(q); });   // outward normal
+    return hues.map(gid => {
+      const [col, faces] = HUE[gid]; let dG = '', dE = '';
+      let start = P.findIndex((p, i) => !faces(Nn[i])); if (start < 0) start = 0;
+      let run = [];
+      const flush = () => { if (run.length >= 3) { dG += qline(run.map(i => inG[i])); dE += qline(run.map(i => inE[i])); } run = []; };
+      for (let k = 1; k <= n; k++) { const i = (start + k) % n; if (faces(Nn[i])) run.push(i); else flush(); }
+      flush();
+      return h('path', { d: dG, fill: 'none', stroke: col, 'stroke-width': f(4.2 * w), opacity: 0.28, 'stroke-linecap': 'round' })
+        + h('path', { d: dE, fill: 'none', stroke: col, 'stroke-width': f(1.4 * w), 'stroke-linecap': 'round' });
+    }).join('');
+  };
+
+  const spill = (pts, w = 1, op = 0.2) =>  h('path', { d: ring(pts), fill: 'none', stroke: 'url(#pb-gSpill)', 'stroke-width': f(7 * w), opacity: op, 'stroke-linecap': 'round' });
 
   // ================================================================ NECK (rider space; deformer)
   // The outline lives once in <defs> (one d write per frame); fill, halo and clip all <use> it.
   s.neck = h('g', { 'data-detail': tag('O', 'neck') },
     h('defs', {}, h('path', { id: 'pb-neckG', 'data-ref': 'pb-neck', d: '' }),
       h('path', { id: 'pb-nkRimF', 'data-ref': 'pb-neckRimF', d: '' }), h('path', { id: 'pb-nkRimB', 'data-ref': 'pb-neckRimB', d: '' })),
-    h('use', { href: '#pb-neckG', fill: 'none', stroke: 'url(#pb-gSpill)', 'stroke-width': 9, opacity: 0.22, 'data-detail': tag('O', 'neck-neon-spill') }),
-    h('use', { href: '#pb-neckG', fill: P, stroke: INK, 'stroke-width': KW, 'stroke-linejoin': 'round' }),
+    h('path', { 'data-du': 'pb-neckG', d: '', fill: 'none', stroke: 'url(#pb-gSpill)', 'stroke-width': 9, opacity: 0.22 }),
+    h('path', { 'data-du': 'pb-neckG', d: '', fill: P, stroke: INK, 'stroke-width': KW, 'stroke-linejoin': 'round' }),
+    h('g', { 'data-detail': tag('O', 'neck-rim-cyan'), fill: 'none', 'stroke-linecap': 'round' },
+      h('path', { 'data-du': 'pb-nkRimB', d: '', stroke: NE.cy, 'stroke-width': 6, opacity: 0.22 }), h('path', { 'data-du': 'pb-nkRimB', d: '', stroke: NE.cy, 'stroke-width': 2.2 }),
+      h('path', { 'data-du': 'pb-nkRimB', d: '', stroke: NE.cyCore, 'stroke-width': 0.8 })),
+    h('g', { 'data-detail': tag('O', 'neck-rim-magenta'), fill: 'none', 'stroke-linecap': 'round' },
+      h('path', { 'data-du': 'pb-nkRimF', d: '', stroke: NE.mag, 'stroke-width': 6, opacity: 0.22 }), h('path', { 'data-du': 'pb-nkRimF', d: '', stroke: NE.mag, 'stroke-width': 2.2 }),
+      h('path', { 'data-du': 'pb-nkRimF', d: '', stroke: NE.magCore, 'stroke-width': 0.8 })),
     h('path', { 'data-ref': 'pb-neckShade', 'data-detail': tag('O', 'neck-nape-shade'), d: '', fill: 'none', stroke: Bk, 'stroke-width': 6, 'stroke-linecap': 'round', opacity: 0.55 }),
     h('path', { 'data-ref': 'pb-neckFlow', 'data-detail': tag('T', 'neck-feather-flow'), d: '', fill: 'none', stroke: Bk, 'stroke-width': 1.2, 'stroke-linecap': 'round' }),
     h('path', { 'data-ref': 'pb-neckFlow2', 'data-detail': tag('T', 'neck-feather-flow-fine'), d: '', fill: 'none', stroke: Bd, 'stroke-width': 0.85, 'stroke-linecap': 'round' }),
     h('path', { 'data-ref': 'pb-neckCrease', 'data-detail': tag('O', 'neck-throat-crease'), d: '', fill: 'none', stroke: Bk, 'stroke-width': 1.2, 'stroke-linecap': 'round' }),
-    h('g', { 'data-detail': tag('O', 'neck-rim-cyan'), fill: 'none', 'stroke-linecap': 'round' },
-      h('use', { href: '#pb-nkRimB', stroke: NE.cy, 'stroke-width': 6, opacity: 0.22 }), h('use', { href: '#pb-nkRimB', stroke: NE.cy, 'stroke-width': 2.2 }),
-      h('use', { href: '#pb-nkRimB', stroke: NE.cyCore, 'stroke-width': 0.8 })),
-    h('g', { 'data-detail': tag('O', 'neck-rim-magenta'), fill: 'none', 'stroke-linecap': 'round' },
-      h('use', { href: '#pb-nkRimF', stroke: NE.mag, 'stroke-width': 6, opacity: 0.22 }), h('use', { href: '#pb-nkRimF', stroke: NE.mag, 'stroke-width': 2.2 }),
-      h('use', { href: '#pb-nkRimF', stroke: NE.magCore, 'stroke-width': 0.8 })),
     // courier barcode tattoo on the nape (ink bars + a cyan status dot), riding the deformer
     h('g', { 'data-ref': 'pb-neckJack', 'data-detail': tag('O', 'nape-barcode-tattoo') },
       h('path', { d: 'M-6 -1.6v3.2M-4.6 -1.6v3.2M-2.4 -1.6v3.2M-1.2 -1.6v3.2M0.8 -1.6v3.2M3 -1.6v3.2M4 -1.6v3.2M6 -1.6v3.2', fill: 'none', stroke: INK, 'stroke-width': 0.7, opacity: 0.75 }),
@@ -328,12 +373,12 @@ export function build({ v }) {
     let b = '';
     // far scarf tail, behind the body mass (dim far fabric; its LEDs are the far pair)
     b += h('g', { 'data-detail': tag('O', 'scarf-far-tail') },
-      h('defs', {}, h('path', { id: 'pb-sfCL', 'data-ref': 'pb-sfCL', d: '', pathLength: 100 }), h('path', { id: 'pb-sfFr', 'data-ref': 'pb-sfFringe', d: '' })),
+      h('defs', {}, h('path', { id: 'pb-sfCL', 'data-ref': 'pb-sfCL', d: '' }), h('path', { id: 'pb-sfFr', 'data-ref': 'pb-sfFringe', d: '' }), h('path', { id: 'pb-sfDA', 'data-ref': 'pb-sfDotA', d: '' })),
       h('path', { 'data-ref': 'pb-sfFill', d: '', fill: HW.fabFar, stroke: INK, 'stroke-width': 1 }),
-      h('use', { href: '#pb-sfCL', fill: 'none', stroke: NE.mag, 'stroke-width': 0.9, opacity: 0.55 }),
-      h('g', { 'data-ref': 'pb-sfLed', 'stroke-dasharray': '0.01 11', 'stroke-linecap': 'round', fill: 'none', opacity: 0.7 },
-        h('use', { href: '#pb-sfCL', stroke: NE.mag, 'stroke-width': 6, opacity: 0.3 }), h('use', { href: '#pb-sfCL', stroke: NE.magCore, 'stroke-width': 2.2 })),
-      h('g', { fill: 'none', 'stroke-linecap': 'round', opacity: 0.6 }, h('use', { href: '#pb-sfFr', stroke: NE.mag, 'stroke-width': 3.2, opacity: 0.3 }), h('use', { href: '#pb-sfFr', stroke: NE.magCore, 'stroke-width': 0.9 })));
+      h('path', { 'data-du': 'pb-sfCL', d: '', fill: 'none', stroke: NE.mag, 'stroke-width': 0.9, opacity: 0.55 }),
+      h('g', { 'stroke-linecap': 'round', fill: 'none', opacity: 0.7 },
+        h('path', { 'data-du': 'pb-sfDA', d: '', stroke: NE.mag, 'stroke-width': 6, opacity: 0.3 }), h('path', { 'data-du': 'pb-sfDA', d: '', stroke: NE.magCore, 'stroke-width': 2.2 })),
+      h('g', { fill: 'none', 'stroke-linecap': 'round', opacity: 0.6 }, h('path', { 'data-du': 'pb-sfFr', d: '', stroke: NE.mag, 'stroke-width': 3.2, opacity: 0.3 }), h('path', { 'data-du': 'pb-sfFr', d: '', stroke: NE.magCore, 'stroke-width': 0.9 })));
 
     // ---------------- plumage under the jacket (only the belly band, the breast bib and the rump show)
     let inner = '';
@@ -348,7 +393,8 @@ export function build({ v }) {
     // belly: soft shade band along the lower edge (flat plumeShade, a touch of volume), then feather rows
     {
       const low = poly.filter(p => p[1] > -26 && p[0] > -70 && p[0] < 96).sort((a, c) => a[0] - c[0]);
-      const band = [...low.map(p => [p[0], p[1] + 2]), ...low.slice().reverse().map(p => [p[0], p[1] - 7])];
+      const lowIn = insetRing(poly, 1.2).filter(p => p[1] > -26 && p[0] > -70 && p[0] < 96).sort((a, c) => a[0] - c[0]);
+      const band = [...lowIn, ...lowIn.slice().reverse().map(p => [p[0], p[1] - 8])];
       inner += h('path', { 'data-detail': tag('T', 'belly-shade-band'), d: 'M' + band.map(pt).join('L') + 'Z', fill: Bk, opacity: 0.55 });
     }
     inner += line(rows([[0.62, 0.62, -0.02, 6, 2.6, 0.02], [0.8, 0.5, -0.3, 5, 2.4, 0.02]]), Bk, 1.2, { 'data-detail': tag('T', 'belly-scallops'), 'data-tract': 'belly' });
@@ -363,12 +409,10 @@ export function build({ v }) {
       inner += line(d, Bd, 0.7, { 'data-detail': tag('T', 'feather-shaft-ticks') });
     }
     inner += line('M-44 6Q-30 11 -12 10.5M-36 1.5Q-26 5 -16 4.6', Bk, 1.1, { 'data-detail': tag('O', 'saddle-compression-crease') });
-    inner += line('M-66 -14Q-61 -7 -59 0M-61 -18Q-55 -13 -53 -7', Bk, 1, { 'data-detail': tag('O', 'vent-fluff') });
+    inner += line('M-62 -13Q-58 -7 -56 -1M-58 -18Q-53 -13 -51 -7', Bk, 1, { 'data-detail': tag('O', 'vent-fluff') });
     b += h('g', { 'data-detail': tag('O', 'body') },
-      spill(o, 1, 0.16),
       h('path', { d: o, fill: P, stroke: INK, 'stroke-width': KW, 'stroke-linejoin': 'round' }),
-      h('clipPath', { id: 'pb-bodyclip' }, h('path', { d: o })),
-      h('g', { 'clip-path': 'url(#pb-bodyclip)' }, inner, h('g', { 'data-detail': tag('O', 'plumage-neon-rim') }, rimIn(o, 0.9, ['pb-gCy', 'pb-gMg']))));
+      h('g', {}, inner), h('g', { 'data-detail': tag('O', 'plumage-neon-rim') }, rimIn(poly, 0.9, ['pb-gCy'])));
 
     // --- belly-on-saddle compression: along the saddle the belly arc is pushed down onto the saddle top (y 13) and
     // spreads a touch, so the weight visibly rests on it. Drawn over the key line.
@@ -388,31 +432,37 @@ export function build({ v }) {
 
     // ---------------- the bomber jacket: the puffed body shell above the ribbed hem, open at the front zipper
     {
-      const HEM = [[-72, -31], [-58, -21], [-30, -12.5], [10, -8], [50, -9.5], [80, -14.5], [96, -19]];   // hem lower edge
+      const HEM = [[-66, -47], [-57, -30], [-32, -14], [10, -8], [50, -9.5], [80, -14.5], [96, -19]];   // hem lower edge
       const ZIP = [[93, -17], [101, -44], [107, -72], [111, -99]];                                          // zipper (open front edge)
-      const clipPoly = [[-240, -260], [124, -260], [119, -101], ...ZIP.slice().reverse().map(p => add(p, [0.6, 0])), ...HEM.slice().reverse().map(p => add(p, [0, 0.4])), [-240, -34]];
-      const shellPts = puff(poly, CTR, 2.2);
-      const shell = smooth(shellPts);
+      const clipPoly = [[-240, -260], [124, -260], [119, -101], ...ZIP.slice().reverse().map(p => add(p, [0.6, 0])), ...HEM.slice().reverse().map(p => add(p, [0, 0.4])), [-240, -60]];
+      const shellAll = puff(poly, CTR, 2.2);
+      const cpPoly = clipPoly;
+      // explicit jacket outline = the puffed shell above the hem and behind the zip, closed by the zip and the hem
+      let i0 = shellAll.findIndex((p, i) => !inside(cpPoly, p) && inside(cpPoly, shellAll[(i + 1) % shellAll.length]));
+      const kept = []; for (let k = 1; k <= shellAll.length; k++) { const p = shellAll[(i0 + k) % shellAll.length]; if (!inside(cpPoly, p)) break; kept.push(p); }
+      const shellPts = [...kept, ...ZIP.slice().reverse(), ...HEM.slice(1, -1).reverse()];
+      const shell = 'M' + resample(shellPts, 3, true).map(pt).join('L') + 'Z';
       const cp = 'M' + clipPoly.map(pt).join('L') + 'Z';
       let jk = '';
       // quilted back panel: a diamond stitch grid clipped to the panel between the yoke and the hem
       {
+        // diamond stitch grid, segments cut analytically to the quilted back panel (no clip, no pattern)
+        const QP = resample([[-60, -40], [-34, -74], [4, -94], [48, -104], [66, -80], [56, -28], [10, -16], [-40, -20]], 4, true);
+        const cut = (a, c) => { const ts = []; for (let i = 0; i < QP.length - 1; i++) { const p0 = QP[i], p1 = QP[i + 1], dx = c[0] - a[0], dy = c[1] - a[1], ex = p1[0] - p0[0], ey = p1[1] - p0[1], den = dx * ey - dy * ex; if (Math.abs(den) < 1e-9) continue; const t = ((p0[0] - a[0]) * ey - (p0[1] - a[1]) * ex) / den, u = ((p0[0] - a[0]) * dy - (p0[1] - a[1]) * dx) / den; if (t >= 0 && t <= 1 && u >= 0 && u <= 1) ts.push(t); } ts.sort((x, y) => x - y); let d = ''; for (let i = 0; i + 1 < ts.length; i += 2) d += `M${pt(lerp2(a, c, ts[i] + 0.01))}L${pt(lerp2(a, c, ts[i + 1] - 0.01))}`; return d; };
         let dq = '';
-        for (let k = -8; k <= 8; k++) { const x = -40 + k * 13; dq += `M${f(x)} -20L${f(x + 60)} -110M${f(x)} -20L${f(x - 60)} -110`; }
-        jk += h('clipPath', { id: 'pb-quiltclip' }, h('path', { d: smooth([[-60, -40], [-34, -74], [4, -94], [48, -104], [66, -80], [56, -28], [10, -16], [-40, -20]]) }));
-        jk += h('g', { 'clip-path': 'url(#pb-quiltclip)', 'data-detail': tag('T', 'jacket-quilt-stitching') },
-          line(dq, HW.jkLo, 1.5), line(dq, HW.jkHi, 0.55, { 'stroke-dasharray': '1.6 1.5', transform: 'translate(0.9 -0.5)' }));
+        for (let k = -8; k <= 8; k++) { const x = -20 + k * 13; dq += cut([x - 50, -10], [x + 50, -120]) + cut([x + 50, -10], [x - 50, -120]); }
+        jk += h('g', { 'data-detail': tag('T', 'jacket-quilt-stitching') }, line(dq, HW.jkLo, 1.5), line(dq, HW.jkHi, 0.45, { transform: 'translate(0.8 -0.4)', opacity: 0.8 }));
       }
       // satin sheen along the upper back + a cyan environment reflection streak
       jk += h('g', { 'data-detail': tag('O', 'jacket-satin-sheen') },
-        line('M-50 -52Q-20 -86 30 -101Q60 -108 88 -104', HW.jkHi, 8, { opacity: 0.55 }),
-        line('M-42 -58Q-14 -86 30 -98', NE.cy, 1.4, { opacity: 0.35 }), line('M40 -104Q64 -108 84 -105', NE.hot, 0.9, { opacity: 0.45 }));
+        line(splitQ(resample([[-50, -52], [-28, -76], [0, -92], [30, -101], [60, -106], [88, -104]], 2)), HW.jkHi, 8, { opacity: 0.55 }),
+        line(crv([[-42, -58], [-20, -78], [4, -91], [30, -98]]), NE.cy, 1.4, { opacity: 0.35 }), line('M40 -104Q64 -108 84 -105', NE.hot, 0.9, { opacity: 0.45 }));
       // yoke seam with magenta piping (stacked-stroke neon) + stitch line under it
-      const YOKE = 'M-58 -46Q-30 -66 2 -80Q40 -94 84 -94Q100 -94 112 -96';
-      jk += h('g', { 'data-detail': tag('O', 'jacket-yoke-seam') }, line(YOKE, HW.seam, 2.2), line('M-56 -41Q-28 -61 4 -75Q40 -89 84 -89', HW.jkHi, 0.55, { 'stroke-dasharray': '1.4 1.6' }));
+      const YOKE = splitQ(resample([[-58, -46], [-30, -63.5], [2, -77.5], [40, -89], [84, -92.5], [112, -96]], 2));
+      jk += h('g', { 'data-detail': tag('O', 'jacket-yoke-seam') }, line(YOKE, HW.seam, 2.2), line(ticks([[-56, -41], [-28, -58.5], [4, -72.5], [40, -84], [84, -87.5]], 3, 0.1), HW.jkHi, 1.4, { 'stroke-linecap': 'butt' }));
       jk += neon(YOKE, NE.mag, NE.magCore, 1.1, { 'data-detail': tag('O', 'jacket-magenta-piping'), transform: 'translate(0 -1.4)' });
       // taped side seam (techwear): dark tape with a hairline highlight
-      jk += h('g', { 'data-detail': tag('O', 'jacket-taped-side-seam') }, line('M36 -92Q44 -62 40 -14', HW.seam, 3.4), line('M38 -92Q46 -62 42 -15', HW.jkHi, 0.6));
+      jk += h('g', { 'data-detail': tag('O', 'jacket-taped-side-seam') }, line(crv([[36, -92], [40.6, -70], [41.6, -46], [40, -14]]), HW.seam, 3.4), line(crv([[38, -92], [42.6, -70], [43.6, -46], [42, -15]]), HW.jkHi, 0.6));
       // fabric compression folds where the jacket bunches above the saddle
       jk += h('g', { 'data-detail': tag('O', 'jacket-compression-folds') },
         line('M-40 -22Q-26 -30 -12 -24M-8 -18Q6 -26 20 -18M-54 -30Q-48 -38 -38 -36', HW.jkLo, 1.5), line('M-38 -24.5Q-26 -32 -14 -26.5M-6 -20.5Q6 -28 18 -20.5', HW.jkHi, 0.6));
@@ -423,7 +473,6 @@ export function build({ v }) {
           h('rect', { x: -pw / 2 - 1.2, y: -ph / 2 + 1.4, width: pw + 2.4, height: ph, rx: 2.4, fill: HW.seam, opacity: 0.55 }),
           h('rect', { x: -pw / 2, y: -ph / 2, width: pw, height: ph, rx: 2.4, fill: HW.patch }),
           neon(`M${-pw / 2 + 1.2} ${-ph / 2 + 1.2}h${pw - 2.4}v${ph - 2.4}h${-(pw - 2.4)}Z`, NE.cy, NE.cyCore, 0.6),
-          glyph(GLYPH.PELICAN, -22, 3.2, gs, NE.cy, { opacity: 0.35, 'stroke-width': 90, stroke: NE.cy, 'stroke-linejoin': 'round' }),
           glyph(GLYPH.PELICAN, -22, 3.2, gs, NE.cyCore));
       }
       // courier number under the patch (reflective acid print)
@@ -433,38 +482,34 @@ export function build({ v }) {
         const gs = 9.4;
         jk += h('g', { 'data-detail': tag('O', 'patch-hanzi'), transform: 'translate(-38 -40) rotate(-26)' },
           h('rect', { x: -6.6, y: -11.6, width: 13.2, height: 23.2, rx: 1.8, fill: NE.mag }),
-          h('rect', { x: -5.2, y: -10.2, width: 10.4, height: 20.4, rx: 1.2, fill: 'none', stroke: NE.magCore, 'stroke-width': 0.5, 'stroke-dasharray': '0.8 0.8' }),
-          h('path', { d: GLYPH.HAN.d, fill: HW.patch, transform: `translate(-4.6 -1.6) scale(${f(gs / 100)})`, 'clip-path': 'url(#pb-han1)' }),
-          h('clipPath', { id: 'pb-han1' }, h('rect', { x: 0, y: -100, width: 100, height: 130 })),
-          h('clipPath', { id: 'pb-han2' }, h('rect', { x: 100, y: -100, width: 100, height: 130 })),
-          h('path', { d: GLYPH.HAN.d, fill: HW.patch, transform: `translate(${f(-4.6 - gs)} 8.6) scale(${f(gs / 100)})`, 'clip-path': 'url(#pb-han2)' }));
+          h('rect', { x: -5.2, y: -10.2, width: 10.4, height: 20.4, rx: 1.2, fill: 'none', stroke: NE.magCore, 'stroke-width': 0.4, opacity: 0.8 }),
+          h('path', { d: HAN[0], fill: HW.patch, transform: `translate(-4.6 -1.6) scale(${f(gs / 100)})` }),
+          h('path', { d: HAN[1], fill: HW.patch, transform: `translate(${f(-4.6 - gs)} 8.6) scale(${f(gs / 100)})` }));
       }
       // clip-on rear light on the back hem (blinks: opacity only, low rate)
-      const rearLight = h('g', { 'data-detail': tag('O', 'clip-on-rear-light'), transform: 'translate(-63.4 -28.6) rotate(-36)' },
+      const rearLight = h('g', { 'data-detail': tag('O', 'clip-on-rear-light'), transform: 'translate(-58.6 -39.6) rotate(-58)' },
         h('rect', { x: -3.6, y: -6.4, width: 7.2, height: 12.8, rx: 2.4, fill: HW.chromeDk, stroke: INK, 'stroke-width': 0.8 }),
-        h('g', { 'data-ref': 'pb-rearLed' }, glowDisc(0, 0, 11, 'pb-rgRed', 0.8), h('rect', { x: -2.2, y: -4.6, width: 4.4, height: 9.2, rx: 1.6, fill: NE.red }),
+        h('g', { 'data-ref': 'pb-rearLed' }, glowDisc(0, 0, 7.5, 'pb-rgRed', 0.8), h('rect', { x: -2.2, y: -4.6, width: 4.4, height: 9.2, rx: 1.6, fill: NE.red }),
           line('M-0.8 -3.4v6.8', NE.magCore, 0.9)));
       // jacket assembly: halo spill, shell, details, the dual neon rim, all clipped to "above the hem, behind the zip"
-      b += h('clipPath', { id: 'pb-jkclip' }, h('path', { d: cp }));
-      b += h('clipPath', { id: 'pb-shellclip' }, h('path', { d: shell }));
-      b += h('g', { 'clip-path': 'url(#pb-jkclip)' },
-        spill(shell, 1.1, 0.22),
-        h('path', { d: shell, fill: 'url(#pb-gJk)', 'data-detail': tag('O', 'jacket-shell') }),
-        h('g', { 'clip-path': 'url(#pb-shellclip)' }, jk, h('g', { 'data-detail': tag('O', 'jacket-neon-rim') }, rimIn(shell, 1))),
-        h('path', { d: shell, fill: 'none', stroke: INK, 'stroke-width': KW + 0.2, 'stroke-linejoin': 'round' }));
+      b += h('g', { 'data-detail': tag('O', 'jacket-shell') },
+        spill(kept, 1, 0.22),
+        h('path', { d: shell, fill: 'url(#pb-gJk)' }),
+        h('g', {}, jk), h('g', { 'data-detail': tag('O', 'jacket-neon-rim') }, rimIn(shellPts, 1)),
+        h('path', { d: ring(shellPts), fill: 'none', stroke: INK, 'stroke-width': KW + 0.2, 'stroke-linecap': 'round' }));
       // shadow the hem casts on the belly feathers
-      const hemD = qline(HEM);
-      b += h('g', { 'clip-path': 'url(#pb-bodyclip)', 'data-detail': tag('O', 'hem-cast-shadow') }, line(hemD, Bd, 5, { opacity: 0.45, transform: 'translate(0 3.6)' }));
+      const hemD = splitQ(resample(HEM, 2));
+      b += h('g', { 'data-detail': tag('O', 'hem-cast-shadow') }, line(splitQ(resample(HEM.slice(1).map(p => add(p, [0, 3.2])), 2)), Bd, 4.4, { opacity: 0.45 }));
       // ribbed hem band + acid reflective strip + magenta top piping (clipped to the shell)
-      const bandD = qline(HEM.map(p => add(p, [0, -4.4])));
-      b += h('g', { 'clip-path': 'url(#pb-shellclip)' },
+      const bandD = splitQ(resample(HEM.map(p => add(p, [0, -4.4])), 2));
+      b += h('g', {},
         h('g', { 'data-detail': tag('O', 'jacket-hem-band') }, line(bandD, INK, 10.6, { 'stroke-linecap': 'butt' }), line(bandD, HW.jkLo, 8.6, { 'stroke-linecap': 'butt' })),
-        line(bandD, HW.jkHi, 7.6, { 'stroke-linecap': 'butt', 'stroke-dasharray': '0.9 1.5', 'data-detail': tag('T', 'jacket-hem-rib') }),
+        line(ticks(HEM.map(p => add(p, [0, -4.4])), 2.4, 7.4), HW.jkHi, 0.9, { 'stroke-linecap': 'butt', 'data-detail': tag('T', 'jacket-hem-rib') }),
         h('g', { 'data-detail': tag('O', 'hem-reflective-strip') }, line(bandD, NE.acid, 1.3, { transform: 'translate(0 -0.4)' }), line(bandD, NE.acidCore, 0.4, { transform: 'translate(0 -0.4)' })), rearLight);
       // zipper: open front edge (tape, chrome teeth, pull with an LED tab)
-      const zipD = qline(ZIP);
+      const zipD = splitQ(resample(ZIP, 2));
       b += h('g', { 'data-detail': tag('O', 'jacket-zipper') }, line(zipD, INK, 3.4), line(zipD, NE.cy, 0.7, { opacity: 0.65, transform: 'translate(1.8 0)' }));
-      b += line(zipD, HW.chrome, 1.5, { 'stroke-dasharray': '0.9 0.9', 'stroke-linecap': 'butt', 'data-detail': tag('T', 'zipper-teeth') });
+      b += line(ticks(ZIP, 1.8, 1.5), HW.chrome, 0.9, { 'stroke-linecap': 'butt', 'data-detail': tag('T', 'zipper-teeth') });
       b += h('g', { 'data-detail': tag('O', 'zipper-pull'), transform: 'translate(106.2 -68) rotate(14)' },
         h('rect', { x: -1.6, y: -1, width: 3.2, height: 3, rx: 0.6, fill: 'url(#pb-gChrome)', stroke: INK, 'stroke-width': 0.5 }),
         h('path', { d: 'M-1.4 2L-1.8 9.6Q0 11 1.8 9.6L1.4 2Z', fill: 'url(#pb-gChrome)', stroke: INK, 'stroke-width': 0.6 }),
@@ -480,8 +525,7 @@ export function build({ v }) {
       const cA = W_(-25, -12), cB = W_(25, -12);
       const cd = smooth([W_(-26, -9), W_(0, -12.5), W_(26, -9), W_(27, -19), W_(0, -22), W_(-27, -19)]);
       gA += h('g', { 'data-detail': tag('O', 'jacket-rib-collar') }, h('path', { d: cd, fill: HW.jkLo, stroke: INK, 'stroke-width': 1.1 }),
-        h('clipPath', { id: 'pb-collarclip' }, h('path', { d: cd })),
-        h('g', { 'clip-path': 'url(#pb-collarclip)' }, (() => { let d = ''; for (let a = -26; a <= 26; a += 2.2) d += `M${pt(W_(a, -8))}L${pt(W_(a * 1.04, -23))}`; return line(d, HW.jkHi, 0.7); })()),
+        (() => { let d = ''; for (let a = -24.2; a <= 24.2; a += 2.2) { const k = 1 - (a / 27) ** 2; d += `M${pt(W_(a, -9.6 - 3 * k))}L${pt(W_(a * 1.02, -18.6 - 3.2 * k))}`; } return line(d, HW.jkHi, 0.7, { 'stroke-linecap': 'butt' }); })(),
         neon(`M${pt(cA)}Q${pt(W_(0, -15.5))} ${pt(cB)}`, NE.mag, NE.magCore, 0.7, { transform: `translate(${pt(mul(NU, -8.6))})` }));
       // neck-base feather tips poking out below the scarf
       let d = '', dl = '';
@@ -496,17 +540,17 @@ export function build({ v }) {
     b += h('g', { 'data-ref': 'pb-scarfA', transform: XF0 }, gA);
     // near trailing end: fabric ribbon + neon centre stripe + chasing LEDs (dash patterns on a pathLength=100 centreline)
     b += h('g', { 'data-detail': tag('O', 'scarf-trailing-end') },
-      h('defs', {}, h('path', { id: 'pb-snCL', 'data-ref': 'pb-snCL', d: '', pathLength: 100 }), h('path', { id: 'pb-snFr', 'data-ref': 'pb-snFringe', d: '' })),
-      h('path', { 'data-ref': 'pb-snFill', d: '', fill: 'url(#pb-gFab)', stroke: INK, 'stroke-width': 1.1, 'stroke-linejoin': 'round' }),
-      h('path', { 'data-ref': 'pb-snKnit', 'data-detail': tag('T', 'scarf-weave'), d: '', fill: 'none', stroke: HW.fabHi, 'stroke-width': 0.7, 'stroke-dasharray': '1.2 1.8' }),
+      h('defs', {}, h('path', { id: 'pb-snCL', 'data-ref': 'pb-snCL', d: '' }), h('path', { id: 'pb-snFr', 'data-ref': 'pb-snFringe', d: '' }),
+        h('path', { id: 'pb-snDA', 'data-ref': 'pb-snDotA', d: '' }), h('path', { id: 'pb-snDB', 'data-ref': 'pb-snDotB', d: '' })),
+      h('path', { 'data-ref': 'pb-snFill', d: '', fill: HW.fab, stroke: INK, 'stroke-width': 1.1, 'stroke-linejoin': 'round' }),
+      h('path', { 'data-ref': 'pb-snKnit', 'data-detail': tag('T', 'scarf-weave'), d: '', fill: 'none', stroke: HW.fabHi, 'stroke-width': 0.7, opacity: 0.7 }),
       h('g', { 'data-detail': tag('O', 'scarf-neon-stripe'), fill: 'none', 'stroke-linecap': 'round' },
-        h('use', { href: '#pb-snCL', stroke: NE.cy, 'stroke-width': 4, opacity: 0.22 }), h('use', { href: '#pb-snCL', stroke: NE.cy, 'stroke-width': 1 })),
-      h('g', { 'data-ref': 'pb-snLedA', 'data-detail': tag('O', 'scarf-led-chase'), 'stroke-dasharray': '0.01 12', 'stroke-linecap': 'round', fill: 'none' },
-        h('use', { href: '#pb-snCL', stroke: NE.cy, 'stroke-width': 7, opacity: 0.3 }), h('use', { href: '#pb-snCL', stroke: NE.cy, 'stroke-width': 3.2 }), h('use', { href: '#pb-snCL', stroke: NE.hot, 'stroke-width': 1.3 })),
-      h('g', { 'data-ref': 'pb-snLedB', 'stroke-dasharray': '0.01 12', 'stroke-linecap': 'round', fill: 'none' },
-        h('use', { href: '#pb-snCL', stroke: NE.mag, 'stroke-width': 7, opacity: 0.3 }), h('use', { href: '#pb-snCL', stroke: NE.mag, 'stroke-width': 3.2 }), h('use', { href: '#pb-snCL', stroke: NE.hot, 'stroke-width': 1.3 })),
+        h('path', { 'data-du': 'pb-snCL', d: '', stroke: NE.cy, 'stroke-width': 4, opacity: 0.22 }), h('path', { 'data-du': 'pb-snCL', d: '', stroke: NE.cy, 'stroke-width': 1 })),
+      h('g', { 'data-detail': tag('O', 'scarf-led-chase'), 'stroke-linecap': 'round', fill: 'none' },
+        h('path', { 'data-du': 'pb-snDA', d: '', stroke: NE.cy, 'stroke-width': 7, opacity: 0.3 }), h('path', { 'data-du': 'pb-snDA', d: '', stroke: NE.cy, 'stroke-width': 3.2 }), h('path', { 'data-du': 'pb-snDA', d: '', stroke: NE.hot, 'stroke-width': 1.3 }),
+        h('path', { 'data-du': 'pb-snDB', d: '', stroke: NE.mag, 'stroke-width': 7, opacity: 0.3 }), h('path', { 'data-du': 'pb-snDB', d: '', stroke: NE.mag, 'stroke-width': 3.2 }), h('path', { 'data-du': 'pb-snDB', d: '', stroke: NE.hot, 'stroke-width': 1.3 })),
       h('g', { 'data-detail': tag('O', 'scarf-fibre-fringe'), fill: 'none', 'stroke-linecap': 'round' },
-        h('use', { href: '#pb-snFr', stroke: NE.cy, 'stroke-width': 3.6, opacity: 0.3 }), h('use', { href: '#pb-snFr', stroke: NE.cy, 'stroke-width': 1.1 }), h('use', { href: '#pb-snFr', stroke: NE.cyCore, 'stroke-width': 0.45 })));
+        h('path', { 'data-du': 'pb-snFr', d: '', stroke: NE.cy, 'stroke-width': 3.6, opacity: 0.3 }), h('path', { 'data-du': 'pb-snFr', d: '', stroke: NE.cy, 'stroke-width': 1.1 }), h('path', { 'data-du': 'pb-snFr', d: '', stroke: NE.cyCore, 'stroke-width': 0.45 })));
     {
       let hatch = '';
       for (let a = -21; a <= 4; a += 3.1) hatch += `M${pt(W_(a, -12.6))}L${pt(W_(a + 2.4, -8.2))}`;
@@ -524,13 +568,13 @@ export function build({ v }) {
     }
     // short front end hanging from the knot
     b += h('g', { 'data-detail': tag('O', 'scarf-hanging-end') },
-      h('defs', {}, h('path', { id: 'pb-shCL', 'data-ref': 'pb-shCL', d: '', pathLength: 100 }), h('path', { id: 'pb-shFr', 'data-ref': 'pb-shFringe', d: '' })),
-      h('path', { 'data-ref': 'pb-shFill', d: '', fill: 'url(#pb-gFab)', stroke: INK, 'stroke-width': 1, 'stroke-linejoin': 'round' }),
-      h('use', { href: '#pb-shCL', fill: 'none', stroke: NE.mag, 'stroke-width': 0.9 }),
-      h('g', { 'data-ref': 'pb-shLed', 'stroke-dasharray': '0.01 16', 'stroke-linecap': 'round', fill: 'none' },
-        h('use', { href: '#pb-shCL', stroke: NE.acid, 'stroke-width': 6, opacity: 0.3 }), h('use', { href: '#pb-shCL', stroke: NE.acid, 'stroke-width': 2.8 }), h('use', { href: '#pb-shCL', stroke: NE.acidCore, 'stroke-width': 1.1 })),
+      h('defs', {}, h('path', { id: 'pb-shCL', 'data-ref': 'pb-shCL', d: '' }), h('path', { id: 'pb-shFr', 'data-ref': 'pb-shFringe', d: '' }), h('path', { id: 'pb-shDA', 'data-ref': 'pb-shDotA', d: '' })),
+      h('path', { 'data-ref': 'pb-shFill', d: '', fill: HW.fab, stroke: INK, 'stroke-width': 1, 'stroke-linejoin': 'round' }),
+      h('path', { 'data-du': 'pb-shCL', d: '', fill: 'none', stroke: NE.mag, 'stroke-width': 0.9 }),
+      h('g', { 'stroke-linecap': 'round', fill: 'none' },
+        h('path', { 'data-du': 'pb-shDA', d: '', stroke: NE.acid, 'stroke-width': 6, opacity: 0.3 }), h('path', { 'data-du': 'pb-shDA', d: '', stroke: NE.acid, 'stroke-width': 2.8 }), h('path', { 'data-du': 'pb-shDA', d: '', stroke: NE.acidCore, 'stroke-width': 1.1 })),
       h('g', { 'data-detail': tag('O', 'scarf-fringe-magenta'), fill: 'none', 'stroke-linecap': 'round' },
-        h('use', { href: '#pb-shFr', stroke: NE.mag, 'stroke-width': 3.4, opacity: 0.3 }), h('use', { href: '#pb-shFr', stroke: NE.mag, 'stroke-width': 1 }), h('use', { href: '#pb-shFr', stroke: NE.magCore, 'stroke-width': 0.4 })));
+        h('path', { 'data-du': 'pb-shFr', d: '', stroke: NE.mag, 'stroke-width': 3.4, opacity: 0.3 }), h('path', { 'data-du': 'pb-shFr', d: '', stroke: NE.mag, 'stroke-width': 1 }), h('path', { 'data-du': 'pb-shFr', d: '', stroke: NE.magCore, 'stroke-width': 0.4 })));
     // the knot is the scarf's power pod: a fabric knot around a round LED hub (pulses slowly)
     b += h('g', { 'data-ref': 'pb-scarfC', transform: XF0 }, h('g', { 'data-detail': tag('O', 'scarf-knot') },
       h('ellipse', { cx: f(KNOT[0]), cy: f(KNOT[1]), rx: 8, ry: 7, fill: 'url(#pb-gFab)', stroke: INK, 'stroke-width': 1.1, transform: `rotate(-62 ${f(KNOT[0])} ${f(KNOT[1])})` }),
@@ -550,7 +594,10 @@ export function build({ v }) {
     const po = 'M-26 -3L108 -3C100 4 88 13 70 21C52 28 30 31.5 10 31.5C-8 31.5 -24 30 -36 25.5C-40 21 -40 15 -37 10C-34 5 -30 0 -26 -3Z';
     const edge = resample([[108, -3], [92, 10], [70, 21], [42, 29.6], [10, 31.5], [-14, 30.6], [-36, 25.5], [-39.4, 17], [-37, 10]], 2);
     // circuit tattoo: PCB traces with 45° bends, via pads and a tiny chip, in cyan ink that glows (emissive)
-    const TR = 'M-30 13h10l6 -6h16l5 5h20l6 -6h14l5 5h14M-24 21h18l5 5h14l4 -4h20l6 6M6 12l6 -8h22M44 12l5 6h16l6 -6h8M62 6h14l6 -5M-8 26h10M30 26v3.6';
+    // (traces as separate straight segments: zero enclosed area, so they never hit-test over the pouch)
+    const TRP = [[[-30, 13], [-20, 13], [-14, 7], [2, 7], [7, 12], [27, 12], [33, 6], [47, 6], [52, 11], [66, 11]], [[-24, 21], [-6, 21], [-1, 26], [13, 26], [17, 22], [37, 22], [43, 28]],
+      [[6, 12], [12, 4], [34, 4]], [[44, 12], [49, 18], [65, 18], [71, 12], [79, 12]], [[62, 6], [76, 6], [82, 1]], [[-8, 26], [2, 26]], [[30, 26], [30, 29.6]], [[66, 11], [88, 11]]];
+    const TR = TRP.map(P => P.slice(1).map((q, i) => `M${pt(P[i])}L${pt(q)}`).join('')).join('');
     const PADS = [[-30, 13], [88, 11], [-24, 21], [57, 22], [34, 4], [79, 12], [82, 1], [2, 26], [30, 29.6], [6, 12]];
     const pads = PADS.map(([x, y]) => `M${x} ${y}h0`).join('');
     s.pouch = h('g', { 'data-detail': tag('O', 'pouch') },
@@ -573,8 +620,8 @@ export function build({ v }) {
           line('M-3.2 -2.6v-1.6M-1 -2.6v-1.6M1.2 -2.6v-1.6M3.4 -2.6v-1.6M-3.2 2.6v1.6M-1 2.6v1.6M1.2 2.6v1.6M3.4 2.6v1.6', NE.cy, 0.5),
           h('circle', { cx: -2.6, cy: -0.9, r: 0.6, fill: NE.cyCore })),
         line('M-33 14q-1.6 4 -0.6 8M-28.4 16q-1.4 4.4 -0.4 8.6M-23.6 17.6q-1.2 4.4 0 8.6M-18.8 19q-1 4.2 0 8', Od, 0.9, { 'data-detail': tag('T', 'pouch-throat-wrinkles'), opacity: 0.8 }),
-        line('M4 22q3 3 7 3M18 24q3 3 7 2.6M32 23q3 3 7 1.6M46 19.5q3 2.6 6.6 1', Od, 0.9, { 'data-detail': tag('T', 'pouch-sag-folds'), opacity: 0.8 }),
-        h('g', { 'data-detail': tag('O', 'pouch-neon-rim') }, rimIn(po, 0.8, ['pb-gCyBot', 'pb-gCy']))),
+        line('M4 22q3 3 7 3M18 24q3 3 7 2.6M32 23q3 3 7 1.6M46 19.5q3 2.6 6.6 1', Od, 0.9, { 'data-detail': tag('T', 'pouch-sag-folds'), opacity: 0.8 })),
+        h('g', { 'data-detail': tag('O', 'pouch-neon-rim') }, rimIn([[-26, -3], [40, -3], [108, -3], [92, 10], [70, 21], [42, 29.6], [10, 31.5], [-14, 30.6], [-36, 25.5], [-39.4, 17], [-37, 10]], 0.8, ['pb-gCyBot', 'pb-gCy'])),
       line(splitQ(edge), Re, 1.4, { 'data-detail': tag('O', 'pouch-edge-line') }),
       line('M14 1.6C36 6 60 5.4 90 0.6', NE.hot, 1.6, { 'data-detail': tag('O', 'pouch-highlight'), opacity: 0.75 }),
       line('M-12 -1q4 3 8 0q4 3 8 0q4 3 8 0q4 3 8 0q4 3 8 0q4 3 8 0q4 3 8 0q4 3 8 0q4 3 8 0q4 2.6 8 0q4 2.2 8 0q4 2 8 0', Re, 0.9, { 'data-detail': tag('O', 'pouch-rim-folds') }));
@@ -598,9 +645,8 @@ export function build({ v }) {
     const nail = 'M114 -6.6C120 -7.6 126 -7 129.6 -3.8C132.6 0.5 131.8 6 128.6 10.8C127.6 7.6 125 5.2 121 4L114 3.4Z';
     s.billUpper = h('g', { 'data-detail': tag('O', 'bill-upper') },
       h('path', { d: ub, fill: K }),
-      h('clipPath', { id: 'pb-billclip' }, h('path', { d: ub })),
-      h('g', { 'clip-path': 'url(#pb-billclip)' }, h('path', { d: ub, fill: 'url(#pb-gBillSh)', 'data-detail': tag('O', 'bill-sheen') }),
-        h('g', { 'data-detail': tag('O', 'culmen-neon-rim') }, rimIn(ub, 0.7, ['pb-gMgTop']))),
+      h('path', { d: ub, fill: 'url(#pb-gBillSh)', 'data-detail': tag('O', 'bill-sheen') }),
+        h('g', { 'data-detail': tag('O', 'culmen-neon-rim') }, rimIn([[-4, -13], [20, -13.4], [60, -9.8], [100, -7.1], [121, -6.7], [121, 3.1], [60, 3.6], [-2, 4.1], [-6, -4]], 0.7, ['pb-gMgTop'])),
       line('M-2 3.7L119 2.9', Re, 1.4, { 'data-detail': tag('O', 'tomium-line') }),
       line('M24 -0.6C56 -0.8 88 -1.4 116 -1.6', Re, 0.8, { 'data-detail': tag('O', 'maxillary-groove') }),
       line('M28 -4.2l-0.8 3.2M33 -4.4l-0.8 3.3M38 -4.4l-0.8 3.3M43 -4.3l-0.8 3.2M48 -4.1l-0.7 3', Re, 0.7, { 'data-detail': tag('T', 'bill-growth-ridges') }),
@@ -618,6 +664,56 @@ export function build({ v }) {
         line('M129.8 1Q130.2 4.6 128.6 8', NE.cy, 0.9, { 'data-detail': tag('O', 'nail-cyan-reflection') }),
         line('M117 2.6Q121 2.4 124.6 4.2', NE.mag, 0.8, { opacity: 0.9, 'data-detail': tag('O', 'nail-magenta-reflection') }),
         line('M126.2 5.6C127.6 7 128.2 8.6 128.6 10.8', INK, 0.9, { 'data-detail': tag('O', 'nail-under-hook') })));
+  }
+
+  // ================================================================ VISOR + EARPIECE (head space)
+  // The translucent lens is drawn at the top of the HEAD slot, under the eye slot, so the eye always reads clearly
+  // "through" the glass (frame, glints and HUD sit above it). The frame, glints, HUD glyphs, earpiece and antenna live in the CREST
+  // slot: update() writes inverse(crest)·head on pb-visorG each frame, so they are drawn in exact head coordinates
+  // but above the eye.
+  let visor, lensG;
+  {
+    const lensP = [[-5.6, -13.2], [5, -16.4], [15.4, -15.4], [22, -11.4], [23.4, -7.4], [20.2, -3], [9, -0.4], [-1.8, -0.9], [-6.6, -5.4]];
+    const lens = smooth(lensP);
+    // scanlines cut to the lens analytically (no clip): x-extent of the lens polygon at each y
+    const LD = resample(lensP, 6, true);
+    const scanAt = (y, m = 0.3) => { const xs = []; for (let i = 0; i < LD.length - 1; i++) { const [x0, y0] = LD[i], [x1, y1] = LD[i + 1]; if ((y0 > y) !== (y1 > y)) xs.push(x0 + (x1 - x0) * (y - y0) / (y1 - y0)); } xs.sort((a, c) => a - c); return xs.length >= 2 ? `M${f(xs[0] + m)} ${f(y)}H${f(xs[xs.length - 1] - m)}` : ''; };
+    let scan = ''; for (let y = -15.4; y < 0; y += 1.3) scan += scanAt(y);
+    const eye = EYE;
+    const dg = (n, x) => h('path', { 'data-ref': 'pb-hudD' + n, d: GLYPH.DIG[2 + n], fill: NE.hot, stroke: NE.cy, 'stroke-width': 9, 'paint-order': 'stroke', transform: `translate(${f(x)} -3.2) scale(0.05)` });
+    lensG = h('g', { 'data-detail': tag('O', 'visor-lens') },
+        h('path', { d: lens, fill: 'none', stroke: NE.cy, 'stroke-width': 5, opacity: 0.16 }),
+        h('path', { d: lens, fill: HW.lensDk, 'fill-opacity': 0.34 }),
+        h('path', { d: lens, fill: 'url(#pb-gLens)' }),
+        h('g', { 'data-detail': tag('T', 'visor-scanlines') }, line(scan, NE.cyCore, 0.28, { opacity: 0.4, 'stroke-linecap': 'butt' }),
+          line(scanAt(-9.2, 0.6), NE.cy, 1.4, { opacity: 0.25 })),
+        h('path', { d: lens, fill: 'none', stroke: NE.cy, 'stroke-width': 0.9 }));
+    visor = h('g', { 'data-ref': 'pb-visorG' },
+      // earpiece: chrome pod on the side of the skull, magenta status ring, mic stub
+      h('g', { 'data-detail': tag('O', 'earpiece') },
+        h('path', { d: 'M-8 -7.4L-17 -6.4', fill: 'none', stroke: INK, 'stroke-width': 3.2, 'stroke-linecap': 'round' }),
+        h('path', { d: 'M-8 -7.4L-17 -6.4', fill: 'none', stroke: HW.chromeMid, 'stroke-width': 1.6, 'stroke-linecap': 'round', 'data-detail': tag('O', 'visor-arm') }),
+        h('circle', { cx: -19, cy: -5.4, r: 5.2, fill: 'url(#pb-gChrome)', stroke: INK, 'stroke-width': 1 }),
+        h('circle', { cx: -19, cy: -5.4, r: 2.8, fill: HW.seam }),
+        h('g', { 'data-detail': tag('O', 'earpiece-led-ring') }, neon('M-19 -8.2A2.8 2.8 0 1 1 -19 -2.6A2.8 2.8 0 1 1 -19 -8.2', NE.mag, NE.magCore, 0.55)),
+        h('path', { d: 'M-15.4 -1.6Q-10 4 -2 5.4', fill: 'none', stroke: INK, 'stroke-width': 1.7, 'stroke-linecap': 'round', 'data-detail': tag('O', 'mic-boom') }),
+        h('path', { d: 'M-15.4 -1.6Q-10 4 -2 5.4', fill: 'none', stroke: HW.chromeMid, 'stroke-width': 0.7, 'stroke-linecap': 'round' }),
+        h('circle', { cx: -1.6, cy: 5.4, r: 1.3, fill: HW.chromeDk, stroke: INK, 'stroke-width': 0.5 })),
+      // antenna: sways with the crest (follow-through), tip LED
+      h('g', { 'data-ref': 'pb-antenna', 'data-detail': tag('O', 'earpiece-antenna'), transform: 'rotate(0 -19 -8)' },
+        h('path', { d: 'M-19.4 -9.6Q-21 -22 -25 -35', fill: 'none', stroke: INK, 'stroke-width': 2, 'stroke-linecap': 'round' }),
+        h('path', { d: 'M-19.4 -9.6Q-21 -22 -25 -35', fill: 'none', stroke: HW.chromeMid, 'stroke-width': 0.9, 'stroke-linecap': 'round' }),
+        h('g', { 'data-ref': 'pb-antTip', 'data-detail': tag('O', 'antenna-tip-led') }, glowDisc(-25, -35.4, 6, 'pb-rgMg'), h('circle', { cx: -25, cy: -35.4, r: 1.5, fill: NE.mag }), h('circle', { cx: -25.3, cy: -35.7, r: 0.6, fill: NE.magCore }))),
+      line(crv([[-6, -13], [5, -16.8], [15.4, -15.6], [20.6, -14], [22.6, -11]]), INK, 2.2, { 'data-detail': tag('O', 'visor-frame') }),
+      line(crv([[-4.4, -13.4], [5, -16.6], [15, -15.6]]), HW.chromeMid, 0.7),
+      h('g', { 'data-detail': tag('O', 'visor-glint') }, line(crv([[-1.8, -12.2], [6, -14.4], [14.4, -13.8]]), NE.hot, 0.9, { opacity: 0.85 }),
+        line(crv([[16.6, -4], [19.8, -5.2], [21.2, -7.4]]), NE.hot, 0.6, { opacity: 0.7 })),
+      // HUD glyphs on the lens: live speed readout, a delta arrow, signal bars, and the target reticle on the pupil
+      h('g', { 'data-detail': tag('O', 'visor-hud-speed'), opacity: 0.95 }, dg(0, 11.6), dg(1, 14.7),
+        h('path', { d: 'M18.2 -3.6l1.4 -2.2l1.4 2.2Z', fill: NE.acid })),
+      line('M-3.6 -4.2h3.2M-3.6 -6.2h2.2M-3.6 -8.2h1.2', NE.cyCore, 0.5, { opacity: 0.9, 'data-detail': tag('O', 'visor-hud-bars') }),
+      h('g', { 'data-ref': 'pb-reticle', 'data-detail': tag('O', 'hud-target-reticle'), transform: `translate(${f(eye[0])} ${f(eye[1])})`, opacity: 0.85 },
+        line('M-6.2 0h-2M6.2 0h2M0 -6.2v-1.6M0 6.2v1.6M-4.7 -4.7l-1.2 -1.2M4.7 -4.7l1.2 -1.2M4.7 4.7l1.2 1.2M-4.7 4.7l-1.2 1.2', NE.cyCore, 0.45)));
   }
 
   // ================================================================ HEAD (head-local, skull r≈26)
@@ -642,13 +738,12 @@ export function build({ v }) {
     }
     inner += line('M6 -26.4l-3.6 1.8M12 -24.6l-3.8 1.6M18 -21.6l-3.6 1.4M9 -20.4l-3.4 1.2M15 -18.6l-3 1', Bk, 0.9, { 'data-detail': tag('T', 'forehead-feather-flecks') });
     inner += line('M-27 8Q-22 12 -16 13M-22 14Q-17 16 -12 16.4', Bk, 1, { 'data-detail': tag('O', 'nape-edge') });
-    inner += h('g', { 'data-detail': tag('O', 'head-neon-rim') }, rimIn(o, 0.8));
     const keyPts = resample([[21, 6], [12, 14], [0, 19], [-14, 18.5], [-26, 12], [-30.5, -3], [-25, -19], [-11, -29], [5, -30.5], [19, -25.6], [29, -17], [37, -9.6], [47.5, -4.4]], 2);
     s.head = h('g', { 'data-detail': tag('O', 'head') },
-      spill(o, 0.8, 0.2),
       h('path', { d: o, fill: P }),
       h('clipPath', { id: 'pb-headclip' }, h('path', { d: o })),
       h('g', { 'clip-path': 'url(#pb-headclip)' }, inner),
+      h('g', { 'data-detail': tag('O', 'head-neon-rim') }, rimIn(outline, 0.8)),
       key(splitQ(keyPts)),
       // feathered forehead point pressing onto the culmen base (P. onocrotalus field mark)
       h('g', { 'data-detail': tag('O', 'forehead-feather-point') },
@@ -658,6 +753,7 @@ export function build({ v }) {
       // gape: the mouth line runs back under the eye and turns up at the corner (a cool little smirk)
       line(splitQ(resample([[40, 9.2], [26, 6.4], [14, 3.8], [5, 1.8], [0.4, 0.6]], 2)), Re, 1.8, { 'data-detail': tag('O', 'gape-smile-line') }),
       h('g', { 'data-ref': 'pb-smile' }, line('M0.4 0.6Q-1.6 -0.4 -1.8 -2.8', Re, 1.3, { 'data-detail': tag('O', 'smile-crease') })),
+      lensG,
       // closed-eye line (blink / happy squint); the eye slot itself squashes to nothing
       line('M-1.4 -7.6Q6 -12.2 13.6 -8', N, 2, { 'data-ref': 'pb-lidClosed', style: 'display:none' }));
   }
@@ -690,54 +786,6 @@ export function build({ v }) {
     // brow ridge: the feathered supraorbital edge; lowers + tilts for focus, lifts for surprise (reads above the visor)
     h('g', { 'data-ref': 'pb-brow' }, line('M-6.8 -9.4Q0.6 -13.4 9.8 -9.8', N, 1.5, { 'data-detail': tag('O', 'brow-ridge') }),
       line('M-3.4 -11.4l-1.2 -2M1 -12.2l-0.7 -2.2M5.4 -11.8l-0.2 -2.2', N, 0.9, { 'data-detail': tag('T', 'brow-feather-tips') })));
-
-  // ================================================================ VISOR + EARPIECE (head space; lives in the crest slot)
-  // update() writes inverse(crest)·head on pb-visorG each frame, so this group is drawn in exact head coordinates but
-  // ABOVE the eye slot: the eye reads through the translucent lens.
-  let visor;
-  {
-    const lensP = [[-5.6, -13.2], [5, -16.4], [15.4, -15.4], [22, -11.4], [23.4, -7.4], [20.2, -3], [9, -0.4], [-1.8, -0.9], [-6.6, -5.4]];
-    const lens = smooth(lensP);
-    let scan = ''; for (let y = -15.6; y < 0; y += 1.3) scan += `M-8 ${f(y)}H25`;
-    const eye = EYE;
-    const dg = (n, x) => h('path', { 'data-ref': 'pb-hudD' + n, d: GLYPH.DIG[2 + n], fill: NE.cyCore, transform: `translate(${f(x)} -3.6) scale(0.042)` });
-    visor = h('g', { 'data-ref': 'pb-visorG' },
-      // earpiece: chrome pod on the side of the skull, magenta status ring, mic stub
-      h('g', { 'data-detail': tag('O', 'earpiece') },
-        h('path', { d: 'M-8 -7.4L-17 -6.4', fill: 'none', stroke: INK, 'stroke-width': 3.2, 'stroke-linecap': 'round' }),
-        h('path', { d: 'M-8 -7.4L-17 -6.4', fill: 'none', stroke: HW.chromeMid, 'stroke-width': 1.6, 'stroke-linecap': 'round', 'data-detail': tag('O', 'visor-arm') }),
-        h('circle', { cx: -19, cy: -5.4, r: 5.2, fill: 'url(#pb-gChrome)', stroke: INK, 'stroke-width': 1 }),
-        h('circle', { cx: -19, cy: -5.4, r: 2.8, fill: HW.seam }),
-        h('g', { 'data-detail': tag('O', 'earpiece-led-ring') }, neon('M-19 -8.2A2.8 2.8 0 1 1 -19 -2.6A2.8 2.8 0 1 1 -19 -8.2', NE.mag, NE.magCore, 0.55)),
-        h('path', { d: 'M-15.4 -1.6Q-10 4 -2 5.4', fill: 'none', stroke: INK, 'stroke-width': 1.7, 'stroke-linecap': 'round', 'data-detail': tag('O', 'mic-boom') }),
-        h('path', { d: 'M-15.4 -1.6Q-10 4 -2 5.4', fill: 'none', stroke: HW.chromeMid, 'stroke-width': 0.7, 'stroke-linecap': 'round' }),
-        h('circle', { cx: -1.6, cy: 5.4, r: 1.3, fill: HW.chromeDk, stroke: INK, 'stroke-width': 0.5 })),
-      // antenna: sways with the crest (follow-through), tip LED
-      h('g', { 'data-ref': 'pb-antenna', 'data-detail': tag('O', 'earpiece-antenna'), transform: 'rotate(0 -19 -8)' },
-        h('path', { d: 'M-19.4 -9.6Q-21 -22 -25 -35', fill: 'none', stroke: INK, 'stroke-width': 2, 'stroke-linecap': 'round' }),
-        h('path', { d: 'M-19.4 -9.6Q-21 -22 -25 -35', fill: 'none', stroke: HW.chromeMid, 'stroke-width': 0.9, 'stroke-linecap': 'round' }),
-        h('g', { 'data-ref': 'pb-antTip', 'data-detail': tag('O', 'antenna-tip-led') }, glowDisc(-25, -35.4, 6, 'pb-rgMg'), h('circle', { cx: -25, cy: -35.4, r: 1.5, fill: NE.mag }), h('circle', { cx: -25.3, cy: -35.7, r: 0.6, fill: NE.magCore }))),
-      // lens: flat translucent cyan + gradient sheen, dark top frame, stacked cyan edge light, glints
-      h('g', { 'data-detail': tag('O', 'visor-lens') },
-        h('path', { d: lens, fill: 'none', stroke: NE.cy, 'stroke-width': 5, opacity: 0.16 }),
-        h('path', { d: lens, fill: HW.lens, 'fill-opacity': 0.2 }),
-        h('path', { d: lens, fill: 'url(#pb-gLens)' }),
-        h('clipPath', { id: 'pb-lensclip' }, h('path', { d: lens })),
-        h('g', { 'clip-path': 'url(#pb-lensclip)', 'data-detail': tag('T', 'visor-scanlines') }, line(scan, NE.cyCore, 0.28, { opacity: 0.4, 'stroke-linecap': 'butt' }),
-          line('M-8 -9.2H25', NE.cy, 1.4, { opacity: 0.25 })),
-        h('path', { d: lens, fill: 'none', stroke: NE.cy, 'stroke-width': 0.9 })),
-      line('M-6 -13Q5 -16.8 15.4 -15.6Q20.6 -14.2 22.6 -11', INK, 2.2, { 'data-detail': tag('O', 'visor-frame') }),
-      line('M-4.4 -13.4Q5 -16.6 15 -15.6', HW.chromeMid, 0.7),
-      line('M-1.8 -12.2Q6 -14.6 14.4 -13.8', NE.hot, 0.9, { opacity: 0.85, 'data-detail': tag('O', 'visor-glint') }),
-      line('M16.6 -4Q19.8 -5.2 21.2 -7.4', NE.hot, 0.6, { opacity: 0.7 }),
-      // HUD glyphs on the lens: live speed readout, a delta arrow, signal bars, and the target reticle on the pupil
-      h('g', { 'data-detail': tag('O', 'visor-hud-speed'), opacity: 0.95 }, dg(0, 12.2), dg(1, 14.8),
-        h('path', { d: 'M17.8 -4.2l1.2 -1.9l1.2 1.9Z', fill: NE.acid })),
-      line('M-3.6 -4.2h3.2M-3.6 -6.2h2.2M-3.6 -8.2h1.2', NE.cyCore, 0.5, { opacity: 0.9, 'data-detail': tag('O', 'visor-hud-bars') }),
-      h('g', { 'data-ref': 'pb-reticle', 'data-detail': tag('O', 'hud-target-reticle'), transform: `translate(${f(eye[0])} ${f(eye[1])})`, opacity: 0.85 },
-        h('circle', { r: 4.2, fill: 'none', stroke: NE.cyCore, 'stroke-width': 0.4, 'stroke-dasharray': '2.2 1.1' }),
-        line('M-5.8 0h-1.4M5.8 0h1.4M0 -5.8v-1.4M0 5.8v1.4', NE.cyCore, 0.45)));
-  }
 
   // ================================================================ CREST (crest-local: +x back along the nape, +y up)
   {
@@ -807,16 +855,29 @@ function ribbon(cl, w0, w1, t, seed) {
   d += `L${pt(Rr[0])}Z`;
   // centreline (LED track) and the weave line just off it
   const c = cl.map((q, i) => lerp2(L[i], Rr[i], 0.5));
-  const knit = qline(cl.map((q, i) => lerp2(L[i], Rr[i], 0.78)));
+  const knit = splitQ(cl.map((q, i) => lerp2(L[i], Rr[i], 0.78)));
   // fibre-optic fringe at the free end (5 fibres; the tips wave slowly)
   let fr = ''; const e0 = L[n - 1], e1 = Rr[n - 1], dn = norm(sub(cl[n - 1], cl[n - 2]));
   for (let k = 0; k <= 4; k++) { const p = lerp2(e0, e1, 0.1 + 0.8 * k / 4); fr += `M${pt(p)}l${f(dn[0] * 9 + (k - 2) * 0.6)} ${f(dn[1] * 9 + Math.sin(t * 2.2 + k) * 1.4)}`; }
-  return { d, cl: qline(c), knit, fr };
+  return { d, cl: splitQ(c), c, knit, fr };
+}
+
+// LED studs along a centreline: arc-length spaced dots ("M x y h0" = zero area), alternating colours A/B; `ph` moves
+// them down the scarf (seamless: the pattern repeats every 2 spacings, and so does the colour parity).
+function ledDots(c, sp, ph) {
+  const cum = [0]; for (let i = 1; i < c.length; i++) cum.push(cum[i - 1] + Math.hypot(c[i][0] - c[i - 1][0], c[i][1] - c[i - 1][1]));
+  const L = cum[cum.length - 1]; let a = '', b = '', k = 1;
+  for (let j = 0; ; j++) {
+    const sd = ph + (j - 2) * sp; if (sd > L - 3) break; if (sd < 3) continue;
+    while (k < c.length - 1 && cum[k] < sd) k++;
+    const u = (sd - cum[k - 1]) / ((cum[k] - cum[k - 1]) || 1), p = lerp2(c[k - 1], c[k], u), m = `M${pt(p)}h0`;
+    if (j % 2) b += m; else a += m;
+  }
+  return [a || 'M0 0', b || 'M0 0'];
 }
 
 export const detailItems = [
   ['neck', 'O', 'S-neck deformer outline in cool-white plume with an ink key line (fixed command count)'],
-  ['neck-neon-spill', 'O', 'outside halo of the neck: cyan on the nape side fading to magenta on the throat side (gradient stroke)'],
   ['neck-nape-shade', 'O', 'soft plumeShade band down the back of the neck'],
   ['neck-feather-flow', 'T', 'contour-feather scallops that ride on and stretch with the neck deformer'],
   ['neck-feather-flow-fine', 'T', 'second, finer staggered lane of neck flow scallops'],
@@ -961,7 +1022,11 @@ export const detailItems = [
 export function attach(svg) {
   const r = refs(svg, 'pb-');
   const st = new WeakMap();   // per element, per attribute: last written value (no getAttribute / key strings per call)
-  const set = (el, k, val) => { if (!el) return; let m = st.get(el); if (!m) st.set(el, m = {}); if (m[k] !== val) { m[k] = val; if (k === 'd') el.setAttribute('d', val); else if (k === 'op') el.style.opacity = val; else if (k === 'show') el.style.display = val ? '' : 'none'; else el.setAttribute(k, val); } };
+  // per-frame geometry is mirrored into real <path> copies (data-du = source id) instead of <use>: changing a <use>
+  // target rebuilds its shadow instance every frame, a plain attribute write does not
+  const DU = {};
+  for (const el of svg.querySelectorAll('[data-du]')) (DU[el.getAttribute('data-du')] ||= []).push(el);
+  const set = (el, k, val) => { if (!el) return; let m = st.get(el); if (!m) st.set(el, m = {}); if (m[k] !== val) { m[k] = val; if (k === 'd') { el.setAttribute('d', val); const mm = el.id && DU[el.id]; if (mm) for (const e of mm) e.setAttribute('d', val); } else if (k === 'op') el.style.opacity = val; else if (k === 'show') el.style.display = val ? '' : 'none'; else el.setAttribute(k, val); } };
   const DIG = GLYPH.DIG;
   let lastNeck = '';
   return {
@@ -1002,7 +1067,7 @@ export function attach(svg) {
         const chain = (p0, angs, len, k, dA = 0, dL = 1) => { const Pp = [p0]; let p = p0; angs.forEach((a, i) => { const aa = (a + dA * (i + 1) / angs.length - (bj.rot || 0)) * D2R; p = add(p, [Math.cos(aa) * len * dL, Math.sin(aa) * len * dL]); Pp.push(p); }); return resample(Pp, k); };
         const A = sc.tails[0], B = sc.tails[1] || sc.tails[0];
         nearCL = chain(place(TAIL0.near), A.a, A.len * 1.25, 3);
-        farCL = chain(place(TAIL0.far), A.a.map((a, i) => a + 12 + 2 * Math.sin(tt * 2.6 + i)), A.len * 1.0, 3, 10);
+        farCL = chain(place(TAIL0.far), A.a.map((a, i) => a + 5 + 2 * Math.sin(tt * 2.6 + i)), A.len * 1.0, 3, 6);
         hangCL = chain(place(KNOT), B.a, B.len * 0.95, 3);
       } else {
         const hopA = sN => {
@@ -1024,11 +1089,12 @@ export function attach(svg) {
       set(r.sfFill, 'd', far.d); set(r.sfCL, 'd', far.cl); set(r.sfFringe, 'd', far.fr);
       const hang = ribbon(hangCL, 15, 12, tt * 0.5, 2.2);
       set(r.shFill, 'd', hang.d); set(r.shCL, 'd', hang.cl); set(r.shFringe, 'd', hang.fr);
-      // LED chase: the dot pattern runs down the scarf (toward the free end) at a rate that follows the road speed
+      // LED chase: the studs run down the scarf (toward the free end) at a rate that follows the road speed
       {
-        const ph = fr.reduced ? 0 : -((t * (3 + 5 * Math.min(spd, 1.4))) % 12);
-        set(r.snLedA, 'stroke-dashoffset', f(ph)); set(r.snLedB, 'stroke-dashoffset', f(ph - 6));
-        set(r.sfLed, 'stroke-dashoffset', f(ph * 0.8 - 3)); set(r.shLed, 'stroke-dashoffset', f(-((t * 4) % 16) * (fr.reduced ? 0 : 1)));
+        const run = fr.reduced ? 0 : t * (6 + 10 * Math.min(spd, 1.4));
+        const dn = ledDots(near.c, 13, run % 26); set(r.snDotA, 'd', dn[0]); set(r.snDotB, 'd', dn[1]);
+        set(r.sfDotA, 'd', ledDots(far.c, 12, (run * 0.8 + 5) % 24)[0]);
+        set(r.shDotA, 'd', ledDots(hang.c, 14, (run * 0.4) % 28)[0]);
       }
       // ---- slow emissive pulses (opacity only, quantised so most frames write nothing)
       const q = x => (Math.round(x * 20) / 20).toFixed(2);

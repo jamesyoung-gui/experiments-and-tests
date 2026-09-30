@@ -22,6 +22,7 @@ A great white pelican rides a bicycle along the coast road: an animated retro tr
 | `→` | 快一点 | Faster |
 | `S` | 滑行 | Coast |
 | `M` | 声音 | Sound |
+| `U` | 音乐 | Music |
 | `P` | 暂停 | Pause |
 | `L` | 语言 | Language |
 | `?` | 帮助 | Help |
@@ -73,6 +74,9 @@ A great white pelican rides a bicycle along the coast road: an animated retro tr
 | 11 | 漂流瓶 | Message in a bottle |
 | 12 | 流星许愿 | Wish upon a star |
 | 13 | 鹈鹕雁阵 | Pelican squadron |
+| 14 | 翻页 | Turn the page |
+| 15 | 全剧终？ | The End? |
+| 16 | 晚安 | Bedtime |
 
 ## 制作过程 · How it was made
 

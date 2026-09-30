@@ -17,6 +17,7 @@ import { fmt1, fmt2 } from '../core/math.js';
 import { h, refs } from '../core/svg.js';
 import { HORIZON_Y, DIST_PER_REV } from '../contract.js';
 import { LAP, KM, stretchAt, relTo, hash } from './route.js';
+import { gwFilters } from '../art/gouache.js';
 
 export const id = 'sea';
 // gouache paints of the coast (graded by the hour like the core materials; namespaced sea*)
@@ -203,6 +204,15 @@ export function build(ctx) {
   const seaL = buildSea(rng, lampOn);
   const boats = buildBoats(rng, lampOn);
   defs += hills.defs + lh.defs + seaL.defs + boats.defs;
+  // painterly filters (STYLE-B §2) for the far, translate-only sheets (hills panorama, the static sea wash)
+  defs += gwFilters('sea', { seed: 31, wob: 3, soft: 7, blur: 0.9, brushFreq: '0.003 0.12', brushK: 3.4 });
+  // aerial perspective: a warm haze glazed over everything far (sky, hills, cape, sea, boats), strongest at the
+  // horizon; the shore, road and rider are in front of it, so the page recedes and the rider stays the focus
+  defs += h('linearGradient', { id: 'sea-aerialG', x1: 0, y1: -420, x2: 0, y2: 660, gradientUnits: 'userSpaceOnUse' },
+    h('stop', { offset: 0, 'stop-color': v('skyHaze'), 'stop-opacity': 0 }), h('stop', { offset: 0.5, 'stop-color': v('skyHaze'), 'stop-opacity': 0.06 }),
+    h('stop', { offset: 0.8, 'stop-color': v('skyHaze'), 'stop-opacity': 0.2 }), h('stop', { offset: 0.87, 'stop-color': v('skyHaze'), 'stop-opacity': 0.24 }),
+    h('stop', { offset: 1, 'stop-color': v('skyHaze'), 'stop-opacity': 0.1 }));
+  boats.markup += h('g', { 'data-ref': 'sea-aerial', ...DD('sea:T:aerial-haze'), class: 'gw-tex', 'pointer-events': 'none' }, F(rect(X0, -420, X1 - X0, 1080), 'url(#sea-aerialG)'));
   return {
     defs,
     layers: { 'L-hills-far': hills.markup, 'L-lighthouse': lh.markup, 'L-sea': seaL.markup, 'L-boats': boats.markup },
@@ -359,6 +369,9 @@ function buildLighthouse(rng, lampOn) {
   let fence = '';
   for (let x = 1172; x <= 1234; x += 4.2) fence += `M${f(x)} ${f(401.5 + (R() - 0.5) * 0.4)}v${f(-5.2 - R() * 0.6)}`;
   g += h('g', DD('sea:O:cape-fence'), S(fence + 'M1171 397.6Q1203 398.2 1235 397.4M1171 399.8Q1203 400.3 1235 399.6', v('seaWhite'), 1), S(fence, v('lineSoft'), 0.3, { transform: 'translate(0.5 0)', opacity: 0.6 }));
+  // gouache director: the static headland (cliff, grass, path, flowers, sheep, fence) gets a painterly edge wobble
+  // (static filter: the cape strip only translates; the keeper, beam and lantern stay outside the filtered group)
+  g = h('g', { filter: 'url(#sea-gw-wob)' }, g);
   // keeper's cottage: cream walls, red roof with tile rows, chimney + a lazy curl of smoke, windows, door, flowers
   const walls = wrect(R, 1086, 386, 40, 16), roof = wob([[1083, 387], [1094, 376], [1118, 376], [1129, 387]], R, 0.35, 4);
   const chim = wrect(R, 1111, 369, 5, 9);
@@ -465,6 +478,10 @@ function buildSea(rng, lampOn) {
     streaks(a, b, 596, 660, 24, [v('seaDeep'), v('seaFar'), v('seaMid')], 3.5, 6, 0.3));
   wash += h('g', DD('sea:O:horizon-glow'), F(rect(X0, HZ - 1.2, X1 - X0, 3.2), v('skyHaze'), { opacity: 0.7 }),
     S((() => { let d = ''; for (let x = X0; x < X1; x += 40 + R() * 70) d += `M${f(x)} ${f1(473.8 + R() * 2.2)}h${f(12 + R() * 34)}`; return d; })(), v('seaSheen'), 1, { opacity: 0.7 }));
+  // flat-brush drag texture over the wash (static filter, fixed colours: rasterised once with the wash sheet)
+  wash += h('g', { ...DD('sea:T:flat-brush-drag'), class: 'gw-tex', 'pointer-events': 'none' },
+    F(rect(X0, HZ, X1 - X0, 200), '#FFF3E4', { style: 'opacity:calc(0.26 - 0.16 * var(--pb-n-night))', filter: 'url(#sea-gw-brush)' }),
+    F(rect(X0, HZ, X1 - X0, 200), '#23204A', { opacity: 0.12, filter: 'url(#sea-gw-brush)', transform: `translate(${X1 + X0} 0) scale(-1 1)` }));
   // the static wash is its own composited sheet: the swaying glitter above it never forces it to repaint
   m += h('g', { 'data-ref': 'sea-wash', transform: 'translate(0 0)' }, wash);
   // ---- wave bands (each scrolls at its own depth; generated periodic over its tile)
@@ -698,7 +715,10 @@ function buildHarbour(rng, lampOn) {
   for (const [x, hh] of [[112, 20], [124, 15], [162, 18], [-54, 17]]) { const yb = yHill(x) + 4; cy += `M${x} ${f(yb)}C${x - 3.4} ${f(yb - hh * 0.35)} ${x - 2.6} ${f(yb - hh * 0.8)} ${x} ${f(yb - hh)}C${x + 2.6} ${f(yb - hh * 0.8)} ${x + 3.4} ${f(yb - hh * 0.35)} ${x} ${f(yb)}Z`; }
   for (const [x, r] of [[20, 6], [185, 6.5], [-25, 5]]) { const yb = yHill(x) + 2; rt += wcirc(R, x, yb - r, r) + wcirc(R, x - r * 0.7, yb - r * 0.6, r * 0.7); rtL += wcirc(R, x + r * 0.3, yb - r * 1.3, r * 0.45); }
   const trees = h('g', DD('sea:O:town-trees'), F(cy, v('seaCypress')), F(rt, v('seaGrassLo')), F(rtL, v('seaGrassHi'), { opacity: 0.7 }), ink(rt + cy, 0.4, true));
-  g += mill + sails + trees + houses + laundry + fm + church + clock;
+  // gouache director: painterly edge wobble on the static town (static filter on the translate-only harbour strip);
+  // the turning sails stay outside the filtered groups
+  const WB = { filter: 'url(#sea-gw-wob)', class: 'sea-gw' };
+  g += h('g', WB, mill) + sails + h('g', WB, trees + houses + laundry + fm + church + clock);
   // quay wall: warm stones with ink joints, cream coping, bollards, and a cat on the wall
   let stones = '';
   for (let r = 0; r < 3; r++) for (let x = -416 + (r % 2) * 4.5; x < 296; x += 9) stones += wrect(R, x, 504.6 + r * 3.5, 8.4, 3.1, 0.12);
@@ -1006,6 +1026,8 @@ function buildBoats(rng, lampOn) {
 // ---------------------------------------------------------------------------------------------- detail catalogue
 export const detailItems = [
   // far hills
+  ['sea:T:aerial-haze', 'T', 'aerial perspective: a warm haze glazed over sky, hills, cape and sea, strongest at the horizon'],
+  ['sea:T:flat-brush-drag', 'T', 'flat-brush drag texture over the sea wash: pale horizontal lifts and dark pooled strokes'],
   ['sea:O:far-ridge', 'O', 'soft mauve mountain ranges with warm light dabs above and cool glazes pooling at the foot'],
   ['sea:O:ridge-rim', 'O', 'thin warm rim of light along every ridge crest'],
   ['sea:O:foothills', 'O', 'hazy sage foothills in front of the ranges'],
@@ -1133,6 +1155,7 @@ export const detailItems = [
 // ---------------------------------------------------------------------------------------------- attach
 // composited strips (see core/sheets.js): far panorama, headland, the four rolling sea bands, harbour and rocks move by
 // a pure translate every frame; the runtime moves each one as its own compositor layer instead of repainting it
+export const isolate = ['[data-ref="sea-aerial"]'];
 export const sheets = ['hills', 'cape', 'wash', 'w0', 'w1', 'w2', 'w3', 'sunG', 'moonG', 'harbour', 'rocks'].map(k => `[data-ref="sea-${k}"]`);
 export function attach(svg, ctx) {
   const r = refs(svg, 'sea-');

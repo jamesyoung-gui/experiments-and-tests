@@ -13,6 +13,7 @@
 import { fmt1, fmt2 } from '../core/math.js';
 import { h, refs } from '../core/svg.js';
 import { hash } from './route.js';
+import { gwFilters } from '../art/gouache.js';
 import { DIST_PER_REV as DIST_PER_REV_ } from '../contract.js';
 
 export const id = 'sky';
@@ -133,6 +134,7 @@ export const detailItems = [
   ['sky:T:brush-streaks-rose', 'T', 'rose streaks in the middle of the wash'],
   ['sky:T:brush-streaks-warm', 'T', 'warm peach streaks low in the sky'],
   ['sky:T:bristle-marks', 'T', 'bristle lines dragged through the streaks'],
+  ['sky:T:flat-brush-drag', 'T', 'flat-brush drag texture over the whole wash: pale lifted streaks and darker pooled strokes'],
   ['sky:O:horizon-glow', 'O', 'soft glow band sitting on the horizon'],
   ['sky:O:horizon-light-line', 'O', 'hand-painted light line just above the sea'],
   ['sky:O:sun-glow-wash', 'O', 'wide watercolour glow around the sun'],
@@ -221,6 +223,9 @@ export function build(ctx) {
 
   // ======================== L-sky: the painted wash
   let sky = '';
+  // painterly filters (STYLE-B §2): allowed here, the sky sheets only ever translate and their paints are static
+  // unless the hour changes; colours of the texture washes are fixed, so they rasterise once
+  defs += gwFilters('sky', { seed: 12, soft: 11, blur: 1.3, brushFreq: '0.0018 0.022', brushK: 3.2, brushOct: 2 });
   defs += h('linearGradient', { id: 'sky-grad', x1: 0, y1: 0, x2: 0, y2: 480, gradientUnits: 'userSpaceOnUse' },
     [[0, 'skyTop'], [0.32, 'skyHigh'], [0.6, 'skyMid'], [0.82, 'skyLow'], [1, 'skyHaze']].map(([o, t]) => h('stop', { offset: o, 'stop-color': v(t) })));
   defs += h('linearGradient', { id: 'sky-hzGlow', x1: 0, y1: 400, x2: 0, y2: 474, gradientUnits: 'userSpaceOnUse' },
@@ -263,6 +268,11 @@ export function build(ctx) {
     }
     sky += h('path', { ...DD('sky:T:bristle-marks'), d: br, ...S(v('skyWashWarm'), 0.9, { opacity: 0.3 }) });
   }
+  // gouache texture of the wash: horizontal flat-brush drag marks (pale pigment lifts and darker pooled strokes),
+  // generated once by the brush filter, fixed colours at a few percent
+  sky += h('g', { ...DD('sky:T:flat-brush-drag'), class: 'gw-tex', 'pointer-events': 'none' },
+    h('rect', { x: X0, y: -420, width: X1 - X0, height: 896, fill: '#FFF3DE', style: 'opacity:calc(0.2 - 0.15 * var(--pb-n-night))', filter: 'url(#sky-gw-brush)' }),
+    h('rect', { x: X0, y: -420, width: X1 - X0, height: 896, fill: '#3E2E58', opacity: 0.06, filter: 'url(#sky-gw-brush)', transform: 'translate(0 900) scale(1 -1)' }));
   sky += h('rect', { ...DD('sky:O:horizon-glow'), x: X0, y: 400, width: X1 - X0, height: 76, fill: 'url(#sky-hzGlow)' });
   {
     const R = rng('hzline'); const pts = [];
@@ -404,7 +414,8 @@ export function build(ctx) {
     let fl = '';
     for (let i = 0; i < Math.round(w / 40); i++) { const x = cx - w * 0.45 + R() * w * 0.9; fl += brush(R, x, cy + hh * 0.2 + R() * 4, 6 + R() * 10, 1.6 + R(), 0.6, (R() - 0.5) * 10); }
     crisp += h('path', { ...DD('sky:T:cloud-edge-flecks'), d: fl, fill: v(sh), opacity: 0.55 });
-    return h('g', DD(key), soft, crisp);
+    // the three tones get the soft painted edge (a static filter: each cloud is a translate-only sheet)
+    return h('g', DD(key), h('g', { filter: 'url(#sky-gw-soft)' }, soft), crisp);
   }
   // drawn at hero-frame position + OFF0 (the offset the clouds have drifted by at the hero frame)
   const at = (x, mk) => drift.push([x + OFF0, mk]);

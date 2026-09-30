@@ -382,14 +382,15 @@ function thigh(I, far) {
     // contour-feather scallops flowing down the leg (tips toward the knee), shrinking toward the knee
     const u = [1, 0.1];
     kids.push(line(scallops(rowPts([46, -15.5], [54, 6], 4), u, 2.6) + scallops(rowPts([70, -12.6], [74, 9], 3), u, 2.5) +
-      scallops(rowPts([94, -10.2], [96, 10], 3), u, 2.2), I.B, 1.1, { 'data-detail': tag('T', 'trouser-feather-scallops'), 'data-tract': 'leg' }));
+      scallops(rowPts([94, -10.2], [96, 10], 3), u, 2.2) + scallops(rowPts([108, -9.6], [109, 10.2], 3), u, 1.9) +
+      scallops(rowPts([30, -19], [40, 3.6], 5), u, 2.6), I.B, 1.1, { 'data-detail': tag('T', 'trouser-feather-scallops'), 'data-tract': 'leg' }));
     kids.push(line('M62 6.4q9 2.4 18 2.6M88 8.2q9 1.6 16 1.4', I.B, 0.8, { 'data-detail': tag('T', 'trouser-rear-hatching') }));
     kids.push(line('M24 -21q5 3 4 8M35 -20.4q4.6 3.2 3.4 8.2M28 1.6q3.4 -2 7.2 -0.8', I.B, 1, { 'data-detail': tag('O', 'flank-plume-curls') }));
-    // dual rim: cyan along the front (top) edge, magenta under the leg
-    kids.push(neon(curve([[48, -18.4], [76, -12.4], [104, -9], [118, -8.6]]), X.cyan, X.cyanCore, 1.3, false, { 'data-detail': tag('O', 'thigh-cyan-rim') }));
-    kids.push(neon(curve([[40, 5.2], [60, 8], [86, 9.6], [116, 10.2]]), X.mag, X.magCore, 1.3, false, { 'data-detail': tag('O', 'thigh-magenta-rim') }));
     kids.push(line(curve([[50, -19.6], [76, -14], [106, -10.5], [118, -10.2]]), X.ink, 1.6));
     kids.push(line(curve([[44, 7.8], [60, 9.5], [86, 11], [118, 11.5]]), X.ink, 1.5));
+    // dual rim: cyan along the front (top) edge, magenta under the leg
+    kids.push(neon(curve([[40, -20], [76, -12.4], [104, -8.8], [116, -8.4]]), X.cyan, X.cyanCore, 1.6, false, { 'data-detail': tag('O', 'thigh-cyan-rim') }));
+    kids.push(neon(curve([[34, 4.2], [60, 8], [86, 9.6], [116, 10]]), X.mag, X.magCore, 1.6, false, { 'data-detail': tag('O', 'thigh-magenta-rim') }));
   } else {
     kids.push(line(scallops(rowPts([80, -11], [82, 9], 3), [1, 0.1], 2.4), I.B, 1, { 'data-detail': tag('T', 'far-trouser-scallops') }));
     kids.push(line(curve([[60, -16.4], [86, -12.4], [112, -9.8]]), XF.cyan, 0.9, { 'data-detail': tag('O', 'far-thigh-rim') }));
@@ -436,6 +437,9 @@ function shank(I, far) {
     for (let x = 34, k = 0; x <= 112; x += 4.6, k++) { const w = hw(x), y = w * (k % 2 ? 0.62 : 0.3); rt += `M${f(x)} ${f(y)}q1.6 -1.3 3.2 0q-1.6 1.3 -3.2 0`; }
     kids.push(G('tarsus-shade-band', 'T', far, [fill(`M30 ${f(hw(30) - 3)}C70 ${f(hw(70) - 3.2)} 110 ${f(hw(110) - 3)} ${118} ${f(hw(118) - 2.4)}L118 ${f(hw(118))}C110 ${f(hw(110))} 70 ${f(hw(70))} 30 ${f(hw(30))}Z`, '#6A2410', { 'fill-opacity': 0.42 }),
       line(rt, SC, 0.6, { 'stroke-opacity': 0.7, 'data-detail': tag('T', 'tarsus-reticulate-scales') })]));
+    // dual rim: cyan down the front of the shin, magenta down the back
+    kids.push(neon(splitQ([30, 52, 74, 96, 112].map(x => [x, -hw(x) + 0.9])), X.cyan, X.cyanCore, 1.1, false, { 'data-detail': tag('O', 'tarsus-cyan-rim') }));
+    kids.push(neon(splitQ([34, 56, 78, 98, 112].map(x => [x, hw(x) - 0.9])), X.mag, X.magCore, 1.1, false, { 'data-detail': tag('O', 'tarsus-magenta-rim') }));
     // transverse scutes on the front (scale rings), overlapping downward
     let sc = '';
     for (let x = 24; x <= 114; x += 7.4) { const w = hw(x); sc += `M${f(x)} ${f(-w + 0.3)}Q${f(x + 2.6)} ${f(-w * 0.2)} ${f(x + 0.6)} ${f(w * 0.45)}`; }
@@ -444,9 +448,6 @@ function shank(I, far) {
     let sh = '';
     for (let x = 27; x <= 112; x += 7.4) { const w = hw(x); sh += `M${f(x)} ${f(-w + 1.3)}l2.4 0.2`; }
     kids.push(line(sh, '#FFE7C8', 0.9, { 'stroke-opacity': 0.8, 'data-detail': tag('T', 'scute-highlights') }));
-    // dual rim: cyan down the front of the shin, magenta down the back
-    kids.push(neon(splitQ([30, 52, 74, 96, 112].map(x => [x, -hw(x) + 0.9])), X.cyan, X.cyanCore, 1.1, false, { 'data-detail': tag('O', 'tarsus-cyan-rim') }));
-    kids.push(neon(splitQ([34, 56, 78, 98, 112].map(x => [x, hw(x) - 0.9])), X.mag, X.magCore, 1.1, false, { 'data-detail': tag('O', 'tarsus-magenta-rim') }));
   } else {
     kids.push(fill(outline, XF.ink, { 'fill-opacity': 0.42 }));
     let sc = '';

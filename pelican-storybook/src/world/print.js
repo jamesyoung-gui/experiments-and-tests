@@ -23,10 +23,12 @@ import { h } from '../core/svg.js';
 import { VIEW, RIDER_X, GROUND_Y, CAMERAS } from '../contract.js';
 import { LAT, SER, ZH } from './print-glyphs.js';
 import { stretchAt, lapOf, lapPos } from './route.js';
+import { paperDefs, paperSheet } from '../art/gouache.js';
 
 export const id = 'print';
 // the animated title and the fading captions get their own composited sheets: the page itself never re-rasterises
-export const isolate = ['#print-captions', '#print-title'];
+// the gouache PAPER (grain + pigment mottle + fibre + vignette, soft-light over the painting) is one static sheet too
+export const isolate = ['[data-ref="gw-paper"]', '#print-captions', '#print-title'];
 // page paints (graded by the hour like every material: the bedtime page at night is a lavender-dusk cream)
 export const materials = {
   pgPaper: '#F8EDD8', pgPaperHi: '#FFF8EC', pgPaperLo: '#E6D2B2', pgEdge: '#EADAC0',
@@ -207,6 +209,7 @@ export const detailItems = [
   ['deckled-edge', 'O', 'deckled (hand-torn) outer edge of the top page, with its soft shadow on the stack'],
   ['page-margin', 'O', 'cream paper margin around the painting; it grows into the cinematic letterbox bars'],
   ['paper-fibre', 'T', 'paper fibres, flecks and pale blotches in the margin'],
+  ['paper-grain', 'T', 'full-page gouache paper over the whole painting: pigment mottle, tooth grain, fibre and a thin chalky veil (one static sheet), with a warm vignette'],
   ['painting-drybrush', 'T', 'dry-brush boundary of the painting: bristle drags and skipped specks where the gouache ends'],
   ['pencil-frame', 'O', 'the illustrator\'s ruled pencil frame, double-struck in places, overshooting at the corners'],
   ['gutter-shadow', 'O', 'soft gutter shadow down the centre of the spread (fades out above the rider)'],
@@ -373,7 +376,7 @@ export function build({ v }) {
   const tag = (name, attrs, ...kids) => h('g', { 'data-detail': DD[name], ...attrs }, ...kids);
   const P = (d, attrs) => h('path', { d, ...attrs });
   const LN = (w, col = c.line) => ({ fill: 'none', stroke: col, 'stroke-width': w, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
-  const defs = [];
+  const defs = [paperDefs('gw')];
 
   // ---- static textures (local coordinates of the element that uses them) ----
   {
@@ -599,9 +602,9 @@ export function build({ v }) {
     tag('caption-initial', {}, P(L.ini, { 'data-ref': `print-${k}-ini`, fill: c.rb, stroke: c.line, 'stroke-width': 0.6 }))));
   const captions = h('g', { id: 'print-captions' }, capG('cap', cl0, true), capG('bar', cb0, false));
 
-  const lampGlow = h('ellipse', { 'data-ref': 'print-lampglow', cx: 0, cy: 0, rx: 1, ry: 1, fill: 'url(#print-lamp)', style: 'opacity:var(--pb-n-lampOn)', 'pointer-events': 'none' });
+  const lampGlow = h('ellipse', { 'data-ref': 'print-lampglow', cx: 0, cy: 0, rx: 1, ry: 1, fill: 'url(#print-lamp)', class: 'gw-tex', style: 'opacity:var(--pb-n-lampOn)', 'pointer-events': 'none' });
   const root = h('g', { id: 'print-root', 'data-ref': 'print-root' },
-    lampGlow, margins, gutter, pencil, rim, heads, pnum('Z', pnZ, 'page-number-zh'), pnum('A', pnA, 'page-number-arabic'), colo,
+    tag('paper-grain', {}, paperSheet('gw', 'gw-paper')), lampGlow, margins, gutter, pencil, rim, heads, pnum('Z', pnZ, 'page-number-zh'), pnum('A', pnA, 'page-number-arabic'), colo,
     h('g', { id: 'print-spots' }, spots), ribbon, captions, title);
   return { defs: defs.join(''), layers: { 'L-letterbox': root } };
 }

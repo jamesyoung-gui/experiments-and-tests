@@ -17,6 +17,7 @@ import { fmt1, fmt2 } from '../core/math.js';
 import { GROUND_Y, TILE, DIST_PER_REV, RIDER_X } from '../contract.js';
 import { h, refs, mount } from '../core/svg.js';
 import { LAP, KM, STRETCHES, SIGNS, KM_STONES, stretchAt, relTo, hash } from './route.js';
+import { gwFilters } from '../art/gouache.js';
 
 export const id = 'land';
 
@@ -193,6 +194,8 @@ const ITEMS = [
   ['O', 'surf-foam', 'lacy gouache foam edge where the last wave runs up the sand, with light dabs'],
   ['T', 'wet-sand-sheen', 'glossy wet-sand band: sky-coloured sheen strokes and a soft darker glaze'],
   ['T', 'sand-gouache', 'sand painted with speckle and dry-brush texture, warmer and darker toward the promenade'],
+  ['T', 'sand-brush-drag', 'flat-brush drag texture over the painted sand: pale lifted streaks, darker pooled strokes'],
+  ['T', 'road-brush-drag', 'flat-brush drag texture over the tarmac: pale lifted streaks, darker pooled strokes'],
   ['O', 'dune-grass', 'marram grass tufts in two olive paints along the back of the beach'],
   ['O', 'hut-open-door', 'red/cream striped beach hut, door swung open onto a dark interior with a striped towel on a hook'],
   ['O', 'hut-plain', 'teal/cream striped hut with an arched door, knob and a wooden step'],
@@ -1116,6 +1119,10 @@ export function build(ctx) {
       const lst = (a, b) => tufts.filter(([x]) => x >= a && x < b).map(e => e[1]);
       s += draw(lst(-1e9, 372)) + G(DD('dune-grass'), draw(lst(372, 452))) + draw(lst(452, 1e9));
     }
+    // gouache director: flat-brush drag texture of the painted sand (static filter on the base tile, which only ever
+    // translates on its own sheet: rasterised once; stitched noise so the tile copies join without a seam)
+    s += G({ ...DD('sand-brush-drag'), class: 'gw-tex' }, F(rect(X0, 636, X1 - X0, 100), '#FFF4E2', { opacity: 0.3, filter: 'url(#land-gw-brush)' }),
+      F(rect(X0, 636, X1 - X0, 100), '#5A3A2A', { opacity: 0.12, filter: 'url(#land-gw-brush)', transform: `translate(0 ${636 * 2 + 100}) scale(1 -1)` }));
     base.shore = s;
     // --- back row (tideline) -----------------------------------------------------------------------------------
     const print = (x, y) => `M${f(x)} ${f(y)}l3.8 -2.4l0.6 1.5l1.2 0.1l0 1.5l-1.2 0.3l-0.6 1.4z`;
@@ -1591,6 +1598,8 @@ export function build(ctx) {
       s += d; put(DD('centre-dashes'), dash(7));
     }
     s += Pw(rect(X0, 858, X1 - X0, 5), v('roadLine')) + F(rect(X0, 863, X1 - X0, 7), M.Dark, { opacity: 0.18 });
+    s += G({ ...DD('road-brush-drag'), class: 'gw-tex' }, F(rect(X0, 752, X1 - X0, 118), '#FFF1E0', { opacity: 0.22, filter: 'url(#land-gw-brush)' }),
+      F(rect(X0, 752, X1 - X0, 118), '#2A1C30', { opacity: 0.14, filter: 'url(#land-gw-brush)', transform: `translate(0 ${752 * 2 + 118}) scale(1 -1)` }));
     base.road = s;
     {
       const x = 292, y = 815; let rl = '';
@@ -1729,6 +1738,7 @@ export function build(ctx) {
     'L-foreground': tile('fg', fg),
   };
   defs += G({ id: 'land-y-none' });
+  defs += gwFilters('land', { seed: 41, brushFreq: '0.004 0.05', brushK: 3, brushOct: 3, stitch: true });
   defs += gouacheGrads(v);
   return { defs, layers };
 }

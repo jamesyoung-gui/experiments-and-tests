@@ -16,6 +16,7 @@
 import { fmt2 } from '../core/math.js';
 import { h, refs } from '../core/svg.js';
 import { SKEL } from '../contract.js';
+import { gouacheTile, glazeGrads, glaze as gz } from './gouache.js';
 
 export const id = 'pelican-body';
 // Extra base colours of the storybook costume and face (graded by light like the core materials).
@@ -259,7 +260,12 @@ function textures(v) {
   const blush = h('radialGradient', { id: 'pb-blushG' },
     h('stop', { offset: 0, 'stop-color': v('pbBlush'), 'stop-opacity': 0.95 }), h('stop', { offset: 0.5, 'stop-color': v('pbBlush'), 'stop-opacity': 0.6 }),
     h('stop', { offset: 1, 'stop-color': v('pbBlush'), 'stop-opacity': 0 }));
-  return gouache + pouchTex + knit + blush;
+  // gouache director: a bolder painted-blotch tile (pigment pooled darker / lifted paler, dry-brush drags, flecks) and
+  // soft radial glazes (wet-in-wet shading without filters) shared by every slot of this module
+  const gw = gouacheTile('pb-gw', { size: 72, seed: 5, dark: Dp, light: '#FFFDF7', kd: 0.11, kl: 0.3, nBlot: 12, nStroke: 9, nFleck: 18, ang: -24 });
+  const gwY = gouacheTile('pb-gwY', { size: 40, seed: 9, dark: Od, light: v('pbPouchHi'), kd: 0.16, kl: 0.34, nBlot: 9, nStroke: 6, nFleck: 10, ang: 8 });
+  const gz = glazeGrads('pb', { shade: Dp, rose: S, warm: v('rim'), lite: '#FFFDF6', pLo: Od, pHi: v('pbPouchHi'), bill: v('billEdge') });
+  return gouache + pouchTex + knit + blush + gw + gwY + gz;
 }
 
 export function build({ v }) {
@@ -274,6 +280,7 @@ export function build({ v }) {
   // ================================================================ NECK (rider space; deformer)
   s.neck = h('g', { 'data-detail': tag('O', 'neck') },
     h('path', { 'data-ref': 'pb-neck', d: '', fill: P, stroke: INK, 'stroke-width': KW, 'stroke-linejoin': 'round' }),
+    h('path', { 'data-ref': 'pb-neckGw', 'data-detail': tag('T', 'neck-gouache-blotch-texture'), class: 'gw-tex', d: '', fill: 'url(#pb-gw)', 'pointer-events': 'none' }),
     h('path', { 'data-ref': 'pb-neckShade', 'data-detail': tag('T', 'neck-nape-glaze'), d: '', fill: S, opacity: 0.9 }),
     h('path', { 'data-ref': 'pb-neckRimF', 'data-detail': tag('O', 'neck-rim-light'), d: '', fill: 'none', stroke: RIM, 'stroke-width': 2.2, 'stroke-linecap': 'round', style: 'opacity:var(--pb-n-rimAlpha)' }),
     h('path', { 'data-ref': 'pb-neckRimB', d: '', fill: 'none', stroke: RIM, 'stroke-width': 2.2, 'stroke-linecap': 'round', style: 'opacity:var(--pb-n-rimAlpha);display:none' }),
@@ -349,6 +356,13 @@ export function build({ v }) {
     const g2 = glaze(t => 0.42 * lowD(t) - 1.5, 30, 230, 0.3);
     inner += h('path', { 'data-detail': tag('T', 'belly-rose-glaze'), d: g1.d, fill: S, opacity: 0.92 });
     inner += h('path', { 'data-detail': tag('T', 'belly-deep-glaze'), d: g2.d, fill: Dp, opacity: 0.5 });
+    // wet-in-wet: soft rose shade pooled under the belly and round the rump, a cool glaze under the wing, a warm lit
+    // back, then the painted-blotch tile over everything (visible brush direction, pigment variation)
+    inner += h('g', { 'data-detail': tag('T', 'body-wet-in-wet-glazes') },
+      gz('pb', 'shade', ...EL(-0.05, 0.72), 88, 30, -18, 0.42), gz('pb', 'rose', ...EL(-0.72, 0.3), 42, 40, -18, 0.55),
+      gz('pb', 'shade', ...EL(0.35, 0.1), 60, 34, -30, 0.28), gz('pb', 'rose', ...EL(0.8, 0.45), 34, 28, 0, 0.35),
+      gz('pb', 'warm', ...EL(0.05, -0.7), 90, 22, -18, 0.5), gz('pb', 'lite', ...EL(0.45, -0.45), 50, 26, -18, 0.8));
+    inner += h('path', { 'data-detail': tag('T', 'body-gouache-blotch-texture'), class: 'gw-tex', d: o, fill: 'url(#pb-gw)' });
     {
       // dry-brush: short tapered strokes feathering up out of the glaze edge
       let d = ''; const r = rng(17);
@@ -498,6 +512,9 @@ export function build({ v }) {
         h('path', { 'data-detail': tag('T', 'pouch-orange-glaze'), d: deep, fill: Od, opacity: 0.42 }),
         h('path', { d: deep2, fill: Od, opacity: 0.4 }),
         h('path', { 'data-detail': tag('T', 'pouch-stipple-texture'), d: po, fill: 'url(#pb-pouchTex)' }),
+        h('g', { 'data-detail': tag('T', 'pouch-wet-in-wet-glazes') }, gz('pb', 'pLo', 20, 30, 70, 12, -4, 0.5), gz('pb', 'pLo', -32, 18, 16, 16, 0, 0.45),
+          gz('pb', 'pHi', 48, 6, 58, 8, -5, 0.85), gz('pb', 'pHi', 88, 2, 22, 6, -12, 0.7)),
+        h('path', { 'data-detail': tag('T', 'pouch-gouache-blotch-texture'), class: 'gw-tex', d: po, fill: 'url(#pb-gwY)' }),
         h('path', { 'data-ref': 'pb-pouchGlow', 'data-detail': tag('O', 'pouch-backlit-glow'), d: 'M-20 2C10 8 60 8 98 0C88 12 66 20 44 24C20 27 -8 26 -28 20Z', fill: v('pbPouchHi'), opacity: 0.8, style: 'display:none' }),
         h('g', { 'data-ref': 'pb-pouchFish', style: 'display:none' },
           h('path', { d: 'M18 0C13 -5.6 -1 -7 -10 -3L-20 -8.4L-17.6 0L-20 8.4L-10 3C-1 7 13 5.6 18 0Z', fill: Od, opacity: 0.75 }),
@@ -532,7 +549,9 @@ export function build({ v }) {
       h('clipPath', { id: 'pb-billclip' }, h('path', { d: ub })),
       h('g', { 'clip-path': 'url(#pb-billclip)' },
         line(mot, Ke, 1.6, { opacity: 0.28, 'data-detail': tag('T', 'bill-gouache-mottling') }),
-        h('path', { d: 'M-6 1.6L121 0.6L121 4L-6 5Z', fill: Ke, opacity: 0.35, 'data-detail': tag('T', 'bill-underside-glaze') })),
+        h('path', { d: 'M-6 1.6L121 0.6L121 4L-6 5Z', fill: Ke, opacity: 0.35, 'data-detail': tag('T', 'bill-underside-glaze') }),
+        h('g', { 'data-detail': tag('T', 'bill-wet-in-wet-glazes') }, gz('pb', 'bill', 70, 2, 56, 5, -2, 0.55), gz('pb', 'lite', 50, -9, 40, 3.4, 2, 0.6), gz('pb', 'bill', 6, -6, 12, 9, 0, 0.4)),
+        h('path', { class: 'gw-tex', d: ub, fill: 'url(#pb-gw)', opacity: 0.8 })),
       line(loopQ(ubP), INK, 1.7, { 'data-detail': tag('O', 'bill-ink-outline') }),
       line('M-2 3.5L119 2.8', INK, 1.3, { 'data-detail': tag('O', 'tomium-line') }),
       line('M24 -0.8C56 -1 88 -1.6 116 -1.8', Ke, 0.9, { 'data-detail': tag('O', 'maxillary-groove') }),
@@ -572,6 +591,9 @@ export function build({ v }) {
       const dc = `M-12 3L${pt(chin[0])}` + chin.slice(1).map((c, i) => { const a = chin[i], m = lerp2(a, c, 0.5), n = perp(norm(sub(c, a))), q = add(m, mul(n, 3.4)); dcl += `M${pt(a)}Q${pt(q)} ${pt(c)}`; return `Q${pt(q)} ${pt(c)}`; }).join('') + 'L12 24L-12 24Z';
       inner += h('g', { 'data-detail': tag('O', 'chin-feathers') }, h('path', { d: dc, fill: P }), line(dcl, SOFT, 1), h('ellipse', { 'data-ref': 'pb-blush', 'data-detail': tag('O', 'cheek-blush'), cx: -3, cy: 6.8, rx: 10, ry: 6.2, transform: 'rotate(-10 -3 6.8)', fill: 'url(#pb-blushG)' }));
     }
+    inner += h('g', { 'data-detail': tag('T', 'head-wet-in-wet-glazes') }, gz('pb', 'rose', -18, 8, 18, 12, 30, 0.6), gz('pb', 'shade', 4, 16, 20, 7, 0, 0.35),
+      gz('pb', 'warm', 2, -24, 22, 8, 10, 0.55), gz('pb', 'lite', 10, -20, 12, 5, 15, 0.8));
+    inner += h('path', { class: 'gw-tex', d: o, fill: 'url(#pb-gw)', opacity: 0.85 });
     inner += line('M6 -26.4l-3.6 1.8M12 -24.6l-3.8 1.6M18 -21.6l-3.6 1.4M9 -20.4l-3.4 1.2M15 -18.6l-3 1M-4 -26l-3.4 1.6M-12 -22.6l-3 1.8', Dp, 1, { 'data-detail': tag('T', 'forehead-feather-flecks') });
     inner += line('M-27 8Q-22 12 -16 13M-22 14Q-17 16 -12 16.4', SOFT, 1, { 'data-detail': tag('O', 'nape-edge') });
     const pencil = WH.slice(0, 7 * k).filter((p, i) => i >= 1 && i <= 11).map(p => add(p, mul(norm(sub(p, [2, -4])), 2)));
@@ -734,6 +756,9 @@ export const detailItems = [
   ['body-brush-weight-accents', 'T', 'tapered brush-weight ink under the chest and round the rump (shadow side)'],
   ['back-pencil-line', 'T', 'offset pencil double line along the back'],
   ['plumage-gouache-mottle', 'T', 'static gouache mottling pattern (rose blotches, brush flecks, paper speckles)'],
+  ['body-wet-in-wet-glazes', 'T', 'soft radial glazes, wet-in-wet: rose shade pooled under the belly and rump, a cool under-wing glaze, a warm lit back'],
+  ['neck-gouache-blotch-texture', 'T', 'painted-blotch gouache tile riding on the neck (same live outline as the neck)'],
+  ['body-gouache-blotch-texture', 'T', 'bold painted-blotch gouache tile over the body: pooled pigment, lifted pale patches, dry-brush drags'],
   ['belly-rose-glaze', 'T', 'rose-grey shadow wash along the underside and rump'],
   ['belly-deep-glaze', 'T', 'second, deeper lilac wash in the core shadow'],
   ['belly-drybrush-edge', 'T', 'dry-brush strokes feathering up out of the glaze edge'],
@@ -768,6 +793,8 @@ export const detailItems = [
   ['knot-highlight', 'O', 'soft highlight on the top of the knot'],
   ['pouch', 'O', 'yellow gular pouch reaching behind the gape to the throat'],
   ['pouch-orange-glaze', 'T', 'two layered orange glazes toward the sagging pouch bottom'],
+  ['pouch-wet-in-wet-glazes', 'T', 'soft glazes on the pouch: deep orange pooled along the sagging rim and the throat, a pale lit band under the mandible'],
+  ['pouch-gouache-blotch-texture', 'T', 'painted-blotch gouache tile on the pouch skin (warm pooled pigment, pale lifts)'],
   ['pouch-stipple-texture', 'T', 'static stipple + wrinkle-tick skin texture pattern'],
   ['pouch-backlit-glow', 'O', 'bright glow when the low sun backlights the pouch (and a fish silhouette inside)'],
   ['pouch-stretch-lines', 'T', 'orange texture lines that stretch with the pouch sy'],
@@ -795,6 +822,8 @@ export const detailItems = [
   ['nail-highlight', 'O', 'highlight on the nail'],
   ['nail-under-hook', 'O', 'under-hook line'],
   ['head', 'O', 'round warm-white skull with a sloping forehead'],
+  ['head-wet-in-wet-glazes', 'T', 'soft glazes on the head: rose shade at the nape and chin, warm light on the crown'],
+  ['bill-wet-in-wet-glazes', 'T', 'soft glazes on the bill: darker peach along the tomium, a pale sheen along the culmen'],
   ['head-gouache-mottle', 'T', 'gouache mottling on the head'],
   ['head-nape-glaze', 'T', 'rose-grey glaze on the back of the head and under the chin'],
   ['crown-pencil-line', 'T', 'pencil double line along the crown'],
@@ -857,7 +886,7 @@ export function attach(svg) {
       const nk = [n.p0, n.p1, n.p2, n.p3].map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(';') + (n.w0 ?? 0).toFixed(2) + (n.bulgeA ?? 0).toFixed(3) + (n.bulgeT ?? 0).toFixed(3) + (bulge ? bulge.at.toFixed(3) : '');
       if (nk !== lastNeck) {
         lastNeck = nk;
-        set(r.neck, 'd', neckD(n, bulge));
+        { const nd = neckD(n, bulge); set(r.neck, 'd', nd); set(r.neckGw, 'd', nd); }
         const nd = neckDetail(n, bulge);
         set(r.neckFlow, 'd', nd.flow); set(r.neckFlow2, 'd', nd.flowSmall); set(r.neckCrease, 'd', nd.crease);
         set(r.neckRimF, 'd', nd.rimF); set(r.neckRimB, 'd', nd.rimB); set(r.neckShade, 'd', nd.shade); set(r.neckPencil, 'd', nd.pencil);
