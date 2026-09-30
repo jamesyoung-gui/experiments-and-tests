@@ -3,7 +3,7 @@
  "bytes": 2601389,
  "gzip": 496629,
  "sha256": "8d7cd15b441b3fcba6cb9240b0895dabe3b22c7c309244f287e6874c6caed4ed",
- "bakeMs": 46504,
+ "bakeMs": 47788,
  "opts": {},
  "stats": {
   "period": 4,
@@ -1041,10 +1041,10 @@
    "other": 180240
   },
   "ms": {
-   "record": 32754,
-   "probe": 11863,
-   "analyse": 742,
-   "total": 45952
+   "record": 33871,
+   "probe": 12183,
+   "analyse": 687,
+   "total": 47269
   },
   "childList": [
    "27 mutations → 15 presence nodes",
