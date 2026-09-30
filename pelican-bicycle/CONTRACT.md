@@ -40,10 +40,21 @@ export function attach(svg, ctx) {               // DOM refs + per-frame work
   - Body: `body` pivot = pelvis (body ellipse centre local (32,−50), rx 98, ry 58, rot −18°, bottom sits on saddle). `head` pivot = skull centre (r≈26). `billUpper`/`billLower` pivot at the gape, bill length 128 along +x (already rotated 14° down). `pouch` hangs from `billLower` (+y), scaled by `sx/sy` for jiggle — draw it so scaling about (0,0) looks natural. `eye` scaled `sy` for blinks. `crest` pivot at the back of the skull (rest rot 200° → points back).
   - `neck` is a deformer: `pelican-body.neckD(pose.neck)` returns the outline path each frame (fixed command count).
 - **Layers**: draw into `LAYERS` ids; your markup lands in `#<layer>--<owner>`. The runtime applies the camera transform per layer from its depth. **Parallax scrolling is yours**: offset = `frame.distance × depth`, wrapped by your tile width (near layers: use `TILE.*` widths so the baked loop is seamless). Keep art ≥ ±400 units beyond the viewBox so camera zoom/roll never reveals edges.
-- **Ids / data-ref**: prefix every id, class and `data-ref` with your module id (`bike-`, `pb-`, `pl-`, `sky-`, `sea-`, `land-`, `fx-`, `ui-`). Get elements via `refs(svg, 'bike-')`.
+- **Ids / data-ref**: prefix every id, class and `data-ref` with your module id (`bike-`, `pb-`, `pl-`, `sky-`, `sea-`, `land-`, `fx-`, `print-`, `ui-`). Get elements via `refs(svg, 'bike-')`.
 - **Colour**: markup uses `ctx.v(token)` → CSS variables set by `core/palette.js` at ≤10 Hz. Env tokens (time-of-day keyed): `sky0 sky1 sky2 sunCore sunGlow cloudLit cloudShade seaFar seaNear foam hillFar hillNear sand road roadLine grassFar grassNear foliage trunk rim grade`. Materials (graded by light, each also has `-far` darker variant): see `MATERIALS` + your module's `materials` export. Emissive (not graded): `lamp lampGlow beacon headlamp`. Numeric vars: `--pb-n-night`, `--pb-n-starAlpha`, `--pb-n-lampOn`, `--pb-n-rimAlpha`, `--pb-n-shadowAlpha` (use in `opacity="var(--pb-n-lampOn)"` via style: `style="opacity:var(--pb-n-lampOn)"`).
 - **Frame** passed to `update(frame)`: `{ t, dt, distance, speed, cadence, coasting, tod, sun:{x,y,elev}, moon, night, pal, pose, cam, toggles, quality, reduced, events }`. `pose` = `solvePose` output: `joints, neck, chainOffset, wheel, crank, riderY, bikePitch, blink, spokeBlur, pelvisDy`.
 - **Events** (bus): UI emits `ui:bell ui:wave ui:hop ui:gulp ui:camera{mode} ui:speed{cadence} ui:coast{on} ui:tod{tod,auto} ui:toggle{key,value} ui:play{on} ui:sound{on} ui:download{kind}`; runtime emits `rig:event{type,t0}` and `rig:land`. Rig events live in `frame.events` as `{type, t0}` (types: hop, wave, bell, gulp).
+
+## Detail inventory (gate G-DETAIL — the user requires FAR more detail than the draft)
+- Tag the root element of every distinct detail item with `data-detail="<layer>:<O|T>:<name>"`; layers are
+  `pelican bike sea land sky fx typography_frame`; `O` = object/part, `T` = texture treatment (hatching, weave, scales, halftone band…).
+  Repeated identical instances count once (32 spokes = 1); visibly different variants count separately. An item counts only if it
+  covers ≥ 2 px² at 1600×900 in the wide or close view and is mostly un-occluded.
+- Also export `detailItems = [{ id, layer, kind, what }]` from your module (documentation for judges).
+- `node tools/detail-inventory.mjs --dev` counts them against the draft baseline (`docs/rubric/detail-baseline-C.json`, 129 items).
+  Gate: total ≥ 323 (2.5×), pelican ≥ 54, bike ≥ 84, others ≥ 1.5× baseline, fx ≥ 4. Owner quotas (sum ≈ 360) are in your brief.
+- Honest detail only: every item must be visible, in style C, and add real information at 1× or 3× zoom (`--set zoom` shots). Judges
+  audit for padding (invisible, duplicate-renamed or meaningless items are removed and penalised).
 
 ## Budgets (live page)
 - 60 fps at 1600×900 in headless Chromium (`--perf`): JS p95 ≤ 2 ms/frame; DOM ≤ 4000 nodes total (~500 per module).

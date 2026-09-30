@@ -15,11 +15,12 @@ import * as sky from './world/sky.js';
 import * as sea from './world/sea.js';
 import * as land from './world/land.js';
 import * as fx from './fx/fx.js';
+import * as print from './world/print.js';
 import { createUI } from './ui/ui.js';
 import { createAudio } from './audio/audio.js';
 import { bakeSVG } from './bake/bake.js';
 
-const ART = [sky, sea, land, fx, bike, pelicanBody, pelicanLimbs];
+const ART = [sky, sea, land, fx, bike, pelicanBody, pelicanLimbs, print];
 const params = new URLSearchParams(location.search);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || params.has('reduced');
 const freeze = params.has('freeze');
@@ -107,6 +108,14 @@ function step(dt) {
 function render(dt) {
   const pose = solvePose(state.t, { crank: state.crank, distance: state.distance, cadence: state.cadence, speed: state.speed, coasting: state.coasting, events: state.events });
   const cam = camera.update(dt, state.t, reduced);
+  // portrait / narrow screens: the slice-fit viewBox crops the sides, so pan toward the rider
+  const aspect = innerWidth / Math.max(1, innerHeight);
+  if (aspect < 1.5 && cam.mode !== 'close') {
+    const k = Math.min(1, (1.5 - aspect) / 0.9);
+    cam.fx += (RIDER_X + 24 - cam.fx) * k;
+    cam.fy += (GROUND_Y - 300 - cam.fy) * k * 0.7;
+    cam.zoom *= 1 - 0.2 * Math.min(1, (1.2 - aspect) / 0.6) * (aspect < 1.2 ? 1 : 0);   // fit the whole bike on phones
+  }
   palT += dt;
   if (palDirty && (palT > 0.1 || dt === 0)) { pal = samplePalette(state.tod, extraMaterials); applyPalette(svg, pal); palDirty = false; palT = 0; }
   for (const [el, d] of layerEls) if (el && d !== null) el.setAttribute('transform', layerTransform(cam, d));

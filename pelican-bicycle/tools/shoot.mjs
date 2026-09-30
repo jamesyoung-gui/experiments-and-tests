@@ -38,13 +38,26 @@ async function shot(page, name, opts) {
 
 const page = await open(1600, 900);
 if (sets.includes('hero')) await shot(page, 'hero', { t: 3.2, tod: 0.70, cam: 'wide' });
-if (sets.includes('frames')) for (let i = 0; i < 12; i++) await shot(page, `frame-${String(i).padStart(2, '0')}`, { t: 2, crankDeg: i * 30, tod: 0.70, cam: 'close' });
+// true motion strip: sim time advances with the crank (60 rpm => one crank turn per second), so wheels,
+// secondary motion and world parallax all move between frames
+if (sets.includes('frames')) for (let i = 0; i < 24; i++) await shot(page, `frame-${String(i).padStart(2, '0')}`, { t: 2 + i / 24, tod: 0.70, cam: 'close' });
 if (sets.includes('tods')) for (const [n, tod] of [['dawn', 0.27], ['noon', 0.5], ['golden', 0.70], ['sunset', 0.765], ['night', 0.93]]) await shot(page, `tod-${n}`, { t: 4, tod, cam: 'wide' });
 if (sets.includes('cams')) for (const cam of ['wide', 'close', 'cinematic']) await shot(page, `cam-${cam}`, { t: 5, tod: 0.70, cam });
 if (sets.includes('events')) {
   await shot(page, 'ev-hop', { t: 6.45, tod: 0.7, cam: 'close', events: [{ type: 'hop', t0: 6.0 }] });
   await shot(page, 'ev-wave', { t: 6.8, tod: 0.7, cam: 'close', events: [{ type: 'wave', t0: 6.0 }] });
   await shot(page, 'ev-gulp', { t: 6.6, tod: 0.7, cam: 'close', events: [{ type: 'gulp', t0: 6.0 }] });
+}
+// 3× zoom crops (G-DETAIL): wide camera, re-rasterised at deviceScaleFactor 3, 533×300 regions around the rider
+if (sets.includes('zoom')) {
+  const z = await browser.newPage({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 3 });
+  z.on('pageerror', e => errors.push('pageerror: ' + e.message));
+  await z.goto(`${base}?${['freeze', 'nohud', query].filter(Boolean).join('&')}`);
+  await z.waitForFunction(() => window.__pb && window.__pb.ready, null, { timeout: 15000 });
+  await z.evaluate(() => window.__pb.renderAt(3.2, { tod: 0.7, cam: 'wide' }));
+  const R = [['head', 860, 290], ['body', 690, 410], ['legs', 700, 630], ['wheel-rear', 560, 690], ['wheel-front', 850, 690], ['basket', 880, 500]];  // region centres (world = screen at 1600×900)
+  for (const [n, cx, cy] of R) { const file = path.join(out, `zoom-${n}.png`); await z.screenshot({ path: file, clip: { x: cx - 266, y: cy - 150, width: 533, height: 300 } }); shots.push(['zoom-' + n, file]); }
+  await z.close();
 }
 if (sets.includes('mobile')) {
   const m = await open(390, 844);

@@ -4,7 +4,7 @@ import { h, refs } from '../core/svg.js';
 export const id = 'bike';
 export const materials = {};
 export function build({ v }) {
-  const wheel = h('g', {}, h('circle', { r: BIKE.R - 4.5, fill: 'none', stroke: v('tyre'), 'stroke-width': 9 }),
+  const wheel = h('g', { 'data-detail': 'bike:O:wheel' }, h('circle', { r: BIKE.R - 4.5, fill: 'none', stroke: v('tyre'), 'stroke-width': 9 }),
     ...Array.from({ length: 8 }, (_, i) => h('line', { x1: 0, y1: 0, x2: 88 * Math.cos(i * Math.PI / 4), y2: 88 * Math.sin(i * Math.PI / 4), stroke: v('steel'), 'stroke-width': 1.5 })));
   const [bx, by] = BIKE.bb, [rx, ry] = BIKE.rearHub, [st, sty] = BIKE.seatTubeTop, [ht, hty] = BIKE.headTop, [hb, hby] = BIKE.headBottom, [fx, fy] = BIKE.frontHub;
   const tube = (a, b) => h('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: v('bikeFrame'), 'stroke-width': 7, 'stroke-linecap': 'round' });

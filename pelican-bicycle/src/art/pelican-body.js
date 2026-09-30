@@ -23,7 +23,7 @@ export function build({ v }) {
     slots: {
       neck: h('path', { 'data-ref': 'pb-neck', fill: v('plume'), d: '' }),
       tail: h('path', { d: 'M0,0 L-40,-6 L-38,12 Z', fill: v('plumeShade') }),
-      body: h('ellipse', { cx: 32, cy: -50, rx: 98, ry: 58, transform: 'rotate(-18 32 -50)', fill: v('plume') }),
+      body: h('ellipse', { 'data-detail': 'pelican:O:body', cx: 32, cy: -50, rx: 98, ry: 58, transform: 'rotate(-18 32 -50)', fill: v('plume') }),
       head: h('circle', { r: 26, fill: v('plume') }),
       eye: h('circle', { r: 4, fill: v('pupil') }),
       crest: h('path', { d: 'M0,0 L22,-6 L20,6 Z', fill: v('plumeShade') }),
