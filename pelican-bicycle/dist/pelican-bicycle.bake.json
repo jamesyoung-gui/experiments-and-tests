@@ -1,19 +1,19 @@
 {
  "file": "dist/pelican-bicycle.svg",
- "bytes": 2601389,
- "gzip": 496610,
- "sha256": "adaa2a3674e45e3546765968c0b3022e913927775eeae8a8f92f837b651e2ab7",
- "bakeMs": 49184,
+ "bytes": 2595435,
+ "gzip": 495365,
+ "sha256": "b141d1af019dcd912a00f82953af7ac2d9068978593c40c70338e808e67a89f3",
+ "bakeMs": 47005,
  "opts": {},
  "stats": {
   "period": 4,
   "fps": 60,
   "start": 250,
   "samples": 9930,
-  "tracks": 907,
-  "animated": 895,
-  "anims": 1166,
-  "keyframes": 76394,
+  "tracks": 896,
+  "animated": 884,
+  "anims": 1148,
+  "keyframes": 76225,
   "warnings": [],
   "nonClosing": [
    "j-wingFarUpper.transform:translate[1] Δ=-0.14 (spread)",
@@ -92,15 +92,6 @@
    "fx-grit8.transform:translate[0] Δ=-19.2",
    "fx-grit8.transform:translate[1] Δ=-20.7",
    "fx-grit8.transform:rotate[0] Δ=26.1",
-   "fx-curl0.transform:translate[0] Δ=-492.1",
-   "fx-curl0.transform:translate[1] Δ=-14.9",
-   "fx-curl0p1.stroke-dashoffset[0] Δ=-2",
-   "fx-curl1.transform:translate[0] Δ=342",
-   "fx-curl1.transform:translate[1] Δ=9.9",
-   "fx-curl2.transform:translate[0] Δ=-9.7",
-   "fx-curl2.transform:translate[1] Δ=26.9",
-   "fx-curl2.transform:scale[0] Δ=0.08",
-   "fx-curl2.transform:scale[1] Δ=0.08",
    "fx-seed0.transform:translate[1] Δ=61",
    "fx-seed0.transform:rotate[0] Δ=21.5",
    "fx-seed1.transform:translate[0] Δ=-603.3",
@@ -849,7 +840,6 @@
    "sky-rpsky1.d[104] Δ=52.1",
    "sky-rpsky1.d[106] Δ=738.96",
    "sky-corona.transform:rotate[0] Δ=-8.8",
-   "fx-curl0p0.stroke-dashoffset[0] Δ=-1.95",
    "fx-dust2.transform:translate[0] Δ=15.4",
    "fx-dust2.transform:translate[1] Δ=9.3",
    "fx-grit5.transform:translate[0] Δ=-27.1",
@@ -964,10 +954,6 @@
    "fx-gfar4.transform:translate[0] -2800 per 24.8337s (W=2800)",
    "fx-gfar5.transform:translate[0] -2800 per 24.8337s (W=2800)",
    "fx-gfar6.transform:translate[0] -2800 per 24.8337s (W=2800)",
-   "fx-curl1p0.stroke-dashoffset[0] -2 per 1.6878s (W=2)",
-   "fx-curl1p1.stroke-dashoffset[0] -2 per 1.7167s (W=2)",
-   "fx-curl2p0.stroke-dashoffset[0] -2 per 4s (W=2)",
-   "fx-curl2p1.stroke-dashoffset[0] -2 per 4s (W=2)",
    "fx-seed0.transform:translate[0] -2000 per 15.8636s (W=2000)",
    "fx-flyTrail.stroke-dashoffset[0] -313.16 per 1.8976s (W=313.16)",
    "bike-chainfx.stroke-dashoffset[0] -100 per 2.0833s (W=100)",
@@ -1023,7 +1009,7 @@
    "L-clouds": 65598,
    "L-shadow": 24363,
    "L-gulls-far": 9086,
-   "L-fx-back": 6195,
+   "L-fx-back": 2140,
    "L-fx-front": 106895,
    "slot:chain": 291,
    "slot:fork": 2276,
@@ -1041,10 +1027,10 @@
    "other": 180240
   },
   "ms": {
-   "record": 35269,
-   "probe": 12188,
-   "analyse": 641,
-   "total": 48605
+   "record": 33824,
+   "probe": 11457,
+   "analyse": 657,
+   "total": 46451
   },
   "childList": [
    "27 mutations → 15 presence nodes",
@@ -1462,46 +1448,6 @@
     "fx-grit8.transform",
     2570,
     "104@4,42@4"
-   ],
-   [
-    "fx-curl0.transform",
-    735,
-    "31@4,1@4"
-   ],
-   [
-    "fx-curl0p1.stroke-dashoffset",
-    201,
-    "10@4"
-   ],
-   [
-    "fx-curl1.transform",
-    950,
-    "35@4,10@4"
-   ],
-   [
-    "fx-curl1p0.stroke-dashoffset",
-    306,
-    "2@1.688,11@4"
-   ],
-   [
-    "fx-curl1p1.stroke-dashoffset",
-    306,
-    "2@1.717,11@4"
-   ],
-   [
-    "fx-curl2.transform",
-    610,
-    "19@4,7@4"
-   ],
-   [
-    "fx-curl2p0.stroke-dashoffset",
-    246,
-    "2@4,6@4"
-   ],
-   [
-    "fx-curl2p1.stroke-dashoffset",
-    246,
-    "2@4,6@4"
    ],
    [
     "fx-seed0.transform",
@@ -1929,11 +1875,6 @@
     "9@4"
    ],
    [
-    "fx-curl0p0.stroke-dashoffset",
-    205,
-    "10@4"
-   ],
-   [
     "fx-dust2.visibility",
     190,
     "7@4"
@@ -1987,11 +1928,6 @@
     "fx-dust6.visibility",
     191,
     "7@4"
-   ],
-   [
-    "fx-curl2.visibility",
-    132,
-    "3@4"
    ],
    [
     "fx-dust7.visibility",
@@ -2102,11 +2038,6 @@
     "fx-grit0.transform",
     1471,
     "62@4,14@4"
-   ],
-   [
-    "fx-curl0.visibility",
-    118,
-    "2@4"
    ],
    [
     "fx-fea0.visibility",
@@ -5539,7 +5470,7 @@
     "1@41,7@41,15@41"
    ]
   ],
-  "blended": 195,
+  "blended": 185,
   "errOver": [
    "pb-snFill.d 2.63×",
    "pb-snStripe.d 1.86×",
@@ -5562,12 +5493,12 @@
    "before": 1562445,
    "after": 960578
   },
-  "prunedHidden": 885,
+  "prunedHidden": 894,
   "culledOffscreen": 120,
   "reducedMotion": {
-   "frozen": 708,
+   "frozen": 699,
    "notFreezable": 0
   },
-  "bytes": 2601164
+  "bytes": 2595210
  }
 }

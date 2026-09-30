@@ -92,16 +92,22 @@ export function build(ctx) {
   }
   const puddles = G({ ...REF('puddles'), ...DD('land:O:wx-puddles') }, G({ 'data-ref': 'wx-pudMove' }, F(pd, I('N'), { opacity: 0.35 }), F(pr, I('B')), S(ph, I('P'), 1.6),
     G({ 'data-ref': 'wx-ripple' }, S(pr, I('P'), 0.9, { opacity: 0.8 }))));
-  // ---- L-fx-back: wind curls + leaves
+  // ---- L-fx-back: ONE disciplined art-deco wind band (poster motion lines), + a few leaves
+  // Three parallel streamlines of equal weight, stacked tightly in the upper sky (never over the sea or the rider),
+  // one group per half tile, each ending in a single deco curl at its leading (left) end. They drift slowly, as one.
   let wd = '';
-  for (let rep = 0; rep < 2; rep++) for (let i = 0; i < 7; i++) {   // two tiles (the curve points are absolute, so draw the copy, don't regex-shift it)
-    const x = rep * WIND_W + i * (WIND_W / 7) + hh(i, 21) * 200, y = 180 + hh(i, 22) * 480, L = 160 + hh(i, 23) * 160;
-    wd += `M${f(x)} ${f(y)}C${f(x + L * 0.3)} ${f(y - 14)} ${f(x + L * 0.7)} ${f(y + 14)} ${f(x + L)} ${f(y)}c18 -2 22 -22 6 -24c-10 -1 -14 10 -6 14`;
-  }
+  const windBand = (x0, y0) => {
+    for (let k = 0; k < 3; k++) {
+      const x = x0 + k * 38, y = y0 + k * 17, L = 460 - k * 70;          // stepped lengths: the classic deco "speed stack"
+      wd += `M${f(x + L)} ${f(y)}C${f(x + L * 0.66)} ${f(y - 6)} ${f(x + L * 0.33)} ${f(y + 6)} ${f(x + 24)} ${f(y)}`;
+      if (k === 0) wd += `c-16 0 -22 -16 -10 -22c9 -4 16 4 10 10`;          // only the top line curls
+    }
+  };
+  for (let rep = 0; rep < 2; rep++) { windBand(rep * WIND_W + 120, 128); windBand(rep * WIND_W + WIND_W / 2 + 260, 168); }
   const leaf = 'M0 0C4 -6 12 -6 16 0C12 6 4 6 0 0Z';
   let leaves = '';
-  for (let i = 0; i < 6; i++) leaves += G({ 'data-ref': 'wx-leaf' + i }, F(leaf, i % 2 ? I('T') : I('O'), { stroke: I('N'), 'stroke-width': 0.8 }), S('M1 0H15', I('N'), 0.6));
-  const wind = G({ ...REF('wind'), ...DD('fx:O:wx-wind') }, G({ 'data-ref': 'wx-windMove' }, S(wd, I('P'), 3, { opacity: 0.85 })), leaves);
+  for (let i = 0; i < 3; i++) leaves += G({ 'data-ref': 'wx-leaf' + i }, F(leaf, i % 2 ? I('T') : I('O'), { stroke: I('N'), 'stroke-width': 0.8 }), S('M1 0H15', I('N'), 0.6));
+  const wind = G({ ...REF('wind'), ...DD('fx:O:wx-wind') }, G({ 'data-ref': 'wx-windMove' }, S(wd, I('P'), 2.2, { opacity: 0.8, 'stroke-linecap': 'round' })), leaves);
   // ---- L-fx-front: near rain + splashes
   let nr = '';
   for (let xi = 0, x = -288; x < 1850 + 192; xi++, x += 48) for (let yi = 0, y = -390; y < 920 + 260; yi++, y += 130) { const o = hh(xi % 4 + 50, yi % 2) * 110, L = 24 + hh(xi % 4, yi % 2 + 20) * 30; nr += `M${f(x + o)} ${f(y + o)}l${f(-L * 0.34)} ${f(L)}`; }
@@ -195,10 +201,12 @@ export function attach(svg, ctx) {
       const wn = red ? 0 : sstep(0.3, 0.9, w.wind);
       showA(r.wind, wn);
       if (wn > 0.01) {
-        set(r.windMove, 'transform', `translate(${f(-wrap(t * (900 + 900 * w.gust) + D * 0.9, WIND_W))} ${f(Math.sin(t * 1.7) * 12)})`);
-        for (let i = 0; i < 6; i++) {
-          const p = wrap(t * 0.55 + i / 6, 1);
-          set(r['leaf' + i], 'transform', `translate(${f(1900 - p * 2300)} ${f(300 + hh(i, 31) * 380 + Math.sin(p * 9 + i) * 50)}) rotate(${f(p * 900 + i * 60)})`);
+        // slow, calm drift: the band glides left at sky pace; a gust only nudges it (no whizzing)
+        set(r.windMove, 'transform', `translate(${f(-wrap(t * (140 + 120 * w.gust) + D * 0.04, WIND_W))} ${f(Math.sin(t * 0.6) * 4)})`);
+        for (let i = 0; i < 3; i++) {
+          // leaves ride the same stream: one gentle path just above the promenade rail, behind the rider
+          const p = wrap(t * 0.22 + i / 3, 1);
+          set(r['leaf' + i], 'transform', `translate(${f(1900 - p * 2300)} ${f(560 + 18 * i + Math.sin(p * 6.3 + i) * 22)}) rotate(${f(p * 540 + i * 90)})`);
         }
       }
     },

@@ -608,25 +608,31 @@ export function attach(svg, ctx) {
       }
 
       // ================= wind curls (draw on / wipe off) + speed lines
-      const curlOn = !reduced && cad > 40;
+      // one wind curl at a time (not three), and none while the weather's wind band is showing: a single wind language
+      // Calm, occasional accent (user: the curls were too fast, too many, too busy): at most ONE curl, only when really
+      // pedalling hard (> 75 rpm), about one in three 6-second windows, drawn on slowly beside the scarf and wiped off in
+      // place; it barely drifts. Never while the weather's wind band is showing, so there is a single wind language.
+      const curlOn = !reduced && cad > 75 && !((fr.weather && fr.weather.wind) > 0.3);
       for (let i = 0; i < 3; i++) {
-        const P = 1.7, k = Math.floor((t - i * P / 3) / P), age = t - (k * P + i * P / 3), el = r['curl' + i];
-        const act = curlOn && hash(k, 30 + i) < clamp((cad - 40) / 30, 0, 1) * 0.9 + 0.1;
+        if (i > 0) { vis(r['curl' + i], false); continue; }
+        const P = 6, k = Math.floor(t / P), age = t - k * P, el = r['curl' + i];
+        const LIFE = 2.8;
+        const act = curlOn && age < LIFE && hash(k, 30) < 0.35;
         if (!act) { vis(el, false); continue; }
         vis(el, true);
-        const u = age / P, hk = hash(k, 40 + i);
-        const x = RIDER_X - 150 - 40 * hk - (160 + 0.08 * sp) * age, y = GROUND_Y - 470 + 110 * hk - 16 * u;
-        set(el, 'transform', `translate(${f1(x)} ${f1(y)}) scale(${f(0.8 + 0.35 * hk)})`);
-        const draw = sstep(0, 0.45, u), wipe = sstep(0.55, 1, u);
-        for (let p = 0; p < 2; p++) set(r[`curl${i}p${p}`], 'stroke-dashoffset', f(p ? 1 - sstep(0.1, 0.55, u) - wipe : 1 - draw - wipe));
+        const u = age / LIFE, hk = hash(k, 40);
+        const x = RIDER_X - 170 - 30 * hk - 28 * age, y = GROUND_Y - 455 + 40 * hk;
+        set(el, 'transform', `translate(${f1(x)} ${f1(y)}) scale(${f(0.75 + 0.15 * hk)})`);
+        const draw = sstep(0, 0.4, u), wipe = sstep(0.65, 1, u);
+        for (let p = 0; p < 2; p++) set(r[`curl${i}p${p}`], 'stroke-dashoffset', f(p ? 1 - sstep(0.1, 0.5, u) - wipe : 1 - draw - wipe));
       }
-      const slW = (tg.speedlines !== false && !reduced) ? sstep(78, 88, cad) : 0;
+      const slW = (tg.speedlines !== false && !reduced) ? sstep(86, 98, cad) : 0;   // only a real sprint
       vis(r.slG, slW > 0.01);
       if (slW > 0.01) {
         for (let i = 0; i < SPEEDLINES.length; i++) {
           const [ax, ay] = SPEEDLINES[i], [xe, yy] = W(ax, ay);
-          const P = 0.36, k = Math.floor((t + i * 0.117) / P), age = t + i * 0.117 - k * P, el = r['sl' + i];
-          const on = hash(k, 50 + i) < 0.5 + 0.45 * slW;
+          const P = 0.9, k = Math.floor((t + i * 0.29) / P), age = t + i * 0.29 - k * P, el = r['sl' + i];
+          const on = i < 4 && hash(k, 50 + i) < 0.3 + 0.3 * slW;   // ≤ 4 lines, slower rhythm
           if (!on) { vis(el, false); continue; }
           vis(el, true);
           const u = age / P, hk = hash(k, 60 + i);
