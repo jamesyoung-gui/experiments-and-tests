@@ -1,0 +1,8 @@
+{
+  "$schema": "pelican-bay-detail-inventory/1",
+  "status": "Storybook edition gate: 'same complexity as edition C'. Baseline = edition C's final visible detail inventory (pelican-bicycle, 2026-09-30), so B must match or beat C per layer and in total.",
+  "counts": {
+    "pelican": { "total": 80 }, "bike": { "total": 90 }, "sea": { "total": 50 }, "land": { "total": 75 },
+    "sky": { "total": 34 }, "fx": { "total": 20 }, "typography_frame": { "total": 25 }, "all": 392
+  }
+}

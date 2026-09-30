@@ -1,0 +1,1084 @@
+{
+  "$schema": "pelican-bay-evidence-manifest/1",
+  "rubricVersion": "2.0.0",
+  "note": "每个 criterion 与门槛必须由构建流水线产出的证据文件（从 evidence 字段解析）以及测量中点名的工具。tools/score.mjs 在每轮结束时断言这些路径存在；tools/coverage.mjs 断言每个工具在 R1 之前存在。",
+  "criteria": {
+    "C1.1": {
+      "dimension": "D1",
+      "evidence": [
+        "docs/eval/canon.json",
+        "docs/eval/anchor-audit.json",
+        "docs/eval/mutants-art.json",
+        "shots/eval/canon/*.png",
+        "docs/eval/judges/canon-*.json"
+      ],
+      "tools": [
+        "tools/check-anchors.mjs"
+      ]
+    },
+    "C1.2": {
+      "dimension": "D1",
+      "evidence": [
+        "docs/eval/occlusion.json",
+        "shots/eval/idmap/*.png"
+      ],
+      "tools": [
+        "tools/check-occlusion.mjs"
+      ]
+    },
+    "C1.3": {
+      "dimension": "D1",
+      "evidence": [
+        "docs/eval/thumb.json",
+        "shots/eval/thumb/*.png",
+        "docs/eval/judges/thumb-*.json"
+      ],
+      "tools": [
+        "tools/thumb.mjs",
+        "tools/silhouette.mjs"
+      ]
+    },
+    "C2.1": {
+      "dimension": "D2",
+      "evidence": [
+        "docs/eval/bike.json",
+        "shots/eval/mech/frame-*.png"
+      ],
+      "tools": [
+        "tools/check-bike.mjs"
+      ]
+    },
+    "C2.2": {
+      "dimension": "D2",
+      "evidence": [
+        "docs/eval/drivetrain.json",
+        "shots/eval/mech/drivetrain-*.png"
+      ],
+      "tools": [
+        "tools/check-bike.mjs"
+      ]
+    },
+    "C2.3": {
+      "dimension": "D2",
+      "evidence": [
+        "docs/eval/kinematics.json",
+        "docs/eval/noslip.json"
+      ],
+      "tools": [
+        "tools/check-kinematics.mjs",
+        "tools/check-noslip.mjs"
+      ]
+    },
+    "C2.4": {
+      "dimension": "D2",
+      "evidence": [
+        "docs/eval/alias.json",
+        "shots/eval/wagon/*.png"
+      ],
+      "tools": [
+        "tools/wagon.mjs"
+      ]
+    },
+    "C2.5": {
+      "dimension": "D2",
+      "evidence": [
+        "docs/eval/bike.json",
+        "shots/eval/mech/hub-*.png"
+      ],
+      "tools": [
+        "tools/check-bike.mjs"
+      ]
+    },
+    "C2.6": {
+      "dimension": "D2",
+      "evidence": [
+        "docs/eval/bike.json",
+        "shots/eval/mech/cockpit-*.png"
+      ],
+      "tools": [
+        "tools/check-bike.mjs"
+      ]
+    },
+    "C2.7": {
+      "dimension": "D2",
+      "evidence": [
+        "shots/eval/mech/detail-*.png",
+        "docs/eval/judges/mech-detail-*.json",
+        "docs/eval/mech-assembly.json"
+      ],
+      "tools": [
+        "tools/shoot.mjs"
+      ]
+    },
+    "C3.1": {
+      "dimension": "D3",
+      "evidence": [
+        "docs/eval/contacts.json",
+        "shots/eval/contacts/*.png"
+      ],
+      "tools": [
+        "tools/check-contacts.mjs",
+        "tools/contact-probe.mjs",
+        "tools/onion.mjs"
+      ]
+    },
+    "C3.2": {
+      "dimension": "D3",
+      "evidence": [
+        "docs/eval/seat.json",
+        "shots/eval/seat/*.png"
+      ],
+      "tools": [
+        "tools/check-rig.mjs"
+      ]
+    },
+    "C3.3": {
+      "dimension": "D3",
+      "evidence": [
+        "docs/eval/biomech.json",
+        "shots/eval/biomech-sheet.png"
+      ],
+      "tools": [
+        "tools/check-rig.mjs"
+      ]
+    },
+    "C3.4": {
+      "dimension": "D3",
+      "evidence": [
+        "docs/eval/dynamics.json",
+        "shots/eval/mech/hop-*.png",
+        "shots/eval/dense/hop-*.png"
+      ],
+      "tools": [
+        "tools/check-rig.mjs"
+      ]
+    },
+    "C4.1": {
+      "dimension": "D4",
+      "evidence": [
+        "docs/eval/species.json",
+        "shots/eval/head3x/*.png"
+      ],
+      "tools": [
+        "tools/thumb.mjs",
+        "tools/shoot.mjs",
+        "tools/judge/pack.mjs"
+      ]
+    },
+    "C4.2": {
+      "dimension": "D4",
+      "evidence": [
+        "docs/eval/anatomy-head.json",
+        "shots/eval/head3x/*.png"
+      ],
+      "tools": [
+        "tools/check-anatomy.mjs"
+      ]
+    },
+    "C4.3": {
+      "dimension": "D4",
+      "evidence": [
+        "docs/eval/anatomy-neck.json"
+      ],
+      "tools": [
+        "tools/check-anatomy.mjs"
+      ]
+    },
+    "C4.4": {
+      "dimension": "D4",
+      "evidence": [
+        "docs/eval/anatomy-wing.json",
+        "shots/eval/wing3x/*.png"
+      ],
+      "tools": [
+        "tools/check-rig.mjs"
+      ]
+    },
+    "C4.5": {
+      "dimension": "D4",
+      "evidence": [
+        "docs/eval/anatomy-legs.json",
+        "shots/eval/foot3x/*.png"
+      ],
+      "tools": [
+        "tools/check-rig.mjs",
+        "tools/check-anatomy.mjs"
+      ]
+    },
+    "C4.6": {
+      "dimension": "D4",
+      "evidence": [
+        "docs/eval/anatomy-colour.json",
+        "shots/eval/plumage/*.png"
+      ],
+      "tools": [
+        "tools/check-anatomy.mjs"
+      ]
+    },
+    "C4.7": {
+      "dimension": "D4",
+      "evidence": [
+        "docs/eval/anatomy-scale.json"
+      ],
+      "tools": [
+        "tools/check-anatomy.mjs"
+      ]
+    },
+    "C5.1": {
+      "dimension": "D5",
+      "evidence": [
+        "docs/eval/motion-audit.json",
+        "shots/eval/filmstrip/cycle-*.png"
+      ],
+      "tools": [
+        "tools/motion-audit.mjs",
+        "tools/filmstrip.mjs"
+      ]
+    },
+    "C5.2": {
+      "dimension": "D5",
+      "evidence": [
+        "docs/eval/motion-audit.json",
+        "shots/eval/onion/*.png",
+        "shots/eval/dense/secondary-*.png"
+      ],
+      "tools": [
+        "tools/motion-audit.mjs",
+        "tools/onion.mjs"
+      ]
+    },
+    "C5.3": {
+      "dimension": "D5",
+      "evidence": [
+        "docs/eval/fuzz.json",
+        "shots/eval/arcs/*.png"
+      ],
+      "tools": [
+        "tools/motion-audit.mjs",
+        "tools/onion.mjs"
+      ]
+    },
+    "C5.4": {
+      "dimension": "D5",
+      "evidence": [
+        "docs/timing.md",
+        "docs/eval/events.json",
+        "shots/eval/filmstrip/ev-*.png"
+      ],
+      "tools": [
+        "tools/motion-audit.mjs",
+        "tools/filmstrip.mjs"
+      ]
+    },
+    "C5.5": {
+      "dimension": "D5",
+      "evidence": [
+        "docs/eval/avian-motion.json",
+        "shots/eval/blink-strip.png"
+      ],
+      "tools": [
+        "tools/sheet.mjs"
+      ]
+    },
+    "C5.6": {
+      "dimension": "D5",
+      "evidence": [
+        "docs/eval/transitions.json",
+        "shots/eval/dense/smear-*.png"
+      ],
+      "tools": [
+        "tools/motion-audit.mjs"
+      ]
+    },
+    "C6.1": {
+      "dimension": "D6",
+      "evidence": [
+        "docs/character.md",
+        "docs/eval/judges/character-*.json",
+        "docs/eval/reactions.json"
+      ],
+      "tools": [
+        "tools/judge/acting.mjs"
+      ]
+    },
+    "C6.2": {
+      "dimension": "D6",
+      "evidence": [
+        "docs/eval/face.json",
+        "shots/eval/expressions.png",
+        "shots/eval/acting/*.png"
+      ],
+      "tools": [
+        "tools/motion-audit.mjs",
+        "tools/judge/acting.mjs"
+      ]
+    },
+    "C6.3": {
+      "dimension": "D6",
+      "evidence": [
+        "shots/eval/dense/ev-*.png",
+        "docs/eval/judges/gags-*.json",
+        "docs/eval/temporal.json"
+      ],
+      "tools": [
+        "tools/shoot.mjs",
+        "tools/check-temporal.mjs"
+      ]
+    },
+    "C6.4": {
+      "dimension": "D6",
+      "evidence": [
+        "shots/eval/gulp/*.png",
+        "docs/eval/gulp.json"
+      ],
+      "tools": [
+        "tools/motion-audit.mjs",
+        "tools/filmstrip.mjs"
+      ]
+    },
+    "C6.5": {
+      "dimension": "D6",
+      "evidence": [
+        "docs/beats.md",
+        "docs/eval/idle.json",
+        "shots/eval/story16.png"
+      ],
+      "tools": [
+        "tools/loop-seam.mjs",
+        "tools/interact.mjs"
+      ]
+    },
+    "C6.6": {
+      "dimension": "D6",
+      "evidence": [
+        "shots/eval/gulls/*.png"
+      ],
+      "tools": [
+        "tools/sheet.mjs"
+      ]
+    },
+    "C7.1": {
+      "dimension": "D7",
+      "evidence": [
+        "docs/eval/first-look.json",
+        "shots/eval/first-look/*.png",
+        "shots/eval/intro-21.png"
+      ],
+      "tools": [
+        "tools/first-look.mjs"
+      ]
+    },
+    "C7.2": {
+      "dimension": "D7",
+      "evidence": [
+        "docs/eval/palette.json",
+        "shots/eval/grid-30/*.png",
+        "shots/eval/wild/*.png"
+      ],
+      "tools": [
+        "tools/judge/palette.mjs"
+      ]
+    },
+    "C7.3": {
+      "dimension": "D7",
+      "evidence": [
+        "docs/eval/saliency.json",
+        "shots/eval/tods/*.png"
+      ],
+      "tools": [
+        "tools/judge/saliency.mjs"
+      ]
+    },
+    "C7.4": {
+      "dimension": "D7",
+      "evidence": [
+        "docs/eval/camera.json",
+        "shots/eval/film-45.png"
+      ],
+      "tools": [
+        "tools/contact-probe.mjs",
+        "tools/judge/film.mjs"
+      ]
+    },
+    "C7.5": {
+      "dimension": "D7",
+      "evidence": [
+        "shots/eval/crops/*.png",
+        "docs/eval/zoom-defects.json",
+        "docs/eval/seams-edges.json"
+      ],
+      "tools": [
+        "tools/shoot.mjs",
+        "tools/judge/seams.mjs",
+        "tools/judge/edges.mjs"
+      ]
+    },
+    "C7.6": {
+      "dimension": "D7",
+      "evidence": [
+        "docs/eval/style.json",
+        "docs/eval/judges/style-*.json",
+        "shots/eval/style/*.png",
+        "docs/eval/user-notes.json"
+      ],
+      "tools": [
+        "tools/check-style.mjs"
+      ]
+    },
+    "C7.7": {
+      "dimension": "D7",
+      "evidence": [
+        "docs/eval/appeal.json",
+        "docs/eval/judges/appeal-*.json",
+        "docs/composition.md"
+      ],
+      "tools": [
+        "tools/judge/saliency.mjs"
+      ]
+    },
+    "C8.1": {
+      "dimension": "D8",
+      "evidence": [
+        "README.md",
+        "docs/eval/moment.json",
+        "shots/eval/moment/*.png"
+      ],
+      "tools": [
+        "tools/judge/eggs.mjs"
+      ]
+    },
+    "C8.2": {
+      "dimension": "D8",
+      "evidence": [
+        "docs/eval/field.json",
+        "shots/eval/field/*.png"
+      ],
+      "tools": [
+        "tools/field.mjs"
+      ]
+    },
+    "C8.3": {
+      "dimension": "D8",
+      "evidence": [
+        "docs/eggs.json",
+        "docs/eval/explorer.json",
+        "shots/eval/eggs/*.png"
+      ],
+      "tools": [
+        "tools/judge/eggs.mjs"
+      ]
+    },
+    "C8.4": {
+      "dimension": "D8",
+      "evidence": [
+        "docs/eval/audio.json",
+        "shots/eval/spectrogram.png",
+        "docs/eval/user-checkpoint.json"
+      ],
+      "tools": [
+        "tools/judge/audio-offline.mjs",
+        "tools/audio-check.mjs"
+      ]
+    },
+    "C9.1": {
+      "dimension": "D9",
+      "evidence": [
+        "docs/eval/cold-start-desktop.json",
+        "docs/eval/cold-start-touch.json",
+        "docs/eval/ux-matrix.json"
+      ],
+      "tools": [
+        "tools/judge/harness.mjs",
+        "tools/ux-matrix.mjs"
+      ]
+    },
+    "C9.2": {
+      "dimension": "D9",
+      "evidence": [
+        "docs/eval/ux-matrix.json",
+        "docs/eval/contrast.json",
+        "shots/eval/ui-states/*.png"
+      ],
+      "tools": [
+        "tools/ux-matrix.mjs",
+        "tools/perf.mjs",
+        "tools/judge/controls.mjs",
+        "tools/contrast.mjs"
+      ]
+    },
+    "C9.3": {
+      "dimension": "D9",
+      "evidence": [
+        "docs/eval/interact.json",
+        "shots/eval/interact/*.png"
+      ],
+      "tools": [
+        "tools/interact.mjs"
+      ]
+    },
+    "C9.4": {
+      "dimension": "D9",
+      "evidence": [
+        "docs/eval/keys.json"
+      ],
+      "tools": [
+        "tools/keys.mjs"
+      ]
+    },
+    "C9.5": {
+      "dimension": "D9",
+      "evidence": [
+        "docs/eval/a11y.json",
+        "docs/a11y/aria.golden.yml"
+      ],
+      "tools": [
+        "tools/a11y.mjs"
+      ]
+    },
+    "C9.6": {
+      "dimension": "D9",
+      "evidence": [
+        "docs/eval/flash.json",
+        "docs/eval/reduced-motion.json"
+      ],
+      "tools": [
+        "tools/flash-check.mjs"
+      ]
+    },
+    "C9.7": {
+      "dimension": "D9",
+      "evidence": [
+        "docs/eval/mobile.json",
+        "shots/eval/mobile/*.png"
+      ],
+      "tools": [
+        "tools/ux-matrix.mjs"
+      ]
+    },
+    "C9.8": {
+      "dimension": "D9",
+      "evidence": [
+        "docs/eval/i18n.json",
+        "docs/eval/in-art-text.json",
+        "shots/eval/text/*.png"
+      ],
+      "tools": [
+        "tools/i18n-lint.mjs",
+        "tools/cjk-glyph.mjs",
+        "tools/check-text.mjs"
+      ]
+    },
+    "C10.1": {
+      "dimension": "D10",
+      "evidence": [
+        "perf/perf.json"
+      ],
+      "tools": [
+        "tools/perf.mjs"
+      ]
+    },
+    "C10.2": {
+      "dimension": "D10",
+      "evidence": [
+        "perf/paint.json",
+        "docs/eval/paint-rects.png"
+      ],
+      "tools": [
+        "tools/perf.mjs",
+        "tools/lint.mjs"
+      ]
+    },
+    "C10.3": {
+      "dimension": "D10",
+      "evidence": [
+        "perf/js.json"
+      ],
+      "tools": [
+        "tools/perf.mjs"
+      ]
+    },
+    "C10.4": {
+      "dimension": "D10",
+      "evidence": [
+        "perf/soak.json",
+        "docs/eval/soak-memory.png"
+      ],
+      "tools": [
+        "tools/soak.mjs"
+      ]
+    },
+    "C10.5": {
+      "dimension": "D10",
+      "evidence": [
+        "perf/dist-audit.json",
+        "budgets.json"
+      ],
+      "tools": [
+        "tools/audit-dist.mjs"
+      ]
+    },
+    "C10.6": {
+      "dimension": "D10",
+      "evidence": [
+        "docs/eval/xb.json",
+        "shots/eval/xb/*.png"
+      ],
+      "tools": [
+        "tools/xb-webkit.mjs",
+        "tools/xb-audit.mjs"
+      ]
+    },
+    "C10.7": {
+      "dimension": "D10",
+      "evidence": [
+        "docs/eval/robust.json",
+        "docs/eval/contexts.json"
+      ],
+      "tools": [
+        "tools/robust.mjs",
+        "tools/contexts.mjs"
+      ]
+    },
+    "C10.8": {
+      "dimension": "D10",
+      "evidence": [
+        "docs/eval/console.json",
+        "docs/eval/fault-injection.json"
+      ],
+      "tools": [
+        "tools/shoot.mjs",
+        "tools/soak.mjs",
+        "tools/robust.mjs",
+        "tools/audit-dist.mjs",
+        "tools/xb-webkit.mjs"
+      ]
+    },
+    "C11.1": {
+      "dimension": "D11",
+      "evidence": [
+        "docs/eval/baked.json",
+        "docs/eval/baked-static.json",
+        "docs/eval/mini.json",
+        "dist/pelican-bicycle.svg",
+        "dist/pelican-mini.svg"
+      ],
+      "tools": [
+        "tools/check-baked.mjs",
+        "tools/perf.mjs",
+        "tools/field.mjs"
+      ]
+    },
+    "C11.2": {
+      "dimension": "D11",
+      "evidence": [
+        "docs/eval/baked.json",
+        "shots/eval/baked-parity.png"
+      ],
+      "tools": [
+        "tools/check-baked.mjs",
+        "tools/loop-seam.mjs"
+      ]
+    },
+    "C11.3": {
+      "dimension": "D11",
+      "evidence": [
+        "dist/poster.png",
+        "dist/contact-sheet.png",
+        "dist/preview.webm",
+        "docs/eval/package.json"
+      ],
+      "tools": [
+        "tools/judge/package.mjs"
+      ]
+    },
+    "C11.4": {
+      "dimension": "D11",
+      "evidence": [
+        "docs/eval/export.json",
+        "docs/eval/publish-probe.json"
+      ],
+      "tools": [
+        "tools/export-check.mjs",
+        "tools/contexts.mjs"
+      ]
+    },
+    "C11.5": {
+      "dimension": "D11",
+      "evidence": [
+        "README.md",
+        "docs/handoff.md",
+        "docs/THIRD_PARTY.md",
+        "docs/eval/docs.json",
+        "docs/eval/publish.json"
+      ],
+      "tools": [
+        "tools/check-docs.mjs"
+      ]
+    },
+    "C12.1": {
+      "dimension": "D12",
+      "evidence": [
+        "docs/eval/contract.json",
+        "docs/architecture.svg"
+      ],
+      "tools": [
+        "tools/check-contract.mjs"
+      ]
+    },
+    "C12.2": {
+      "dimension": "D12",
+      "evidence": [
+        "docs/eval/rig.json",
+        "docs/eval/mutants.json",
+        "docs/rig-proof.svg"
+      ],
+      "tools": [
+        "tools/check-rig.mjs",
+        "tools/mutate-rig.mjs"
+      ]
+    },
+    "C12.3": {
+      "dimension": "D12",
+      "evidence": [
+        "docs/eval/determinism.json",
+        "test/golden/MANIFEST.json",
+        "docs/eval/vr/*.png"
+      ],
+      "tools": [
+        "tools/determinism.mjs",
+        "tools/vr.mjs"
+      ]
+    },
+    "C12.4": {
+      "dimension": "D12",
+      "evidence": [
+        "dist/MANIFEST.json",
+        "docs/eval/verify.txt"
+      ],
+      "tools": [
+        "tools/verify.mjs"
+      ]
+    },
+    "C12.5": {
+      "dimension": "D12",
+      "evidence": [
+        "docs/claims.json",
+        "docs/eval/claims.json"
+      ],
+      "tools": [
+        "tools/verify-claims.mjs",
+        "tools/readme-lint.mjs"
+      ]
+    },
+    "C12.6": {
+      "dimension": "D12",
+      "evidence": [
+        "docs/eval/inspect.json",
+        "shots/eval/inspect/*.png"
+      ],
+      "tools": [
+        "tools/check-inspect.mjs",
+        "tools/perf.mjs"
+      ]
+    },
+    "C12.7": {
+      "dimension": "D12",
+      "evidence": [
+        "docs/team/ledger.json",
+        "docs/team/coverage.json",
+        "docs/eval/rounds/*.json",
+        "docs/eval/ownership.json",
+        "docs/eval/isolation.json"
+      ],
+      "tools": [
+        "tools/coverage.mjs"
+      ]
+    },
+    "C12.8": {
+      "dimension": "D12",
+      "evidence": [
+        "docs/eval/benchmark.json",
+        "docs/eval/velocipedia-gallery.png",
+        "docs/eval/redteam-defects.json"
+      ],
+      "tools": [
+        "tools/check-benchmark.mjs"
+      ]
+    },
+    "C13.1": {
+      "dimension": "D13",
+      "evidence": [
+        "docs/eval/detail-inventory.json",
+        "docs/eval/judges/detail-*.json",
+        "shots/eval/detail/pairs/*.png"
+      ],
+      "tools": [
+        "tools/detail-inventory.mjs"
+      ]
+    },
+    "C13.2": {
+      "dimension": "D13",
+      "evidence": [
+        "docs/eval/zoom-coverage.json",
+        "shots/eval/detail/pelican-*.png",
+        "docs/eval/judges/detail-pelican-*.json"
+      ],
+      "tools": [
+        "tools/zoom-coverage.mjs"
+      ]
+    },
+    "C13.3": {
+      "dimension": "D13",
+      "evidence": [
+        "docs/eval/zoom-coverage.json",
+        "shots/eval/detail/bike-*.png",
+        "docs/eval/judges/detail-bike-*.json"
+      ],
+      "tools": [
+        "tools/zoom-coverage.mjs",
+        "tools/wagon.mjs"
+      ]
+    },
+    "C13.4": {
+      "dimension": "D13",
+      "evidence": [
+        "docs/eval/detail-inventory.json",
+        "docs/eval/scale.json",
+        "shots/eval/detail/world-*.png",
+        "docs/eval/judges/detail-world-*.json"
+      ],
+      "tools": [
+        "tools/detail-inventory.mjs",
+        "tools/check-scale.mjs",
+        "tools/judge/saliency.mjs"
+      ]
+    },
+    "C13.5": {
+      "dimension": "D13",
+      "evidence": [
+        "docs/eval/detail-inventory.json",
+        "docs/eval/in-art-text.json",
+        "shots/eval/detail/type-*.png"
+      ],
+      "tools": [
+        "tools/detail-inventory.mjs",
+        "tools/check-text.mjs",
+        "tools/first-look.mjs"
+      ]
+    },
+    "C13.6": {
+      "dimension": "D13",
+      "evidence": [
+        "docs/eval/detail-budget.json",
+        "perf/perf.json",
+        "docs/eval/judges/detail-regress-*.json"
+      ],
+      "tools": [
+        "tools/perf.mjs",
+        "tools/check-detail-budget.mjs"
+      ]
+    }
+  },
+  "gates": {
+    "G1": {
+      "evidence": [
+        "docs/eval/console.json",
+        "perf/dist-audit.json"
+      ],
+      "tools": [
+        "tools/build.mjs",
+        "tools/shoot.mjs",
+        "tools/audit-dist.mjs"
+      ]
+    },
+    "G2": {
+      "evidence": [
+        "docs/eval/canon.json",
+        "docs/eval/benchmark.json"
+      ],
+      "tools": [
+        "tools/check-benchmark.mjs"
+      ]
+    },
+    "G3": {
+      "evidence": [
+        "docs/eval/rig.json",
+        "docs/eval/canon.json",
+        "docs/eval/anchor-audit.json",
+        "docs/eval/seat.json",
+        "docs/eval/contacts.json"
+      ],
+      "tools": [
+        "tools/check-rig.mjs",
+        "tools/check-anchors.mjs",
+        "tools/check-contacts.mjs"
+      ]
+    },
+    "G4": {
+      "evidence": [
+        "docs/eval/alias.json",
+        "docs/eval/kinematics.json",
+        "docs/eval/baked.json"
+      ],
+      "tools": [
+        "tools/wagon.mjs",
+        "tools/check-kinematics.mjs",
+        "tools/check-baked.mjs"
+      ]
+    },
+    "G5": {
+      "evidence": [
+        "docs/eval/baked.json",
+        "docs/eval/baked-static.json",
+        "docs/eval/mini.json"
+      ],
+      "tools": [
+        "tools/check-baked.mjs",
+        "tools/loop-seam.mjs"
+      ]
+    },
+    "G6": {
+      "evidence": [
+        "docs/claims.json",
+        "docs/eval/claims.json"
+      ],
+      "tools": [
+        "tools/verify-claims.mjs",
+        "tools/readme-lint.mjs"
+      ]
+    },
+    "G7": {
+      "evidence": [
+        "docs/eval/thumb.json",
+        "docs/eval/species.json"
+      ],
+      "tools": []
+    },
+    "G8": {
+      "evidence": [
+        "docs/eval/mobile.json",
+        "docs/eval/first-look.json"
+      ],
+      "tools": [
+        "tools/ux-matrix.mjs",
+        "tools/first-look.mjs",
+        "tools/contact-probe.mjs"
+      ]
+    },
+    "G9": {
+      "evidence": [
+        "perf/perf.json",
+        "docs/eval/live-parity.json"
+      ],
+      "tools": [
+        "tools/perf.mjs",
+        "tools/live-parity.mjs",
+        "tools/lint.mjs"
+      ]
+    },
+    "G10": {
+      "evidence": [
+        "docs/eval/fuzz.json",
+        "perf/soak.json",
+        "docs/eval/determinism.json"
+      ],
+      "tools": [
+        "tools/motion-audit.mjs",
+        "tools/soak.mjs",
+        "tools/determinism.mjs"
+      ]
+    },
+    "G11": {
+      "evidence": [
+        "docs/eval/flash.json",
+        "docs/eval/reduced-motion.json",
+        "docs/eval/audio.json",
+        "docs/eval/keys.json"
+      ],
+      "tools": [
+        "tools/flash-check.mjs",
+        "tools/audio-check.mjs",
+        "tools/keys.mjs",
+        "tools/ux-matrix.mjs"
+      ]
+    },
+    "G12": {
+      "evidence": [
+        "docs/eval/a11y.json",
+        "docs/eval/i18n.json",
+        "docs/eval/keys.json"
+      ],
+      "tools": [
+        "tools/cjk-glyph.mjs",
+        "tools/a11y.mjs",
+        "tools/i18n-lint.mjs",
+        "tools/keys.mjs"
+      ]
+    },
+    "G13": {
+      "evidence": [
+        "docs/eval/package.json",
+        "docs/eval/export.json",
+        "docs/eval/publish.json"
+      ],
+      "tools": [
+        "tools/judge/package.mjs",
+        "tools/export-check.mjs"
+      ]
+    },
+    "G14": {
+      "evidence": [
+        "docs/eval/verify.txt",
+        "dist/MANIFEST.json",
+        "docs/eval/tool-validity.json",
+        "docs/team/coverage.json",
+        "docs/team/ledger.json",
+        "docs/eval/ownership.json",
+        "docs/eval/isolation.json"
+      ],
+      "tools": [
+        "tools/tool-validity.mjs",
+        "tools/coverage.mjs"
+      ]
+    },
+    "G15": {
+      "evidence": [
+        "README.md",
+        "docs/THIRD_PARTY.md",
+        "LICENSE",
+        "dist/index.html",
+        "docs/eval/docs.json"
+      ],
+      "tools": [
+        "tools/check-docs.mjs"
+      ]
+    },
+    "G-DETAIL": {
+      "evidence": [
+        "docs/eval/detail-inventory.json",
+        "docs/eval/zoom-coverage.json",
+        "docs/eval/judges/detail-*.json",
+        "shots/eval/detail/pairs/*.png"
+      ],
+      "tools": [
+        "tools/detail-inventory.mjs",
+        "tools/zoom-coverage.mjs",
+        "tools/perf.mjs"
+      ]
+    },
+    "G16": {
+      "evidence": [
+        "docs/eval/user-checkpoint.json"
+      ],
+      "tools": []
+    },
+    "G17": {
+      "evidence": [
+        "docs/eval/purity.json"
+      ],
+      "tools": [
+        "tools/check-purity.mjs"
+      ]
+    }
+  }
+}
