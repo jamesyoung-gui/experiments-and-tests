@@ -91,3 +91,44 @@ export function flicker(t, seed, rate = 7, p = 0.04, low = 0.28) {
   if (nhash(k >> 1, seed + 17) < p * 0.5 && (k & 1)) return String(Math.min(1, low + 0.35));
   return '1';
 }
+
+// ---- compositor hygiene (lighting pass, perf). Chromium gives an element `opacity` its own effect node; on a big
+// shape that effect is often not folded back into the sheet's layer, so the shape gets a cc layer of its own (each one
+// costs its full visible area every frame in the software compositor), and a group effect spanning several such layers
+// needs an offscreen render pass. Paint opacity (fill-opacity / stroke-opacity) is part of the drawing itself: no
+// effect node, no extra layer. flattenOpacity(root) rewrites the static `opacity` of every LEAF shape into paint
+// opacity (×fill-opacity / ×stroke-opacity already there; style="opacity:…" likewise) and patches the element so a
+// later setAttribute('opacity', v) from a module's update() lands on the paint opacities (getAttribute answers the
+// logical value). Groups and <use> keep their opacity (an effect over a whole subtree is not a paint property).
+// Visual difference: where a shape's stroke overlaps its own fill, the fill shows through the stroke a little.
+const LEAF = 'path,rect,circle,ellipse,line,polyline,polygon';
+export function flattenOpacity(root) {
+  const P = root.ownerDocument.defaultView.Element.prototype, nSet = P.setAttribute, nGet = P.getAttribute, nRem = P.removeAttribute;
+  let n = 0;
+  const num = x => (x === null || x === '' ? 1 : +x);
+  for (const el of root.querySelectorAll(LEAF)) {
+    const a = nGet.call(el, 'opacity');
+    const st = nGet.call(el, 'style') || '';
+    const m = /(^|;)\s*opacity\s*:\s*([^;]+)/.exec(st);
+    if (a === null && !m) continue;
+    const fo = num(nGet.call(el, 'fill-opacity')), so = num(nGet.call(el, 'stroke-opacity'));
+    if (!Number.isFinite(fo) || !Number.isFinite(so)) continue;
+    if (m) {   // CSS opacity (often a var() mood value): move it into paint opacity, in the style
+      const e = m[2].trim();
+      if (/!important/.test(e)) continue;
+      const rest = st.replace(m[0], m[1]).replace(/^;+/, '');
+      nSet.call(el, 'style', `${rest ? rest.replace(/;?\s*$/, ';') : ''}fill-opacity:calc(${fo} * (${e}) * ${a === null ? 1 : +a});stroke-opacity:calc(${so} * (${e}) * ${a === null ? 1 : +a})`);
+      if (a !== null) nRem.call(el, 'opacity');
+      n++; continue;
+    }
+    const k = +a; if (!Number.isFinite(k)) continue;
+    const st0 = { fo, so, v: a };
+    const put = v => { const x = Math.max(0, Math.min(1, +v)); nSet.call(el, 'fill-opacity', String(Math.round(st0.fo * x * 1e4) / 1e4)); nSet.call(el, 'stroke-opacity', String(Math.round(st0.so * x * 1e4) / 1e4)); };
+    nRem.call(el, 'opacity'); put(k);
+    el.setAttribute = function (key, v) { if (key === 'opacity') { if (String(v) !== st0.v) { st0.v = String(v); put(v); } return; } return nSet.call(this, key, v); };
+    el.getAttribute = function (key) { return key === 'opacity' ? st0.v : nGet.call(this, key); };
+    el.removeAttribute = function (key) { if (key === 'opacity') { st0.v = null; put(1); return; } return nRem.call(this, key); };
+    n++;
+  }
+  return n;
+}

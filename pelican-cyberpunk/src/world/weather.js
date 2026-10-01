@@ -235,9 +235,12 @@ export function build(ctx) {
   const clear = G({ ...REF('clear') }, G({ 'data-ref': 'wx-clearMove', transform: `translate(${AX} ${AY})` }, aster, aurora, proj, ad));
 
   // ================================================================ L-atmo: far rain, rain sheets, smog banks, the searchlight in smog, flash
-  const fr = rainTile({ salt: 70, colW: 20, rowH: 64, cols: 8, rows: 4, x0: -400, x1: 2200, y0: -560, y1: 820, slant: 0.2, L0: 11, L1: 20, mix: { p: 0.8, m: 0.2 } });
-  const farRain = G({ ...REF('farRain'), ...NOHIT, ...DD('fx:T:wx-farrain') }, G({ 'data-ref': 'wx-farRainMove' },
-    S(fr.p, v('smogHi'), 1.1, { opacity: 0.55, 'stroke-linecap': 'butt' }), S(fr.m, v('smogLit'), 1.2, { opacity: 0.5, 'stroke-linecap': 'butt' })));
+  // far streaks on the near tile's period (408 × 384, see `ra`), so they wrap with the wx-rainA translate
+  const fr = rainTile({ salt: 70, colW: 17, rowH: 64, cols: 24, rows: 6, x0: -300, x1: 2350, y0: -600, y1: 1060, slant: 0.2, L0: 9, L1: 17, mix: { p: 0.8, m: 0.2 } });
+  // Perf (lighting pass): the far rain no longer has a full-screen sheet of its own. Its streaks ride in the near-rain
+  // strip (wx-rainA, one composited screen for all the rain): finer, dimmer, smog-tinted, tiled on the near tile's period.
+  // The farRain / farRainMove refs stay (empty) so the update code and the sheet list keep working.
+  const farRain = G({ ...REF('farRain'), ...NOHIT }, G({ 'data-ref': 'wx-farRainMove' }));
   let gs = '';
   for (let rep = -1; rep < 2; rep++) for (let i = 0; i < 3; i++) { const x = rep * GUST_W + i * GUST_W / 3 + hh(i, 80) * 300, w = 180 + hh(i, 81) * 160; gs += `M${f(x)} -120h${f(w)}L${f(x + w - 330)} 620h${f(-w * 1.3)}Z`; }
   const gusts = G({ ...REF('gusts'), ...NOHIT, ...DD('fx:O:wx-rainsheets') }, G({ 'data-ref': 'wx-gustMove' }, F(gs, 'url(#wx-gSheet)'), F(gs, 'url(#wx-pSheet)')));
@@ -314,7 +317,9 @@ export function build(ctx) {
   const neon = (o, sc) => S(o.c, C.cy, 3.4 * sc, { opacity: 0.13, 'stroke-linecap': 'butt', ...NOHIT }) + S(o.c, C.cy, 1.2 * sc, { opacity: 0.75, 'stroke-linecap': 'butt' })
     + S(o.m, C.mag, 3.4 * sc, { opacity: 0.13, 'stroke-linecap': 'butt', ...NOHIT }) + S(o.m, C.mag, 1.2 * sc, { opacity: 0.75, 'stroke-linecap': 'butt' })
     + (o.a ? S(o.a, C.am, 1.2 * sc, { opacity: 0.7, 'stroke-linecap': 'butt' }) : '');
-  const rainL = G({ ...REF('rainL') }, G({ 'data-ref': 'wx-rainA' }, S(ra.p, C.cyC, 1.1, { opacity: 0.36, 'stroke-linecap': 'butt', ...DD('fx:T:wx-rain') }), G(DD('fx:O:wx-rain-neon'), neon(ra, 1))));
+  const rainL = G({ ...REF('rainL') }, G({ 'data-ref': 'wx-rainA' },
+    G(DD('fx:T:wx-farrain'), S(fr.p, v('smogHi'), 0.8, { 'stroke-opacity': 0.42, 'stroke-linecap': 'butt' }), S(fr.m, v('smogLit'), 0.9, { 'stroke-opacity': 0.4, 'stroke-linecap': 'butt' })),
+    S(ra.p, C.cyC, 1.1, { opacity: 0.36, 'stroke-linecap': 'butt', ...DD('fx:T:wx-rain') }), G(DD('fx:O:wx-rain-neon'), neon(ra, 1))));
   const rainH = G({ ...REF('rainH'), ...DD('fx:T:wx-downpour') }, G({ 'data-ref': 'wx-rainB' }, S(rb.p, C.cyC, 1.35, { opacity: 0.42, 'stroke-linecap': 'butt' }), neon(rb, 1.1)));
   let spl = '';
   for (let i = 0; i < 12; i++) {
@@ -424,12 +429,15 @@ export function attach(svg, ctx) {
       }
 
       // ---- puddles: hashed slots along the road (pooled; no quick repeats), ripples while it rains, lightning flash
-      if (showA(r.puddles, clamp(0.62 + 0.38 * (w.wet || 0), 0, 1))) for (let i = 0; i < PUD_N; i++) {
+      // the group alpha goes on each puddle (a group opacity over two far-apart puddles = two cc layers = an offscreen pass)
+      const pudA = op(clamp(0.62 + 0.38 * (w.wet || 0), 0, 1));
+      if (showA(r.puddles, 1)) for (let i = 0; i < PUD_N; i++) {
         const m = Math.floor((D + 2000 - i * PUD_SP) / (PUD_N * PUD_SP)), k = i + PUD_N * m, sx = k * PUD_SP + hash(k, 502) * 280 - D;
         const el = r['pud' + i], on = hash(k, 501) < 0.62 && sx > -300 && sx < 1950;
         vis(el, on); if (!on) continue;
         const y = GROUND_Y + 22 + hash(k, 503) * 58, sc = 0.7 + (y - GROUND_Y - 22) / 58 * 0.55;
         set(el, 'transform', `translate(${f(sx)} ${f(y)}) scale(${f(sc * (0.8 + 0.45 * hash(k, 504)))} ${f(sc)})`);
+        set(el, 'opacity', pudA);
         for (let j = 0; j < 2; j++) {
           const rp = r[`rip${i}_${j}`], P = 0.8 + 0.25 * j, q = (t + j * 0.41 + i * 0.29) / P, c = Math.floor(q), u = red ? 0.5 : q - c;
           const ron = R > 0.05 && (red ? j === 0 : true);

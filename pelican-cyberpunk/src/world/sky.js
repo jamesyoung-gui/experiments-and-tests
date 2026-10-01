@@ -238,7 +238,7 @@ export function build(ctx) {
         h('path', { d: 'M-48.4 2A48.4 9.4 0 0 1 -30 -6.2L-30 -5.4A47.6 8.6 0 0 0 -47.6 2ZM30 -6.2A48.4 9.4 0 0 1 48.4 2L47.6 2A47.6 8.6 0 0 0 30 -5.4Z', fill: NEON.cyan, opacity: 0.35 }),
         h('circle', { cx: 30, cy: 8.6, r: 1.4, fill: NEON.cyanCore }))));
   }
-  const beamAt = sunmoon.length;   // the searchlights slot in here: behind the towers, in front of the sun and moon
+  let beamsM = '';                 // the searchlights (built with L-clouds below, drawn last in L-sky)
   // ---- window grid helper (merged paths per colour)
   const WIN = ['#FFB547', '#19E6FF', '#FF2E88', '#FFF3E0'];
   function windows(R, x0, x1, y0, y1, cw, ch, dens, buckets, ww = 1.8, wh = 2.6) {
@@ -385,11 +385,14 @@ export function build(ctx) {
   let clouds = '';
   // searchlights (one isolated sheet inside L-sunmoon; each beam turns slowly about its foot on the horizon)
   {
-    const beamG = lg('sky-beam', 0, 0, 0, -1150, [[0, v('search'), 0.2], [0.4, v('search'), 0.08], [1, v('search'), 0]]);
-    const coreG = lg('sky-beamC', 0, 0, 0, -1150, [[0, '#FFFFFF', 0.3], [0.45, v('search'), 0.07], [1, v('search'), 0]]);
-    sunmoon = sunmoon.slice(0, beamAt) + h('g', { 'data-ref': 'sky-beams', style: 'fill-opacity:var(--pb-n-search)' }, BEAMS.map(([x, a0], i) => h('g', { 'data-ref': 'sky-beam' + i, transform: `translate(${x} 486) rotate(${a0})` },
-      h('path', { ...(i === 0 ? DD('sky:O:searchlights') : {}), d: poly([[-5, 0], [5, 0], [110, -1150], [-110, -1150]]), fill: beamG }),
-      h('path', { ...(i === 0 ? DD('sky:T:searchlight-cores') : {}), d: poly([[-1.5, 0], [1.5, 0], [22, -1150], [-22, -1150]]), fill: coreG })))) + sunmoon.slice(beamAt);
+    const beamG = lg('sky-beam', 0, 0, 0, -760, [[0, v('search'), 0.2], [0.4, v('search'), 0.08], [1, v('search'), 0]]);
+    const coreG = lg('sky-beamC', 0, 0, 0, -760, [[0, '#FFFFFF', 0.3], [0.45, v('search'), 0.07], [1, v('search'), 0]]);
+    // lighting pass (perf): the beams sit at the END of L-sky (in front of the arcology: the lamps stand in the near
+    // city, their feet hide behind the skyline layers). Slotted mid-sheet they cut L-sky into two composited sheets
+    // (+0.3 screen of compositing every frame). Shortened to 760 (the gradient is spent long before 1150).
+    beamsM = h('g', { 'data-ref': 'sky-beams', style: 'fill-opacity:var(--pb-n-search)' }, BEAMS.map(([x, a0], i) => h('g', { 'data-ref': 'sky-beam' + i, ...(i === 0 ? DD('sky:O:searchlights') : {}), transform: `translate(${x} 486) rotate(${a0})` },
+      h('path', { d: poly([[-5, 0], [5, 0], [78, -760], [-78, -760]]), fill: beamG, style: 'pointer-events:none !important' }),
+      h('path', { ...(i === 0 ? DD('sky:T:searchlight-cores') : {}), d: poly([[-1.5, 0], [1.5, 0], [16, -760], [-16, -760]]), fill: coreG, style: 'pointer-events:none !important' }))));
   }
   // smog banks (each its own translate strip)
   {
@@ -570,7 +573,7 @@ export function build(ctx) {
     layers: {
       // everything static and far lives on the opaque L-sky sheet (one composited layer, repainted only by the slow
       // searchlight sweep, the star twinkle and the warning-light blink); L-stars / L-sunmoon only carry two tiny strips
-      'L-sky': sky + starsL + sunmoon,
+      'L-sky': sky + starsL + sunmoon + beamsM,
       'L-stars': satL,
       'L-sunmoon': capsule,
       'L-clouds': clouds,
@@ -614,8 +617,11 @@ export function attach(svg, ctx) {
       const sa = num.starAlpha ?? 0;
       vis(r.stars, sa > 0.02, 'starV'); vis(r.sat, sa > 0.02, 'satV');
       if (sa > 0.02) {
-        const tt = Math.floor(t * 8) / 8;
-        for (let g = 0; g < 3; g++) set(r['tw' + g], 'opacity', (reduced ? 0.8 : 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(tt * (1.7 + g * 0.6) + g * 2.1)) ** 2).toFixed(2), 'tw' + g);
+        // perf (lighting pass): each twinkle write repaints the whole L-sky sheet (the stars span it), so the three
+        // groups take turns at 3 Hz (3 repaints a second instead of 24) on 5 brightness steps
+        const k = Math.floor(t * 3);
+        for (let g = 0; g < 3; g++) { const tt = (k - (((k - g) % 3) + 3) % 3) / 3;   // this group's last turn (deterministic)
+          set(r['tw' + g], 'opacity', (reduced ? 0.8 : 0.25 + 0.75 * Math.round(4 * (0.5 + 0.5 * Math.sin(tt * (1.7 + g * 0.6) + g * 2.1)) ** 2) / 4).toFixed(2), 'tw' + g); }
         const sx = wrap(300 + 700 + tm * 7, SAT_SPAN) - 700;
         r.sat.setAttribute('transform', `translate(${f(sx)} ${f(60 + sx * 0.04)})`);
       }

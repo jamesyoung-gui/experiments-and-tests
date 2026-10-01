@@ -23,7 +23,7 @@ import { fmt1, fmt2 } from '../core/math.js';
 import { GROUND_Y, TILE, DIST_PER_REV, RIDER_X } from '../contract.js';
 import { h, refs, mount } from '../core/svg.js';
 import { LAP, KM, STRETCHES, SIGNS, KM_STONES, stretchAt, relTo, hash } from './route.js';
-import { streakFilter, brightBloom } from '../art/neon.js';
+import { streakFilter, flattenOpacity } from '../art/neon.js';
 
 export const id = 'land';
 // extra base colours (graded by the city mood like the core materials; '-far' variants sink into the smog)
@@ -204,7 +204,6 @@ const ITEMS = [
   ['O', 'road-studs', 'glowing road studs between the dashes'],
   ['T', 'wet-asphalt', 'wet asphalt: aggregate speckle and gloss'],
   ['O', 'neon-reflections', 'long vertical neon reflections of the signs on the wet road'],
-  ['T', 'neon-bloom', 'bloom pass on the pavement: every bright tube, lamp and sign glows into the rainy air (bright-pass blur of the static tile)'],
   ['T', 'pavement-reflection', 'the whole pavement mirrored in the wet asphalt: squashed, streak-blurred neon of every pylon, lamp and stall (static tile, scrolls with the pavement)'],
   ['O', 'manhole', 'manhole cover with a rim'],
   ['T', 'manhole-pattern', 'hex relief and 鹈鹕 cast on the manhole cover'],
@@ -260,7 +259,8 @@ const lampStreaks = () => LAMP_X.map(x => F(rect(x + 30, REFL.y0, 40, 96), 'url(
 const pylonStreaks = () => F(rect(1502, REFL.y0, 34, 100), 'url(#land-refM)') + F(rect(1512, REFL.y0, 12, 102), 'url(#land-refM)') + F(rect(1384, REFL.y0, 28, 92), 'url(#land-refA)')
   + F(rect(22, REFL.y0, 30, 96), 'url(#land-refC)') + F(rect(32, REFL.y0, 10, 100), 'url(#land-refC)');
 // bright-pass bloom over a static tile (lighting pass): a blurred copy of only its brightest neon, laid over the art
-const bloomUse = href => h('use', { href, filter: 'url(#land-bloom)', opacity: 0.85, ...NOHIT });
+// (the bright-pass bloom <use> of the whole tile was dropped in the lighting pass: re-running its wide blur on every new
+// raster tile of the scrolling strip cost 2 s dips to 11 fps, and the tubes already glow with stacked strokes)
 const mstrip = m => m.replace(/ (?:data-detail|data-size-m|data-ref|id|class)="[^"]*"/g, '');
 // Lamp x positions in the roadside layer's coordinates for a given distance (for fx rim-light / other modules).
 export function lampPositions(distance, x0 = -500, x1 = 2100) {
@@ -875,7 +875,11 @@ export function build(ctx) {
   let defs = '';
   // lighting pass: the asphalt band the pavement reflection is clipped to, and its streak blur (static tiles only)
   defs += h('clipPath', { id: 'land-reflclip', clipPathUnits: 'userSpaceOnUse' }, h('path', { d: rect(-30000, REFL.y0, 60000, REFL.y1 - REFL.y0) }));
-  defs += brightBloom('land-bloom', { thr: 0.42, s: 3.2, gain: 1.1, region: [-600, 60, 3000, 712] });
+  // the same asphalt band expressed in the local space of a mirrored copy (y_local = (BASE·(1+k) − Y) / k)
+  for (const [id, k] of [['land-reflclipK', REFL.k], ['land-reflclipK2', 0.5]]) {
+    const o = id === 'land-reflclipK' ? BASE * (1 + k) : BASE * (1 + k) + 3, ya = (o - REFL.y1) / k, yb = (o - REFL.y0) / k;
+    defs += h('clipPath', { id, clipPathUnits: 'userSpaceOnUse' }, h('path', { d: rect(-30000, ya, 60000, yb - ya) }));
+  }
   defs += streakFilter('land-streak', 1.3, 4.5, [-4000, REFL.y0 - 20, 10000, REFL.y1 - REFL.y0 + 40], 1.7);
   const anim = { shore: [], roadside: [] }, under = { shore: [], roadside: [] };   // under: glows drawn beneath the hero objects   // tg => markup; hero-copy animation hooks
   const base = {}, baseAnim = {};              // continuous base tiles (streamed stretches)
@@ -1434,13 +1438,13 @@ export function build(ctx) {
       // squashed and streak-blurred. It lives in the roadside tiles, so it scrolls with what it reflects (depth 0.9);
       // the road above is translucent over it. Static tiles that only translate: the blur rasterises once (STYLE-X §2).
       defs += G({ id: 'land-bsrc-roadside' }, baseBody);
-      defs += G({ id: 'land-base-roadside' }, roadBase(W) + reflWrap(h('use', { href: '#land-bsrc-roadside' }), W, lampStreaks()) + h('use', { href: '#land-bsrc-roadside' }) + bloomUse('#land-bsrc-roadside'));
+      defs += G({ id: 'land-base-roadside' }, roadBase(W) + reflWrap(h('use', { href: '#land-bsrc-roadside' }), W, lampStreaks()) + h('use', { href: '#land-bsrc-roadside' }));
       // the hero tile's mirror + bloom read a stripped static copy (its animated hooks would rebuild a <use> shadow tree per frame)
       defs += G({ id: 'land-hstat-roadside' }, mstrip(under0 + content));
       return G({ 'data-ref': 'land-' + key },
         [0, 1, 2].map(k => h('use', { 'data-ref': `land-b${key}${k}`, href: '#land-base-' + key })).join(''),
         G({ id: 'land-tile-' + key, 'data-ref': 'land-full' + key }, roadBase(W), G(DD('pavement-reflection'), reflWrap(h('use', { href: '#land-hstat-roadside' }), W, lampStreaks() + pylonStreaks())),
-          under0, content, anim0, G(DD('neon-bloom'), bloomUse('#land-hstat-roadside'))),
+          under0, content, anim0),
         spMarkup(key), streamMarkup(key), fixedMarkup());
     }
     defs += G({ id: 'land-base-' + key }, baseBody);
@@ -1455,8 +1459,10 @@ export function build(ctx) {
   // roadside stream + fixed boards: each slot also gets a mirrored <use> (same host, so it scrolls with its prop; the
   // shadow tree rebuilds only when that slot is re-seated). No filter: these recycle (STYLE-X §2), so the smear is two
   // offset copies instead of a blur.
-  const slotMirror = ids => G({ ...NOHIT, 'clip-path': 'url(#land-reflclip)' }, G({ transform: REFL.xf, opacity: REFL.aStream },
-    ids.map(i => h('use', { href: '#' + i })).join('')), G({ transform: REFL.xf2, opacity: f(REFL.aStream * 0.45) }, ids.map(i => h('use', { href: '#' + i })).join('')));
+  // Perf: the mirror transform, alpha and clip sit on EACH <use> (the clip in the use's mirrored local space). A group
+  // effect over the pool would span one cc layer per far-apart prop and cost an offscreen render pass every frame.
+  const slotMirror = ids => G(NOHIT, ids.map(i => h('use', { href: '#' + i, transform: REFL.xf, opacity: REFL.aStream, 'clip-path': 'url(#land-reflclipK)' })).join('')
+    + ids.map(i => h('use', { href: '#' + i, transform: REFL.xf2, opacity: f(REFL.aStream * 0.45), 'clip-path': 'url(#land-reflclipK2)' })).join(''));
   const streamMarkup = key => G({ 'data-ref': 'land-pool-' + key }, Array.from({ length: POOL[key] }, (_, i) =>
     G({ 'data-ref': `land-sl-${key}-${i}`, ...(key === 'roadside' ? { id: `land-sl-${key}-${i}` } : {}), display: 'none' }, Array.from({ length: PARTS[key] }, () => h('use', { href: '#land-y-none' })).join(''))).join('')
     + (key === 'roadside' ? slotMirror(Array.from({ length: POOL[key] }, (_, i) => `land-sl-${key}-${i}`)) : ''));
@@ -1539,7 +1545,7 @@ export function attach(svg, ctx) {
   const SPS = SP_CACHE.map(c => ({ ...c, el: null, host: r['sphost-' + c.layer] }));
   const NSVG = 'http://www.w3.org/2000/svg';
   const mountSP = sp => {
-    const g = document.createElementNS(NSVG, 'g'); mount(g, sp.m); sp.host.appendChild(g); sp.el = g;
+    const g = document.createElementNS(NSVG, 'g'); mount(g, sp.m); flattenOpacity(g); sp.host.appendChild(g); sp.el = g;
     for (const el of g.querySelectorAll('[data-ref^="land-"]')) r[el.getAttribute('data-ref').slice(5)] = el;
     for (const el of g.querySelectorAll('.land-glow')) { glows.push(el); el.setAttribute('display', glowOn ? 'inline' : 'none'); }
   };

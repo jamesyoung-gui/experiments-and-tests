@@ -449,6 +449,19 @@ export function build() {
 
   // ============================================================ FRAME (rider space, static)
   let fr = '';
+  // --- lighting pass: the rims' light in the wet air (STATIC, in the frame slot, so the rotating wheel sheets never
+  // re-raster it). Rotation-invariant annuli round each hub: a wide faint halo outside the tyre, a tighter one on the
+  // sidewall and a soft inner spill over the spokes; magenta rear, cyan front (the concept's dual rim light). No hit
+  // area (a wash must not steal the wheel's hit tests), no filter.
+  {
+    const NH = 'pointer-events:none !important';
+    const halo = (c, col) => h('g', { style: NH },
+      Fp(ringNZ(c, 97.5, 118), col, { 'fill-opacity': 0.05, 'fill-rule': 'evenodd', style: NH }),
+      Fp(ringNZ(c, 97.5, 106), col, { 'fill-opacity': 0.08, 'fill-rule': 'evenodd', style: NH }),
+      Fp(ringNZ(c, 97.6, 99.4), col, { 'fill-opacity': 0.28, 'fill-rule': 'evenodd', style: NH }),
+      Fp(ringNZ(c, 66, 86.4), col, { 'fill-opacity': 0.045, 'fill-rule': 'evenodd', style: NH }));
+    fr += halo(RH, X.mag) + halo(FH, X.cyan);
+  }
   // --- neon spoke light trails (static, two colours, fade in with speed)
   const trail = (c, r, a0, span, w, ink) => {
     const A = [], Bq = [];
@@ -458,7 +471,8 @@ export function build() {
   const tD = (c, r, a0, span, w) => [0, 1, 2].map(k => trail(c, r, k * 120 + a0, span, w, '').match(/d="([^"]*)"/)[1]).join('');
   const trails = (c, col, core, col2) => h('g', {}, Fp(tD(c, 74, 10, 46, 2.6), col), Fp(tD(c, 74, 14, 40, 0.9), core),
     Fp(tD(c, 56, 70, 38, 2), col2, { opacity: 0.8 }), Fp(tD(c, 38, 40, 30, 1.4), col, { opacity: 0.55 }));
-  fr += h('g', { ...tag('wheel-light-trails'), 'data-ref': 'bike-swoosh', opacity: 0 }, trails(RH, X.mag, X.magCore, X.cyan), trails(FH, X.cyan, X.cyanCore, X.mag));
+  // (the fade alpha sits on each wheel's trails: one group opacity over both wheels = two cc layers = an offscreen pass)
+  fr += h('g', { ...tag('wheel-light-trails'), 'data-ref': 'bike-swoosh' }, h('g', { 'data-ref': 'bike-swooshR', opacity: 0 }, trails(RH, X.mag, X.magCore, X.cyan)), h('g', { 'data-ref': 'bike-swooshF', opacity: 0 }, trails(FH, X.cyan, X.cyanCore, X.mag)));
   // --- wet tyre sheen: static reflections (cyan from the front, magenta from behind)
   for (const c of [RH, FH]) fr += G('tyre-wet-sheen', ...arcPieces(c, 96.6, 97.9, -78, 6, 3).map(d => Fp(d, X.cyan, { opacity: 0.8 })), ...arcPieces(c, 96.4, 98, 186, 246, 2).map(d => Fp(d, X.mag, { opacity: 0.85 })),
     ...arcPieces(c, 97, 97.5, -60, -20, 1).map(d => Fp(d, X.cyanCore)));
@@ -1085,7 +1099,7 @@ export function attach(svg) {
         set(r[`${w}-tread`], 'opacity', (1 - blur).toFixed(2));
         set(r[`${w}-treadblur`], 'opacity', blur.toFixed(2));
       }
-      set(r.swoosh, 'opacity', (0.95 * blur).toFixed(2));
+      set(r.swooshR, 'opacity', (0.95 * blur).toFixed(2)); set(r.swooshF, 'opacity', (0.95 * blur).toFixed(2));
       set(r.roller, 'opacity', (1 - blur).toFixed(2));
       // bell striker + dome shiver
       const bell = p.bell || {};

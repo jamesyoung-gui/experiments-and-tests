@@ -10,7 +10,7 @@
 // strip (a compositor move); nothing repaints per frame. The only per-frame write is that strip's translate.
 import { fmt2 } from '../core/math.js';
 import { h, refs } from '../core/svg.js';
-import { NEON } from '../art/neon.js';
+import { NEON, flattenOpacity } from '../art/neon.js';
 
 const f = fmt2;
 const wrap = (x, m) => ((x % m) + m) % m;
@@ -34,8 +34,9 @@ export function build(ctx) {
   const lin = (id, list, a = { x1: 0, y1: 0, x2: 0, y2: 1 }) => { defs += h('linearGradient', { id, ...a }, list.map(s => stop(...s)).join('')); };
   const rad = (id, list) => { defs += h('radialGradient', { id }, list.map(s => stop(...s)).join('')); };
   // horizon band: transparent → city glow → haze → transparent (y-down)
-  lin('fx-lHz', [[0, v('haze'), 0], [0.45, v('haze'), 0.34], [0.78, v('cityGlow'), 0.3], [1, v('cityGlow'), 0]]);
-  lin('fx-lMist', [[0, v('haze'), 0], [0.5, v('smogHi'), 0.2], [1, v('haze'), 0]]);
+  // (retuned: less milky violet, more coloured light at the foot of the towers, so the skyline keeps its blacks)
+  lin('fx-lHz', [[0, v('haze'), 0], [0.4, v('haze'), 0.16], [0.74, v('cityGlow'), 0.3], [0.9, NEON.mag, 0.1], [1, v('cityGlow'), 0]]);
+  lin('fx-lMist', [[0, v('haze'), 0], [0.5, v('smogHi'), 0.11], [1, v('haze'), 0]]);
   lin('fx-lStreet', [[0, v('cityGlow'), 0], [0.7, v('cityGlow'), 0.16], [1, NEON.amber, 0.2]]);
   for (const [n, c] of [['M', NEON.mag], ['C', NEON.cyan], ['A', NEON.amber], ['V', NEON.violet]]) rad('fx-lP' + n, [[0, c, 0.26], [0.5, c, 0.1], [1, c, 0]]);
   // vignette: edges only (the middle of the frame stays untouched, and so do its tiles)
@@ -44,8 +45,10 @@ export function build(ctx) {
   lin('fx-lVl', [[0, NEON.void, 0.55], [1, NEON.void, 0]], { x1: 0, y1: 0, x2: 1, y2: 0 });
   lin('fx-lVr', [[0, NEON.void, 0], [1, NEON.void, 0.55]], { x1: 0, y1: 0, x2: 1, y2: 0 });
 
-  const R = (x, y, w, hh, fill, o = {}) => h('rect', { x: f(x), y: f(y), width: f(w), height: f(hh), fill, ...o });
-  const E = (cx, cy, rx, ry, fill, o = {}) => h('ellipse', { cx: f(cx), cy: f(cy), rx: f(rx), ry: f(ry), fill, ...o });
+  // every shape carries the inline no-hit style itself (a washed overlay must never win a hit test, not even when a tool
+  // forces pointer-events on every element: the detail inventory does)
+  const R = (x, y, w, hh, fill, o = {}) => h('rect', { x: f(x), y: f(y), width: f(w), height: f(hh), fill, ...NH, ...o });
+  const E = (cx, cy, rx, ry, fill, o = {}) => h('ellipse', { cx: f(cx), cy: f(cy), rx: f(rx), ry: f(ry), fill, ...NH, ...o });
   const smogOp = 'opacity:calc(0.55 + 0.45 * var(--pb-n-smog, 0.6));pointer-events:none !important';
 
   // ---- L-atmo: horizon smog band (x covers any camera zoom / roll) + mist on the water
@@ -72,6 +75,8 @@ export function build(ctx) {
 }
 
 export function attach(svg) {
+  // compositor hygiene for the whole frame (art/neon.js): leaf opacity -> paint opacity, before the sheets split
+  flattenOpacity(svg);
   const r = refs(svg, 'fx-');
   let last = null;
   return {

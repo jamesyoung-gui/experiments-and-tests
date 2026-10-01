@@ -711,8 +711,8 @@ function buildSpire(v, rng) {
   // the searchlight beam: its own small sheet (a pure translate; the sweep repaints only the beam)
   const beam = h('g', { 'data-ref': 'sea-beam', transform: `translate(${LAMP.x} ${LAMP.y})`, style: 'opacity:var(--pb-n-search)' },
     h('g', { 'data-ref': 'sea-beamRot', ...DD('sea:O:searchlight-beam') },
-      F('M0 -3L900 -56L900 56L0 3Z', N.cyanCore, { opacity: 0.09 }),
-      F('M0 -2L900 -22L900 22L0 2Z', N.cyanCore, { opacity: 0.16 }),
+      F('M0 -3L900 -56L900 56L0 3Z', N.cyanCore, { opacity: 0.09 , style: 'pointer-events:none !important' }),
+      F('M0 -2L900 -22L900 22L0 2Z', N.cyanCore, { opacity: 0.16 , style: 'pointer-events:none !important' }),
       S('M6 -2L900 -46M6 -1L900 -30M8 0L900 -10M8 0L900 10M6 1L900 30M6 2L900 46', N.cyan, 1, { opacity: 0.4, 'stroke-dasharray': '60 14 30 10' })),
     h('circle', { 'data-ref': 'sea-lantern', r: 26, fill: 'url(#sea-gCyan)' }));
   // the spire's reflection (in L-sea, scrolled with the spire)
