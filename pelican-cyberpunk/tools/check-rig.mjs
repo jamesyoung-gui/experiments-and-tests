@@ -316,7 +316,7 @@ eventScan('hop', TIMING.hop.dur);
   }
   // big shifts from the pose: head-slot rotation change > 15° within 0.5 s, must see lid > 0.9 around it
   let lid = [], hr = [];
-  for (let t = 0; t < 560; t += 1 / 60) { const p = solvePose(t, { crank: t * 2 * Math.PI, cadence: 60, speed: U, distance: t * U, events: [], tod: 0.9 }); lid.push(p.face.lid); hr.push(p.joints.head.rot); if (p.gaze.target && !['ahead', 'road', 'sea', 'sky', 'basket', 'camera'].includes(p.gaze.target)) seen.add('pose:' + p.gaze.target); }
+  for (let t = 0; t < 560; t += 1 / 60) { const p = solvePose(t, { crank: t * 2 * Math.PI, cadence: 60, speed: U, distance: t * U, events: [], tod: 0.9 }); lid.push(p.face.lid); hr.push(p.joints.head.rot); if (p.gaze.target && !['ahead', 'road', 'sea', 'sky', 'basket', 'camera', 'hud'].includes(p.gaze.target)) seen.add('pose:' + p.gaze.target); }
   let unblinked = 0;
   const blinked = lid.filter((v, i) => v > 0.9 && !(lid[i - 1] > 0.9)).length;
   for (let i = 30; i < hr.length; i += 30) if (Math.abs(hr[i] - hr[i - 30]) > 15) { bigShifts++; if (!lid.slice(i - 45, i + 15).some(v => v > 0.9)) { unblinked++; if (verbose) console.log('unblinked head shift at t', (i / 60).toFixed(2), (hr[i] - hr[i - 30]).toFixed(1)); } }
@@ -330,6 +330,25 @@ eventScan('hop', TIMING.hop.dur);
   if (blinked / 560 * 60 > 30) fail(`blinking too often on the journey (${(blinked / 560 * 60).toFixed(1)}/min)`);
   if (unblinked) fail(`${unblinked} head turns over 15° without a blink`);
   if (maxHeadStep > 0.6) fail(`encounter head pitch whip ${maxHeadStep.toFixed(2)}° per 240 Hz sample`);
+}
+
+// ---------------------------------------------------------------- 8. neon cruise feel (edition X tuning)
+// Half-time head nod locked to the crank (1φ harmonic of the head rotation, 1–3°, dipping after the near leg's push),
+// the crest lags the nod, the nod fades when sprinting; the HUD scan is a short glance that returns ahead.
+{
+  const h1 = (cad, sig) => { let c = 0, s = 0; const N = 720; for (let i = 0; i < N; i++) { const phi = i / N * 2 * Math.PI; const p = solvePose(5.0, { ...state(5.0, cad, phi), director: false }); const v = sig(p); c += v * Math.cos(phi); s += v * Math.sin(phi); } return { amp: 2 * Math.hypot(c, s) / N, ph: ((Math.atan2(s, c) * D) + 360) % 360 }; };
+  const nod60 = h1(60, p => p.joints.head.rot), nod95 = h1(95, p => p.joints.head.rot);
+  const cr60 = h1(60, p => -angDiff(p.joints.crest.rot, p.joints.head.rot));
+  const lagC = ((cr60.ph - nod60.ph) % 360 + 360) % 360;
+  info.push(`cruise: nod ±${nod60.amp.toFixed(2)}° @60rpm peaking ${nod60.ph.toFixed(0)}° after the near push (±${nod95.amp.toFixed(2)}° @95rpm), crest counter-swing lags ${lagC.toFixed(0)}°; rest lean ${bio[60].lean.toFixed(1)}°`);
+  if (nod60.amp < 1 || nod60.amp > 3) fail(`head nod ±${nod60.amp.toFixed(2)}° out of 1–3°`);
+  if (nod95.amp >= nod60.amp) fail('head nod does not fade when sprinting');
+  if (!(lagC > 5 && lagC < 90)) fail(`crest does not lag the nod (${lagC.toFixed(0)}°)`);
+  let glances = 0, longest = 0, st = null;
+  for (let i = 0; i < 180 * 60; i++) { const g = gazeAt(i / 60); if (g.target === 'hud') { if (st === null) { st = i / 60; glances++; } } else if (st !== null) { longest = Math.max(longest, i / 60 - st); st = null; } }
+  info.push(`hud scan: ${glances} glances in 180 s, longest ${longest.toFixed(2)} s`);
+  if (glances < 4) fail(`only ${glances} HUD glances in 180 s`);
+  if (longest > 2.7) fail(`HUD stare ${longest.toFixed(2)} s`);
 }
 
 console.log(info.join('\n'));

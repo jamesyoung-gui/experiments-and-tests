@@ -13,7 +13,7 @@
 //     so the texture rides with the part.
 // Each slot is drawn in its joint-local frame (see CONTRACT.md "Slots"). Everything static is built once as markup;
 // update() only rewrites the neck + scarf ribbons (fixed command counts) and toggles a few opacities/transforms.
-import { fmt2 } from '../core/math.js';
+import { fmt2, fmt1 } from '../core/math.js';
 import { h, refs } from '../core/svg.js';
 import { SKEL } from '../contract.js';
 import { gouacheTile, glazeGrads, glaze as gz } from './gouache.js';
@@ -130,8 +130,11 @@ function neckSamples(n, N, bulge) {
     const t = i / (N - 1);
     C.push([B(t, n.p0[0], n.p1[0], n.p2[0], n.p3[0]), B(t, n.p0[1], n.p1[1], n.p2[1], n.p3[1])]);
     T.push(norm([Bd(t, n.p0[0], n.p1[0], n.p2[0], n.p3[0]), Bd(t, n.p0[1], n.p1[1], n.p2[1], n.p3[1])]));
-    // slight throat fullness under the head + taper; bulge for the gulp
-    let w = (n.w0 + (n.w1 - n.w0) * t) / 2 + 1.6 * Math.sin(Math.PI * t) ** 2;
+    // a HEAVY pelican neck (not a heron's tube): the rig's widths (w0 34 -> w1 24, breathing) re-profiled to flare
+    // into the chest (~52 u at the base, hidden by the scarf), ~37 u mid-neck (0.7x the skull) and a full throat
+    // (~31 u) where the pouch lies against the fore-neck; bulge for the gulp
+    const wr = (n.w0 + (n.w1 - n.w0) * t) / (34 - 10 * t);
+    let w = wr * (31 + 21 * (1 - t) ** 1.8) / 2 + 1.5 * Math.sin(Math.PI * t) ** 2 + 1.2 * Math.exp(-(((t - 0.84) / 0.12) ** 2));
     const bg = bulge || (n.bulgeA > 0 ? { at: n.bulgeT, amp: (n.bulgeW ?? 13 * n.bulgeA) / 2 } : null);
     if (bg && bg.amp > 0) w += bg.amp * Math.exp(-(((t - bg.at) / 0.1) ** 2));
     W.push(w); WF.push(w + wobF(t)); WB.push(w + wobB(t));
@@ -188,23 +191,33 @@ function neckDetail(n, bulge) {
 }
 
 // ---------------------------------------------------------------- static geometry
-// Body (pelvis-local): the spec ellipse (centre (32,-50), rx 98, ry 58, rot −18°) warped into the pelican shape: a
-// DEEP chest that hangs forward under the neck, a LONG, nearly straight back that runs down to the tail, a tapering
-// rump. The belly band that sits on the saddle is left exactly on the ellipse (the rig's seat contact).
+// Body (pelvis-local). A pelican, not a goose egg: a DEEP keel chest that projects forward and down under the neck
+// base, a LONG, nearly straight back that slopes from the high shoulders down to a short tail, and the belly line
+// lifting toward the vent. The belly band that sits on the saddle (ellipse angles 80-160) is left exactly on the spec
+// ellipse (centre (32,-50), rx 98, ry 58, rot -18) so the rig's seat contact holds.
+// Keyframes are [ellipse angle (deg), pelvis-local point]; angles keep the old parametrisation, so every glaze, rim
+// and accent that is placed by angle (or by EL()) follows the new silhouette.
+const ELL = d => { const t = d * D2R, p = rot([98 * Math.cos(t), 58 * Math.sin(t)], -18); return [32 + p[0], -50 + p[1]]; };
+const BODY_KEYS = [
+  [6, [146, -82]], [24, [151, -55]], [44, [135, -29]], [62, [106, -12]],
+  ...[80, 90, 100, 110, 120, 130, 140, 150, 160].map(d => [d, ELL(d)]),
+  [172, [-61, -15]], [186, [-68, -30]], [202, [-63, -46]], [226, [-37, -64]], [250, [-6, -80]], [275, [26, -95]],
+  [298, [57, -108]], [318, [86, -118]], [336, [114, -116]], [352, [136, -100]],
+];
+// dense outline sampled by angle (Catmull-Rom through the keys, closed); OUT(deg) -> point on the silhouette
+const OUT = (() => {
+  const P = BODY_KEYS.map(k => k[1]), A = BODY_KEYS.map(k => k[0]), K = 12, D = resample(P, K, true), n = P.length, ang = [];
+  for (let i = 0; i < n; i++) { const a0 = A[i], a1 = A[(i + 1) % n] + (i === n - 1 ? 360 : 0); for (let j = 0; j < K; j++) ang.push(a0 + (a1 - a0) * j / K); }
+  return deg => {
+    let d = ((deg % 360) + 360) % 360; if (d < A[0]) d += 360;
+    let i = 0; while (i < ang.length - 1 && ang[i + 1] <= d) i++;
+    const a0 = ang[i], a1 = i + 1 < ang.length ? ang[i + 1] : A[0] + 360, u = (d - a0) / (a1 - a0 || 1);
+    return lerp2(D[i], D[(i + 1) % D.length], clamp(u, 0, 1));
+  };
+})();
 function bodyPoly() {
   const pts = [];
-  for (let i = 0; i < 48; i++) {
-    const t = i / 48 * Math.PI * 2; let ex = 98 * Math.cos(t), ey = 58 * Math.sin(t);
-    const deg = (t / D2R) % 360;
-    const m = 1 - sstep(55, 85, deg) * (1 - sstep(150, 180, deg));        // 0 on the saddle contact band
-    const back = Math.max(0, -Math.cos(t)), breast = Math.max(0, Math.cos(t)) * Math.max(0, Math.sin(t));
-    const top = Math.max(0, -Math.sin(t));
-    ey *= 1 - 0.34 * back * back * m;                                     // tapering rump
-    ex *= 1 + (0.1 * back + 0.07 * breast) * m;                           // long back, chest pushed forward
-    ey *= 1 + 0.1 * breast * m;                                           // deep chest
-    if (Math.sin(t) < 0) ey *= 1 - 0.1 * Math.max(0, -Math.cos(t)) - 0.05 * top * Math.max(0, Math.cos(t));   // long flat back line
-    const p = rot([ex, ey], -18); pts.push([32 + p[0], -50 + p[1]]);
-  }
+  for (let i = 0; i < 48; i++) pts.push(OUT(i / 48 * 360));
   return pts;
 }
 // lowest belly point (pelvis-local) for a body rotation, on the exact spec ellipse (matches rig bellyLow)
@@ -219,7 +232,8 @@ function bellyLowLocal(bodyRot, sx = 1, sy = 1) {
   }
   return [bx0, by0];
 }
-const EL = (e, g) => { const p = rot([e * 98, g * 58], -18); return [32 + p[0], -50 + p[1]]; };   // ellipse param -> body-local
+// ellipse param (e, g) -> body-local, warped radially into the pelican silhouette (interior marks follow the shape)
+const EL = (e, g) => { const r = Math.hypot(e, g), o = OUT(Math.atan2(g, e) / D2R); return [32 + (o[0] - 32) * r, -50 + (o[1] + 50) * r]; };
 
 // scarf wrap frame (body-local), from the neck base and the rig's first neck control offset (30,-58)
 const NB = SKEL.neckBase, NU = norm([30, -58]), NN = perp(NU);   // NU along the neck (up), NN across (toward the front)
@@ -257,6 +271,9 @@ function textures(v) {
   // knit stitches (stocking stitch "V" columns) for the scarf wrap and knot
   const knit = h('pattern', { id: 'pb-knit', patternUnits: 'userSpaceOnUse', width: 4.4, height: 3.6, patternTransform: `rotate(${f(NU_ANG + 90)})` },
     line('M0.4 0.3L2.2 3.1L4 0.3', v('pbScarfLo'), 0.8, { opacity: 0.75 }));
+  // the same stitch, laid along the trailing scarf ends (they stream back along -x): V columns pointing to the fringe
+  const knitH = h('pattern', { id: 'pb-knitH', patternUnits: 'userSpaceOnUse', width: 5.6, height: 4.4, patternTransform: 'rotate(84)' },
+    line('M0.5 0.4L2.8 3.8L5.1 0.4', v('pbScarfLo'), 0.75, { opacity: 0.8 }));
   const blush = h('radialGradient', { id: 'pb-blushG' },
     h('stop', { offset: 0, 'stop-color': v('pbBlush'), 'stop-opacity': 0.95 }), h('stop', { offset: 0.5, 'stop-color': v('pbBlush'), 'stop-opacity': 0.6 }),
     h('stop', { offset: 1, 'stop-color': v('pbBlush'), 'stop-opacity': 0 }));
@@ -264,23 +281,25 @@ function textures(v) {
   // soft radial glazes (wet-in-wet shading without filters) shared by every slot of this module
   const gw = gouacheTile('pb-gw', { size: 72, seed: 5, dark: Dp, light: '#FFFDF7', kd: 0.11, kl: 0.3, nBlot: 12, nStroke: 9, nFleck: 18, ang: -24 });
   const gwY = gouacheTile('pb-gwY', { size: 40, seed: 9, dark: Od, light: v('pbPouchHi'), kd: 0.16, kl: 0.34, nBlot: 9, nStroke: 6, nFleck: 10, ang: 8 });
-  const gz = glazeGrads('pb', { shade: Dp, rose: S, warm: v('rim'), lite: '#FFFDF6', pLo: Od, pHi: v('pbPouchHi'), bill: v('billEdge') });
-  return gouache + pouchTex + knit + blush + gw + gwY + gz;
+  const gz = glazeGrads('pb', { shade: Dp, rose: S, warm: v('rimLight'), lite: '#FFFDF6', pLo: Od, pHi: v('pbPouchHi'), bill: v('billEdge') });
+  return gouache + pouchTex + knit + knitH + blush + gw + gwY + gz;
 }
 
 export function build({ v }) {
   const P = v('plume'), S = v('plumeShade'), Dp = v('plumeDeep'), N = v('flight'), K = v('bill'), Ks = v('skin'), O = v('pouch'), Od = v('pouchDeep');
   const Nl = v('billNail'), Ke = v('billEdge'), INK = v('ink'), SOFT = v('pbInkSoft');
   const SC = v('pbScarf'), SCL = v('pbScarfLo'), CR = v('pbCream');
-  const RIM = v('rim');
+  const RIM = v('rimLight');
   const KW = 2.1;
   const tag = (kind, name) => `pelican:${kind}:${name}`;
   const s = {};
 
   // ================================================================ NECK (rider space; deformer)
   s.neck = h('g', { 'data-detail': tag('O', 'neck') },
-    h('path', { 'data-ref': 'pb-neck', d: '', fill: P, stroke: INK, 'stroke-width': KW, 'stroke-linejoin': 'round' }),
-    h('path', { 'data-ref': 'pb-neckGw', 'data-detail': tag('T', 'neck-gouache-blotch-texture'), class: 'gw-tex', d: '', fill: 'url(#pb-gw)', 'pointer-events': 'none' }),
+    // the neck's paint comes from its group, so the gouache overlay can be a <use> of the same animated path
+    // (one per-frame d instead of two identical ones: halves the neck's cost in the baked SVG)
+    h('g', { fill: P, stroke: INK, 'stroke-width': KW, 'stroke-linejoin': 'round' }, h('path', { 'data-ref': 'pb-neck', id: 'pb-neckPath', d: '' })),
+    h('use', { 'data-ref': 'pb-neckGw', 'data-detail': tag('T', 'neck-gouache-blotch-texture'), class: 'gw-tex', href: '#pb-neckPath', fill: 'url(#pb-gw)', stroke: 'none', 'pointer-events': 'none' }),
     h('path', { 'data-ref': 'pb-neckShade', 'data-detail': tag('T', 'neck-nape-glaze'), d: '', fill: S, opacity: 0.9 }),
     h('path', { 'data-ref': 'pb-neckRimF', 'data-detail': tag('O', 'neck-rim-light'), d: '', fill: 'none', stroke: RIM, 'stroke-width': 2.2, 'stroke-linecap': 'round', style: 'opacity:var(--pb-n-rimAlpha)' }),
     h('path', { 'data-ref': 'pb-neckRimB', d: '', fill: 'none', stroke: RIM, 'stroke-width': 2.2, 'stroke-linecap': 'round', style: 'opacity:var(--pb-n-rimAlpha);display:none' }),
@@ -294,29 +313,35 @@ export function build({ v }) {
   // A short, rounded pelican tail: 5 painted rectrices with rose-grey tips, rooted inside the rump (the body slot draws
   // over the roots) and angled a little down; coverts on top, a fluffy undertail lobe below.
   {
-    const TILT = -17;
-    const fan = [[-8, 42, -6.5], [-3.5, 46, -3.2], [1, 48, 0], [5.5, 46, 3.2], [10, 41, 6.5]];
-    let feathers = '', tips = '', shafts = '', splits = '';
+    const TILT = -36;   // tucked down under the rump
+    const fan = [[12, 34, -6], [6, 38, -3], [0, 41, 0], [-6, 42, 3], [-12, 40, 6]];   // a short rounded fan, painted top -> bottom so each lower tip laps over the one above
+    // each rectrix is painted whole (white vane, rose-grey tip band, shaft) before the next one overlaps it
+    let feathers = '', splits = '';
     fan.forEach(([ang0, L, yb], j) => {
       const ang = ang0 + TILT, dir = rot([-1, 0], ang), nr = perp(dir), b = [8, yb];
-      const at = (u, w) => add(add(b, mul(dir, u)), mul(nr, w)), w = 4.6;
-      const o = hand([at(0, -w), at(L * 0.5, -w * 1.04), at(L - 2, -w * 0.96), at(L, -w * 0.5), at(L + 0.6, 0), at(L, w * 0.5), at(L - 2, w * 0.96), at(L * 0.5, w * 1.04), at(0, w)], { k: 2, amp: 0.35, lam: 5, seed: 30 + j });
-      feathers += h('path', { d: smooth(o, true, 1 / 8), fill: P, stroke: INK, 'stroke-width': 1.4, 'stroke-linejoin': 'round' });
-      tips += `M${pt(at(L - 9, -w * 0.9))}Q${pt(at(L - 6, 0))} ${pt(at(L - 10, w * 0.9))}L${pt(at(L - 1.6, w * 0.88))}Q${pt(at(L + 0.6, 0))} ${pt(at(L - 1.6, -w * 0.88))}Z`;
-      shafts += `M${pt(at(L * 0.4, 0.2))}Q${pt(at(L * 0.7, -0.5))} ${pt(at(L - 4, 0))}`;
-      splits += `M${pt(at(L + 0.2, w * 0.25))}l${pt(mul(dir, -3.2))}`;
+      const at = (u, w) => add(add(b, mul(dir, u)), mul(nr, w)), w = 8;
+      const o = hand([at(0, -w), at(L * 0.5, -w * 1.04), at(L - 3, -w * 0.96), at(L - 0.5, -w * 0.55), at(L + 0.8, 0), at(L - 0.5, w * 0.55), at(L - 3, w * 0.96), at(L * 0.5, w * 1.04), at(0, w)], { k: 2, amp: 0.35, lam: 5, seed: 30 + j });
+      const tip = `M${pt(at(L - 13, -w * 0.94))}Q${pt(at(L - 9, 0))} ${pt(at(L - 14, w * 0.94))}L${pt(at(L - 2.6, w * 0.9))}Q${pt(at(L + 0.8, 0))} ${pt(at(L - 2.6, -w * 0.9))}Z`;
+      const tip2 = `M${pt(at(L - 6, -w * 0.9))}Q${pt(at(L - 3.4, 0))} ${pt(at(L - 6.6, w * 0.9))}L${pt(at(L - 2.6, w * 0.9))}Q${pt(at(L + 0.8, 0))} ${pt(at(L - 2.6, -w * 0.9))}Z`;
+      const shaft = `M${pt(at(L * 0.35, 0.2))}Q${pt(at(L * 0.7, -0.6))} ${pt(at(L - 5, 0))}`;
+      feathers += ''.concat(
+        h('path', { d: smooth(o, true, 1 / 8), fill: P }),
+        h('path', j ? { d: tip, fill: S } : { 'data-detail': tag('O', 'tail-rose-tips'), d: tip, fill: S }),
+        h('path', j ? { d: tip2, fill: Dp, opacity: 0.6 } : { 'data-detail': tag('T', 'tail-tip-band-deep'), d: tip2, fill: Dp, opacity: 0.6 }),
+        line(shaft, Dp, 0.8, j ? {} : { 'data-detail': tag('T', 'tail-rachis-lines') }),
+        line(loopQ(o), INK, 1.4));
+      splits += `M${pt(at(L + 0.2, w * 0.3))}l${pt(mul(dir, -3))}`;
     });
     let cv = '';
-    for (const [x, y, L, w, sd] of [[2, -7, 17, 5.6, 41], [0, -1.5, 15, 5.4, 42]]) {
+    for (const [x, y, L, w, sd] of [[2, -8, 25, 7.4, 41], [0, -1, 21, 7, 42]]) {
       const q = p => add([x, y], rot(p, TILT));
       const d = smooth(hand([q([2, -w * 0.8]), q([-L * 0.5, -w * 0.85]), q([-L, 0.3]), q([-L * 0.5, w * 0.8]), q([2, w * 0.8])], { k: 2, amp: 0.3, lam: 5, seed: sd }));
-      cv += h('path', { d, fill: P, stroke: INK, 'stroke-width': 1.3, 'stroke-linejoin': 'round' });
+      cv += h('path', { d, fill: P, stroke: INK, 'stroke-width': 1.3, 'stroke-linejoin': 'round' })
+        + line(`M${pt(q([-L * 0.45, -w * 0.5]))}Q${pt(q([-L * 0.78, 0]))} ${pt(q([-L * 0.45, w * 0.5]))}`, S, 1.6, { opacity: 0.9 });
     }
     const uq = p => rot(p, TILT);
     const ut = smooth(hand([[12, 8], [2, 11.5], [-8, 14], [-14, 12.5], [-9, 9], [2, 6]].map(uq), { k: 2, amp: 0.45, lam: 4, seed: 44 }));
     s.tail = h('g', { 'data-detail': tag('O', 'tail-rectrices') }, feathers,
-      h('path', { 'data-detail': tag('O', 'tail-rose-tips'), d: tips, fill: S }),
-      line(shafts, Dp, 0.8, { 'data-detail': tag('T', 'tail-rachis-lines') }),
       line(splits, SOFT, 0.7, { 'data-detail': tag('T', 'tail-tip-splits') }),
       h('g', { 'data-detail': tag('O', 'tail-upper-coverts') }, cv),
       h('g', { 'data-detail': tag('O', 'undertail-coverts') }, h('path', { d: ut, fill: P, stroke: INK, 'stroke-width': 1.3, 'stroke-linejoin': 'round' }),
@@ -452,9 +477,11 @@ export function build({ v }) {
     }
     b += h('g', { 'data-ref': 'pb-scarfA', transform: XF0 }, gA);
     b += h('g', { 'data-detail': tag('O', 'scarf-trailing-end') },
-      h('path', { 'data-ref': 'pb-snFill', d: '', fill: SC, stroke: INK, 'stroke-width': 1.3, 'stroke-linejoin': 'round' }),
+      // paint on the group so the knit overlay can be a <use> of the same live ribbon path (one per-frame d, no
+      // per-frame stitch geometry): the stitches are a static pattern showing through the moving ribbon
+      h('g', { fill: SC, stroke: INK, 'stroke-width': 1.3, 'stroke-linejoin': 'round' }, h('path', { 'data-ref': 'pb-snFill', id: 'pb-snPath', d: '' })),
       h('path', { 'data-ref': 'pb-snStripe', 'data-detail': tag('T', 'scarf-cream-stripes'), d: '', fill: CR }),
-      h('path', { 'data-ref': 'pb-snKnit', 'data-detail': tag('T', 'scarf-knit-stitches'), d: '', fill: 'none', stroke: SCL, 'stroke-width': 0.65, opacity: 0.85, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }),
+      h('use', { 'data-detail': tag('T', 'scarf-knit-stitches'), href: '#pb-snPath', fill: 'url(#pb-knitH)', stroke: 'none', 'pointer-events': 'none' }),
       h('path', { 'data-ref': 'pb-snFringe', 'data-detail': tag('O', 'scarf-fringe'), d: '', fill: 'none', stroke: CR, 'stroke-width': 2, 'stroke-linecap': 'round' }));
     {
       let st = '';
@@ -475,9 +502,9 @@ export function build({ v }) {
         line(loopQ(wrapPts), INK, 1.4)));
     }
     b += h('g', { 'data-detail': tag('O', 'scarf-hanging-end') },
-      h('path', { 'data-ref': 'pb-shFill', d: '', fill: SC, stroke: INK, 'stroke-width': 1.2, 'stroke-linejoin': 'round' }),
+      h('g', { fill: SC, stroke: INK, 'stroke-width': 1.2, 'stroke-linejoin': 'round' }, h('path', { 'data-ref': 'pb-shFill', id: 'pb-shPath', d: '' })),
       h('path', { 'data-ref': 'pb-shStripe', d: '', fill: CR }),
-      h('path', { 'data-ref': 'pb-shKnit', d: '', fill: 'none', stroke: SCL, 'stroke-width': 0.6, opacity: 0.85, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }),
+      h('use', { href: '#pb-shPath', fill: 'url(#pb-knit)', stroke: 'none', 'pointer-events': 'none' }),
       h('path', { 'data-ref': 'pb-shFringe', 'data-detail': tag('O', 'scarf-fringe-cream'), d: '', fill: 'none', stroke: CR, 'stroke-width': 1.8, 'stroke-linecap': 'round' }));
     {
       const knP = hand([add(KNOT, [-7.6, -2]), add(KNOT, [-3, -7.6]), add(KNOT, [4.4, -6.6]), add(KNOT, [7.8, -0.6]), add(KNOT, [5.4, 6.4]), add(KNOT, [-1.4, 7.8]), add(KNOT, [-6.6, 4.4])], { k: 2, amp: 0.35, lam: 4, seed: 57 }), kn = smooth(knP);
@@ -705,35 +732,33 @@ function scarfCentre(p0, L, n, t, spd, hopA, seed) {
   }
   return pts;
 }
-// Knitted ribbon: outline, cream stripe bands, knit stitch chevrons in two columns (fixed counts), fringe tassels.
-function ribbon(cl, w0, w1, t, seed, knitOn = true) {
-  const n = cl.length, L = [], Rr = [];
+// Knitted ribbon: outline, cream stripe bands, fringe tassels (the knit stitches are a static pattern shown through a
+// <use> of the outline). Per-frame hot path: scalar maths, every point formatted ONCE (1 decimal) and the strings
+// reused by the outline and the stripes; fixed command counts.
+const f1 = fmt1;
+function ribbon(cl, w0, w1, t, seed) {
+  const n = cl.length, SL = new Array(n), SR = new Array(n), ML = new Array(n - 1), MR = new Array(n - 1);
+  const Lx = new Float64Array(n), Ly = new Float64Array(n), Rx = new Float64Array(n), Ry = new Float64Array(n);
   for (let i = 0; i < n; i++) {
-    const d = norm(sub(cl[Math.min(n - 1, i + 1)], cl[Math.max(0, i - 1)])), nr = perp(d), s = i / (n - 1);
-    const tw = 0.62 + 0.38 * Math.abs(Math.cos(Math.PI * (1.1 * s - 0.35 * t) + seed));
-    const w = lerp(w0, w1, s) * tw / 2;
-    L.push(add(cl[i], mul(nr, w))); Rr.push(add(cl[i], mul(nr, -w)));
+    const a = cl[i ? i - 1 : 0], c = cl[i < n - 1 ? i + 1 : n - 1];
+    let dx = c[0] - a[0], dy = c[1] - a[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+    const s = i / (n - 1), tw = 0.62 + 0.38 * Math.abs(Math.cos(Math.PI * (1.1 * s - 0.35 * t) + seed));
+    const w = (w0 + (w1 - w0) * s) * tw / 2, px = -dy * w, py = dx * w, x = cl[i][0], y = cl[i][1];
+    Lx[i] = x + px; Ly[i] = y + py; Rx[i] = x - px; Ry[i] = y - py;
+    SL[i] = f1(Lx[i]) + ' ' + f1(Ly[i]); SR[i] = f1(Rx[i]) + ' ' + f1(Ry[i]);
   }
-  const mid = (a, i) => lerp2(a[i], a[i + 1], 0.5);
-  let d = `M${pt(L[0])}`;
-  for (let i = 1; i < n - 1; i++) d += `Q${pt(L[i])} ${pt(mid(L, i))}`;
-  d += `L${pt(L[n - 1])}L${pt(Rr[n - 1])}`;
-  for (let i = n - 2; i >= 1; i--) d += `Q${pt(Rr[i])} ${pt(mid(Rr, i - 1))}`;
-  d += `L${pt(Rr[0])}Z`;
+  for (let i = 0; i < n - 1; i++) { ML[i] = f1((Lx[i] + Lx[i + 1]) / 2) + ' ' + f1((Ly[i] + Ly[i + 1]) / 2); MR[i] = f1((Rx[i] + Rx[i + 1]) / 2) + ' ' + f1((Ry[i] + Ry[i + 1]) / 2); }
+  let d = 'M' + SL[0];
+  for (let i = 1; i < n - 1; i++) d += 'Q' + SL[i] + ' ' + ML[i];
+  d += 'L' + SL[n - 1] + 'L' + SR[n - 1];
+  for (let i = n - 2; i >= 1; i--) d += 'Q' + SR[i] + ' ' + MR[i - 1];
+  d += 'L' + SR[0] + 'Z';
   let st = '';
-  for (let i = 1; i + 2 < n; i += 4) {
-    const a = i, b = i + 2;
-    st += `M${pt(mid(L, a - 1))}Q${pt(L[a])} ${pt(mid(L, a))}Q${pt(L[a + 1])} ${pt(mid(L, a + 1))}L${pt(mid(Rr, b - 1))}Q${pt(Rr[b - 1])} ${pt(mid(Rr, b - 2))}Q${pt(Rr[a])} ${pt(mid(Rr, a - 1))}Z`;
-  }
-  // knit: stocking-stitch "V"s in two columns, pointing toward the free end
-  let knit = '';
-  if (knitOn) for (let i = 0; i < n - 1; i++) for (const c of [0.22, 0.5, 0.78]) {
-    const a = lerp2(L[i], Rr[i], c - 0.1), b = lerp2(L[i], Rr[i], c + 0.1), tip = lerp2(lerp2(L[i], Rr[i], c), lerp2(L[i + 1], Rr[i + 1], c), 0.62);
-    knit += `M${pt(a)}L${pt(tip)}L${pt(b)}`;
-  }
-  let fr = ''; const e0 = L[n - 1], e1 = Rr[n - 1], dn = norm(sub(cl[n - 1], cl[n - 2]));
-  for (let k = 0; k <= 5; k++) { const p = lerp2(e0, e1, k / 5); fr += `M${pt(p)}l${f(dn[0] * 8.5 + (k - 2.5) * 0.4)} ${f(dn[1] * 8.5 + Math.sin(t * 9 + k) * 1.2)}`; }
-  return { d, st, knit, fr };
+  for (let i = 1; i + 2 < n; i += 3) st += 'M' + ML[i - 1] + 'Q' + SL[i] + ' ' + ML[i] + 'Q' + SL[i + 1] + ' ' + ML[i + 1] + 'L' + MR[i + 1] + 'Q' + SR[i + 1] + ' ' + MR[i] + 'Q' + SR[i] + ' ' + MR[i - 1] + 'Z';
+  let fr = '';
+  const e = cl[n - 1], e2 = cl[n - 2]; let dx = e[0] - e2[0], dy = e[1] - e2[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+  for (let k = 0; k <= 5; k++) { const u = k / 5; fr += 'M' + f1(Lx[n - 1] + (Rx[n - 1] - Lx[n - 1]) * u) + ' ' + f1(Ly[n - 1] + (Ry[n - 1] - Ly[n - 1]) * u) + 'l' + f1(dx * 8.5 + (k - 2.5) * 0.4) + ' ' + f1(dy * 8.5 + Math.sin(t * 9 + k) * 1.2); }
+  return { d, st, fr };
 }
 
 export const detailItems = [
@@ -745,7 +770,8 @@ export const detailItems = [
   ['neck-pencil-line', 'T', 'pencil double line just outside the nape'],
   ['neck-rim-light', 'O', 'warm rim line on the sun/moon side of the neck (flips with the light)'],
   ['tail-rectrices', 'O', '5 short, rounded rectrices with hand-wobbled outlines, rooted in the rump'],
-  ['tail-rose-tips', 'O', 'rose-grey glaze on each tail tip'],
+  ['tail-rose-tips', 'O', 'rose-grey tip band on each rectrix'],
+  ['tail-tip-band-deep', 'T', 'deeper lilac edge inside each tail tip band (the wet-edge of the glaze)'],
   ['tail-rachis-lines', 'T', 'feather shafts on each rectrix'],
   ['tail-tip-splits', 'T', 'little split lines in the tail tips (worn feather ends)'],
   ['tail-upper-coverts', 'O', '2 rounded coverts overlapping the tail base'],
@@ -778,7 +804,7 @@ export const detailItems = [
   ['collar-ruff', 'O', 'neck-base feather tips poking out below the scarf'],
   ['scarf-trailing-end', 'O', 'long knitted scarf end streaming back, with follow-through and hop lift'],
   ['scarf-cream-stripes', 'T', 'cream stripe bands that ride on the animated ribbon'],
-  ['scarf-knit-stitches', 'T', 'stocking-stitch V columns that ride on the ribbon (per frame, fixed count)'],
+  ['scarf-knit-stitches', 'T', 'stocking-stitch V columns showing through the live ribbon (static pattern under a <use> of the ribbon path)'],
   ['scarf-fringe', 'O', 'cream fringe tassels at the trailing end'],
   ['scarf-wrap', 'O', 'bulky red wrap with cream stripes around the neck base'],
   ['scarf-wrap-knit-texture', 'T', 'knit-stitch pattern on the wrap'],
@@ -870,7 +896,7 @@ export function attach(svg) {
   const r = refs(svg, 'pb-');
   const st = new WeakMap();   // per element, per attribute: last written value (no getAttribute / key strings per call)
   const set = (el, k, val) => { if (!el) return; let m = st.get(el); if (!m) st.set(el, m = {}); if (m[k] !== val) { m[k] = val; if (k === 'd') el.setAttribute('d', val); else if (k === 'op') el.style.opacity = val; else if (k === 'show') el.style.display = val ? '' : 'none'; else el.setAttribute(k, val); } };
-  let lastNeck = '';
+  let lastNeck = '', parity = 0, neckStale = true, rimSide = null;
   return {
     update(fr) {
       const pose = fr.pose, t = fr.t, n = pose.neck, J = pose.joints || {};
@@ -883,13 +909,21 @@ export function attach(svg) {
       // ---- neck: outline + riding detail (bulge from the rig's neck fields, or a local fallback)
       let bulge = null;
       if (!(n.bulgeT !== undefined) && gulpTau > 0.85 && gulpTau < 1.6) { const u = (gulpTau - 0.85) / 0.75; bulge = { at: 0.95 - 0.85 * u, amp: 5 * Math.sin(Math.PI * u) }; }
-      const nk = [n.p0, n.p1, n.p2, n.p3].map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(';') + (n.w0 ?? 0).toFixed(2) + (n.bulgeA ?? 0).toFixed(3) + (n.bulgeT ?? 0).toFixed(3) + (bulge ? bulge.at.toFixed(3) : '');
+      const nk = [n.p0, n.p1, n.p2, n.p3].map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(';') + (n.w0 ?? 0).toFixed(2) + (n.bulgeA ?? 0).toFixed(3) + (n.bulgeT ?? 0).toFixed(3) + (bulge ? bulge.at.toFixed(3) : '') + (((fr.night > 0.5 ? fr.moon?.x : fr.sun?.x) ?? 1200) > 740 ? 'F' : 'B');
+      const lxN = (fr.night > 0.5 ? fr.moon?.x : fr.sun?.x) ?? 1200, frontN = lxN > 740;
       if (nk !== lastNeck) {
         lastNeck = nk;
-        { const nd = neckD(n, bulge); set(r.neck, 'd', nd); set(r.neckGw, 'd', nd); }
-        const nd = neckDetail(n, bulge);
-        set(r.neckFlow, 'd', nd.flow); set(r.neckFlow2, 'd', nd.flowSmall); set(r.neckCrease, 'd', nd.crease);
-        set(r.neckRimF, 'd', nd.rimF); set(r.neckRimB, 'd', nd.rimB); set(r.neckShade, 'd', nd.shade); set(r.neckPencil, 'd', nd.pencil);
+        { const nd = neckD(n, bulge); set(r.neck, 'd', nd); }
+        // the painted marks inside the neck move < 0.4 u per frame, so in live play they refresh on alternate frames
+        // (half the neck's DOM path rewrites); renderAt / the baker (dt = 0) always get the complete, exact frame
+        const live = fr.dt > 0; parity ^= 1;
+        if (!live || parity || neckStale) {
+          const nd = neckDetail(n, bulge);
+          set(r.neckFlow, 'd', nd.flow); set(r.neckFlow2, 'd', nd.flowSmall); set(r.neckCrease, 'd', nd.crease);
+          set(frontN ? r.neckRimF : r.neckRimB, 'd', frontN ? nd.rimF : nd.rimB); set(r.neckShade, 'd', nd.shade); set(r.neckPencil, 'd', nd.pencil);
+          neckStale = false; rimSide = frontN;
+        } else neckStale = true;
+        if (rimSide !== frontN) neckStale = true;
       }
       // ---- seat contact anchor on the exact belly ellipse
       const lo = bellyLowLocal(bj.rot || 0, bsx, bsy);
@@ -909,11 +943,25 @@ export function attach(svg) {
       let nearCL, farCL, hangCL;
       if (sc && sc.tails && sc.tails[0] && sc.tails[0].a) {
         // rig tails: rider-space segment angles (deg) -> body-local chains, resampled smooth
-        const chain = (p0, angs, len, k, dA = 0, dL = 1) => { const P = [p0]; let p = p0; angs.forEach((a, i) => { const aa = (a + dA * (i + 1) / angs.length - (bj.rot || 0)) * D2R; p = add(p, [Math.cos(aa) * len * dL, Math.sin(aa) * len * dL]); P.push(p); }); return resample(P, k); };
+        // calm-wind knitted ribbons: a soft wool scarf is heavy, so below a sprint gravity bends each tail down along
+        // its length (sag grows root -> tip), and a slow travelling wave (0.5 Hz, loop-exact in the 4 s bake) rolls
+        // from the knot to the fringe with the tip swinging ~2x the root. Only a real sprint lifts them level.
+        const sprint = clamp(pose.sprint ?? 0, 0, 1), calm = 1 - sprint, ph = 2 * Math.PI * 0.5 * tt;
+        const chain = (p0, angs, len, k, sag, amp, ph0) => {
+          // the rig's chain curls the free end upward (its buoyant float); for a heavy wool scarf in a calm breeze only
+          // part of that curl is kept (all of it in a sprint), so gravity wins toward the fringe
+          const P = [p0], m = angs.length, keep = 0.5 + 0.5 * sprint; let p = p0;
+          angs.forEach((a0, i) => {
+            const u = (i + 1) / m, a = angs[0] + keep * (a0 - angs[0]);
+            const aa = (a - sag * calm * u ** 1.25 + amp * (0.45 + 0.9 * u) * Math.sin(ph - 1.15 * i + ph0) - (bj.rot || 0)) * D2R;
+            p = add(p, [Math.cos(aa) * len, Math.sin(aa) * len]); P.push(p);
+          });
+          return resample(P, k);
+        };
         const A = sc.tails[0], B = sc.tails[1] || sc.tails[0];
-        nearCL = chain(place(TAIL0.near), A.a, A.len * 1.25, 3);
-        farCL = chain(place(TAIL0.far), A.a.map((a, i) => a + 12 + 3 * Math.sin(tt * 5.1 + i)), A.len * 1.0, 3, 10);
-        hangCL = chain(place(KNOT), B.a, B.len * 0.95, 3);
+        nearCL = chain(place(TAIL0.near), A.a, A.len * 1.25, 2, 24, 3.4 + 3 * sprint, 0);
+        farCL = chain(place(TAIL0.far), A.a.map(a => a + 9), A.len * 1.02, 2, 30, 3.8 + 3 * sprint, 1.9);
+        hangCL = chain(place(KNOT), B.a, B.len * 0.95, 3, 10, 2.4, 0.8);
       } else {
         const hopA = sN => {
           if (hopTau < 0) return 0;
@@ -929,11 +977,15 @@ export function attach(svg) {
         hangCL = resample(hangCL, 2);
       }
       const near = ribbon(nearCL, 17, 12, tt, 0.4);
-      set(r.snFill, 'd', near.d); set(r.snStripe, 'd', near.st); set(r.snKnit, 'd', near.knit); set(r.snFringe, 'd', near.fr);
-      const far = ribbon(farCL, 15, 11, tt + 0.4, 1.3, false);
-      set(r.sfFill, 'd', far.d); set(r.sfStripe, 'd', far.st); set(r.sfFringe, 'd', far.fr);
+      set(r.snFill, 'd', near.d); set(r.snStripe, 'd', near.st); set(r.snFringe, 'd', near.fr);
+      // the far tail hangs behind the body in far glazes: in live play it refreshes on the frames the neck's painted
+      // marks skip (spreads the path rewrites evenly); exact on every renderAt / bake frame
+      if (!(fr.dt > 0) || !parity) {
+        const far = ribbon(farCL, 15, 11, tt + 0.4, 1.3);
+        set(r.sfFill, 'd', far.d); set(r.sfStripe, 'd', far.st); set(r.sfFringe, 'd', far.fr);
+      }
       const hang = ribbon(hangCL, 15, 12, tt * 0.5, 2.2);
-      set(r.shFill, 'd', hang.d); set(r.shStripe, 'd', hang.st); set(r.shKnit, 'd', hang.knit); set(r.shFringe, 'd', hang.fr);
+      set(r.shFill, 'd', hang.d); set(r.shStripe, 'd', hang.st); set(r.shFringe, 'd', hang.fr);
       // ---- face: closed-lid line when the eye is (nearly) shut; nictitating membrane; smile; lid pose; gaze
       const face = pose.face || {};
       const eyeSy = J.eye?.sy ?? pose.blink ?? 1;

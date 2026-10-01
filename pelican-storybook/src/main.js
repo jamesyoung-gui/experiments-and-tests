@@ -6,6 +6,7 @@ import { mount, xf, h } from './core/svg.js';
 import { createBus } from './core/bus.js';
 import { samplePalette, applyPalette, v } from './core/palette.js';
 import { createCamera, layerTransform, layerZoom, fitAspect } from './core/camera.js';
+import { foldOpacity } from './core/opacity.js';
 import { createSheets } from './core/sheets.js';
 import { solvePose, TIMING } from './rig/solve.js';
 import { buildSceneMarkup, checkIds } from './scene.js';
@@ -37,7 +38,7 @@ const state = {
   speed: 0, distance: 0, crank: 0, coasting: false,
   tod: params.has('tod') ? +params.get('tod') : TOD_DEFAULT, todAuto: params.has('autotod'), dayLength: 120,
   events: [], cam: params.get('cam') || 'wide',
-  toggles: { sound: false, speedlines: true, gulls: true, hud: !params.has('nohud'), skeleton: params.has('skeleton') },
+  toggles: { sound: false, music: false, speedlines: true, gulls: true, hud: !params.has('nohud'), skeleton: params.has('skeleton') },
 };
 state.cadence = state.cadenceTarget; state.speed = (state.cadence / 60) * DIST_PER_REV;
 
@@ -65,13 +66,76 @@ if (dups.length) console.error('[scene] duplicate ids: ' + [...new Set(dups)].jo
 mount(svg.querySelector('#L-letterbox'), h('g', { id: 'lead-letterbox' },
   h('rect', { id: 'lead-lb-top', x: -10, y: -10, width: 1620, height: 0, fill: v('inkP') }),
   h('rect', { id: 'lead-lb-bot', x: -10, y: 900, width: 1620, height: 0, fill: v('inkP') })));
+// ---------- the calm page (STYLE-B §4 "Focus", the draft keyframe): lead-owned ----------
+// 1. Atmospheric veils: static, filter-free vertical washes of the hour's low-sky haze paint, laid over the far layers
+//    (start of L-atmo: hills, lighthouse, sea, boats) and, thinner, over the shore band (start of L-roadside: the
+//    village, beach, harbour). The background gets lighter, softer and lower in contrast as it recedes, so the rider
+//    is the brightest, most outlined thing on the page. A veil rides in its layer's (static) root sheet, so it is
+//    rasterised once; no extra compositor layer.
+const VEIL = [['far', 'L-atmo', [[250, 0], [405, 0.2], [470, 0.4], [560, 0.26], [660, 0.1], [760, 0]]],
+  ['mid', 'L-roadside', [[300, 0], [410, 0.16], [500, 0.22], [600, 0.14], [690, 0.05], [735, 0]]]];
+mount(svgRoot.querySelector('defs'), VEIL.map(([k, , st]) => h('linearGradient', { id: 'lead-veil-' + k, x1: 0, y1: st[0][0], x2: 0, y2: st[st.length - 1][0], gradientUnits: 'userSpaceOnUse' },
+  st.map(([y, o]) => h('stop', { offset: ((y - st[0][0]) / (st[st.length - 1][0] - st[0][0])).toFixed(3), 'stop-color': v('skyHaze'), 'stop-opacity': o })))).join(''));
+for (const [k, layer, st] of VEIL) {
+  const L = svg.querySelector('#' + layer);
+  if (L) L.insertAdjacentHTML('afterbegin', h('g', { id: 'lead-veil-' + k, 'data-pb-veil': '', 'aria-hidden': 'true' },
+    h('rect', { x: -900, y: st[0][0], width: 3400, height: st[st.length - 1][0] - st[0][0], fill: `url(#lead-veil-${k})` })));
+}
+// 2. Ambient movers as rare beats. Edition C put every toy and critter on screen at once (a balloon, an airship, a
+//    biplane towing a second "Pelican Bay" banner, a bee, two butterflies, a dragonfly, a fly and dandelion seeds all
+//    around the rider). The storybook page shows at most ONE sky toy and ONE small critter at a time (plus the gulls),
+//    each fading in and out over 3 s inside its slot (so t = 0 opens on a clean page). The schedule is a pure function of t, so renderAt / shots / the baker agree.
+//    Sky toys take turns in 80 s slots after a calm, toy-free opening page (0–80 s: the draft's composition); the
+//    critters rotate in 20 s slots. A hidden mover's sheet leaves compositing (opacity 0 → visibility hidden).
+const CALM_TOYS = { period: 320, slot: 80, order: [null, 'sky-plane', 'sky-balloonG', 'sky-shipG'] };
+const CALM_BUGS = { slot: 20, order: ['fx-bf0', 'fx-flyG', 'fx-dfly', 'fx-bf1', 'fx-seedG', 'fx-beeG'] };
+const CALM_FADE = 3;
+function calmAlpha(ref, t) {
+  const ramp = (a, b) => clamp(Math.min(t - a, b - t) / CALM_FADE, 0, 1);   // 3 s fades inside the slot: slots never overlap
+  let i = CALM_TOYS.order.indexOf(ref);
+  if (i >= 0) { const P = CALM_TOYS.period, s = CALM_TOYS.slot, c = Math.floor(t / P) * P + i * s; return Math.max(ramp(c, c + s), ramp(c - P, c - P + s), ramp(c + P, c + P + s)); }
+  i = CALM_BUGS.order.indexOf(ref);
+  if (i >= 0) { const s = CALM_BUGS.slot, P = s * CALM_BUGS.order.length, c = Math.floor(t / P) * P + i * s; return Math.max(ramp(c, c + s), ramp(c - P, c - P + s), ramp(c + P, c + P + s)); }
+  return 1;
+}
+const CALM_REFS = [...CALM_TOYS.order.filter(Boolean), ...CALM_BUGS.order];
+// showcase times: one moment inside each mover's beat (tools/detail-inventory.mjs counts the beats there too)
+const calmShowcase = () => [...CALM_TOYS.order.map((r, i) => r && { ref: r, t: i * CALM_TOYS.slot + [0, 40, 60, 30][i] }), ...CALM_BUGS.order.map((r, i) => ({ ref: r, t: i * CALM_BUGS.slot + 10 }))].filter(Boolean);
+const calmState = new Map();
+function applyCalm(t, live) {
+  if (params.has('busy')) return;   // ?busy: every mover at once (edition C's behaviour, for comparison)
+  for (const ref of CALM_REFS) {
+    const el = svg.querySelector(`[data-ref="${ref}"]`);
+    if (!el) continue;
+    const a = Math.round(calmAlpha(ref, t) * 50) / 50;
+    // the mover's own sheet when it has one (a compositor opacity), else the element (a repaint, only during a fade)
+    const part = el.closest('svg');
+    const own = part && part !== svgRoot && part.getAttribute('data-sheet') === ref;
+    const tgt = own ? part : el;
+    const st = calmState.get(ref);
+    if (st && st.a === a && st.tgt === tgt) continue;
+    if (st && st.tgt !== tgt) { st.tgt.style.opacity = ''; st.tgt.style.display = ''; }
+    calmState.set(ref, { a, tgt });
+    tgt.style.opacity = a >= 1 ? '' : String(a);
+    tgt.style.display = a <= 0 ? 'none' : '';
+  }
+}
+
 // split into one <svg> per layer, one per moving strip (module export `sheets`: hoisted translate) and one per busy prop
 // (module export `isolate`); the rider is cut into groups of slots (first slot of each group below: far wing · far leg ·
 // wheels · static frame/fork/bars · drivetrain · neck/tail/body · near leg · head · near wing), so a moving group
 // repaints only its own art. ?nosheets keeps the single <svg>.
-const RIDER_SHEETS = ['pedalFar', 'wheelRear', 'frame', 'cog', 'neck', 'pedalNear', 'pouch', 'wingNearUpper'];
-const sheets = createSheets(svg, svgRoot, { layers: LAYERS.map(l => l[0]), sheets: mods.flatMap(m => m.sheets || []), scale: (d, cam) => layerZoom(cam, d), cuts: RIDER_SHEETS.map(x => '#j-' + x),
-  isolate: mods.flatMap(m => m.isolate || []) });
+const RIDER_SHEETS = ['pedalFar', 'wheelRear', 'frame', 'bars', 'cog', 'neck', 'pedalNear', 'pouch', 'wingNearUpper'];   // integrator: bars (steering bob) cut off the static frame/fork sheet
+// RIGID rider (default since the gouache restyle; ?norigid = the grouped sheets above): every slot is its own RIGID
+// sheet (core/sheets.js): in live play a slot's pose is a compositor move of its sheet, so the rider's art rasterises
+// once instead of every frame. Edition C measured the grouped sheets cheaper under software compositing; the storybook
+// rider (textured gouache patterns, baked double lines) made raster the bottleneck: grouped 66-78 ms CPU/frame vs
+// rigid 61-65 ms, and fps +8-20% in paired runs on this box (lead, /proc CPU per frame).
+const RIGID = !params.has('norigid');
+const slotSel = SLOTS.map(x => '#j-' + x);
+const sheets = createSheets(svg, svgRoot, { layers: LAYERS.map(l => l[0]), sheets: mods.flatMap(m => m.sheets || []), scale: (d, cam) => layerZoom(cam, d),
+  cuts: RIGID ? [] : RIDER_SHEETS.map(x => '#j-' + x), rigid: RIGID ? slotSel : [], rigidClip: params.has('rigidclip'),
+  isolate: [...mods.flatMap(m => m.isolate || []), ...(RIGID ? slotSel : []), ...CALM_BUGS.order.map(r => `[data-ref="${r}"]`)] });
 addEventListener('resize', () => sheets.resize());
 
 const layerEls = LAYERS.map(([id, depth]) => [svg.querySelector('#' + id), depth]);
@@ -172,14 +236,15 @@ function render(dt) {
   if (modPerf) {   // per-module totals, plus the last 600 frames' per-module ms in __pb.modPerf().frames (spike hunting)
     const fr = { core: performance.now() - tR0 }; let t1 = performance.now();
     for (const a of attached) if (a.update) { try { a.update(frame); } catch (e) { console.error(e); a.update = null; } const t2 = performance.now(); fr[a.__id] = t2 - t1; t1 = t2; }
-    ui.update(frame); audio.update(frame); sheets.flush(); sheets.update(cam); fr.ui = performance.now() - t1;
+    ui.update(frame); audio.update(frame); applyCalm(state.t, dt > 0); sheets.flush(); sheets.update(cam, dt > 0); fr.ui = performance.now() - t1;
     for (const k in fr) modPerf[k] = (modPerf[k] || 0) + fr[k];
     modPerf.n = (modPerf.n || 0) + 1; (modPerf.frames ||= []).push(fr); if (modPerf.frames.length > 600) modPerf.frames.shift();
     return frame;
   }
   else { for (const a of attached) if (a.update) try { a.update(frame); } catch (e) { console.error(e); a.update = null; }
   ui.update(frame); audio.update(frame); }
-  sheets.flush(); sheets.update(cam);
+  applyCalm(state.t, dt > 0);
+  sheets.flush(); sheets.update(cam, dt > 0);
   return frame;
 }
 
@@ -203,6 +268,7 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 render(0);
+if (!params.has('nofold')) foldOpacity(svg);   // perf: static leaf opacity -> fill/stroke-opacity (core/opacity.js)
 // split after the first render: every wrapper already carries the attributes the runtime writes (rider, layers)
 if (!params.has('nosheets')) { sheets.split(); sheets.update(curCam); }
 requestAnimationFrame(loop);
@@ -241,4 +307,5 @@ window.__pb = {
   perf: () => fpsAcc, modPerf: () => modPerf,
   bakeSVG: opts => sheets.whole(s => bakeSVG(s, { cadence: 60, tod: state.tod, pose: solvePose, state, ...opts })),
   sheets,
+  calm: { alpha: calmAlpha, showcase: calmShowcase, refs: CALM_REFS },
 };

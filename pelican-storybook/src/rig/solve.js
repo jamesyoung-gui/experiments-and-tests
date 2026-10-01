@@ -30,18 +30,18 @@ const at = (F, off) => add(F.p, rot(off, F.r));
 const softMax = (a, x, k) => a + k * Math.log1p(Math.exp((x - a) / k));   // smooth floor (belly never leaves the saddle)
 
 // ------------------------------------------------------------------------------------------------
-// Fit (C3.2 / C3.3): pelvis 22 u further back than SKEL.pelvis so the belly contact centres on the saddle
-// (x ≈ −64, saddle −101…−23), the hip sits in the middle third and KOPS is ≈ +8 u. The torso carries a
+// Fit (C3.2 / C3.3): pelvis 24.5 u further back than SKEL.pelvis so the belly contact centres on the saddle
+// (x ≈ −64, saddle −101…−23), the hip sits in the middle third and KOPS is ≈ +7…+9 u (inside the ±10 u band). The torso carries a
 // 3° forward lean at rest (body axis 15° head-up), up to +7.5° when sprinting and −3° when coasting.
-export const FIT = { dx: -22, lean: 3, sit: 2.6, head: [120, -518] };
+export const FIT = { dx: -24.5, lean: 3, sit: 2.6, head: [120, -518] };
 export const G = 2885;                              // scene gravity, u/s² (1 u = 3.4 mm)
 const hopT = (() => {
-  const H = 48, v0 = Math.sqrt(2 * G * H), air = 2 * v0 / G, takeoff = 0.24;
-  return { H, v0, air, takeoff, land: takeoff + air, frontLift: 0.15, level: 0.2, hold: takeoff + air + 0.1, release: 0.45, gap: 1.2 };
+  const H = 72, v0 = Math.sqrt(2 * G * H), air = 2 * v0 / G, takeoff = 0.42 - air / 2;   // storybook-big hop; apex at τ = 0.42 s (takeoff ≈ 0.20 s: a 12-frame crouch)
+  return { H, v0, air, takeoff, land: takeoff + air, frontLift: takeoff - 0.083, level: takeoff - 0.04, hold: takeoff + air + 0.1, release: 0.45, gap: 1.2 };
 })();
 // X-sheet timing (seconds from t0). Audio / fx should key off these (e.g. ring on bell.strike, thud on hop.land).
 export const TIMING = {
-  hop: { crouch: [0, 0.16], frontLift: hopT.frontLift, takeoff: hopT.takeoff, apex: hopT.takeoff + hopT.air / 2, land: hopT.land, settle: hopT.land + 0.5, height: hopT.H, gap: hopT.gap, dur: 1.3 },
+  hop: { crouch: [0, 0.18], frontLift: hopT.frontLift, takeoff: hopT.takeoff, apex: hopT.takeoff + hopT.air / 2, land: hopT.land, settle: hopT.land + 0.5, height: hopT.H, gap: hopT.gap, dur: 1.3 },
   bell: { cock: [0, 0.085], strike: 0.1, settle: 0.45, dur: 0.6 },
   wave: { dip: [0, 0.14], unfold: [0.14, 0.86], wave: [0.8, 1.65], back: [1.65, 2.37], overshoot: 2.37, dur: 2.7, gap: 2.7 },
   gulp: { reach: [0.14, 0.54], scoop: [0.54, 0.7], lift: [0.7, 1.0], toss: [1.0, 1.32], swallow: [1.32, 1.85], settle: [1.85, 2.5], dur: 2.5, gap: 2.6 },
@@ -65,18 +65,18 @@ const gmap = tau => { let i = 0; while (i < GMAP.length - 2 && tau > GMAP[i + 1]
 const K = {
   // hop
   hopPitch: [[0, 0], [hopT.frontLift, 0], [hopT.takeoff + 0.02, -6.5], [hopT.takeoff + 0.1, -5.2], [hopT.land - 0.02, -1.1], [hopT.land + 0.06, 0]],
-  hopSit: [[0, 0], [0.13, 5.2], [0.19, 4.2], [hopT.takeoff + 0.02, -1.2], [hopT.takeoff + 0.14, 0], [hopT.land, 0]],
+  hopSit: [[0, 0], [0.13, 8.5], [0.18, 7], [hopT.takeoff + 0.02, -1.2], [hopT.takeoff + 0.14, 0], [hopT.land, 0]],
   hopLean: [[0, 0], [0.14, 3], [hopT.takeoff, -1.5], [hopT.takeoff + 0.16, 0.5], [hopT.land, 0]],
-  hopHead: [[0, 0], [0.14, 3], [hopT.takeoff + 0.03, 6], [hopT.takeoff + 0.18, -3], [hopT.land - 0.03, -2], [hopT.land, 0]],
-  hopSurp: [[0, 0], [0.18, 0], [hopT.takeoff + 0.08, 1], [hopT.land + 0.05, 0.9], [hopT.land + 0.35, 0]],
-  hopStretch: [[0, 0], [0.13, -1], [0.19, -0.8], [hopT.takeoff + 0.03, 1], [hopT.takeoff + 0.16, 0], [hopT.land, 0]],
+  hopHead: [[0, 0], [0.14, 4.5], [hopT.takeoff + 0.03, 6], [hopT.takeoff + 0.18, -3], [hopT.land - 0.03, -2], [hopT.land, 0]],
+  hopSurp: [[0, 0], [0.17, 0], [hopT.takeoff + 0.08, 1], [hopT.land + 0.05, 0.9], [hopT.land + 0.35, 0]],
+  hopStretch: [[0, 0], [0.13, -1.6], [0.18, -1.3], [hopT.takeoff + 0.03, 1], [hopT.takeoff + 0.16, 0], [hopT.land, 0]],
   // bell: 5-frame cock, 2-frame pop, settle
   bellFlick: [[0, 0], [0.07, -1], [0.085, -1.05], [0.118, 1], [0.2, 0.55], [0.32, -0.12], [0.45, 0]],
   bellSquint: [[0, 0], [0.09, 0], [0.13, 0.9], [0.3, 0.55], [0.6, 0]],
   // wave
   waveDip: [[0, 0], [0.08, 1], [0.18, 0.55], [0.32, 0]],
   waveU: [[0, 0], [0.14, 0], [0.26, 0.15], [0.74, 0.88], [0.86, 1], [1.65, 1], [1.77, 0.9], [2.25, 0.1], [2.37, 0]],
-  waveHand: [[0, 0], [0.14, 6], [0.55, -45], [0.85, -72], [1.65, -72], [2.05, -30], [2.37, 9], [2.5, -3], [2.62, 0]],
+  waveHand: [[0, 0], [0.14, 6], [0.55, -22], [0.85, -34], [1.65, -34], [2.05, -14], [2.37, 7], [2.5, -2], [2.62, 0]],
   waveEnv: [[0, 0], [0.8, 0], [0.92, 1], [1.55, 1], [1.67, 0]],
   waveLook: [[0, 0], [0.22, 0], [0.38, 1], [1.9, 1], [2.2, 0]],
   waveLean: [[0, 0], [0.2, 0.4], [0.6, -1.3], [1.8, -1.2], [2.3, 0.3], [2.5, 0]],
@@ -474,7 +474,7 @@ export function solvePose(t, s = {}) {
   // takes over the steering during the wave (bigger, slower corrections)
   const steer = (0.35 * Math.sin(phi - 0.6) * pedalling
     + 0.28 * Math.sin((TAU * 7 * t) / 24 + 1.1) + 0.16 * Math.sin((TAU * 17 * t) / 24 + 2.3)) * (0.5 + 0.5 * clamp(wind, 0, 1.2))
-    + wv.steer * (1.3 * Math.sin(TAU * 1.3 * wv.tau) + 0.5 * Math.sin(TAU * 2.9 * wv.tau + 1)) + steerEv + 0.6 * gRider * Math.sin((TAU * 42 * t) / 24);
+    + wv.steer * (0.9 * Math.sin(TAU * 1.3 * wv.tau) + 0.35 * Math.sin(TAU * 2.9 * wv.tau + 1)) + steerEv + 0.6 * gRider * Math.sin((TAU * 42 * t) / 24);
   const piv = [BIKE.steererTop[0], BIKE.steererTop[1]];
   const steerAt = P => add(piv, rot([P[0] - piv[0], P[1] - piv[1]], steer));
   const barsO = steerAt([0, 0]);
@@ -516,15 +516,15 @@ export function solvePose(t, s = {}) {
       const g = [grip[0] - sh[0], grip[1] - sh[1]];
       const ga = Math.atan2(g[1], g[0]), gr = Math.hypot(g[0], g[1]);
       const osc = wv.env * Math.sin(TAU * 2.4 * (wv.tau - 0.8));
-      const wa = Math.atan2(-68, 106) + 0.14 * osc, wr = 124 - 4 * Math.abs(osc);   // raised forward of the chest, clear of the neck
+      const wa = Math.atan2(-34, 118) + 0.2 * osc, wr = 138 - 3 * Math.abs(osc);   // wing held out forward below the head line (wrist leads, clear of the neck and bill)
       const u = wv.u, arcIn = Math.sin(Math.PI * u) * 10;           // radius tucks mid-arc → a real arc, not a lerp
       const ang = ga + (wa - ga) * u, rad = gr + (wr - gr) * u - arcIn;
       target = [sh[0] + rad * Math.cos(ang) - 3 * wv.dip, sh[1] + rad * Math.sin(ang) + 7 * wv.dip];
-      open = clamp(u * 1.1, 0, 1); primLag = -wv.env * 14 * Math.cos(TAU * 2.4 * (wv.tau - 0.8) - 1.2);
+      open = 0.72 * clamp(u * 1.1, 0, 1); primLag = -wv.env * 14 * Math.cos(TAU * 2.4 * (wv.tau - 0.8) - 1.2);
     }
     // the hand lags the wrist by ~70° of the wave cycle (follow-through in the primaries); additive so the
     // hand rotation is continuous in and out of the wave
-    if (side === 'Near') handRot += wv.hand + wv.env * 24 * Math.sin(TAU * 2.4 * (wv.tau - 0.8) - 1.2);
+    if (side === 'Near') handRot += wv.hand + wv.env * 16 * Math.sin(TAU * 2.4 * (wv.tau - 0.8) - 1.2);
     if (side === 'Near') handRot += 4 * flick;
     const k = ik2(sh[0], sh[1], target[0], target[1], SKEL.wingUpper, SKEL.wingLower, +1);
     J['wing' + side + 'Upper'] = { x: sh[0], y: sh[1], rot: k.a1 * R2D };
@@ -541,7 +541,7 @@ export function solvePose(t, s = {}) {
   // ---------------- 5. head, face slots ----------------
   const headBob = child(phasor(0.3 * bobA, th0), w2, TAU * 1.6, 0.52);         // stabilised head: 30% of the bob, softer spring
   const headP = add(FIT.head, [hd.dx + 10 * cadN - 4 * coastW, hd.dy + evalPh(headBob, phi2) + 7 * cadN - 0.6 * breath]);
-  const sway = 0.9 * (1 - sprint) * (1 - coastW * 0.5) * Math.sin((TAU * 3 * t) / 24);   // contented 8 s head sway, loop-exact
+  const sway = 0.9 * (1 - sprint) * (1 - coastW * 0.5) * Math.cos((TAU * 6 * t) / 24);   // contented 4 s head sway, exact in the 4 s bake loop and the 24 s story loop
   const headR = hd.r + sway - 0.5 * rock + 2 * cadN - 2 * coastW + 2 * delight * Math.sin(TAU * 0.9 * (gl.tau - 1.7)) * (gl.tau > 1.7 ? 1 : 0);
   const head = { p: headP, r: headR };
   J.head = { x: headP[0], y: headP[1], rot: headR };
@@ -625,7 +625,7 @@ export function solvePose(t, s = {}) {
       const baseA = lerp(droop - 7 * i, base + 2 * i, stream);
       const flut = (0.8 + 2.4 * f) * wind * Math.sin(3 * psiD - 0.9 * i + ph0) + (0.4 + 1.6 * f) * wind * Math.sin(8 * psiD - 1.4 * i + salt)
         + gS * (6 + 10 * f) * Math.sin((TAU * 75 * t) / 24 - 1.1 * i + salt)
-        + (1.2 + 4.5 * f) * (1 - 0.5 * stream) * Math.sin((TAU * 4 * t) / 24 - 0.8 * i + salt);   // slow buoyant float (6 s, loop-exact)
+        + (1.2 + 4.5 * f) * (1 - 0.5 * stream) * Math.sin((TAU * 6 * t) / 24 - 0.8 * i + salt);   // slow buoyant float (4 s: exact in the bake loop)
       const lift = liftV * (0.35 + 0.65 * f) - 8 * landKickSlow * f + 6 * gS * f;
       a.push(baseA + evalPh(prevLag, phi2) * (0.4 + f) + flut + lift - 3 * coastW * f);
     }

@@ -68,7 +68,7 @@ const ENV_BASE = {
   // sea, land (painted by the sea / land owners with these paints)
   seaFar: '#6A78B0', seaNear: '#3A5AA3', seaDeep: '#34557F', seaMid: '#8E86BC', seaSheen: '#FFD99A', foam: '#FFF6EC',
   hillFar: '#94777F', hillNear: '#7FA067', sand: '#F2C694', sandShade: '#C9A06E', road: '#A48688', roadLine: '#F6E2BC',
-  grassFar: '#9DB872', grassNear: '#739A55', foliage: '#5E8A4E', trunk: '#6B4632', rim: '#FFE3B8', grade: '#FFF6EC',
+  grassFar: '#9DB872', grassNear: '#739A55', foliage: '#5E8A4E', trunk: '#6B4632', rim: '#FFBE6E', grade: '#FFF6EC',
   // page paints
   line: '#4A2C20', lineSoft: '#8A5A48', paper: '#FFF6EC', mauve: '#94777F',
 };
@@ -102,7 +102,7 @@ const ENV_PAINT = {
     sunCore: '#FFF0C0', sunGlow: '#FFD08A', sunHalo: '#FFB070', sunRing: '#FFE2A0', sunBloom: '#F08050',
     sunBar1: '#E8866E', sunBar2: '#FFB888', sunDog: '#FFE2A0',
     cloudLit: '#FFC496', cloudMid: '#E88684', cloudShade: '#8E6A9E', cloudDots: '#B8789A', cloudRim: '#FFE4B0', cloudBank: '#9A6E9C', cloudHigh: '#FFD2A8',
-    seaFar: '#6A5E9E', seaNear: '#3A3A80', seaDeep: '#2C2E68', seaMid: '#9A74A8', seaSheen: '#FFC080', hillFar: '#7E5E88', rim: '#FFC890',
+    seaFar: '#6A5E9E', seaNear: '#3A3A80', seaDeep: '#2C2E68', seaMid: '#9A74A8', seaSheen: '#FFC080', hillFar: '#7E5E88', rim: '#FFAE6A',
   },
   dusk: {
     skyTop: '#2C2E68', skyHigh: '#4E437E', skyMid: '#8C5E98', skyLow: '#CC8494', skyHaze: '#F0B09A',
@@ -199,6 +199,7 @@ export function samplePalette(tod, extraMaterials = NOEXTRA) {
   const A = SET[na], B = SET[nb];
   const env = {};
   for (const k of ENV_TOKENS) env[k] = mixTok(A[k], B[k], u);
+  env.rimLight = env.rim;   // the sun-side rim light (the material 'rim' = the bike's wheel rims shares --pb-rim)
   const inks = {}; for (const r of INK_ROLES) inks[r] = env['ink' + r];
   const T = matTables(extraMaterials), MA = T[na], MB = T[nb], mat = {};
   for (const k in MA) mat[k] = linToHex(na === nb ? MA[k] : mixLin(MA[k], MB[k], u));

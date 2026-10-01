@@ -1,30 +1,42 @@
-// OWNER: print. Screen-fixed poster furniture in L-letterbox (depth null), STYLE-C §4–§5:
-//  · the poster border: P paper margin, N keyline + outer hairline, deco sunburst corners, stepped edge diamonds,
-//    crop and registration marks, a printer's strip (imprint, colour bar, halftone tint ramp, edition number);
-//  · the intro title card "PELICAN BAY" in stroke-built deco capitals (P face, R inline, N stepped shadow + N hatched
-//    cast shadow), the 鹈鹕湾 deco label tablet and the subtitle band. It is PRINTED IN plate by plate (shadow plate,
-//    face plate dropping into register, inline plate, the label thunked down, the band rolled on), holds ~3 s, then
-//    shrinks into a small corner logo. Every frame the card is fitted into the free space around the rider's screen
-//    box (from frame.cam + pose), so it never covers the bird at any camera, aspect, or during a hop;
-//  · ephemera: an "ADMIT ONE" coast-railway ticket (guilloche, perforated stub, conductor's punch, matching serials),
-//    a perforated postage stamp with an engraved vignette of a pelican on a bicycle, and a 鹈鹕湾 postmark with date;
-//  · the cinematic letterbox: the paper margin itself grows into the bars (driven by frame.cam.letterbox); the logo
-//    and stamp move into the top bar and the ticket into the bottom bar.
+// OWNER: print. The screen-fixed CYBERPUNK HUD FRAME in L-letterbox (depth null), STYLE-X §8:
+//  · the frame: cyan corner brackets with a magenta inner offset, hairline keylines, edge rulers with a centre notch,
+//    inward chevrons at the side midpoints, and tiny rotated corner codes along the bracket arms;
+//  · the intro title "NEON PELICAN" (DejaVu Sans Bold) + 鹈鹕湾 tag: glitch-lettered as geometry (a chromatic cyan /
+//    magenta split, horizontally displaced slices, cut scanlines inside the face). It BOOTS: the brackets snap in, a
+//    scan beam sweeps the screen, every letter decodes through scramble glyphs and locks, the split converges, the tag
+//    slams in, the subtitle types on. After ~3.5 s it shrinks into the corner HUD logo. Every frame the card is fitted
+//    into the free space around the rider's screen box (frame.cam + pose), so it never covers the bird;
+//  · the mission panel: "▶ MISSION ACTIVE", ETA to the end of the stretch, a progress bar, the per-stretch caption
+//    "DELIVERY 06 · 灯塔角 / DATA SPIRE" + a witty brief line, a barcode; under it the minimap strip of the whole
+//    26 km loop (12 districts with pictograms, km scale, current district, the rider's marker, lap + km counters);
+//  · the status readouts: signal bars + 霓虹网 NEON-NET, a battery that drains over the lap and charges at home,
+//    ● REC with the clock (from the time of day), weather word + humidity + temperature (from frame.weather);
+//  · a target reticle that tracks the rider's head (brackets OUTSIDE the head + bill box) with its courier tag;
+//  · the cinematic letterbox becomes two HUD BARS (void, scanlines, neon edge, tick ruler, hazard ends); the logo and
+//    mission panel dock into the top bar, the readouts and a slow news ticker into the bottom bar;
+//  · a rare, brief glitch transition (tear bands + frame jitter + slice jumps), on district changes into / out of
+//    the tunnel, at the lap start and at seeded moments (~ every 40 s, 0.24 s long); the caption swaps with a split.
+// Performance: no filters anywhere (the glow is stacked strokes); only transforms, opacity and <use> href swaps per
+// frame, each written only when its value changes; the scanline texture is a static <pattern> on panels and bars.
 // All lettering is path data (print-glyphs.js, generated offline by print-glyphs.gen.mjs); no runtime fonts.
 import { fmt2 } from '../core/math.js';
 import { h } from '../core/svg.js';
 import { VIEW, RIDER_X, GROUND_Y, CAMERAS } from '../contract.js';
-import { LAT, ZH } from './print-glyphs.js';
+import { STRETCHES, LAP, KM, hash } from './route.js';
+import * as G from './print-glyphs.js';
 
 export const id = 'print';
 
+const LAT = G.LAT || {}, SANS = G.SANS || {}, MONO = G.MONO || {}, ZH = G.ZH || {};
+const FACES = { LAT, SANS, MONO, ZH };
 const TD = 'typography_frame';
-const f = fmt2;   // = String(Math.round(x * 100) / 100), fast (core/math.js)
+const f = fmt2;
 const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
 const lerp = (a, b, t) => a + (b - a) * t;
 const easeOut = t => 1 - (1 - t) ** 3;
 const easeInOut = t => t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 const backOut = t => { const c = 1.9; return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2; };
+const wrapM = (x, m) => ((x % m) + m) % m;
 
 // ------------------------------------------------------------------ path geometry helpers (build time only)
 // Affine-transform an absolute SVG path (M L H V Q C A Z). m = [a b c d e f]: x' = a·x + c·y + e, y' = b·x + d·y + f.
@@ -39,16 +51,12 @@ function tp(d, m) {
     if (/[a-zA-Z]/.test(tok[i])) cmd = tok[i++];
     switch (cmd) {
       case 'M': case 'L': { cx = num(); cy = num(); out += cmd + pt(cx, cy); if (cmd === 'M') cmd = 'L'; break; }
-      case 'h': cx += num(); out += 'L' + pt(cx, cy); break;
-      case 'v': cy += num(); out += 'L' + pt(cx, cy); break;
-      case 'm': case 'l': { cx += num(); cy += num(); out += cmd.toUpperCase() + pt(cx, cy); if (cmd === 'm') cmd = 'l'; break; }
       case 'H': cx = num(); out += 'L' + pt(cx, cy); break;
       case 'V': cy = num(); out += 'L' + pt(cx, cy); break;
       case 'Q': { const a = pt(num(), num()); cx = num(); cy = num(); out += `Q${a} ${pt(cx, cy)}`; break; }
       case 'C': { const a = pt(num(), num()), b = pt(num(), num()); cx = num(); cy = num(); out += `C${a} ${b} ${pt(cx, cy)}`; break; }
-      case 'a': case 'A': {
-        const rx = num(), ry = num(), rot = num(), la = num(), sw = num();
-        if (cmd === 'a') { cx += num(); cy += num(); } else { cx = num(); cy = num(); }
+      case 'A': {
+        const rx = num(), ry = num(), rot = num(), la = num(), sw = num(); cx = num(); cy = num();
         out += `A${f(rx * sc)} ${f(ry * sc)} ${f(rot + ang)} ${la} ${det < 0 ? 1 - sw : sw} ${pt(cx, cy)}`; break;
       }
       case 'Z': case 'z': out += 'Z'; cmd = ''; break;
@@ -57,383 +65,444 @@ function tp(d, m) {
   }
   return out;
 }
-// matrix for translate(tx,ty) rotate(deg) scale(sx,sy)
-const mat = (tx, ty, deg = 0, sx = 1, sy = sx) => {
-  const r = deg * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
-  return [c * sx, s * sx, -s * sy, c * sy, tx, ty];
-};
-const circ = (x, y, r, ccw = false) => `M${f(x - r)} ${f(y)}a${f(r)} ${f(r)} 0 1 ${ccw ? 1 : 0} ${f(2 * r)} 0a${f(r)} ${f(r)} 0 1 ${ccw ? 1 : 0} ${f(-2 * r)} 0Z`;
+const circ = (x, y, r) => `M${f(x - r)} ${f(y)}a${f(r)} ${f(r)} 0 1 0 ${f(2 * r)} 0a${f(r)} ${f(r)} 0 1 0 ${f(-2 * r)} 0Z`;
 const rectD = (x, y, w, hh) => `M${f(x)} ${f(y)}h${f(w)}v${f(hh)}h${f(-w)}Z`;
-const rectCCW = (x, y, w, hh) => `M${f(x)} ${f(y)}v${f(hh)}h${f(w)}v${f(-hh)}Z`;
-const roundRect = (x, y, w, hh, r) => `M${f(x + r)} ${f(y)}H${f(x + w - r)}A${r} ${r} 0 0 1 ${f(x + w)} ${f(y + r)}V${f(y + hh - r)}A${r} ${r} 0 0 1 ${f(x + w - r)} ${f(y + hh)}H${f(x + r)}A${r} ${r} 0 0 1 ${f(x)} ${f(y + hh - r)}V${f(y + r)}A${r} ${r} 0 0 1 ${f(x + r)} ${f(y)}Z`;
-const diamond = (x, y, hw, hh) => `M${f(x - hw)} ${f(y)}L${f(x)} ${f(y - hh)}L${f(x + hw)} ${f(y)}L${f(x)} ${f(y + hh)}Z`;
+const poly = pts => 'M' + pts.map(p => `${f(p[0])} ${f(p[1])}`).join('L') + 'Z';
+const hlines = (x0, x1, y0, y1, step) => { let d = ''; for (let y = y0; y <= y1 + 1e-6; y += step) d += `M${f(x0)} ${f(y)}H${f(x1)}`; return d; };
 
-// Glyph text -> one path d. font = LAT | ZH (em 1000, y down, baseline 0). rot in degrees about (x, y).
-const SPACE = { lat: 330, zh: 500 };
-function measure(font, str, size, track = 0, sx = 1) {
+// ------------------------------------------------------------------ lettering
+// Mixed runs: CJK / kana / full-width -> ZH (WenQuanYi), everything else -> the run's Latin face. em 1000, y down.
+export const isZH = ch => ch.codePointAt(0) >= 0x2e80;
+const SPACE = { LAT: 348, SANS: 318, MONO: 602, ZH: 500 };
+const SLOT = '¤';                       // a digit slot in a template: skipped, its pen x is reported
+const USED = { LAT: new Set(), SANS: new Set(), MONO: new Set(), ZH: new Set() };
+let COLLECT = false;                    // print-glyphs.gen.mjs: collect the characters instead of throwing
+function glyph(face, ch) {
+  const key = isZH(ch) ? 'ZH' : face;
+  USED[key].add(ch);
+  const g = FACES[key][ch];
+  if (!g && !COLLECT) throw new Error(`print: no ${key} glyph for "${ch}" (run node src/world/print-glyphs.gen.mjs)`);
+  return [key, g || [600, '']];
+}
+// -> { d, w, slots:[x…] }. zs: CJK scale in a Latin run (WenQuanYi's ideographs are taller than the Latin caps).
+function text(face, str, { size = 10, x = 0, y = 0, track = 0, sx = 1, align = 'left', zs = 0.9, zy = -0.03 } = {}) {
   const k = size / 1000, ch = [...str];
-  return ch.reduce((w, c, i) => w + (font[c] ? font[c][0] : font === ZH ? SPACE.zh : SPACE.lat) * k * sx + (i < ch.length - 1 ? track : 0), 0);
-}
-function text(font, str, { size = 10, x = 0, y = 0, track = 0, sx = 1, rot = 0, align = 'left' } = {}) {
-  const k = size / 1000, w = measure(font, str, size, track, sx);
-  const r = rot * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
+  const adv = c => {
+    if (c === ' ') return SPACE[face] * k * sx;
+    if (c === SLOT) return 602 * k * sx;
+    const [key, g] = glyph(face, c);
+    return g[0] * k * sx * (key === 'ZH' && face !== 'ZH' ? zs : 1);
+  };
+  const w = ch.reduce((s, c, i) => s + adv(c) + (i < ch.length - 1 ? track : 0), 0);
   let pen = align === 'center' ? -w / 2 : align === 'right' ? -w : 0, d = '';
-  for (const ch of str) {
-    const g = font[ch];
-    if (!g && ch !== ' ') throw new Error(`print: no glyph for "${ch}" (add it to print-glyphs.gen.mjs)`);
-    if (g) d += tp(g[1], [c * k * sx, s * k * sx, -s * k, c * k, x + c * pen, y + s * pen]);
-    pen += (g ? g[0] : font === ZH ? SPACE.zh : SPACE.lat) * k * sx + track;
+  const slots = [];
+  for (const c of ch) {
+    if (c === SLOT) slots.push(x + pen);
+    else if (c !== ' ') {
+      const [key, g] = glyph(face, c);
+      const z = key === 'ZH' && face !== 'ZH' ? zs : 1;
+      if (g[1]) d += tp(g[1], [k * sx * z, 0, 0, k * z, x + pen, y + (z !== 1 ? zy * size : 0)]);
+    }
+    pen += adv(c) + track;
   }
-  return { d, w };
-}
-// Text along a circle. top: reads clockwise, glyphs stand outward on radius r. bottom: reads left→right along the
-// bottom of the circle, glyphs hang inward from radius r.
-function arcText(font, str, cx, cy, r, { size = 7, track = 0, bottom = false, mid = bottom ? 90 : -90 } = {}) {
-  const k = size / 1000, w = measure(font, str, size, track);
-  const span = w / r * 180 / Math.PI;
-  let pen = 0, d = '';
-  for (const ch of str) {
-    const g = font[ch], adv = (g ? g[0] : font === ZH ? SPACE.zh : SPACE.lat) * k;
-    const th = bottom ? mid + span / 2 - (pen + adv / 2) / r * 180 / Math.PI : mid - span / 2 + (pen + adv / 2) / r * 180 / Math.PI;
-    const a = th * Math.PI / 180, rot = bottom ? th - 90 : th + 90;
-    const rr = rot * Math.PI / 180, c = Math.cos(rr), s = Math.sin(rr);
-    const px = cx + r * Math.cos(a), py = cy + r * Math.sin(a);
-    if (g) d += tp(g[1], [c * k, s * k, -s * k, c * k, px - c * adv / 2, py - s * adv / 2]);
-    pen += adv + track;
-  }
-  return d;
-}
-// Halftone patch as zero-length round-capped strokes (one path per radius), hex grid of pitch s.
-function dotsD(x0, y0, w, hh, s) {
-  let d = '';
-  for (let j = 0, y = y0 + s / 2; y < y0 + hh; j++, y += s * 0.866)
-    for (let x = x0 + (j % 2 ? s : s / 2); x < x0 + w; x += s) d += `M${f(x)} ${f(y)}h0`;
-  return d;
-}
-// Sine polyline
-function wave(x0, x1, y, amp, per, phase = 0, step = 1.5) {
-  let d = '';
-  for (let x = x0; x <= x1 + 0.01; x += step) d += (x === x0 ? 'M' : 'L') + f(x) + ' ' + f(y + amp * Math.sin((x - x0) / per * 2 * Math.PI + phase));
-  return d;
-}
-// Perforated stamp outline: rectangle whose edges are bitten by semicircles (holes of radius r at pitch p).
-function perforated(w, hh, r, p) {
-  const nx = Math.round(w / p), ny = Math.round(hh / p), px = w / nx, py = hh / ny;
-  let d = `M0 0`;
-  for (let i = 0; i < nx; i++) { const c = (i + 0.5) * px; d += `L${f(c - r)} 0A${r} ${r} 0 0 0 ${f(c + r)} 0`; }
-  d += `L${f(w)} 0`;
-  for (let i = 0; i < ny; i++) { const c = (i + 0.5) * py; d += `L${f(w)} ${f(c - r)}A${r} ${r} 0 0 0 ${f(w)} ${f(c + r)}`; }
-  d += `L${f(w)} ${f(hh)}`;
-  for (let i = nx - 1; i >= 0; i--) { const c = (i + 0.5) * px; d += `L${f(c + r)} ${f(hh)}A${r} ${r} 0 0 0 ${f(c - r)} ${f(hh)}`; }
-  d += `L0 ${f(hh)}`;
-  for (let i = ny - 1; i >= 0; i--) { const c = (i + 0.5) * py; d += `L0 ${f(c + r)}A${r} ${r} 0 0 0 0 ${f(c - r)}`; }
-  return d + 'Z';
+  return { d, w, slots };
 }
 
-// ------------------------------------------------------------------ deco stroke capitals (ported from the draft)
-// Monoline strokes (w = 24 in a 100-high box), clipped flush to the cap and base lines. D M O T are new.
-const LET = {
-  P: { w: 76, s: [['M12 112V12H40A24 23 0 0 1 40 58H12', 24]] },
-  E: { w: 64, s: [['M64 12H12V88H64', 24], ['M12 50H56', 22]] },
-  L: { w: 60, s: [['M12 -10V88H60', 24]] },
-  I: { w: 24, s: [['M12 -10V110', 24]] },
-  C: { w: 76, s: [['M76 12H46A34 38 0 0 0 12 50A34 38 0 0 0 46 88H76', 24]] },
-  A: { w: 90, s: [['M10 118L45 -14L80 118', 24], ['M20 76H70', 18]] },
-  N: { w: 82, s: [['M12 112V-2L70 102V-12', 24]] },
-  B: { w: 78, s: [['M12 -10V110', 24], ['M12 12H42A20 19 0 0 1 42 50H12', 24], ['M12 50H44A22 19 0 0 1 44 88H12', 24]] },
-  Y: { w: 84, s: [['M2 -14L42 54L82 -14', 24], ['M42 50V112', 24]] },
-  D: { w: 80, s: [['M12 -10V110', 24], ['M12 12H36A32 38 0 0 1 36 88H12', 24]] },
-  M: { w: 100, s: [['M12 112V-6L50 82L88 -6V112', 24]] },
-  O: { w: 84, s: [['M12 50A30 38 0 1 1 72 50A30 38 0 1 1 12 50Z', 24]] },
-  T: { w: 72, s: [['M0 12H72', 24], ['M36 -10V110', 24]] },
+// ------------------------------------------------------------------ copy (every string the HUD prints)
+// per route stretch: [中文, English, brief]; lighthouse keeps its old name 灯塔角 on the caption (STYLE-X brief)
+const MISSIONS = {
+  village: ['鹈鹕湾', 'PELICAN BAY', 'PICKUP 鱼丸 FISHBALL ×12 · TIP ¥88'],
+  pier: ['无人机码头', 'DRONE DOCK', 'HANDOFF TO DRONE 07 · 请勿喂食 NO FEEDING'],
+  harbour: ['渔港', 'NEON FISH PORT', 'FRESH CATCH · HOLO-FISH NOT EDIBLE'],
+  funfair: ['游戏厅', 'ARCADE ROW', 'DODGE THE KOI · 投币 INSERT COIN'],
+  railway: ['磁浮线', 'MAGLEV LINE', 'RACE THE MAGLEV · 请勿追车 DO NOT CHASE'],
+  lighthouse: ['灯塔角', 'DATA SPIRE', 'UPLINK 99% · SEARCHLIGHT SWEEP · DUCK'],
+  cliffs: ['霓虹隧道', 'NEON TUNNEL', 'NO SIGNAL · 信号弱 · KEEP PEDALLING'],
+  dunes: ['废料场', 'SCRAPYARD', 'SALVAGE 1 CHROME NAIL · 小心 MIND THE GAP'],
+  bridge: ['天桥', 'SKYBRIDGE', 'WIND 2 KN · CALM AS A KOI POND'],
+  fort: ['古庙', 'OLD TEMPLE', 'LIGHT INCENSE · 保佑外卖 BLESS THE FISH'],
+  pines: ['水培园', 'HYDRO GARDEN', 'GROW LIGHTS 420NM · 水培 · BREATHE IN'],
+  return: ['鹈鹕湾', 'PELICAN BAY', 'DROP-OFF · 30 MIN OR THE FISH IS FREE'],
 };
-function deco(str, gap = 13) {
-  let pen = 0; const byW = {}; let inl = '';
-  for (const ch of str) {
-    if (ch === ' ') { pen += 44; continue; }
-    const L = LET[ch]; if (!L) throw new Error('print: no deco capital ' + ch);
-    for (const [d, sw] of L.s) { const dd = tp(d, [1, 0, 0, 1, pen, 0]); byW[sw] = (byW[sw] || '') + dd; inl += dd; }
-    pen += L.w + gap;
-  }
-  return { byW, inl, w: pen - gap };
-}
+const CAPTION = s => `DELIVERY ${String(s.i + 1).padStart(2, '0')} · ${MISSIONS[s.key][0]} / ${MISSIONS[s.key][1]}`;
+const WEATHER = { clear: '晴 CLEAR', drizzle: '小雨 DRIZZLE', fog: '雾 FOG', rain: '雨 RAIN', storm: '暴雨 STORM' };
+const CODES = { TL: 'SYS.OK // NP-07', TR: 'CAM A · LIVE FEED', BL: '22.28°N 114.16°E', BR: 'BUILD X.2026.09.30' };
+const TICKER = '霓虹快讯 NEON NEWS // FISH PRICES +3% // DRONE LANE 7 CLOSED FOR RAIN // 鹈鹕外卖 PELICAN EXPRESS: 30 MIN OR THE FISH IS FREE // MAGLEV LINE 7 ON TIME 准点 // 禁止鹈鹕 NO PELICANS BEYOND THIS POINT (JUST KIDDING) // ACID RAIN 72% TONIGHT · BRING AN UMBRELLA // ';
+const TITLE = 'NEON PELICAN';
+const SCRAMBLE = '#%&@$0123456789XZ';
 
 // ------------------------------------------------------------------ geometry constants (screen / viewBox units)
-const M = 18, MB = 24;                  // paper margin (sides+top) / bottom margin (holds the printer's strip)
+const M = 14;                                      // bracket inset from the visible edge (and from the bars)
+const ARM = 46;                                    // bracket arm length
 const LB_MAX = CAMERAS.cinematic.letterbox;
-const W1 = deco('PELICAN'), W2 = deco('BAY');
-const LINE_W = W1.w + 57 + W2.w;       // "PELICAN BAY" on one line (space 44 + gap 13)
-const SEAL = { w: 56, h: 140 };
-const SUB = { h: 32 };
-const SUBTXT = text(LAT, 'THE COAST ROAD  ·  BY BICYCLE', { size: 21, track: 5.2, sx: 0.92 });
-const SUB_W = SUBTXT.w + 64;
-// Title layouts in card-local units: pose per group {x, y, s}; bbox {x0,y0,x1,y1}.
-const LAYOUTS = {
-  line: { w1: { x: 0, y: 0 }, w2: { x: W1.w + 57, y: 0 }, seal: { x: LINE_W + 30, y: -4, s: 1 }, sub: { x: 4, y: 130 },
-    box: [-6, -8, LINE_W + 30 + SEAL.w + 6, 166] },
-  stack: { w1: { x: 0, y: 0 }, w2: { x: 0, y: 118 }, seal: { x: W2.w + 30, y: 112, s: 1 }, sub: { x: 4, y: 262 },
-    box: [-6, -8, Math.max(W1.w, W2.w + 30 + SEAL.w, SUB_W) + 18, 300] },
-  logo: { w1: { x: 0, y: 0 }, w2: { x: W1.w + 57, y: 0 }, seal: { x: LINE_W + 24, y: -2, s: 0.74 }, sub: { x: 4, y: 110 },
-    box: [-4, -6, LINE_W + 24 + SEAL.w * 0.74 + 4, 106] },
-  logoBar: { w1: { x: 0, y: 0 }, w2: { x: W1.w + 57, y: 0 }, seal: { x: LINE_W + 24, y: -2, s: 0.74 }, sub: { x: LINE_W + 24 + SEAL.w * 0.74 + 40, y: 30, s: 1.25 },
-    box: [-4, -6, LINE_W + 24 + SEAL.w * 0.74 + 40 + SUB_W * 1.25 + 4, 106] },
-};
-const TICKET = { w: 236, h: 92 };
-const SH_N = 5, SH_STEP = 1.52;        // stepped shadow: 5 plates, 7.6 units deep
-const ED = text(LAT, 'PLATE C · SEVEN INKS · № 07/120', { size: 7.2, track: 1.05, align: 'right' });
-const STAMP = { w: 80, h: 96 };
+const TT = { size: 76, sx: 1.14, track: 5 };       // title face
+const TAG = { w: 160, h: 60 };
+// title letters (the same pen as text(): positions for the per-letter <use> slots)
+function titleLetters() {
+  const k = TT.size / 1000; let pen = 0; const out = [];
+  for (const c of TITLE) {
+    if (c === ' ') { pen += SPACE.LAT * k * TT.sx + TT.track; continue; }
+    const [, g] = glyph('LAT', c); out.push({ c, x: pen }); pen += g[0] * k * TT.sx + TT.track;
+  }
+  return { letters: out, w: pen - TT.track };
+}
+// glitch slices of the title face: [y0, y1, dx] in word units (baseline 0, cap top ≈ −55)
+const BANDS = [[-48, -45, 4], [-37, -31.5, 9], [-20, -16, -6], [-8.5, -6.5, 3]];
+const PW = 404, PH = 72, MH = 54, MGAP = 8;        // mission panel / minimap
+const BLOCK = { w: PW, h: PH + MGAP + MH };
+const RW = 322, RH = 48;                           // readouts
+const KMS = 26;
 
 export const detailItems = [
-  ['paper-margin', 'O', 'cream paper margin that becomes the cinematic letterbox bars'],
-  ['frame-keyline', 'O', 'navy 3-unit keyline where the print meets the paper'],
-  ['frame-hairline', 'O', 'outer navy hairline, a double-rule frame'],
-  ['corner-sunburst', 'O', 'deco corner ornament: quarter sun with rays, bead ring and stepped keyline blocks'],
-  ['edge-diamond', 'O', 'stepped deco diamond stops at the middle of each frame side'],
-  ['crop-marks', 'O', 'printer\'s crop marks in the margin at each corner'],
-  ['registration-mark', 'O', 'registration targets (ring, crosshair, filled quadrants) on the margins'],
-  ['colour-bar', 'O', 'seven-ink colour bar: one swatch per ink of the hour'],
-  ['tint-ramp', 'T', 'halftone tint ramp: five dot sizes of the cool ink'],
-  ['imprint', 'O', 'imprint "PRINTED AT PELICAN BAY · 鹈鹕湾印制"'],
-  ['edition-number', 'O', 'edition line "PLATE C · SEVEN INKS · № 07/120"'],
-  ['title-face', 'O', 'PELICAN BAY in stroke-built deco capitals (paper ink)'],
-  ['title-inline', 'T', 'vermilion inline engraved down the centre of every stroke'],
-  ['title-stepped-shadow', 'O', 'navy stepped (extruded) drop shadow, 5 plates'],
-  ['title-hatch-shadow', 'T', 'hatched cast shadow offset behind the extrusion'],
-  ['title-label', 'O', '鹈鹕湾 vertical deco label tablet (vermilion, cream rule, navy offset)'],
-  ['subtitle-band', 'O', 'navy band "THE COAST ROAD · BY BICYCLE" in cream'],
-  ['band-ornament', 'O', 'swallowtail band ends with diamond studs'],
-  ['ticket-card', 'O', 'ADMIT ONE coast-railway ticket: header band, deco caps, keyline'],
-  ['ticket-guilloche', 'T', 'guilloche security waves printed under the ticket text'],
-  ['ticket-perforation', 'O', 'tear line: dashed rule and punched perforation holes'],
-  ['ticket-serial', 'O', 'matching serial numbers on ticket and stub'],
-  ['ticket-route', 'O', 'route 鹈鹕湾 → 灯塔角 / PELICAN BAY → LIGHTHOUSE PT and fare class'],
-  ['ticket-punch', 'O', 'conductor\'s diamond punch hole through the card'],
-  ['ticket-stub', 'O', 'stub with vertical ADMIT ONE'],
-  ['stamp-perforated', 'O', 'postage stamp with perforated (bitten) edge and frame rule'],
-  ['stamp-vignette', 'O', 'tiny pelican riding a bicycle on the coast road, rising sun, sea'],
-  ['stamp-engraving', 'T', 'engraved line shading across sky and sun'],
-  ['stamp-value', 'O', 'denomination roundel 5分'],
-  ['stamp-legend', 'O', 'legend 鹈鹕湾邮政 / PELICAN BAY POST'],
-  ['postmark-ring', 'O', 'double-ring postmark with PELICAN BAY and 鹈鹕湾 set on the arcs'],
-  ['postmark-date', 'O', 'postmark date 30 SEP 2026 between bars'],
-  ['postmark-cancel', 'T', 'wavy cancellation lines struck across the stamp'],
+  ['hud-bracket', 'O', 'cyan corner brackets with stacked-stroke glow, a magenta inner offset L, corner nubs and dash ticks'],
+  ['frame-keyline', 'O', 'hairline cyan keylines joining the brackets (the frame of the feed)'],
+  ['edge-ruler', 'O', 'tick rulers centred on the top and bottom edges: minor/major ticks, magenta centre notch'],
+  ['edge-chevron', 'O', 'inward chevron stacks with a bar at the middle of each side'],
+  ['corner-codes', 'O', 'rotated micro codes along the bracket arms: SYS.OK // NP-07 · CAM A · LIVE FEED · 22.28°N 114.16°E · BUILD'],
+  ['scanlines', 'T', 'static scanline texture on every HUD panel and bar'],
+  ['title-face', 'O', 'NEON PELICAN in wide DejaVu Sans Bold capitals, cool white face'],
+  ['title-chroma', 'T', 'chromatic aberration: cyan and magenta copies split left/right behind the face'],
+  ['title-slice', 'O', 'glitch slices: four horizontal bands of the face displaced sideways'],
+  ['title-scan', 'T', 'dark scanlines cut through the title face'],
+  ['title-rule', 'O', 'magenta rule under the title with acid data blocks and ticks'],
+  ['title-tag', 'O', '鹈鹕湾 tag: chamfered magenta plate, keyline, drop-shadowed CJK'],
+  ['title-kana', 'O', 'katakana ペリカン・ベイ under the tag'],
+  ['title-sub', 'O', 'monospace subtitle PELICAN BAY · 霓虹区 NEON DISTRICT · ネオン with a block cursor'],
+  ['edition-code', 'O', 'edition line EDITION X · 霓虹版 · BUILD 2026.09.30 · NODE 0719'],
+  ['mission-panel', 'O', 'chamfered translucent mission panel with neon border, magenta accent bar and acid stud'],
+  ['mission-status', 'O', '▶ MISSION ACTIVE status (UPLINK LOST in the tunnel)'],
+  ['mission-eta', 'O', 'ETA mm:ss to the end of the district, live digits'],
+  ['mission-progress', 'O', 'progress bar through the district with tick scale'],
+  ['mission-caption', 'O', 'per-district caption DELIVERY nn · 中文 / ENGLISH (12 districts)'],
+  ['mission-brief', 'O', 'per-district brief line (PICKUP 鱼丸 ×12 · TIP ¥88 …)'],
+  ['mission-barcode', 'T', 'seeded barcode + parcel number on the mission panel'],
+  ['minimap-frame', 'O', 'minimap strip frame: ROUTE // 霓虹环线 NEON LOOP, LAP and KM counters'],
+  ['minimap-track', 'O', 'the 26 km loop as 12 district segments with station dots'],
+  ['minimap-icons', 'O', 'district pictograms: ramen bowl, drone, crane, koi, maglev, spire, tunnel, scrap, skybridge, temple, leaf, home flag'],
+  ['minimap-scale', 'O', 'km ticks and 0 · 5 · 10 · 15 · 20 · 26 labels'],
+  ['minimap-current', 'O', 'current district highlight and visited trail'],
+  ['minimap-marker', 'O', 'the rider marker: ring, dot and pointer at the live lap position'],
+  ['signal-bars', 'O', 'five signal bars (drop to one in the tunnel) + SIGNAL label'],
+  ['net-id', 'O', 'carrier 霓虹网 NEON-NET 5G'],
+  ['battery', 'O', 'battery with nub, five cells, live %, charging bolt at home'],
+  ['rec-time', 'O', '● REC and the clock hh:mm:ss (from the time of day)'],
+  ['weather-readout', 'O', 'weather icon + word (晴 CLEAR / 霾 SMOG / 雾 FOG / 雨 RAIN / 暴雨 STORM) + humidity % + °C'],
+  ['target-reticle', 'O', 'corner brackets tracking the rider\'s head, outside the head + bill box'],
+  ['target-label', 'O', 'courier tag COURIER 鹈鹕 #0719 on a leader line'],
+  ['hud-bar', 'O', 'cinematic letterbox as HUD bars: void, neon double edge, tick ruler'],
+  ['bar-hazard', 'T', 'hazard stripes at the ends of the HUD bars'],
+  ['bar-ticker', 'O', 'slow news ticker in the bottom bar (霓虹快讯 NEON NEWS …)'],
+  ['glitch-tear', 'T', 'rare glitch transition: tear bands and scanline blocks'],
 ].map(([name, kind, what]) => ({ id: `${TD}:${kind}:${name}`, layer: TD, kind, what }));
 const DD = Object.fromEntries(detailItems.map(d => [d.id.split(':')[2], d.id]));
 
+// the title layouts, card-local (word baseline at y = 0): pose per group {x, y}; box [x0 y0 x1 y1]
+let LAYOUTS = null, TL = null, SUBW = 0, EDW = 0, TICK_W = 1000, CODEW = {};
+function layouts() {
+  TL = titleLetters();
+  const W = TL.w;
+  SUBW = text('MONO', 'PELICAN BAY · 霓虹区 NEON DISTRICT · ネオン', { size: 12.5, track: 3.2 }).w + 14;
+  EDW = text('MONO', 'EDITION X · 霓虹版 · BUILD 2026.09.30 · NODE 0719', { size: 7.4, track: 1.5 }).w;
+  const lineW = Math.max(W + 24 + TAG.w, SUBW, EDW) + 12;
+  TICK_W = text('MONO', TICKER, { size: 8.6, track: 1.6 }).w + 30;
+  for (const c of ['TL', 'TR', 'BL', 'BR']) CODEW[c] = text('MONO', CODES[c], { size: 6.2, track: 1.1 }).w;
+  LAYOUTS = {
+    line: { w: { x: 0, y: 0 }, tag: { x: W + 24, y: 0 }, sub: { x: 0, y: 40 }, ed: { x: 0, y: 58 }, box: [-12, -68, lineW, 64] },
+    stack: { w: { x: 0, y: 0 }, tag: { x: 0, y: 82 }, sub: { x: 0, y: 128 }, ed: { x: 0, y: 146 }, box: [-12, -68, Math.max(W, SUBW, EDW) + 12, 152] },
+    logo: { w: { x: 0, y: 0 }, tag: { x: W + 24, y: 0 }, sub: { x: 0, y: 40 }, ed: { x: 0, y: 58 }, box: [-12, -68, lineW, 46] },
+  };
+}
+
+// ------------------------------------------------------------------ minimap pictograms (8 × 8, centred, stroke)
+const ICON = {
+  village: 'M-4 -1H4A4 3.4 0 0 1 -4 -1ZM-2 -3V-5M0 -3.4V-5.6M2 -3V-5M-3 3H3',
+  pier: 'M-2 -1H2V1H-2ZM-4.5 -3H-1.5M1.5 -3H4.5M-3 -3V-1M3 -3V-1M0 1V3',
+  harbour: 'M-3 4V-4H4M-3 -2.5L-0.5 -4M3 -4V0M2 0H4',
+  funfair: 'M-4 0Q-1 -3.4 2.4 0Q-1 3.4 -4 0ZM2.4 0L4.4 -2V2ZM-1.6 -0.6V0.4',
+  railway: 'M-4.5 2.5V-1Q-4.5 -3 -2 -3H3Q4.5 -3 4.5 -1V2.5ZM-3 -1H-1M0.5 -1H2.5M-4 4H4',
+  lighthouse: 'M-1.4 4L0 -4.5L1.4 4ZM1 -3.5L4.5 -5M1 -2.5L4.5 -1.6M-3 4H3',
+  cliffs: 'M-4.5 4V0A4.5 4.5 0 0 1 4.5 0V4M-2.4 4V0.6A2.4 2.4 0 0 1 2.4 0.6V4',
+  dunes: 'M-4.5 3.5L-1.5 -1.5L0.5 1L2.5 -2.5L4.5 3.5ZM-4.5 3.5H4.5',
+  bridge: 'M-4.5 2H4.5M0 -4V2M0 -4L-4 2M0 -4L4 2M0 -4L-2 2M0 -4L2 2',
+  fort: 'M-4.5 -1Q0 -5.4 4.5 -1ZM-3 -1V3.5M3 -1V3.5M-4 3.5H4M-1 3.5V1H1V3.5',
+  pines: 'M0 4V-1M0 -1Q-4 -2 -3 -5Q1 -5 0 -1ZM0 0.5Q3.5 0 3.5 -3Q0.5 -2.6 0 0.5Z',
+  return: 'M-2.5 4V-4.5M-2.5 -4.5L3.5 -2.6L-2.5 -0.8M-4 4H1',
+};
+
 // ------------------------------------------------------------------ build
-export function build({ v }) {
-  const I = Object.fromEntries(['P', 'K', 'O', 'R', 'B', 'T', 'N'].map(k => [k, v('ink' + k)]));
+export function build(ctx) {
+  const { v } = ctx;
+  if (!LAYOUTS) layouts();
+  const C = {
+    cyan: v('cyan'), mag: v('magenta'), acid: v('acid'), amber: v('amber'), red: v('red'), core: v('cyanCore'), mcore: v('magentaCore'),
+    plume: v('inkP'), void: v('inkN'), haze: v('inkB'),
+  };
   const tag = (name, attrs, ...kids) => h('g', { 'data-detail': DD[name], ...attrs }, ...kids);
   const txt = (s, attrs = {}) => ({ 'data-text': s, ...attrs });
   const defs = [];
+  const P = (d, attrs) => h('path', { d, ...attrs });
 
-  // ---- title glyph plates (defs) ----
-  for (const [k, W] of [['w1', W1], ['w2', W2]]) {
-    defs.push(h('clipPath', { id: `print-clip-${k}` }, h('rect', { x: -30, y: 0, width: W.w + 60, height: 100 })));
-    // squeegee wipes that pull the face and inline plates across the word during the intro
-    for (const pl of ['face', 'inl']) defs.push(h('clipPath', { id: `print-wipe-${pl}-${k}` }, h('rect', { 'data-ref': `print-wipe-${pl}-${k}`, x: 0, y: -40, width: 1, height: 190 })));
-    defs.push(h('g', { id: `print-g-${k}`, 'clip-path': `url(#print-clip-${k})`, fill: 'none', 'stroke-miterlimit': 12 },
-      Object.entries(W.byW).map(([sw, d]) => h('path', { d, 'stroke-width': sw }))));
+  // ---- shared textures ----
+  defs.push(h('pattern', { id: 'print-scan', width: 12, height: 3, patternUnits: 'userSpaceOnUse' },
+    h('rect', { width: 12, height: 1, fill: C.cyan, 'fill-opacity': 0.075 })));
+  defs.push(h('pattern', { id: 'print-scan-dark', width: 12, height: 3, patternUnits: 'userSpaceOnUse' },
+    h('rect', { width: 12, height: 1.1, fill: C.void, 'fill-opacity': 0.5 })));
+  defs.push(h('pattern', { id: 'print-ticks', width: 20, height: 8, patternUnits: 'userSpaceOnUse' },
+    h('rect', { width: 1, height: 3, fill: C.cyan }), h('rect', { x: 10, width: 1, height: 1.6, fill: C.cyan })));
+  defs.push(h('pattern', { id: 'print-hazard', width: 8, height: 8, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' },
+    h('rect', { width: 4, height: 8, fill: C.amber })));
+  // MONO digit glyphs for the live slots (em 1000; each slot is a <use> scaled to its size)
+  for (let dg = 0; dg <= 9; dg++) defs.push(P(glyph('MONO', String(dg))[1][1], { id: 'print-dm-' + dg }));
+  const slotUses = (prefix, xs, y, size, attrs = {}) => xs.map((x, i) =>
+    h('use', { href: '#print-dm-0', 'data-ref': `print-${prefix}${i}`, transform: `translate(${f(x)} ${f(y)}) scale(${f(size / 1000)})`, ...attrs }));
+
+  // ================================================================ FRAME
+  const corner = h('g', { id: 'print-corner' },
+    P(`M0 ${ARM}V0H${ARM}`, { fill: 'none', stroke: C.cyan, 'stroke-width': 6, 'stroke-opacity': 0.14 }),
+    P(`M0 ${ARM}V0H${ARM}`, { fill: 'none', stroke: C.cyan, 'stroke-width': 2 }),
+    P(`M5 ${ARM - 20}V5H${ARM - 20}`, { fill: 'none', stroke: C.mag, 'stroke-width': 1.2 }),
+    P(rectD(-2.5, -2.5, 5, 5) + rectD(ARM + 4, -1, 4, 2) + rectD(ARM + 11, -1, 2.5, 2) + rectD(-1, ARM + 4, 2, 4) + rectD(-1, ARM + 11, 2, 2.5), { fill: C.core }),
+    P(poly([[9, 9], [15, 9], [9, 15]]), { fill: C.cyan, 'fill-opacity': 0.8 }));
+  defs.push(corner);
+  // edge ruler: centred at (0,0) on the keyline, ticks toward +y
+  let rt = '';
+  for (let x = -160; x <= 160; x += 8) { const maj = x % 40 === 0; rt += rectD(x - 0.5, 0, 1, maj ? 7 : 3.5); }
+  defs.push(h('g', { id: 'print-ruler' },
+    P(rt, { fill: C.cyan, 'fill-opacity': 0.7 }),
+    P(rectD(-160, 0, 320, 1), { fill: C.cyan, 'fill-opacity': 0.55 }),
+    P(poly([[-7, 0], [7, 0], [0, 9]]), { fill: C.mag }),
+    P(rectD(-196, -0.5, 26, 2) + rectD(170, -0.5, 26, 2), { fill: C.mag, 'fill-opacity': 0.8 })));
+  // side chevrons: centred at (0,0) on the left keyline, pointing inward (+x)
+  const chev = (x) => `M${x} -9L${x + 7} 0L${x} 9L${x + 3} 9L${x + 10} 0L${x + 3} -9Z`;
+  defs.push(h('g', { id: 'print-chev' },
+    P(chev(6) + chev(15), { fill: C.cyan, 'fill-opacity': 0.75 }),
+    P(chev(24), { fill: C.mag }),
+    P(rectD(0, -26, 2, 52), { fill: C.cyan }),
+    P(rectD(0, -36, 1, 6) + rectD(0, 30, 1, 6), { fill: C.cyan, 'fill-opacity': 0.6 })));
+  const codes = {};
+  for (const k of ['TL', 'TR', 'BL', 'BR']) codes[k] = text('MONO', CODES[k], { size: 6.2, track: 1.1 });
+  const unit = (ref, fill, item, op = 1) => h('rect', { 'data-ref': ref, 'data-detail': DD[item], x: 0, y: 0, width: 1, height: 1, fill, 'fill-opacity': op });
+  const frame = h('g', { id: 'print-frame', 'data-ref': 'print-frame' },
+    ['kT', 'kB', 'kL', 'kR'].map(k => unit('print-' + k, C.cyan, 'frame-keyline', 0.42)),
+    ['TL', 'TR', 'BL', 'BR'].map(k => h('use', { href: '#print-corner', 'data-ref': 'print-c' + k, 'data-detail': DD['hud-bracket'] })),
+    ['T', 'B'].map(k => h('use', { href: '#print-ruler', 'data-ref': 'print-r' + k, 'data-detail': DD['edge-ruler'] })),
+    ['L', 'R'].map(k => h('use', { href: '#print-chev', 'data-ref': 'print-e' + k, 'data-detail': DD['edge-chevron'] })),
+    ['TL', 'TR', 'BL', 'BR'].map(k => tag('corner-codes', txt(CODES[k], { 'data-ref': 'print-code' + k }), P(codes[k].d, { fill: C.cyan, 'fill-opacity': 0.72 }))));
+
+  // ================================================================ CINEMATIC HUD BARS (bar edge at y = 0, bar toward −y)
+  const hudBar = k => h('g', { 'data-ref': 'print-bar' + k, display: 'none' },
+    tag('hud-bar', {},
+      h('rect', { x: -1400, y: -1400, width: 4400, height: 1400, fill: C.void }),
+      h('rect', { x: -1400, y: -1400, width: 4400, height: 1400, fill: 'url(#print-scan)' }),
+      h('rect', { x: -1400, y: -2.5, width: 4400, height: 1.6, fill: C.cyan }),
+      h('rect', { x: -1400, y: -7, width: 4400, height: 1, fill: C.mag, 'fill-opacity': 0.85 }),
+      h('rect', { x: -1400, y: -4, width: 4400, height: 5, fill: C.cyan, 'fill-opacity': 0.1 }),
+      h('rect', { x: -1400, y: -17, width: 4400, height: 8, fill: 'url(#print-ticks)', opacity: 0.45 })),
+    ['L', 'R'].map(s => tag('bar-hazard', { 'data-ref': `print-hz${k}${s}` },
+      h('rect', { x: 0, y: -15, width: 64, height: 6, fill: 'url(#print-hazard)' }),
+      h('rect', { x: 0, y: -15, width: 64, height: 6, fill: 'none', stroke: C.amber, 'stroke-width': 0.6 }))));
+  const tick = text('MONO', TICKER, { size: 8.6, track: 1.6 });
+  TICK_W = tick.w + 30;
+  defs.push(h('clipPath', { id: 'print-clip-ticker' }, h('rect', { 'data-ref': 'print-tickclip', x: 0, y: 0, width: 1, height: 1 })));
+  const ticker = h('g', { 'data-ref': 'print-ticker', 'clip-path': 'url(#print-clip-ticker)', display: 'none' },
+    tag('bar-ticker', txt(TICKER), h('g', { 'data-ref': 'print-tickmove' },
+      P(tick.d + tp(tick.d, [1, 0, 0, 1, TICK_W, 0]), { fill: C.cyan, 'fill-opacity': 0.85 }))));
+
+  // ================================================================ TITLE
+  const W = TL.w, k = TT.size / 1000;
+  const glyphChars = [...new Set([...TITLE.replace(/ /g, ''), ...SCRAMBLE])];
+  for (const c of glyphChars) defs.push(P(glyph('LAT', c)[1][1], { id: 'print-gl-' + c.charCodeAt(0) }));
+  defs.push(h('g', { id: 'print-tw' }, TL.letters.map((L, i) =>
+    h('use', { href: '#print-gl-' + L.c.charCodeAt(0), 'data-ref': 'print-tl' + i, transform: `translate(${f(L.x)} 0) scale(${f(k * TT.sx)} ${f(k)})` }))));
+  const faceD = text('LAT', TITLE, { size: TT.size, sx: TT.sx, track: TT.track }).d;
+  defs.push(h('clipPath', { id: 'print-clip-glyph' }, P(faceD)));
+  // complement of the bands
+  let bodyClip = '', yPrev = -90;
+  for (const [y0, y1] of BANDS) { bodyClip += rectD(-40, yPrev, W + 80, y0 - yPrev); yPrev = y1; }
+  bodyClip += rectD(-40, yPrev, W + 80, 40 - yPrev);
+  defs.push(h('clipPath', { id: 'print-clip-body' }, P(bodyClip)));
+  BANDS.forEach(([y0, y1], i) => defs.push(h('clipPath', { id: 'print-clip-band' + i }, P(rectD(-40, y0, W + 80, y1 - y0)))));
+  const ruleBlocks = [0, 1, 2, 3].map(i => rectD(W - 54 + i * 13, 9, 9, 4)).join('');
+  let ruleTicks = ''; for (let x = 0; x <= W - 70; x += 24) ruleTicks += rectD(x, 14, 1, 3);
+  const word = h('g', { 'data-ref': 'print-w', 'data-text': TITLE },
+    h('g', { 'data-ref': 'print-wv' },
+      h('use', { href: '#print-tw', fill: 'none', stroke: C.mag, 'stroke-width': 11, 'stroke-opacity': 0.12, 'stroke-linejoin': 'round' }),
+      tag('title-chroma', {},
+        h('use', { href: '#print-tw', 'data-ref': 'print-chc', fill: C.cyan, transform: 'translate(-3.2 0.6)' }),
+        h('use', { href: '#print-tw', 'data-ref': 'print-chm', fill: C.mag, transform: 'translate(3.4 -0.4)' })),
+      h('g', { 'clip-path': 'url(#print-clip-body)' }, h('use', { href: '#print-tw', fill: C.core, 'data-detail': DD['title-face'] })),
+      tag('title-slice', {}, BANDS.map(([, , dx], i) => h('g', { 'clip-path': `url(#print-clip-band${i})` },
+        h('use', { href: '#print-tw', fill: C.core, 'data-ref': 'print-band' + i, transform: `translate(${dx} 0)` })))),
+      tag('title-scan', { 'data-ref': 'print-wscan', 'clip-path': 'url(#print-clip-glyph)' },
+        P(hlines(-10, W + 10, -56, 2, 5.2), { stroke: C.void, 'stroke-width': 0.8, 'stroke-opacity': 0.26, fill: 'none' }))),
+    tag('title-rule', { 'data-ref': 'print-rule' },
+      P(rectD(0, 10, W - 70, 2), { fill: C.mag }), P(ruleBlocks, { fill: C.acid }), P(ruleTicks, { fill: C.mag, 'fill-opacity': 0.7 })));
+  // 鹈鹕湾 tag (local: top −58, bottom +2) + kana
+  const TW = TAG.w, TH = TAG.h;
+  const plate = poly([[0, -58], [TW, -58], [TW, 2 - 12], [TW - 12, 2], [0, 2]]);
+  const zhTag = text('ZH', '鹈鹕湾', { size: 44, track: 5, x: TW / 2, y: -12, align: 'center' }).d;
+  const kana = text('ZH', 'ペリカン・ベイ', { size: 12, track: 2.2, x: 1, y: 20 });
+  const tagG = h('g', { 'data-ref': 'print-tag' }, h('g', { 'data-ref': 'print-tagin' },
+    tag('title-tag', txt('鹈鹕湾'),
+      P(plate, { fill: 'none', stroke: C.mag, 'stroke-width': 9, 'stroke-opacity': 0.16, 'stroke-linejoin': 'round' }),
+      P(plate, { fill: C.mag }),
+      P(poly([[4, -54], [TW - 4, -54], [TW - 4, -12], [TW - 14, -2], [4, -2]]), { fill: 'none', stroke: C.void, 'stroke-width': 1, 'stroke-opacity': 0.7 }),
+      P(tp(zhTag, [1, 0, 0, 1, 2, 2]), { fill: C.void, 'fill-opacity': 0.8 }),
+      P(zhTag, { fill: C.mcore }),
+      P(rectD(TW - 30, -54, 22, 3), { fill: C.void, 'fill-opacity': 0.75 })),
+    tag('title-kana', txt('ペリカン・ベイ'), P(kana.d, { fill: C.mag }), P(rectD(kana.w + 8, 13, TW - kana.w - 8, 1.4), { fill: C.mag, 'fill-opacity': 0.6 }))));
+  const subT = text('MONO', 'PELICAN BAY · 霓虹区 NEON DISTRICT · ネオン', { size: 12.5, track: 3.2 });
+  defs.push(h('clipPath', { id: 'print-clip-sub' }, h('rect', { 'data-ref': 'print-subclip', x: -4, y: -20, width: SUBW + 10, height: 30 })));
+  const subG = h('g', { 'data-ref': 'print-sub' },
+    tag('title-sub', txt('PELICAN BAY · 霓虹区 NEON DISTRICT · ネオン'),
+      h('g', { 'clip-path': 'url(#print-clip-sub)' }, P(subT.d, { fill: C.cyan })),
+      h('rect', { 'data-ref': 'print-cursor', x: subT.w + 5, y: -10.5, width: 7, height: 12.5, fill: C.cyan })));
+  const edT = text('MONO', 'EDITION X · 霓虹版 · BUILD 2026.09.30 · NODE 0719', { size: 7.4, track: 1.5 });
+  const edG = h('g', { 'data-ref': 'print-ed' }, tag('edition-code', txt('EDITION X · 霓虹版 · BUILD 2026.09.30 · NODE 0719'),
+    P(edT.d, { fill: C.cyan, 'fill-opacity': 0.62 }), P(rectD(edT.w + 8, -5, 4, 4) + rectD(edT.w + 14, -5, 4, 4), { fill: C.acid, 'fill-opacity': 0.8 })));
+  const title = h('g', { id: 'print-title', 'data-ref': 'print-title' }, word, tagG, subG, edG);
+
+  // ================================================================ MISSION PANEL + MINIMAP (block-local, top-left 0,0)
+  const panel = poly([[0, 0], [PW - 12, 0], [PW, 12], [PW, PH], [14, PH], [0, PH - 14]]);
+  const capW = Math.max(...STRETCHES.map(s => text('SANS', CAPTION(s), { size: 16, track: 0.4 }).w));
+  const capSX = Math.min(1, (PW - 30) / capW);
+  for (const s of STRETCHES) {
+    const c = text('SANS', CAPTION(s), { size: 16, track: 0.4, sx: capSX, zs: 0.92 });
+    const b = text('MONO', MISSIONS[s.key][2], { size: 7.6, track: 0.9 });
+    const bsx = Math.min(1, 292 / b.w);
+    defs.push(P(c.d, { id: 'print-cap' + s.i }));
+    defs.push(P(bsx < 1 ? tp(b.d, [bsx, 0, 0, 1, 0, 0]) : b.d, { id: 'print-brf' + s.i }));
   }
-  defs.push(h('pattern', { id: 'print-hatch', width: 4.2, height: 4.2, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' },
-    h('rect', { width: 1.5, height: 4.2, fill: I.N })));
+  const status = text('MONO', 'MISSION ACTIVE', { size: 9.5, track: 1.8, x: 27, y: 19 });
+  const lost = text('MONO', 'UPLINK LOST · 信号弱', { size: 9.5, track: 1.8, x: 27, y: 19 });
+  const eta = text('MONO', `ETA ${SLOT}${SLOT}:${SLOT}${SLOT}`, { size: 8.6, track: 1, x: PW - 16, y: 18.5, align: 'right' });
+  let bar = ''; for (let i = 0; i <= 10; i++) bar += rectD(PW - 136 + i * 12, 29, 0.8, i % 5 ? 1.6 : 2.6);
+  // barcode (seeded, deterministic)
+  let bc = '', bx = PW - 76;
+  for (let i = 0; bx < PW - 18; i++) { const w = 0.7 + 1.6 * hash(i, 719); bc += rectD(bx, 50, w, 10); bx += w + 0.8 + 1.2 * hash(i, 83); }
+  const bcN = text('MONO', '#0719', { size: 5.6, track: 1.1, x: PW - 47, y: 66.5, align: 'center' }).d;
+  // minimap
+  const Y0 = PH + MGAP, TX0 = 14, TXW = PW - 28, TY = Y0 + 33;
+  const kx = km => TX0 + TXW * km / KMS;
+  let seg = '', dots = '', icons = '', kmt = '';
+  for (const s of STRETCHES) { seg += rectD(kx(s.kmA) + 1, TY - 1, kx(s.kmB) - kx(s.kmA) - 2, 2); dots += circ(kx(s.kmA), TY, 1.9); icons += tp(ICON[s.key], [1.3, 0, 0, 1.3, (kx(s.kmA) + kx(s.kmB)) / 2, TY - 12.5]); }
+  dots += circ(kx(KMS), TY, 1.9);
+  for (let km = 0; km <= KMS; km++) kmt += rectD(kx(km) - 0.4, TY + 3.5, 0.8, km % 5 === 0 || km === KMS ? 3 : 1.6);
+  const kmLab = [0, 5, 10, 15, 20, 26].map(km => text('MONO', String(km), { size: 6.2, x: kx(km), y: TY + 15.5, align: 'center' }).d).join('');
+  const mmLab = text('MONO', 'ROUTE // 霓虹环线 NEON LOOP', { size: 6.8, track: 1.3, x: 10, y: Y0 + 10.5 });
+  const mmCnt = text('MONO', `LAP ${SLOT}${SLOT} · KM ${SLOT}${SLOT}.${SLOT}`, { size: 6.8, track: 1.3, x: PW - 10, y: Y0 + 10.5, align: 'right' });
+  const mmFrame = poly([[0, Y0], [PW, Y0], [PW, Y0 + MH], [10, Y0 + MH], [0, Y0 + MH - 10]]);
+  const mission = h('g', { 'data-ref': 'print-mission' },
+    h('g', { 'data-ref': 'print-mpanel' },
+      tag('mission-panel', {},
+        P(panel, { fill: C.void, 'fill-opacity': 0.76 }),
+        P(panel, { fill: 'none', stroke: C.cyan, 'stroke-width': 5, 'stroke-opacity': 0.1 }),
+        P(panel, { fill: 'none', stroke: C.cyan, 'stroke-width': 1, 'stroke-opacity': 0.85 }),
+        P(rectD(-7.5, 0, 3.6, PH - 18), { fill: C.mag }), P(rectD(-7.5, PH - 12, 3.6, 3.6), { fill: C.acid }),
+        P(panel, { fill: 'url(#print-scan)' })),
+      tag('mission-status', txt('▶ MISSION ACTIVE'),
+        P(poly([[15, 10.5], [22, 14.8], [15, 19]]), { fill: C.acid, 'data-ref': 'print-mtri' }),
+        h('g', { 'data-ref': 'print-mok' }, P(status.d, { fill: C.acid })),
+        h('g', { 'data-ref': 'print-mlost', display: 'none' }, P(lost.d, { fill: C.red }))),
+      tag('mission-eta', txt('ETA mm:ss'), P(eta.d, { fill: C.cyan }), slotUses('eta', eta.slots, 18.5, 8.6, { fill: C.cyan })),
+      tag('mission-progress', {},
+        P(rectD(PW - 136, 25, 120, 3), { fill: C.cyan, 'fill-opacity': 0.22 }),
+        h('rect', { 'data-ref': 'print-prog', x: 0, y: 0, width: 1, height: 1, fill: C.cyan, transform: `translate(${PW - 136} 25) scale(60 3)` }),
+        P(bar, { fill: C.cyan, 'fill-opacity': 0.6 })),
+      tag('mission-caption', txt('DELIVERY nn · 中文 / ENGLISH'),
+        h('use', { href: '#print-cap0', 'data-ref': 'print-capc', fill: C.cyan, x: 14, y: 45, opacity: 0 }),
+        h('use', { href: '#print-cap0', 'data-ref': 'print-capm', fill: C.mag, x: 14, y: 45, opacity: 0 }),
+        h('use', { href: '#print-cap0', 'data-ref': 'print-capf', fill: C.plume, x: 14, y: 45 })),
+      tag('mission-brief', txt('PICKUP 鱼丸 FISHBALL ×12 · TIP ¥88 …'), h('use', { href: '#print-brf0', 'data-ref': 'print-brf', fill: C.cyan, 'fill-opacity': 0.72, x: 14, y: 61.5 })),
+      tag('mission-barcode', txt('#0719'), P(bc, { fill: C.plume, 'fill-opacity': 0.75 }), P(bcN, { fill: C.plume, 'fill-opacity': 0.75 }))),
+    h('g', { 'data-ref': 'print-mmap' },
+      tag('minimap-frame', txt('ROUTE // 霓虹环线 NEON LOOP · LAP · KM'),
+        P(mmFrame, { fill: C.void, 'fill-opacity': 0.66 }),
+        P(mmFrame, { fill: 'none', stroke: C.cyan, 'stroke-width': 0.8, 'stroke-opacity': 0.6 }),
+        P(mmLab.d + mmCnt.d, { fill: C.cyan, 'fill-opacity': 0.8 }),
+        slotUses('mm', mmCnt.slots, Y0 + 10.5, 6.8, { fill: C.acid }),
+        P(mmFrame, { fill: 'url(#print-scan)' })),
+      tag('minimap-track', {}, P(seg, { fill: C.cyan, 'fill-opacity': 0.42 }), P(dots, { fill: C.void, stroke: C.cyan, 'stroke-width': 0.9 })),
+      tag('minimap-icons', {}, P(icons, { fill: 'none', stroke: C.cyan, 'stroke-width': 0.8, 'stroke-opacity': 0.95, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' })),
+      tag('minimap-scale', txt('0 5 10 15 20 26'), P(kmt + kmLab, { fill: C.cyan, 'fill-opacity': 0.6 })),
+      tag('minimap-current', {},
+        h('rect', { 'data-ref': 'print-mcur', x: 0, y: 0, width: 1, height: 1, fill: C.mag, transform: `translate(${TX0} ${TY - 1.6}) scale(20 3.2)` }),
+        h('rect', { 'data-ref': 'print-mvis', x: 0, y: 0, width: 1, height: 1, fill: C.acid, transform: `translate(${TX0} ${TY - 4.2}) scale(1 1)` })),
+      tag('minimap-marker', { 'data-ref': 'print-mark', transform: `translate(${TX0} ${TY})` },
+        P(circ(0, 0, 3.6), { fill: 'none', stroke: C.acid, 'stroke-width': 1.3 }),
+        P(circ(0, 0, 1.5) + poly([[0, 5], [3.4, 10.5], [-3.4, 10.5]]), { fill: C.acid }))));
 
-  const word = (k, W, label) => h('g', { 'data-ref': 'print-' + k, 'data-text': label },
-    tag('title-hatch-shadow', { 'data-ref': 'print-hatch-' + k }, h('use', { href: `#print-g-${k}`, transform: 'translate(15 13)', stroke: 'url(#print-hatch)' })),
-    tag('title-stepped-shadow', { 'data-ref': 'print-shadow-' + k },
-      Array.from({ length: SH_N }, (_, i) => h('use', { href: `#print-g-${k}`, transform: `translate(${f((SH_N - i) * SH_STEP)} ${f((SH_N - i) * SH_STEP)})`, stroke: I.N, 'data-ref': `print-sh-${k}-${SH_N - i}` }))),
-    h('g', { 'clip-path': `url(#print-wipe-face-${k})`, 'data-ref': `print-wg-face-${k}` }, h('use', { href: `#print-g-${k}`, stroke: I.P, 'data-detail': DD['title-face'], 'data-ref': 'print-face-' + k })),
-    h('g', { 'clip-path': `url(#print-wipe-inl-${k})`, 'data-ref': `print-wg-inl-${k}` }, h('path', { d: W.inl, fill: 'none', stroke: I.R, 'stroke-width': 2.6, 'clip-path': `url(#print-clip-${k})`, 'data-detail': DD['title-inline'], 'data-ref': 'print-inl-' + k })));
+  // ================================================================ READOUTS (block-local, top-left 0,0)
+  const plateR = poly([[10, 0], [RW, 0], [RW, RH], [0, RH], [0, 10]]);
+  const sigL = text('MONO', 'SIGNAL', { size: 7.8, track: 1.3, x: 12, y: 18 });
+  const net = text('MONO', '· 霓虹网 NEON-NET 5G', { size: 7.8, track: 1.1, x: 90, y: 18 });
+  const pct = text('MONO', `${SLOT}${SLOT}${SLOT}%`, { size: 8.4, track: 0.6, x: RW - 10, y: 18, align: 'right' });
+  const bX = RW - 10 - pct.w - 34, bY = 9;
+  const rec = text('MONO', `REC ${SLOT}${SLOT}:${SLOT}${SLOT}:${SLOT}${SLOT}`, { size: 10, track: 1.1, x: 24, y: 38.5 });
+  const wnum = text('MONO', `${SLOT}${SLOT}% · ${SLOT}${SLOT}°C`, { size: 8.4, track: 0.9, x: RW - 10, y: 38 });
+  wnum.slots = wnum.slots.map(x => x - wnum.w); const wnumD = text('MONO', `${SLOT}${SLOT}% · ${SLOT}${SLOT}°C`, { size: 8.4, track: 0.9, x: RW - 10, y: 38, align: 'right' }).d;
+  const WX = 162;
+  const wIcon = {
+    clear: circ(0, 0, 4) + circ(6.5, -5, 0.9) + circ(-6, -4, 0.7),
+    drizzle: 'M-3 -3.5L-3.8 -1.4M1 -3.5L0.2 -1.4M-1 0.5L-1.8 2.6M3 0.5L2.2 2.6',
+    fog: 'M-6 -3.5H2M-3 -0.5H6M-6 2.5H4',
+    rain: 'M-4 -4L-5.4 -0.4M0 -4L-1.4 -0.4M4 -4L2.6 -0.4M-2 1L-3.4 4.6M2 1L0.6 4.6',
+    storm: 'M-5 -4L-6.4 -0.4M-1 -4L-2.4 -0.4M3 -4L1.6 -0.4M1 0L-2 3.5H1L-1 7',
+  };
+  const readouts = h('g', { 'data-ref': 'print-read' },
+    P(plateR, { fill: C.void, 'fill-opacity': 0.62 }),
+    P(plateR, { fill: 'none', stroke: C.cyan, 'stroke-width': 0.8, 'stroke-opacity': 0.55 }),
+    tag('scanlines', {}, P(plateR, { fill: 'url(#print-scan)' })),
+    tag('signal-bars', txt('SIGNAL'), P(sigL.d, { fill: C.cyan, 'fill-opacity': 0.8 }),
+      [0, 1, 2, 3, 4].map(i => h('rect', { 'data-ref': 'print-sig' + i, x: 57 + i * 5.4, y: 18 - 3 - i * 2.2, width: 3.4, height: 3 + i * 2.2, fill: C.acid }))),
+    tag('net-id', txt('· 霓虹网 NEON-NET 5G'), P(net.d, { fill: C.cyan, 'fill-opacity': 0.8 })),
+    tag('battery', txt('battery %'),
+      P(`M${bX} ${bY + 1.5}Q${bX} ${bY} ${bX + 1.5} ${bY}H${bX + 22.5}Q${bX + 24} ${bY} ${bX + 24} ${bY + 1.5}V${bY + 8.5}Q${bX + 24} ${bY + 10} ${bX + 22.5} ${bY + 10}H${bX + 1.5}Q${bX} ${bY + 10} ${bX} ${bY + 8.5}Z`, { fill: 'none', stroke: C.cyan, 'stroke-width': 1.1 }),
+      P(rectD(bX + 24.8, bY + 3, 2, 4), { fill: C.cyan }),
+      [0, 1, 2, 3, 4].map(i => h('rect', { 'data-ref': 'print-cell' + i, x: bX + 2 + i * 4.1, y: bY + 2, width: 3.3, height: 6, fill: C.acid })),
+      P('M4.2 -5L-1.4 0.6H1.4L-0.8 5L4 -0.8H1.2Z', { 'data-ref': 'print-bolt', fill: C.amber, stroke: C.void, 'stroke-width': 0.6, transform: `translate(${bX + 12} ${bY + 5})`, display: 'none' }),
+      P(pct.d, { fill: C.plume }), slotUses('pct', pct.slots, 18, 8.4, { fill: C.plume })),
+    tag('rec-time', txt('● REC hh:mm:ss'),
+      P(circ(15, 35, 3.4), { fill: C.red, 'data-ref': 'print-recdot' }),
+      P(rec.d, { fill: C.plume }), slotUses('clk', rec.slots, 38.5, 10, { fill: C.plume })),
+    tag('weather-readout', txt('雨 RAIN 72% · 22°C'),
+      Object.entries(wIcon).map(([kk, d]) => h('g', { 'data-ref': 'print-wx-' + kk, display: kk === 'rain' ? 'inline' : 'none' },
+        P(d, { transform: `translate(${WX} 34.5)`, fill: kk === 'clear' ? C.amber : 'none', stroke: kk === 'clear' ? 'none' : C.cyan, 'stroke-width': 1.2, 'stroke-linecap': 'round' }),
+        P(text('MONO', WEATHER[kk], { size: 8.4, track: 1, x: WX + 11, y: 38 }).d, { fill: C.cyan }))),
+      P(wnumD, { fill: C.plume }), slotUses('wx', wnum.slots, 38, 8.4, { fill: C.plume })));
 
-  // ---- 鹈鹕湾 label tablet ----
-  const sealChars = ['鹈', '鹕', '湾'].map((ch, i) => text(ZH, ch, { size: 40, x: 8, y: 40 + i * 42 }).d).join('');
-  const seal = h('g', { 'data-ref': 'print-seal' }, h('g', { 'data-ref': 'print-seal-in' }, tag('title-label', txt('鹈鹕湾'),
-    h('rect', { x: 5, y: 5, width: SEAL.w, height: SEAL.h, rx: 6, fill: I.N }),
-    h('rect', { x: 0, y: 0, width: SEAL.w, height: SEAL.h, rx: 6, fill: I.R }),
-    h('rect', { x: 3.5, y: 3.5, width: SEAL.w - 7, height: SEAL.h - 7, rx: 4, fill: 'none', stroke: I.P, 'stroke-width': 1.6 }),
-    h('path', { d: diamond(SEAL.w / 2, 3.5, 5, 3) + diamond(SEAL.w / 2, SEAL.h - 3.5, 5, 3), fill: I.P }),
-    h('path', { d: sealChars, fill: I.P, stroke: I.P, 'stroke-width': 1.4, 'stroke-linejoin': 'round' }))));
+  // ================================================================ TARGET RETICLE (corners drawn at their own origin)
+  const rc = (sx, sy) => P(poly([[0, 0], [9 * sx, 0], [0, 9 * sy]]), { fill: C.acid, 'fill-opacity': 0.45 }) +
+    P(`M0 ${18 * sy}V0H${18 * sx}`, { fill: 'none', stroke: C.acid, 'stroke-width': 1.6 }) + P(circ(0, 0, 1.6), { fill: C.acid });
+  const tlab = text('MONO', 'COURIER 鹈鹕 #0719', { size: 8.4, track: 1.1, x: 34, y: -26 });
+  const lock = text('MONO', 'LOCK · 30 MIN', { size: 6, track: 1.2, x: 34, y: -15 });
+  const reticle = h('g', { 'data-ref': 'print-ret', display: 'none' },
+    [['TL', 1, 1], ['TR', -1, 1], ['BL', 1, -1], ['BR', -1, -1]].map(([kk, sx, sy]) => tag('target-reticle', { 'data-ref': 'print-rt' + kk }, rc(sx, sy))),
+    tag('target-label', txt('COURIER 鹈鹕 #0719 · LOCK · 30 MIN'), h('g', { 'data-ref': 'print-rtlab' },
+      P('M0 0L22 -22H32', { fill: 'none', stroke: C.acid, 'stroke-width': 1 }), P(circ(0, 0, 2.6), { fill: 'none', stroke: C.acid, 'stroke-width': 1 }),
+      P(rectD(30, -37, tlab.w + 8, 26), { fill: C.void, 'fill-opacity': 0.55 }),
+      P(tlab.d, { fill: C.acid }), P(lock.d, { fill: C.acid, 'fill-opacity': 0.7 }))));
 
-  // ---- subtitle band ----
-  const bw = SUB_W, bh = SUB.h, n = 9;
-  const band = `M0 0H${f(bw)}L${f(bw - n)} ${f(bh / 2)}L${f(bw)} ${f(bh)}H0L${n} ${f(bh / 2)}Z`;
-  const sub = h('g', { 'data-ref': 'print-sub' }, h('g', { 'data-ref': 'print-sub-in' },
-    tag('subtitle-band', txt('THE COAST ROAD · BY BICYCLE'),
-      h('path', { d: band, fill: I.N }),
-      h('path', { d: tp(SUBTXT.d, [1, 0, 0, 1, 32, 23.5]), fill: I.P })),
-    tag('band-ornament', {},
-      h('path', { d: `M1.5 3H${f(bw - 1.5)}M1.5 ${f(bh - 3)}H${f(bw - 1.5)}`, stroke: I.O, 'stroke-width': 1, fill: 'none' }),
-    ),
-    [20, bw - 20].map(x => tag('band-ornament', {}, h('path', { d: diamond(x, bh / 2, 5, 5), fill: I.O }), h('path', { d: diamond(x, bh / 2, 2, 2), fill: I.N })))));
+  // ================================================================ GLITCH + BOOT SCAN
+  const glitch = h('g', { 'data-ref': 'print-glitch', display: 'none' }, tag('glitch-tear', {},
+    Array.from({ length: 8 }, (_, i) => h('rect', { 'data-ref': 'print-gb' + i, x: 0, y: 0, width: 1, height: 1, fill: [C.cyan, C.mag, C.void, C.acid][i % 4], 'fill-opacity': i % 4 === 2 ? 0.6 : 0.38 })),
+    Array.from({ length: 3 }, (_, i) => h('rect', { 'data-ref': 'print-gs' + i, x: 0, y: 0, width: 1, height: 1, fill: 'url(#print-scan-dark)' }))));
+  defs.push(h('linearGradient', { id: 'print-boot-g', x1: 0, y1: 0, x2: 0, y2: 1 },
+    h('stop', { offset: 0, 'stop-color': C.cyan, 'stop-opacity': 0 }), h('stop', { offset: 1, 'stop-color': C.cyan, 'stop-opacity': 0.22 })));
+  const boot = h('g', { 'data-ref': 'print-boot', display: 'none' },
+    h('rect', { x: -1400, y: -70, width: 4400, height: 70, fill: 'url(#print-boot-g)' }),
+    h('rect', { x: -1400, y: -1.5, width: 4400, height: 2.2, fill: C.core }));
 
-  const title = h('g', { id: 'print-title', 'data-ref': 'print-title' }, word('w1', W1, 'PELICAN'), word('w2', W2, 'BAY'), seal, sub);
-
-  // ---- border: bars (paper), keylines, hairlines (unit rects scaled per frame: filled, so no stroke distortion) ----
-  // (each visible piece carries its item tag: the pieces of one item are identical instances, counted once)
-  const unit = (ref, fill, item) => h('rect', { 'data-ref': ref, 'data-detail': DD[item], x: 0, y: 0, width: 1, height: 1, fill });
-  const bar = (k, x, y, w, hh) => h('rect', { 'data-ref': 'print-bar' + k, 'data-detail': DD['paper-margin'], x, y, width: w, height: hh, fill: I.P });
-  const border = h('g', { id: 'print-border' },
-    bar('L', -1200, -1200, 1200, 3300), bar('R', 0, -1200, 1200, 3300), bar('T', -1200, -1400, 4000, 1400), bar('B', -1200, 0, 4000, 1400),
-    ['hT', 'hB', 'hL', 'hR'].map(k => unit('print-' + k, I.N, 'frame-hairline')),
-    ['kT', 'kB', 'kL', 'kR'].map(k => unit('print-' + k, I.N, 'frame-keyline')));
-
-  // deco corner: art lies in +x,+y from the keyline corner at (0,0)
-  const q = (r) => `M0 0H${r}A${r} ${r} 0 0 1 0 ${r}Z`;
-  const rays = [30, 60].map(a => { const c = Math.cos(a * Math.PI / 180), s = Math.sin(a * Math.PI / 180); return `M0 0L${f(15 * c)} ${f(15 * s)}`; }).join('');
-  const beads = [15, 45, 75].map(a => circ(20.5 * Math.cos(a * Math.PI / 180), 20.5 * Math.sin(a * Math.PI / 180), 1.3)).join('');
-  const steps = rectD(28, 3, 16, 3) + rectD(28, 6, 8, 3) + rectD(3, 28, 3, 16) + rectD(6, 28, 3, 8) + rectD(48, 3, 4, 3) + rectD(3, 48, 3, 4);
-  defs.push(h('g', { id: 'print-corner' },
-    h('path', { d: q(26), fill: I.P }),
-    h('path', { d: q(14), fill: I.R }),
-    h('path', { d: rays, stroke: I.P, 'stroke-width': 1.6, fill: 'none' }),
-    h('path', { d: `M26 0A26 26 0 0 1 0 26M17 0A17 17 0 0 1 0 17`, fill: 'none', stroke: I.N, 'stroke-width': 1.3 }),
-    h('path', { d: beads + steps + q(4.5), fill: I.N })));
-  defs.push(h('g', { id: 'print-crop' },
-    h('rect', { x: -17, y: -17, width: 17, height: 17, fill: 'none' }),   // hit area of the mark's corner cell
-    h('path', { d: 'M1.5 -17V-10M-17 1.5H-10', stroke: I.N, 'stroke-width': 0.9, fill: 'none' })));
-  // stepped edge diamond, centred on the keyline centre (0,0), art toward +y
-  defs.push(h('g', { id: 'print-edge' },
-    h('path', { d: rectD(-44, 1.5, 28, 3) + rectD(16, 1.5, 28, 3) + rectD(-30, 4.5, 14, 2.5) + rectD(16, 4.5, 14, 2.5), fill: I.N }),
-    h('path', { d: diamond(0, 0, 14, 8.5), fill: I.P, stroke: I.N, 'stroke-width': 1.6, 'stroke-linejoin': 'miter' }),
-    h('path', { d: diamond(0, 0, 6.5, 4), fill: I.R })));
-  defs.push(h('g', { id: 'print-reg' },
-    h('circle', { r: 5.2, fill: I.P, stroke: I.N, 'stroke-width': 0.9 }),
-    h('path', { d: 'M0 0H3.2A3.2 3.2 0 0 1 0 3.2ZM0 0H-3.2A3.2 3.2 0 0 1 0 -3.2Z', fill: I.N }),
-    h('path', { d: 'M-9 0H9M0 -9V9', stroke: I.N, 'stroke-width': 0.8 })));
-  const ornaments = h('g', { id: 'print-ornaments' },
-    ['TL', 'TR', 'BL', 'BR'].map(k => h('use', { href: '#print-corner', 'data-ref': 'print-c' + k, 'data-detail': DD['corner-sunburst'] })),
-    ['TL', 'TR', 'BL', 'BR'].map(k => h('use', { href: '#print-crop', 'data-ref': 'print-crop' + k, 'data-detail': DD['crop-marks'] })),
-    ['T', 'B', 'L', 'R'].map(k => h('use', { href: '#print-edge', 'data-ref': 'print-e' + k, 'data-detail': DD['edge-diamond'] })),
-    ['L', 'R', 'B'].map(k => h('use', { href: '#print-reg', 'data-ref': 'print-reg' + k, 'data-detail': DD['registration-mark'] })));
-
-  // ---- printer's strip (bottom margin) ----
-  const IMPRINT_LAT = text(LAT, 'PRINTED AT PELICAN BAY', { size: 7.2, track: 1.25, x: 0, y: 0 });
-  const IMPRINT_ZH = text(ZH, '鹈鹕湾印制', { size: 8.4, track: 0.8, x: IMPRINT_LAT.w + 14, y: 0.6 });
-  const imprint = h('g', { 'data-ref': 'print-imprint' }, tag('imprint', txt('PRINTED AT PELICAN BAY · 鹈鹕湾印制'),
-    h('path', { d: IMPRINT_LAT.d + IMPRINT_ZH.d + circ(IMPRINT_LAT.w + 7, -2.6, 1.1), fill: I.N })));
-  const edition = h('g', { 'data-ref': 'print-edition' }, tag('edition-number', txt('PLATE C · SEVEN INKS · № 07/120'), h('path', { d: ED.d, fill: I.N })));
-  const inks = ['P', 'K', 'O', 'R', 'B', 'T', 'N'];
-  const SW = 12, SH = 8;
-  const colour = h('g', { 'data-ref': 'print-colour' },
-    tag('colour-bar', {}, inks.map((k, i) => h('rect', { x: i * SW, y: -SH / 2, width: SW, height: SH, fill: I[k] })),
-      h('rect', { x: 0, y: -SH / 2, width: SW * 7, height: SH, fill: 'none', stroke: I.N, 'stroke-width': 0.7 })),
-    tag('tint-ramp', { 'data-ref': 'print-tint' },
-      h('rect', { x: -6 - 5 * SW, y: -SH / 2, width: 5 * SW, height: SH, fill: I.P, stroke: I.N, 'stroke-width': 0.7 }),
-      [0.45, 0.7, 0.95, 1.2, 1.5].map((r, i) => h('path', { d: dotsD(-6 - (5 - i) * SW, -SH / 2, SW, SH, 3), stroke: I.B, 'stroke-width': f(r * 2), 'stroke-linecap': 'round', fill: 'none' }))));
-  const strip = h('g', { id: 'print-strip' }, imprint, edition, colour);
-
-  // ---- ADMIT ONE ticket (local 0..236 × 0..92) ----
-  const T = TICKET, sx0 = 178;
-  let perfHoles = '';
-  for (let y = 9; y <= T.h - 8; y += 7.4) perfHoles += circ(sx0, y, 1.35, true);
-  const punch = `M156 57L161 63L156 69L151 63Z`;
-  const card = roundRect(0, 0, T.w, T.h, 5) + perfHoles + punch;
-  let guil = '';
-  for (let i = 0; i < 6; i++) { guil += wave(8, 172, 30 + i * 9.5, 2.6, 22, i * 0.9); guil += wave(8, 172, 30 + i * 9.5, 2.6, 22, i * 0.9 + Math.PI); }
-  const ADMIT = deco('ADMIT ONE');
-  const aS = 0.205, aX = 12, aY = 28;
-  const admit = Object.entries(ADMIT.byW).map(([sw, d]) => [sw, tp(d, [aS, 0, 0, aS, aX, aY])]);
-  const hdr = text(LAT, 'COAST ROAD RAILWAY', { size: 7.4, track: 1.2, x: 12, y: 18.2 });
-  const hdrZh = text(ZH, '海滨路', { size: 9, track: 0.6, x: 167, y: 18.8, align: 'right' });
-  const route = text(ZH, '鹈鹕湾', { size: 10, x: 12, y: 64 }).d + text(ZH, '灯塔角', { size: 10, x: 64, y: 64 }).d
-    + text(LAT, 'PELICAN BAY → LIGHTHOUSE PT', { size: 5.6, track: 0.55, x: 12, y: 73 }).d;
-  const arrow = 'M46 59.5H59M55.5 56.5L59.5 59.5L55.5 62.5';
-  const fareL = text(LAT, 'SINGLE · 3RD CLASS', { size: 5.2, track: 0.6, x: 170, y: 84, align: 'right' });
-  const fare = fareL.d + text(ZH, '单程', { size: 6.4, x: 170 - fareL.w - 4, y: 84.4, align: 'right' }).d;
-  const serialA = text(LAT, '№ 0719', { size: 9.5, track: 0.5, x: 12, y: 85 }).d, serialB = text(LAT, '0719', { size: 8.5, track: 0.6, x: 227.5, y: 46, rot: -90, align: 'center' }).d;
-  const stubTxt = text(LAT, 'ADMIT ONE', { size: 8.6, track: 1.2, x: 199, y: 46, rot: -90, align: 'center' }).d;
-  const stubMark = text(LAT, '1', { size: 13, x: 206, y: 18, align: 'center' }).d;
-  const ticket = h('g', { 'data-ref': 'print-ticket' },
-    tag('ticket-card', txt('COAST ROAD RAILWAY 海滨路 · ADMIT ONE'),
-      h('path', { d: tp(card, [1, 0, 0, 1, 2.5, 2.5]), fill: I.N, 'fill-rule': 'evenodd' }),
-      h('path', { d: card, fill: I.P, 'fill-rule': 'evenodd' }),
-      h('path', { d: rectD(4.5, 4.5, sx0 - 9, T.h - 9) + rectD(sx0 + 4.5, 4.5, T.w - sx0 - 9, T.h - 9), fill: 'none', stroke: I.N, 'stroke-width': 0.9 }),
-    ),
-    tag('ticket-guilloche', {}, h('rect', { x: 8, y: 25, width: sx0 - 16, height: T.h - 33, fill: I.P }), h('path', { d: guil, fill: 'none', stroke: I.K, 'stroke-width': 0.75, 'clip-path': 'url(#print-clip-guil)' })),
-    tag('ticket-card', {},
-      h('path', { d: rectD(8, 8, sx0 - 16, 14), fill: I.R }),
-      h('path', { d: hdr.d + hdrZh.d, fill: I.P }),
-      admit.map(([sw, d]) => h('path', { d, fill: 'none', stroke: I.R, 'stroke-width': sw * aS, transform: 'translate(0.9 0.9)', 'clip-path': 'url(#print-clip-admit)' })),
-      admit.map(([sw, d]) => h('path', { d, fill: 'none', stroke: I.N, 'stroke-width': sw * aS, 'clip-path': 'url(#print-clip-admit)' }))),
-    tag('ticket-route', txt('鹈鹕湾 → 灯塔角 · PELICAN BAY → LIGHTHOUSE PT · SINGLE · 3RD CLASS 单程'),
-      h('path', { d: route + fare, fill: I.N }), h('path', { d: arrow, fill: 'none', stroke: I.N, 'stroke-width': 1.3 })),
-    tag('ticket-serial', txt('№ 0719'), h('path', { d: serialA, fill: I.R })),
-    tag('ticket-serial', txt('0719'), h('path', { d: serialB, fill: I.R })),
-    tag('ticket-perforation', {}, h('path', { d: `M${sx0} 4V${T.h - 4}`, stroke: I.N, 'stroke-width': 0.8, 'stroke-dasharray': '2.2 5.2', 'stroke-dashoffset': 3.5, fill: 'none' }),
-      h('path', { d: perfHoles.replace(/1\.35/g, '1.9'), fill: 'none', stroke: I.K, 'stroke-width': 0.6 })),
-    tag('ticket-punch', {}, h('path', { d: 'M156 55.5L162.5 63L156 70.5L149.5 63Z', fill: 'none', stroke: I.K, 'stroke-width': 1.2 })),
-    tag('ticket-stub', txt('ADMIT ONE 1'), h('path', { d: stubTxt + stubMark, fill: I.N })));
-  defs.push(h('clipPath', { id: 'print-clip-admit' }, h('rect', { x: 0, y: aY, width: 175, height: 100 * aS })));
-  defs.push(h('clipPath', { id: 'print-clip-guil' }, h('rect', { x: 5, y: 23, width: sx0 - 10, height: T.h - 28 })));
-
-  // ---- postage stamp (local 0..80 × 0..96) + postmark ----
-  const S = STAMP;
-  const vg = { x: 8, y: 8, w: S.w - 16, h: 60 };
-  let eng = '', engSun = '';
-  for (let y = vg.y + 2; y < vg.y + 36; y += 2.4) eng += `M${vg.x} ${f(y)}H${vg.x + vg.w}`;
-  for (let y = vg.y + 28; y < vg.y + 42; y += 2.2) engSun += `M${vg.x + 36} ${f(y)}H${vg.x + vg.w - 2}`;
-  const seaY = vg.y + 42, roadY = vg.y + 50;
-  const sunC = [vg.x + 46, seaY];
-  const bikeR = 6;
-  const wR = [vg.x + 17, roadY + 3.2], wF = [vg.x + 37, roadY + 3.2];
-  const miniBike = `M${wR[0]} ${wR[1]}L${vg.x + 26} ${wR[1]}L${vg.x + 23.5} ${roadY - 6}M${vg.x + 26} ${wR[1]}L${vg.x + 34} ${roadY - 6.5}L${wF[0]} ${wF[1]}M${vg.x + 23.5} ${roadY - 6}L${vg.x + 34} ${roadY - 6.5}M${wR[0]} ${wR[1]}L${vg.x + 23.5} ${roadY - 6}M${vg.x + 34} ${roadY - 6.5}L${vg.x + 33} ${roadY - 9.5}`;
-  const px = vg.x, py = roadY;   // mini pelican anchors
-  const pBody = `M${px + 13} ${py - 11}C${px + 14} ${py - 18} ${px + 25} ${py - 20} ${px + 30} ${py - 16}C${px + 32} ${py - 13} ${px + 28} ${py - 9} ${px + 22} ${py - 8.5}C${px + 18} ${py - 8} ${px + 14} ${py - 8.5} ${px + 13} ${py - 11}Z`;
-  const pNeck = `M${px + 27} ${py - 16}C${px + 30} ${py - 21} ${px + 27} ${py - 25} ${px + 30} ${py - 29}`;
-  const pBill = `M${px + 31} ${py - 31}L${px + 43} ${py - 26.5}L${px + 31} ${py - 28.2}Z`;
-  const pPouch = `M${px + 31.5} ${py - 28.4}L${px + 41} ${py - 26.6}Q${px + 34} ${py - 24.2} ${px + 31.5} ${py - 27}Z`;
-  const pWing = `M${px + 17} ${py - 14}Q${px + 24} ${py - 16.5} ${px + 31} ${py - 12.5}L${px + 21} ${py - 11}Z`;
-  const pLeg = `M${px + 22} ${py - 9}L${px + 26} ${py - 3.5}L${px + 26.5} ${roadY + 3}`;
-  const legend = text(ZH, '鹈鹕湾邮政', { size: 8.6, track: 0.5, x: S.w / 2, y: 83, align: 'center' }).d;
-  const legendLat = text(LAT, 'PELICAN BAY POST', { size: 4.6, track: 0.6, x: S.w / 2, y: 89.5, align: 'center' }).d;
-  const value = text(LAT, '5', { size: 10.5, x: 13.6, y: 21, align: 'center' }).d + text(ZH, '分', { size: 5.6, x: 20.6, y: 21.4, align: 'center' }).d;
-  defs.push(h('clipPath', { id: 'print-clip-vg' }, h('rect', { x: vg.x, y: vg.y, width: vg.w, height: vg.h })));
-  const stamp = h('g', { 'data-ref': 'print-stamp' },
-    h('path', { d: tp(perforated(S.w, S.h, 2.3, 8), [1, 0, 0, 1, 2, 2.2]), fill: I.N }),
-    tag('stamp-vignette', { 'clip-path': 'url(#print-clip-vg)' },
-      h('path', { d: rectD(vg.x, vg.y, vg.w, vg.h), fill: I.B }),
-      h('path', { d: circ(sunC[0], sunC[1], 12), fill: I.K }),
-      h('path', { d: rectD(vg.x, seaY, vg.w, roadY - seaY) + rectD(vg.x, roadY + 7, vg.w, vg.h), fill: I.N }),
-      h('path', { d: rectD(vg.x, roadY, vg.w, 7), fill: I.O }),
-      h('path', { d: wave(vg.x, vg.x + vg.w, seaY + 3, 0.7, 5) + wave(vg.x + 3, vg.x + vg.w, seaY + 6, 0.7, 5, 2), fill: 'none', stroke: I.B, 'stroke-width': 0.7 }),
-      h('path', { d: `M${vg.x + 48} ${seaY + 2.6}h14M${vg.x + 50} ${seaY + 5.2}h10`, stroke: I.K, 'stroke-width': 0.9 }),
-      h('path', { d: circ(...wR, bikeR) + circ(...wF, bikeR), fill: 'none', stroke: I.N, 'stroke-width': 1.5 }),
-      h('path', { d: miniBike, fill: 'none', stroke: I.T, 'stroke-width': 1.25, 'stroke-linecap': 'round' }),
-      h('path', { d: `M${px + 8} ${py - 12}Q${px + 14} ${py - 14} ${px + 27} ${py - 16}`, stroke: I.R, 'stroke-width': 1.4, 'stroke-dasharray': '1.6 1.2', fill: 'none' }),
-      h('path', { d: pLeg, fill: 'none', stroke: I.O, 'stroke-width': 1 }),
-      h('path', { d: pBody + circ(px + 30.5, py - 29.5, 2.7), fill: I.P }),
-      h('path', { d: pNeck, fill: 'none', stroke: I.P, 'stroke-width': 2.6, 'stroke-linecap': 'round' }),
-      h('path', { d: pWing, fill: I.N }),
-      h('path', { d: pBill + pPouch, fill: I.O }),
-      h('path', { d: circ(px + 31, py - 30, 0.55), fill: I.N })),
-    tag('stamp-engraving', { 'clip-path': 'url(#print-clip-vg)' },
-      h('path', { d: eng, stroke: I.P, 'stroke-width': 0.6, 'stroke-opacity': 0.9, fill: 'none', 'clip-path': 'url(#print-clip-sky)' }),
-      h('path', { d: engSun, stroke: I.O, 'stroke-width': 0.8, fill: 'none', 'clip-path': 'url(#print-clip-sun)' })),
-    tag('stamp-perforated', {},
-      h('path', { d: perforated(S.w, S.h, 2.3, 8) + rectCCW(vg.x, vg.y, vg.w, vg.h), fill: I.P }),
-      h('path', { d: rectD(5.5, 5.5, S.w - 11, S.h - 11) + rectD(vg.x, vg.y, vg.w, vg.h), fill: 'none', stroke: I.N, 'stroke-width': 0.8 })),
-    tag('stamp-value', txt('5分'), h('path', { d: circ(16.5, 17.5, 8), fill: I.R }), h('path', { d: value, fill: I.P })),
-    tag('stamp-legend', txt('鹈鹕湾邮政 PELICAN BAY POST'), h('path', { d: legend + legendLat, fill: I.N })));
-  defs.push(h('clipPath', { id: 'print-clip-sky' }, h('path', { d: `M${vg.x} ${vg.y}H${vg.x + vg.w}V${vg.y + 16}C${vg.x + 50} ${vg.y + 22} ${vg.x + 20} ${vg.y + 8} ${vg.x} ${vg.y + 26}Z` })));
-  defs.push(h('clipPath', { id: 'print-clip-sun' }, h('path', { d: circ(sunC[0], sunC[1], 12) })));
-
-  const PMC = [96, 20], PR = 27;
-  const pmTop = arcText(LAT, 'PELICAN BAY', PMC[0], PMC[1], 19.6, { size: 6, track: 1.1 });
-  const pmBot = arcText(ZH, '鹈鹕湾', PMC[0], PMC[1], 25.4, { size: 6.4, track: 2.2, bottom: true });
-  const pmDate = text(LAT, '30 SEP 2026', { size: 5.4, track: 0.35, x: PMC[0], y: PMC[1] + 2, align: 'center' }).d;
-  let cancel = '';
-  for (let i = 0; i < 4; i++) cancel += wave(PMC[0] - PR - 70, PMC[0] - PR - 3, PMC[1] - 13 + i * 6.2, 2, 15, 0.4);
-  const postmark = h('g', { 'data-ref': 'print-postmark', transform: 'rotate(-9 96 20)' },
-    tag('postmark-cancel', {}, h('path', { d: cancel, fill: 'none', stroke: I.N, 'stroke-width': 1.05 })),
-    tag('postmark-ring', txt('PELICAN BAY 鹈鹕湾'),
-      h('path', { d: circ(PMC[0], PMC[1], PR) + circ(PMC[0], PMC[1], 17.6), fill: 'none', stroke: I.N, 'stroke-width': 1.2 }),
-      h('path', { d: pmTop + pmBot + circ(PMC[0] - 24.6, PMC[1] + 5, 1) + circ(PMC[0] + 24.6, PMC[1] + 5, 1), fill: I.N })),
-    tag('postmark-date', txt('30 SEP 2026'),
-      h('path', { d: pmDate, fill: I.N }), h('path', { d: `M${PMC[0] - 13} ${PMC[1] - 5.5}H${PMC[0] + 13}M${PMC[0] - 13} ${PMC[1] + 5.2}H${PMC[0] + 13}`, stroke: I.N, 'stroke-width': 0.9 })));
-  const post = h('g', { 'data-ref': 'print-post' }, h('g', { transform: 'rotate(6 40 48)' }, stamp), postmark);
-
-  const root = h('g', { id: 'print-root', 'data-ref': 'print-root' }, border, ornaments, strip, h('g', { id: 'print-ephemera', 'data-ref': 'print-ephemera' }, ticket, post), title);
+  const root = h('g', { id: 'print-root', 'data-ref': 'print-root' },
+    hudBar('T'), hudBar('B'), ticker, frame, mission, readouts, reticle, title, glitch, boot);
   return { defs: defs.join(''), layers: { 'L-letterbox': root } };
+}
+
+// print-glyphs.gen.mjs: run build() with a stub context and report every character printed, per face
+export function collectText() {
+  COLLECT = true;
+  try { LAYOUTS = null; build({ v: t => `var(--pb-${t})`, rng: () => () => 0.5 }); } finally { COLLECT = false; LAYOUTS = null; }
+  return Object.fromEntries(Object.entries(USED).map(([k, s]) => [k, [...s].join('')]));
 }
 
 // ------------------------------------------------------------------ runtime
@@ -443,8 +512,8 @@ function fitScale(zone, box, maxS) {
   if (zw <= 0 || zh <= 0) return 0;
   return Math.min(maxS, zw / w, zh / hh);
 }
-// Best placement of a layout among free zones: -> {X, Y, S} (card origin in screen units and scale)
-function place(layoutNames, zones, maxS, alignRight) {
+// Best placement of a title layout among free zones: -> {name, X, Y, S}
+function place(layoutNames, zones, maxS) {
   let best = null;
   for (const name of layoutNames) {
     const L = LAYOUTS[name];
@@ -454,24 +523,44 @@ function place(layoutNames, zones, maxS, alignRight) {
       if (!best || score > best.score + 1e-6) {
         const w = (L.box[2] - L.box[0]) * s;
         const slack = z[2] - z[0] - w;
-        const x0 = z.right || alignRight ? z[2] - w : z[0] + Math.min(slack, z.inset || 0);
+        const x0 = z.right ? z[2] - w : z[0] + Math.min(slack, z.inset || 0);
         best = { name, score, S: s, X: x0 - L.box[0] * s, Y: z[1] - L.box[1] * s };
       }
     }
   }
   return best;
 }
+const boxOf = (pl, L = LAYOUTS[pl.name]) => [pl.X + L.box[0] * pl.S, pl.Y + L.box[1] * pl.S, pl.X + L.box[2] * pl.S, pl.Y + L.box[3] * pl.S];
+const hit = (a, b) => !!b && a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+// largest scale ≤ smax of a w×h box anchored at a corner ('tr' | 'tl' | 'br' | 'bl' at ax, ay) that avoids obstacles
+function fitCorner(a, ax, ay, w, hh, obst, smax) {
+  let s = smax;
+  const right = a[1] === 'r', bottom = a[0] === 'b';
+  for (const o of obst) {
+    if (!o) continue;
+    const box = sc => [right ? ax - w * sc : ax, bottom ? ay - hh * sc : ay, right ? ax : ax + w * sc, bottom ? ay : ay + hh * sc];
+    if (!hit(box(s), o)) continue;
+    const sx = right ? (ax - o[2]) / w : (o[0] - ax) / w;
+    const sy = bottom ? (ay - o[3]) / hh : (o[1] - ay) / hh;
+    s = Math.min(s, Math.max(sx, sy));
+  }
+  return s;
+}
+const cornerPose = (a, ax, ay, w, hh, s) => ({ x: a[1] === 'r' ? ax - w * s : ax, y: a[0] === 'b' ? ay - hh * s : ay, s });
 
 export function attach(svg, ctx) {
   const doc = svg.ownerDocument, view = doc.defaultView;
+  if (!LAYOUTS) layouts();
   const R = {};
   for (const el of svg.querySelectorAll('[data-ref^="print-"]')) R[el.getAttribute('data-ref').slice(6)] = el;
-  // draw above the lead's plain letterbox rects: the paper margin IS the letterbox in style C
+  // draw above the lead's plain letterbox rects: the HUD bars ARE the letterbox in style X
   const host = svg.querySelector('#L-letterbox');
   if (R.root && host) host.appendChild(R.root);
 
   const cache = new Map();
-  const set = (el, name, val) => { if (!el) return; const k = el; let c = cache.get(k); if (!c) cache.set(k, c = {}); if (c[name] !== val) { c[name] = val; el.setAttribute(name, val); } };
+  const set = (el, name, val) => { if (!el) return; let c = cache.get(el); if (!c) cache.set(el, c = {}); if (c[name] !== val) { c[name] = val; el.setAttribute(name, val); } };
+  const show = (el, on) => set(el, 'display', on ? 'inline' : 'none');
+  const digitsTo = (prefix, n, str) => { for (let i = 0; i < n; i++) set(R[prefix + i], 'href', '#print-dm-' + str[i]); };
 
   // visible viewBox rectangle (preserveAspectRatio slice)
   let V = { x0: 0, y0: 0, x1: VIEW.w, y1: VIEW.h, w: VIEW.w, h: VIEW.h };
@@ -482,7 +571,7 @@ export function attach(svg, ctx) {
     V = { x0: VIEW.cx - w / 2, y0: VIEW.cy - hh / 2, x1: VIEW.cx + w / 2, y1: VIEW.cy + hh / 2, w, h: hh, left: r.left, top: r.top, s };
   };
   measureV();
-  // the UI control card (an HTML overlay that docks to a free corner): the ephemera keep clear of it
+  // the UI control card (an HTML overlay that docks to a free corner): the HUD blocks keep clear of it
   let uiBox = null, uiAt = -1e9;
   const measureUI = force => {
     const now = view.performance.now();
@@ -496,8 +585,7 @@ export function attach(svg, ctx) {
     uiBox = [X(r.left) - 8, Y(r.top) - 8, X(r.right) + 8, Y(r.bottom) + 8];
   };
   view.addEventListener('resize', measureV);
-  // live: measure the card at the START of a frame (this rAF is registered before the runtime's loop), when layout is
-  // clean; a read inside update() would force a synchronous style + layout of the frame's pending scene writes
+  // measure the card at the START of a frame (this rAF is registered before the runtime's loop), when layout is clean
   const early = () => { measureUI(false); view.requestAnimationFrame(early); };
   view.requestAnimationFrame(early);
 
@@ -513,6 +601,251 @@ export function attach(svg, ctx) {
     const pad = 14 + Math.abs(cam.roll || 0) * 8;
     return [X(RIDER_X - 262) - pad, Y(oy - 572) - pad, X(RIDER_X + 305) + pad, Y(oy + 6) + pad];
   };
+  const TIP = (s, pose) => `translate(${f(pose.x)} ${f(pose.y)}) scale(${f(pose.s)})`;
+  let L = null;   // last layout (block poses for the dynamic part)
+
+  // ---------------------------------------------------------------- layout (only when the view / intro phase changes)
+  function layout(frame, cam, ti, kc, lb) {
+    const reduced = frame.reduced;
+    const yT = V.y0 + M + lb, yB = V.y1 - M - lb, xL = V.x0 + M, xR = V.x1 - M;
+    const cx = (xL + xR) / 2, cy = (yT + yB) / 2;
+    // ---- bars ----
+    const onBars = lb > 0.5;
+    show(R.barT, onBars); show(R.barB, onBars);
+    set(R.barT, 'transform', `translate(0 ${f(V.y0 + lb)})`);
+    set(R.barB, 'transform', `translate(0 ${f(V.y1 - lb)}) scale(1 -1)`);
+    for (const k of ['T', 'B']) { set(R[`hz${k}L`], 'transform', `translate(${f(xL)} 0)`); set(R[`hz${k}R`], 'transform', `translate(${f(xR - 64)} 0)`); }
+    // ---- frame ----
+    const boot = reduced ? 1 : easeOut(clamp01(ti / 0.38));
+    const bs = 1 + 0.5 * (1 - boot);
+    const cT = (x, y, sx, sy) => `translate(${f(x)} ${f(y)}) scale(${f(sx * bs)} ${f(sy * bs)})`;
+    set(R.cTL, 'transform', cT(xL, yT, 1, 1)); set(R.cTR, 'transform', cT(xR, yT, -1, 1));
+    set(R.cBL, 'transform', cT(xL, yB, 1, -1)); set(R.cBR, 'transform', cT(xR, yB, -1, -1));
+    set(R.frame, 'opacity', f(reduced ? 1 : ti < 0.05 ? 0 : Math.min(1, 0.25 + boot)));
+    const codeW = Math.max(...Object.values(CODEW));
+    const sideGap = ARM + 22 + codeW + 10;
+    const ur = (el, x, y, w, hh) => set(el, 'transform', `translate(${f(x)} ${f(y)}) scale(${f(Math.max(0.01, w))} ${f(Math.max(0.01, hh))})`);
+    ur(R.kT, xL + ARM + 22, yT, xR - xL - 2 * (ARM + 22), 1); ur(R.kB, xL + ARM + 22, yB - 1, xR - xL - 2 * (ARM + 22), 1);
+    ur(R.kL, xL, yT + sideGap, 1, yB - yT - 2 * sideGap); ur(R.kR, xR - 1, yT + sideGap, 1, yB - yT - 2 * sideGap);
+    set(R.rT, 'transform', `translate(${f(cx)} ${f(yT)})`); set(R.rB, 'transform', `translate(${f(cx)} ${f(yB)}) scale(1 -1)`);
+    set(R.rT, 'opacity', V.w < 560 ? 0 : 1); set(R.rB, 'opacity', V.w < 560 ? 0 : 1);
+    set(R.eL, 'transform', `translate(${f(xL)} ${f(cy)})`); set(R.eR, 'transform', `translate(${f(xR)} ${f(cy)}) scale(-1 1)`);
+    const cw = k => CODEW[k];
+    set(R.codeTL, 'transform', `translate(${f(xL + 6.5)} ${f(yT + ARM + 22 + cw('TL'))}) rotate(-90)`);
+    set(R.codeTR, 'transform', `translate(${f(xR - 6.5)} ${f(yT + ARM + 22)}) rotate(90)`);
+    set(R.codeBL, 'transform', `translate(${f(xL + 6.5)} ${f(yB - ARM - 22)}) rotate(-90)`);
+    set(R.codeBR, 'transform', `translate(${f(xR - 6.5)} ${f(yB - ARM - 22 - cw('BR'))}) rotate(90)`);
+
+    // ---- title card ----
+    const rb = riderBox(cam, frame.pose);
+    const top = Object.assign([xL + 16, yT + 16, xR - 16, Math.min(rb[1] - 6, yB - 16)], { inset: 30 });
+    const left = Object.assign([xL + 16, yT + 16, Math.min(rb[0] - 6, xR - 16), yB - 160], { inset: 8 });
+    const right = Object.assign([Math.max(rb[2] + 6, xL + 16), yT + 150, xR - 16, yB - 80], { right: true });
+    const bar = Object.assign([xL + 10, V.y0 + 12, xR - 10, V.y0 + lb - 18], { inset: 8 });
+    // keep every zone clear of the UI card: cut the zone on the card's side (left or right of its centre)
+    const clip = z => {
+      if (!uiBox || !hit(z, uiBox)) return z;
+      const c = Object.assign([...z], { inset: z.inset, right: z.right });
+      if ((uiBox[0] + uiBox[2]) / 2 < (z[0] + z[2]) / 2) c[0] = Math.max(c[0], uiBox[2] + 8); else c[2] = Math.min(c[2], uiBox[0] - 8);
+      return c;
+    };
+    const cardP = place(['line', 'stack'], [top, left, right].map(clip), 1.0), cardB = place(['line'], [clip(bar)], 1.0);
+    const logoP = place(['logo'], [Object.assign([xL + 16, yT + 14, Math.min(xR - 16, xL + 16 + 470), Math.min(rb[1] - 4, yT + 14 + 52)], { inset: 4 }),
+      Object.assign([xL + 16, yT + 14, Math.min(rb[0] - 4, xL + 16 + 470), yT + 14 + 52], { inset: 4 })].map(clip), 0.44);
+    const logoB = place(['logo'], [clip(bar)], 0.5);
+    const E = reduced ? () => 1 : (a, d) => clamp01((ti - a) / d);
+    let shrink = easeInOut(clamp01((ti - 3.55) / 0.62));
+    let alpha = 1;
+    if (reduced) { shrink = ti < 3.9 ? 0 : 1; alpha = ti < 3.6 ? 1 : ti < 3.9 ? 1 - (ti - 3.6) / 0.3 : Math.min(1, (ti - 3.9) / 0.35); }
+    if (ti >= 99) shrink = 1;
+    const at = (pl, g) => { const a = LAYOUTS[pl.name][g]; return [pl.X + pl.S * a.x, pl.Y + pl.S * a.y, pl.S]; };
+    const mix3 = (a, b, kk) => [lerp(a[0], b[0], kk), lerp(a[1], b[1], kk), lerp(a[2], b[2], kk)];
+    const gpose = g => { const c = mix3(at(cardP, g), at(cardB, g), kc), l = mix3(at(logoP, g), at(logoB, g), kc), p = mix3(c, l, shrink); return p; };
+    const T = p => `translate(${f(p[0])} ${f(p[1])}) scale(${f(p[2])})`;
+    set(R.w, 'transform', T(gpose('w'))); set(R.tag, 'transform', T(gpose('tag')));
+    set(R.sub, 'transform', T(gpose('sub'))); set(R.ed, 'transform', T(gpose('ed')));
+    set(R.title, 'opacity', f(alpha));
+    set(R.ed, 'opacity', f(Math.min(E(1.75, 0.3), 1 - shrink)));
+    const small = shrink >= 1 && kc < 0.01;
+    show(R.wscan, !small);                       // the cut scanlines are too fine for the small logo
+    // letters decode through scramble glyphs, then lock (staggered)
+    for (let i = 0; i < TL.letters.length; i++) {
+      const lockT = 0.28 + i * 0.058;
+      let c = TL.letters[i].c;
+      if (!reduced && ti < lockT) c = SCRAMBLE[Math.floor(hash(i, Math.floor(ti * 30)) * SCRAMBLE.length)];
+      set(R['tl' + i], 'href', '#print-gl-' + c.charCodeAt(0));
+    }
+    set(R.wv, 'opacity', reduced ? 1 : ti < 0.1 ? 0 : 1);
+    const split = reduced ? 0 : 1 - easeOut(E(0.1, 1.0));
+    set(R.chc, 'transform', `translate(${f(-3.2 - 18 * split)} ${f(0.6 + 2 * split)})`);
+    set(R.chm, 'transform', `translate(${f(3.4 + 18 * split)} ${f(-0.4 - 2 * split)})`);
+    const jit = reduced ? 0 : ti < 1.2 ? 2.5 * (1 - ti / 1.2) : 0;
+    BANDS.forEach(([, , dx], i) => set(R['band' + i], 'transform', `translate(${f(dx * (1 + jit * (hash(i, Math.floor(ti * 20)) * 2 - 0.4)))} 0)`));
+    set(R.rule, 'transform', `scale(${f(Math.max(0.001, easeOut(E(0.7, 0.4))))} 1)`);
+    const tagE = E(0.95, 0.3), tb = tagE > 0 ? backOut(tagE) : 0;
+    set(R.tagin, 'transform', `translate(${TAG.w / 2} -28) rotate(${f(-6 * (1 - tagE))}) scale(${f(tagE > 0 ? 1.6 - 0.6 * tb : 1.6)}) translate(${-TAG.w / 2} 28)`);
+    set(R.tagin, 'opacity', tagE > 0 ? 1 : 0);
+    // the subtitle types on, one monospace cell at a time
+    const nCh = [...'PELICAN BAY · 霓虹区 NEON DISTRICT · ネオン'].length;
+    const typed = reduced ? 1 : Math.floor(E(1.2, 0.62) * nCh) / nCh;
+    set(R.subclip, 'width', f((SUBW + 10) * typed));
+    set(R.cursor, 'transform', `translate(${f(-(SUBW - 14 + 5) * (1 - typed))} 0)`);
+
+    // ---- HUD blocks: mission (+ minimap) top-right, readouts bottom-right ----
+    const logoBox = boxOf(logoP, LAYOUTS.logo);
+    const cardBox = boxOf({ ...cardP, name: cardP.name });
+    const obst = [rb, uiBox, logoBox];
+    let mP = null;
+    for (const [a, ax, ay] of [['tr', xR - 10, yT + 10], ['tl', xL + 10, logoBox[3] + 12]]) {
+      const s = fitCorner(a, ax, ay, BLOCK.w + 8, BLOCK.h, obst, Math.min(1, (V.w - 2 * M - 20) / (BLOCK.w + 8)));
+      if (s >= 0.55) { mP = cornerPose(a, ax, ay, BLOCK.w + 8, BLOCK.h, s); mP.x += 8 * s; break; }
+    }
+    const mBox = mP && [mP.x - 8 * mP.s, mP.y, mP.x + BLOCK.w * mP.s, mP.y + BLOCK.h * mP.s];
+    let rP = null;
+    for (const [a, ax, ay] of [['br', xR - 10, yB - 10], ['bl', xL + 10, yB - 10]]) {
+      const s = fitCorner(a, ax, ay, RW, RH, [rb, uiBox, mBox, logoBox], Math.min(1, (V.w - 2 * M - 20) / RW));
+      if (s >= 0.6) { rP = cornerPose(a, ax, ay, RW, RH, s); break; }
+    }
+    // cinematic: dock into the bars
+    const bh = Math.max(1, lb - 22);
+    const mS = Math.min(0.92, bh / BLOCK.h, (V.w * 0.42) / BLOCK.w);
+    const mC = { x: xR - 6 - BLOCK.w * mS, y: V.y0 + 11, s: mS };
+    const rS = Math.min(1, bh / RH, (V.w * 0.36) / RW);
+    const rC = { x: xR - 6 - RW * rS, y: V.y1 - lb + (lb - RH * rS) / 2 + 4, s: rS };
+    const mix = (a, b) => a ? { x: lerp(a.x, b.x, kc), y: lerp(a.y, b.y, kc), s: lerp(a.s, b.s, kc) } : b;
+    const mBoot = reduced ? 1 : easeOut(E(1.25, 0.4)), rBoot = reduced ? 1 : easeOut(E(1.5, 0.4));
+    const mVis = (mP || kc > 0.5) && !(shrink < 1 && kc < 0.5 && hit(mBox || [0, 0, 0, 0], cardBox)) ? 1 : 0;
+    const rVis = (rP || kc > 0.5) && !(shrink < 1 && kc < 0.5 && rP && hit([rP.x, rP.y, rP.x + RW * rP.s, rP.y + RH * rP.s], cardBox)) ? 1 : 0;
+    const mm = mix(mP, mC), rr = mix(rP, rC);
+    set(R.mission, 'transform', TIP(null, mm)); set(R.mission, 'opacity', f(mVis * mBoot));
+    set(R.mpanel, 'transform', `translate(${f(PW * (1 - mBoot))} 0) scale(${f(Math.max(0.001, mBoot))} 1)`);
+    set(R.read, 'transform', TIP(null, rr)); set(R.read, 'opacity', f(rVis * rBoot));
+    // ticker window: the bottom bar between the UI card and the readouts
+    let tx0 = xL + 76, tx1 = rC.x - 18;
+    const tyc = V.y1 - lb / 2;
+    if (uiBox && uiBox[3] > V.y1 - lb && uiBox[1] < V.y1) { if (uiBox[0] < V.x0 + V.w / 2) tx0 = Math.max(tx0, uiBox[2] + 12); else tx1 = Math.min(tx1, uiBox[0] - 12); }
+    const tickOn = kc > 0.6 && tx1 - tx0 > 160;
+    show(R.ticker, tickOn);
+    set(R.tickclip, 'x', f(tx0)); set(R.tickclip, 'width', f(Math.max(1, tx1 - tx0))); set(R.tickclip, 'y', f(tyc - 12)); set(R.tickclip, 'height', 20);
+    const mNow = mVis ? [mm.x - 10, mm.y, mm.x + BLOCK.w * mm.s, mm.y + BLOCK.h * mm.s] : null;
+    L = { tx0, tyc, xL, xR, yT, yB, mm, kc, cam, shrink, reduced, mBox: mNow, logoBox: shrink >= 1 || kc > 0.5 ? (kc > 0.5 ? boxOf(logoB, LAYOUTS.logo) : logoBox) : cardBox };
+  }
+
+  // ---------------------------------------------------------------- per-frame state (values written only on change)
+  const clockOf = (tod, t) => { const s = wrapM(Math.floor(tod * 86400 + t), 86400); return [Math.floor(s / 3600), Math.floor(s / 60) % 60, s % 60].map(n => String(n).padStart(2, '0')).join(''); };
+  let lastStretch = -1;
+  function dynamic(frame, cam, ti) {
+    const lb = Math.max(0, cam.letterbox || 0);
+    const t = frame.t, D = frame.distance || 0, reduced = frame.reduced;
+    const p = wrapM(D, LAP), lap = Math.floor(D / LAP);
+    let si = STRETCHES.length - 1; for (const s of STRETCHES) if (p < s.b) { si = s.i; break; }
+    const S = STRETCHES[si];
+    const speed = Math.max(1, frame.speed || 1);
+    // mission
+    if (si !== lastStretch) { lastStretch = si; for (const k of ['capc', 'capm', 'capf']) set(R[k], 'href', '#print-cap' + si); set(R.brf, 'href', '#print-brf' + si); }
+    const since = (p - S.a) / speed;   // seconds since the district began
+    const cg = reduced || ti < 4.3 ? 0 : clamp01(1 - since / 0.5);
+    const gq = Math.floor(t * 30);
+    set(R.capc, 'opacity', cg > 0 ? 1 : 0); set(R.capm, 'opacity', cg > 0 ? 1 : 0);
+    if (cg > 0) {
+      set(R.capc, 'transform', `translate(${f(-2 - 7 * cg * hash(1, gq))} 0)`); set(R.capm, 'transform', `translate(${f(2 + 7 * cg * hash(2, gq))} 0)`);
+      set(R.capf, 'transform', `translate(${f((hash(3, gq) - 0.5) * 8 * cg)} 0)`);
+    } else set(R.capf, 'transform', 'translate(0 0)');
+    const tunnel = S.key === 'cliffs';
+    show(R.mok, !tunnel); show(R.mlost, tunnel);
+    set(R.mtri, 'opacity', reduced || Math.floor(t * 1.6) % 2 === 0 ? 1 : 0.25);
+    const rem = Math.min(5999, Math.max(0, Math.round((S.b - p) / speed)));
+    digitsTo('eta', 4, String(Math.floor(rem / 60)).padStart(2, '0') + String(rem % 60).padStart(2, '0'));
+    const prog = clamp01((p - S.a) / (S.b - S.a));
+    set(R.prog, 'transform', `translate(${PW - 136} 25) scale(${f(Math.max(0.01, 120 * Math.round(prog * 240) / 240))} 3)`);
+    // minimap
+    const TX0 = 14, TXW = PW - 28, TY = PH + MGAP + 33;
+    const kx = km => TX0 + TXW * km / KMS;
+    set(R.mcur, 'transform', `translate(${f(kx(S.kmA) + 1)} ${TY - 1.6}) scale(${f(kx(S.kmB) - kx(S.kmA) - 2)} 3.2)`);
+    const mx = Math.round(kx(p / KM) * 4) / 4;
+    set(R.mark, 'transform', `translate(${f(mx)} ${TY})`);
+    set(R.mvis, 'transform', `translate(${TX0} ${TY - 4.6}) scale(${f(Math.max(0.01, mx - TX0))} 1)`);
+    const kmNow = Math.floor(p / KM * 10);
+    digitsTo('mm', 5, String(Math.min(99, lap + 1)).padStart(2, '0') + String(Math.floor(kmNow / 10)).padStart(2, '0') + String(kmNow % 10));
+    // readouts
+    const flick = Math.floor(t / 2.3);
+    const sig = tunnel ? (hash(flick, 5) < 0.5 ? 0 : 1) : S.key === 'lighthouse' ? 5 : S.key === 'dunes' ? 2 : 3 + (hash(si * 31 + flick, 9) < 0.5 ? 0 : 1);
+    for (let i = 0; i < 5; i++) set(R['sig' + i], 'fill-opacity', i < sig ? 1 : 0.18);
+    const charging = S.key === 'return';
+    let pct = Math.round(100 - 72 * (p / STRETCHES[STRETCHES.length - 1].a));
+    if (charging) pct = Math.round(lerp(28, 100, clamp01((p - S.a) / (S.b - S.a))));
+    pct = Math.max(1, Math.min(100, pct));
+    digitsTo('pct', 3, String(pct).padStart(3, '0'));
+    set(R.pct0, 'opacity', pct >= 100 ? 1 : 0);
+    const cells = Math.ceil(pct / 20);
+    for (let i = 0; i < 5; i++) set(R['cell' + i], 'fill-opacity', i < cells ? (cells <= 1 ? 0.95 : 1) : 0.12);
+    set(R.cell0, 'fill', cells <= 1 ? 'var(--pb-red)' : 'var(--pb-acid)');
+    show(R.bolt, charging);
+    digitsTo('clk', 6, clockOf(frame.tod || 0, t));
+    set(R.recdot, 'opacity', reduced || (t % 1) < 0.62 ? 1 : 0.2);
+    const w = frame.weather || {};
+    const rain = w.rain || 0, fog = w.fog || 0, tod = frame.tod || 0.7;
+    const cond = (w.bow || 0) > 0.4 ? 'clear' : rain > 0.62 ? 'storm' : fog > 0.3 ? 'fog' : rain > 0.12 ? 'rain' : 'drizzle';
+    for (const kk of ['clear', 'drizzle', 'fog', 'rain', 'storm']) show(R['wx-' + kk], kk === cond);
+    const hum = Math.min(99, Math.round(cond === 'clear' ? 54 : 70 + 28 * Math.max(rain, fog * 0.8)));
+    const temp = Math.round(27 - 16 * Math.abs(wrapM(tod - 0.55 + 0.5, 1) - 0.5) - 3 * rain);
+    digitsTo('wx', 4, String(hum).padStart(2, '0') + String(Math.max(0, temp)).padStart(2, '0'));
+    // subtitle cursor blink
+    set(R.cursor, 'opacity', reduced || ti < 1.9 || (t % 1.1) < 0.6 ? 1 : 0);
+    // ticker (cinematic)
+    if (L && L.kc > 0.6) {
+      const off = reduced ? 0 : wrapM(t * 26, TICK_W);
+      set(R.tickmove, 'transform', `translate(${f(L.tx0 - off)} ${f(L.tyc + 3)})`);
+    }
+    // reticle: brackets outside the head + bill box
+    const hb = frame.headBox;
+    const rOn = hb && !reduced ? ti > 2.0 : !!hb && ti > 2;
+    show(R.ret, rOn);
+    if (rOn) {
+      const z = cam.zoom || 1;
+      const lockK = reduced ? 1 : easeOut(clamp01((ti - 2.0) / 0.45));
+      const gw = (1 + 0.8 * (1 - lockK));
+      const barB = V.y0 + lb + 6;
+      const x0 = hb.x - 126 * z * gw, x1 = hb.x + 118 * z * gw, y0 = Math.max(barB, hb.y - 26 * z * gw), y1 = hb.y + 86 * z * gw;
+      const q = x => Math.round(x * 4) / 4;
+      set(R.rtTL, 'transform', `translate(${f(q(x0))} ${f(q(y0))})`); set(R.rtTR, 'transform', `translate(${f(q(x1))} ${f(q(y0))})`);
+      set(R.rtBL, 'transform', `translate(${f(q(x0))} ${f(q(y1))})`); set(R.rtBR, 'transform', `translate(${f(q(x1))} ${f(q(y1))})`);
+      // label up-right of the TR corner, kept on screen (flips left when it would leave the frame)
+      const labW = 190;
+      const lx = x1 + 4, ly = y0 - 2;
+      const lBox = [lx, ly - 40, lx + labW, ly + 4];
+      const blocked = lx + labW > V.x1 - M - 6 || ly - 40 < V.y0 + lb + 4 || (L && L.mBox && hit(lBox, L.mBox)) || (L && L.logoBox && hit(lBox, L.logoBox));
+      set(R.rtlab, 'transform', `translate(${f(q(lx))} ${f(q(ly))})`);
+      set(R.rtlab, 'opacity', blocked ? 0 : f(lockK));
+      set(R.ret, 'opacity', f(Math.min(1, lockK * 1.4)));
+    }
+    // ---- rare glitch transition ----
+    let g = 0;
+    if (!reduced && ti >= 4.5) {
+      const GP = 41, kk = Math.floor(t / GP), o = 10 + 24 * hash(kk, 3), u = t - kk * GP - o;
+      if (hash(kk, 11) < 0.7 && u >= 0 && u < 0.24) g = 1 - u / 0.24;
+      if ((S.key === 'cliffs' || S.key === 'dunes' || S.key === 'village') && since < 0.3) g = Math.max(g, 1 - since / 0.3);
+    }
+    show(R.glitch, g > 0);
+    const gq24 = Math.floor(t * 24);
+    if (g > 0) {
+      for (let i = 0; i < 8; i++) {
+        const y = V.y0 + V.h * hash(i, gq24), hh = 2 + 20 * hash(i + 9, gq24) ** 2, x = V.x0 + V.w * 0.6 * hash(i + 3, gq24) - 40;
+        set(R['gb' + i], 'transform', `translate(${f(x)} ${f(y)}) scale(${f(V.w * (0.3 + 0.7 * hash(i + 5, gq24)))} ${f(hh)})`);
+      }
+      for (let i = 0; i < 3; i++) set(R['gs' + i], 'transform', `translate(${f(V.x0)} ${f(V.y0 + V.h * hash(i + 20, gq24))}) scale(${f(V.w)} ${f(10 + 30 * hash(i + 23, gq24))})`);
+      set(R.glitch, 'opacity', f(0.5 + 0.5 * g));
+    }
+    const fj = g > 0 ? (hash(7, gq24) - 0.5) * 10 * g : 0;
+    set(R.frame, 'transform', `translate(${f(fj)} 0)`);
+    if (g > 0) BANDS.forEach(([, , dx], i) => set(R['band' + i], 'transform', `translate(${f(dx * (1 + 3 * g * (hash(i, gq24) * 2 - 0.6)))} 0)`));
+    else if (ti >= 4.3) BANDS.forEach(([, , dx], i) => set(R['band' + i], 'transform', `translate(${dx} 0)`));
+    if (g > 0) { set(R.capc, 'opacity', 1); set(R.capm, 'opacity', 1); set(R.capc, 'transform', `translate(${f(-3 - 6 * g)} 0)`); set(R.capm, 'transform', `translate(${f(3 + 6 * g)} 0)`); }
+    // boot scan beam (intro only)
+    const bootOn = !reduced && ti > 0.04 && ti < 1.05;
+    show(R.boot, bootOn);
+    if (bootOn) set(R.boot, 'transform', `translate(0 ${f(V.y0 + (V.h + 80) * easeInOut(clamp01((ti - 0.04) / 0.95)))})`);
+  }
 
   return {
     update(frame) {
@@ -522,116 +855,18 @@ export function attach(svg, ctx) {
       if (skipReq) { skipReq = false; if (t < 4.2) skipAt = Math.min(skipAt, t); }
       const reduced = frame.reduced;
       const lb = Math.max(0, cam.letterbox || 0);
-      const kc = easeInOut(clamp01((lb - M) / (LB_MAX - M)));      // 0 poster → 1 cinematic bars
-      // integrator perf: after the intro nothing here moves unless the view, letterbox, UI card or (coarse) rider box changes
-      if (frame.dt === 0) measureUI(true);
-      const rbQ = riderBox(cam, frame.pose).map(v => Math.round(v / 6));
-      const tiQ = t >= skipAt ? 99 : t;
-      const sig = [V.w, V.h, V.x0, V.y0, f(lb), tiQ >= 4.3 ? 'post' : f(tiQ), reduced ? 1 : 0, rbQ.join(), uiBox ? uiBox.map(Math.round).join() : ''].join('|');
-      if (sig === lastSig) return;
-      lastSig = sig;
-
-      // ---- border ----
-      const yT = V.y0 + Math.max(M, lb), yB = V.y1 - Math.max(MB, lb), xL = V.x0 + M, xR = V.x1 - M;
-      set(R.barL, 'transform', `translate(${f(xL)} 0)`); set(R.barR, 'transform', `translate(${f(xR)} 0)`);
-      set(R.barT, 'transform', `translate(0 ${f(yT)})`); set(R.barB, 'transform', `translate(0 ${f(yB)})`);
-      const ur = (el, x, y, w, hh) => set(el, 'transform', `translate(${f(x)} ${f(y)}) scale(${f(w)} ${f(hh)})`);
-      ur(R.kT, xL, yT, xR - xL, 3); ur(R.kB, xL, yB - 3, xR - xL, 3); ur(R.kL, xL, yT, 3, yB - yT); ur(R.kR, xR - 3, yT, 3, yB - yT);
-      const hg = 7;
-      ur(R.hT, xL - hg, yT - hg - 1, xR - xL + 2 * hg, 1); ur(R.hB, xL - hg, yB + hg - 1, xR - xL + 2 * hg, 1);
-      ur(R.hL, xL - hg - 1, yT - hg - 1, 1, yB - yT + 2 * hg + 1); ur(R.hR, xR + hg, yT - hg - 1, 1, yB - yT + 2 * hg + 1);
-      set(R.cTL, 'transform', `translate(${f(xL)} ${f(yT)})`); set(R.cTR, 'transform', `translate(${f(xR)} ${f(yT)}) scale(-1 1)`);
-      set(R.cBL, 'transform', `translate(${f(xL)} ${f(yB)}) scale(1 -1)`); set(R.cBR, 'transform', `translate(${f(xR)} ${f(yB)}) scale(-1 -1)`);
-      set(R.cropTL, 'transform', `translate(${f(xL)} ${f(yT)})`); set(R.cropTR, 'transform', `translate(${f(xR)} ${f(yT)}) scale(-1 1)`);
-      set(R.cropBL, 'transform', `translate(${f(xL)} ${f(yB)}) scale(1 -1)`); set(R.cropBR, 'transform', `translate(${f(xR)} ${f(yB)}) scale(-1 -1)`);
-      const cx = (xL + xR) / 2, cy = (yT + yB) / 2;
-      set(R.eT, 'transform', `translate(${f(cx)} ${f(yT + 1.5)})`); set(R.eB, 'transform', `translate(${f(cx)} ${f(yB - 1.5)}) scale(1 -1)`);
-      set(R.eL, 'transform', `translate(${f(xL + 1.5)} ${f(cy)}) rotate(-90)`); set(R.eR, 'transform', `translate(${f(xR - 1.5)} ${f(cy)}) rotate(90)`);
-      set(R.regL, 'transform', `translate(${f(V.x0 + 7.5)} ${f(cy)})`); set(R.regR, 'transform', `translate(${f(V.x1 - 7.5)} ${f(cy)})`);
-      // printer's strip along the bottom edge of the paper
-      const sy = V.y1 - 8.6;
-      set(R.regB, 'transform', `translate(${f(cx)} ${f(sy)})`);
-      const narrow = V.w < 760;
-      set(R.imprint, 'transform', `translate(${f(xL + 22)} ${f(sy + 2.7)})`);
-      set(R.edition, 'transform', `translate(${f(xR - 22)} ${f(sy + 2.7)})`);
-      set(R.edition, 'opacity', narrow ? 0 : 1);
-      set(R.regB, 'opacity', narrow ? 0 : 1);
-      set(R.tint, 'opacity', V.w < 520 ? 0 : 1);
-      set(R.colour, 'transform', `translate(${f(narrow ? xR - 22 - 7 * 12 : xR - 22 - ED.w - 16 - 7 * 12)} ${f(sy)})`);
-
-      // ---- ephemera: ticket + stamp/postmark (bottom-right corner; into the bars in cinematic) ----
-      const es = Math.min(1, (V.w - 40) / 330);
-      const exR = xR - 26, eyB = yB - 18;
-      // wide poses (screen)
-      const tW = { x: exR - TICKET.w * es, y: eyB - TICKET.h * es - 2, r: -4, s: es };
-      const pW = { x: tW.x - 76 * es, y: eyB - 118 * es, r: 0, s: es };
-      // cinematic poses: ticket in the bottom bar, stamp + postmark in the top bar
-      const barHb = lb - MB - 12;
-      const ts = Math.max(0.3, Math.min(1, barHb / TICKET.h));
-      const tC = { x: exR - TICKET.w * ts, y: V.y1 - lb + 10, r: 0, s: ts };
-      const pC = { x: tC.x - 80 * ts, y: tC.y - 22 * ts, r: 0, s: ts };   // stamp stuck across the bar's edge
-      const mix = (a, b) => ({ x: lerp(a.x, b.x, kc), y: lerp(a.y, b.y, kc), r: lerp(a.r, b.r, kc), s: lerp(a.s, b.s, kc) });
-      const tp_ = mix(tW, tC), pp = mix(pW, pC);
-      // corner choice: bottom-right, else bottom-left, else hidden (never under the UI card or the rider)
-      const rbE = riderBox(cam, frame.pose);
-      const eBox = [pp.x - 4, pp.y - 6, exR + 6, Math.max(tp_.y + (TICKET.h + 12) * tp_.s, eyB + 6)];
-      const hit = (a, b) => b && a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
-      const shiftL = xL + 26 - eBox[0];
-      const boxL = [eBox[0] + shiftL, eBox[1], eBox[2] + shiftL, eBox[3]];
-      let dx = 0, show = 1;
-      if (hit(eBox, uiBox)) { if (!hit(boxL, uiBox) && !(kc < 0.5 && hit(boxL, rbE))) dx = shiftL; else show = 0; }
-      tp_.x += dx; pp.x += dx;
-      set(R.ephemera, 'opacity', show);
-      set(R.ticket, 'transform', `translate(${f(tp_.x)} ${f(tp_.y)}) rotate(${f(tp_.r)}) scale(${f(tp_.s)})`);
-      set(R.post, 'transform', `translate(${f(pp.x)} ${f(pp.y)}) rotate(${f(pp.r)}) scale(${f(pp.s)})`);
-
-      // ---- title card ----
-      const rb = riderBox(cam, frame.pose);
-      const ti = t >= skipAt ? 99 : t;
-      const inset = 38;
-      const top = Object.assign([xL + 14, yT + 14, xR - 14, Math.min(rb[1] - 6, yB - 14)], { inset });
-      const left = Object.assign([xL + 14, yT + 14, Math.min(rb[0] - 6, xR - 14), yB - 150], { inset: 12 });
-      const right = Object.assign([Math.max(rb[2] + 6, xL + 14), yT + 14, xR - 14, pp.y - 8], { right: true });
-      const bar = Object.assign([xL + 20, V.y0 + 12, xR - 20, yT - 12], { inset: 10 });
-      // poster placement (free space around the rider) and bar placement (inside the cinematic top bar), blended by kc
-      const cardP = place(['line', 'stack'], [top, left, right], 1.12), cardB = place(['line'], [bar], 1.12);
-      const logoP = place(['logo'], [Object.assign([xL + 14, yT + 12, xR - 14, Math.min(rb[1] - 4, yT + 12 + 42)], { inset: 6 }),
-        Object.assign([xL + 14, yT + 12, Math.min(rb[0] - 4, xL + 14 + 330), yT + 12 + 42], { inset: 6 })], 0.31);
-      const logoB = place(['logoBar'], [bar], 0.46);
-
-      // intro plates
-      const E = reduced ? () => 1 : (a, d) => clamp01((ti - a) / d);
-      const shE = easeOut(E(0.12, 0.45)), sealE = E(1.18, 0.32), subE = easeOut(E(1.42, 0.42));
-      let shrink = easeInOut(clamp01((ti - 3.55) / 0.62));
-      let alpha = 1;
-      if (reduced) { shrink = ti < 3.9 ? 0 : 1; alpha = ti < 3.6 ? 1 : ti < 3.9 ? 1 - (ti - 3.6) / 0.3 : Math.min(1, (ti - 3.9) / 0.35); }
-      if (ti >= 99) shrink = 1;
-      const at = (pl, g) => { const a = LAYOUTS[pl.name][g]; return [pl.X + pl.S * a.x, pl.Y + pl.S * a.y, pl.S * (a.s || 1)]; };
-      const mix3 = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
-      const pose = g => {
-        const c = mix3(at(cardP, g), at(cardB, g), kc), l = mix3(at(logoP, g), at(logoB, g), kc), p = mix3(c, l, shrink);
-        return `translate(${f(p[0])} ${f(p[1])}) scale(${f(p[2])})`;
-      };
-      set(R.w1, 'transform', pose('w1')); set(R.w2, 'transform', pose('w2'));
-      set(R.seal, 'transform', pose('seal')); set(R.sub, 'transform', pose('sub'));
-      set(R.title, 'opacity', f(alpha));
-      const subRoll = lerp(clamp01(1 - shrink * 1.4), 1, kc);   // the band rolls up into the logo, unrolls in the bar
-      const WW = { w1: W1.w, w2: W2.w };
-      const wipe = { face: { w1: E(0.42, 0.4), w2: E(0.74, 0.22) }, inl: { w1: E(0.9, 0.3), w2: E(1.08, 0.18) } };
-      for (const k of ['w1', 'w2']) {
-        for (const pl of ['face', 'inl']) { const e = wipe[pl][k]; set(R[`wipe-${pl}-${k}`], 'transform', `translate(-30 0) scale(${e >= 1 ? 4000 : f(Math.max(0.001, (WW[k] + 60) * e))} 1)`);
-          set(R[`wg-${pl}-${k}`], 'clip-path', e >= 1 ? 'none' : `url(#print-wipe-${pl}-${k})`); }   // no clip once pulled
-        for (let i = 1; i <= SH_N; i++) set(R[`sh-${k}-${i}`], 'transform', `translate(${f(i * SH_STEP * shE)} ${f(i * SH_STEP * shE)})`);
-        set(R['shadow-' + k], 'opacity', f(Math.min(1, shE * 2.5)));
-        set(R['hatch-' + k], 'opacity', f(shE));
-        set(R['hatch-' + k], 'display', shrink >= 1 && kc < 0.01 ? 'none' : 'inline');   // too fine for the small logo
-        const fe = easeOut(wipe.face[k]);
-        set(R['face-' + k], 'transform', `translate(${f(-7 * (1 - fe))} ${f(-5 * (1 - fe))})`);   // drops into register
+      const kc = easeInOut(clamp01(lb / LB_MAX));
+      if (frame.dt === 0) {
+        measureUI(true);
+        // a still render (renderAt / freeze): the UI card docks AFTER this update, so re-check it on the next frame
+        const before = uiBox ? uiBox.join() : '';
+        view.requestAnimationFrame(() => { measureUI(true); if ((uiBox ? uiBox.join() : '') !== before) { lastSig = ''; this.update({ ...frame, dt: 1e-9 }); } });
       }
-      const sb = sealE > 0 ? backOut(sealE) : 0;
-      set(R['seal-in'], 'transform', `translate(28 70) rotate(${f(-10 * (1 - sealE))}) scale(${f(sealE > 0 ? 1.7 - 0.7 * sb : 1.7)}) translate(-28 -70)`);
-      set(R['seal-in'], 'opacity', sealE > 0 ? 1 : 0);
-      set(R['sub-in'], 'transform', `scale(${f(Math.max(0.001, subE * subRoll))} 1)`);
+      const ti = t >= skipAt ? 99 : t;
+      const rbQ = riderBox(cam, frame.pose).map(x => Math.round(x / 6));
+      const sig = [V.w, V.h, V.x0, V.y0, f(lb), ti >= 4.3 ? 'post' : f(ti), reduced ? 1 : 0, rbQ.join(), uiBox ? uiBox.map(Math.round).join() : ''].join('|');
+      if (sig !== lastSig) { lastSig = sig; layout(frame, cam, ti, kc, lb); }
+      dynamic(frame, cam, ti);
     },
   };
 }

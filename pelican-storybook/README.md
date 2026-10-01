@@ -1,7 +1,7 @@
 # 鹈鹕湾 · Pelican Bay
 
-一只大白鹈鹕骑着自行车沿海滨路前行——一张会动的复古旅行海报（WPA / 装饰艺术丝网印刷风格，七色套印）。
-A great white pelican rides a bicycle along the coast road: an animated retro travel poster (WPA / art-deco screenprint, seven inks).
+一只大白鹈鹕骑着自行车沿海滨路前行——一本会动的温暖绘本（水粉风格，绘本版 · 风格 B）。
+A great white pelican rides a bicycle along the coast road: a warm storybook gouache picture book that comes alive (storybook edition, style B).
 
 - 打开 Open: `dist/index.html` (单文件，离线可用 · single file, works from file://)
 - 零 JS 动画 SVG · Zero-JS animated SVG: `dist/pelican-bicycle.svg`
@@ -51,9 +51,13 @@ A great white pelican rides a bicycle along the coast road: an animated retro tr
 动作证据 Motion evidence: `node tools/shoot.mjs --set strip` 为每个事件渲染连续 30 帧 60 fps 胶片条（响铃、挥手、跳跃、吞鱼、滑行、踏频变化）。
 `--set strip` renders 30 consecutive 60 fps frames per event (bell, wave, hop, gulp, coast, cadence jump).
 
+实测 Measured (`shots/perf-latest.json`, written by `shoot.mjs --perf`): **40.1 fps**, frame p95 50 ms, JS p95 3.9 ms, 9199 DOM nodes (dist, 2026-09-30 19:49 UTC, 1-min load 5.84 on this 4-core box; **below the budget**)
+
 ## 构图 · Composition
 
-- 远景（wide）是海报本身；特写（close）比契约值放宽（zoom 1.32），冠羽上方至少留 6% 空间。 Wide is the poster itself. Close is looser than the contract value (zoom 1.32) and keeps at least 6% headroom above the crest.
+- 安静的一页 The calm page (STYLE-B §4): 天空玩具（热气球、飞艇、拖横幅的双翼机）每次只出现一个，开场 80 秒没有玩具；小昆虫（蝴蝶、苍蝇、蜻蜓、蒲公英、蜜蜂）每 20 秒轮换一只；远景和岸线罩一层当时天色的薄雾，越远越淡。 At most one sky toy (balloon, airship, the banner biplane) at a time, none in the first 80 s; one small critter at a time in 20 s turns; a static haze veil of the hour's low-sky paint over the far layers and, thinner, the shore, so the rider stays the focus. `?busy` shows everything at once, for comparison.
+
+- 远景（wide）就是这一页绘本；特写（close）比契约值放宽（zoom 1.32），冠羽上方至少留 6% 空间。 Wide is the picture-book page itself. Close is looser than the contract value (zoom 1.32) and keeps at least 6% headroom above the crest.
 - 跳跃时特写/电影镜头在下蹲帧（0.24 s 预备）就开始上抬，临界阻尼约 0.7 s 回落，所以到最高点时嘴和冠羽仍在画面内。 On a hop, the close and cinematic cameras start rising at the crouch (0.24 s anticipation) and settle back, critically damped, in about 0.7 s, so the bill and crest stay in frame at the apex.
 - 每帧提供 `frame.headBox`（viewBox 坐标的头部圆），天空道具应避开它。 Each frame exposes `frame.headBox` (a circle around the head, in viewBox units); sky props should keep out of it.
 
@@ -102,7 +106,7 @@ The toolchain is Node 22, esbuild, and Playwright with headless Chromium (softwa
 - `check-eggs`: 13/13 eggs trigger, with 0 console errors.
 - `bake` + `check-baked`: pass (0 hard, 2 soft).
 - `shoot --dist`: 43 shots, 0 console errors.
-- `--perf`: **59.5 fps**, frame p95 16.8 ms, 5948 DOM nodes. JS p95 is **2.6 ms, which misses the 2 ms budget**.
+- `--perf` (measured, see above): **40.1 fps**, frame p95 50 ms, JS p95 3.9 ms, 9199 DOM nodes (dist, 2026-09-30 19:49 UTC, 1-min load 5.84 on this 4-core box; **below the budget**)
 
 **Known gaps (honest list):**
 - JS p95 is above budget.

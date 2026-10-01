@@ -12,7 +12,8 @@
 //   fallback  every <animate*> removed: the base attributes must render the t0 hero pose (SSIM vs live t0)
 //   reduced   prefers-reduced-motion: the file must hold still (the t0 poster); long own loops of the world band / cameos
 // Writes <out>/check-baked.json. Exit 1 on a hard failure.
-import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+// Playwright: $PB_PLAYWRIGHT (a path or package name) overrides this box's global install
+const { chromium } = await import(process.env.PB_PLAYWRIGHT || '/opt/node22/lib/node_modules/playwright/index.mjs');
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';

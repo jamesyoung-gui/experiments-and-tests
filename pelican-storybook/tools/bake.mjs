@@ -2,7 +2,8 @@
 // (+ dist/pelican-bicycle.bake.json with the bake report: animations, keyframes, error bounds, sub-periods, size split).
 // usage: node tools/bake.mjs [--dist] [--out dist/pelican-bicycle.svg] [--period 24] [--tod 0.70] [--cam wide]
 //                            [--story "wave@8,bell@16"] [--fps 60]
-import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+// Playwright: $PB_PLAYWRIGHT (a path or package name) overrides this box's global install
+const { chromium } = await import(process.env.PB_PLAYWRIGHT || '/opt/node22/lib/node_modules/playwright/index.mjs');
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';

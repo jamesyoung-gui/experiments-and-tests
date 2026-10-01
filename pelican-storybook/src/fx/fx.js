@@ -15,9 +15,9 @@
 //   L-gulls-far  far gulls (4 painted flap frames by href), distant fireflies over the dunes at night
 //   L-shadow     painted contact shadows (soft gradient glaze + dry-brush edge) and a sun-projected mauve cast shadow
 //                of bike + rider (shear matrix from the sun / moon position, pelican parts follow the live joints)
-//   L-fx-back    headlamp glow cone + road pool (soft gradients), escort gulls, ONE calm breeze swirl, fireflies,
+//   L-fx-back    headlamp glow cone + road pool (soft gradients), escort gulls, ONE calm set of breeze swirls, dandelion seeds, fireflies,
 //                a bumblebee
-//   L-fx-front   dust puffs + sand grit, landing puffs + bump marks, feathers, dandelion seeds, butterflies, dragonfly,
+//   L-fx-front   dust puffs + sand grit, landing puffs + bump marks, feathers, butterflies, dragonfly,
 //                a tumbling leaf, a fly and a ladybird on the basket, sparkles, lamp glow + moths, event pops
 //                ("Ding!" "Hop!" "Gulp!" on cloud bubbles, with stars / hearts), bell notes, hum notes when coasting,
 //                drips, hearts, a fish bone, wave arcs, sparse speed strokes in a real sprint
@@ -134,7 +134,7 @@ export const detailItems = [
   ['fx:O:ladybird', 'O', 'a ladybird crawling along the front of the basket: red shell, black spots and head, cream eye dots'],
   ['fx:O:bumblebee', 'O', 'a round bumblebee bumbling about behind the rider with a dotted trail'],
   ['fx:T:bee-stripes', 'T', 'fuzzy bee stripes painted as short brush hairs'],
-  ['fx:O:wind-swirl', 'O', 'ONE soft painted breeze swirl in the upper sky, only above 75 rpm, rare and slow'],
+  ['fx:O:wind-swirl', 'O', 'ONE calm set of three soft painted breeze swirls high in the sky, drawing on and drifting slowly, at most one set on screen'],
   ['fx:O:glint-bell', 'O', 'painted four-point sparkle twinkling on the bell (sun side)'],
   ['fx:O:glint-rim', 'O', 'sparkle with a halo ring on the rear rim, held on the sun side while the wheel turns under it'],
   ['fx:O:speed-lines', 'O', 'sparse cream dry-brush speed strokes, only in a real sprint (> 86 rpm, toggle "speedlines")'],
@@ -310,9 +310,13 @@ export function build(ctx) {
   // A soft painted curl: a cream brush line that draws on slowly, holds, and wipes off, plus a fainter echo line.
   const SW = ['M0 0C-40 -8 -96 6 -140 -4C-176 -12 -186 -52 -156 -58C-130 -62 -122 -34 -144 -32C-152 -31 -156 -38 -152 -42',
     'M-20 16C-54 12 -90 20 -122 14'];
-  L.back += h('g', { 'data-ref': 'fx-curl0', visibility: 'hidden', ...DD('fx:O:wind-swirl') },
-    SW.map((d, k) => h('path', { 'data-ref': `fx-curl0p${k}`, d, pathLength: 1, 'stroke-dasharray': '1 1', 'stroke-dashoffset': 1, fill: 'none', stroke: PAPER, 'stroke-width': k ? 2.6 : 4.2, opacity: k ? 0.55 : 0.85, 'stroke-linecap': 'round' })),
-    h('path', { d: SW[0], pathLength: 1, 'data-ref': 'fx-curl0p2', 'stroke-dasharray': '1 1', 'stroke-dashoffset': 1, fill: 'none', stroke: v('skyWashWarm'), 'stroke-width': 1.4, transform: 'translate(1.5 3)', opacity: 0.6, 'stroke-linecap': 'round' }));
+  // ONE set of 3 curls (big, medium, small), drifting together; a warm-brown under-line makes them read on pale sky.
+  const SWS = [[0, 0, 1], [175, 34, 0.7], [330, -6, 0.55]];
+  const curl = (i, sc) => h('g', { 'data-ref': 'fx-curl' + i, transform: `translate(${SWS[i][0]} ${SWS[i][1]}) scale(${sc})`, ...(i === 0 ? DD('fx:O:wind-swirl') : {}) },
+    h('path', { 'data-ref': `fx-curl${i}u`, d: SW[0], pathLength: 1, 'stroke-dasharray': '1 1', 'stroke-dashoffset': 1, fill: 'none', stroke: LINE, 'stroke-width': 6, opacity: 0.22, 'stroke-linecap': 'round', transform: 'translate(0.8 1.6)' }),
+    SW.map((d, k) => h('path', { 'data-ref': `fx-curl${i}p${k}`, d, pathLength: 1, 'stroke-dasharray': '1 1', 'stroke-dashoffset': 1, fill: 'none', stroke: PAPER, 'stroke-width': k ? 2.6 : 4.2, opacity: k ? 0.6 : 0.9, 'stroke-linecap': 'round' })),
+    h('path', { d: SW[0], pathLength: 1, 'data-ref': `fx-curl${i}p2`, 'stroke-dasharray': '1 1', 'stroke-dashoffset': 1, fill: 'none', stroke: v('skyWashWarm'), 'stroke-width': 1.4, transform: 'translate(1.5 3)', opacity: 0.6, 'stroke-linecap': 'round' }));
+  L.back += h('g', { 'data-ref': 'fx-curlG', visibility: 'hidden' }, SWS.map((q, i) => curl(i, q[2])));
   // ============================================== sparse speed strokes (sprint only)
   const SLD = [brush([0, 0], [-100, 0.5], 4.6, 0.6) + brush([-16, 5.4], [-60, 5.8], 1.6, 0.3), brush([0, 0], [-86, -0.4], 3.8, -0.5) + brush([-30, -4.6], [-74, -5], 1.4, -0.2)];
   L.front += h('g', { 'data-ref': 'fx-slG', visibility: 'hidden', ...DD('fx:O:speed-lines') }, SPEEDLINES.map((_, i) => h('path', {
@@ -367,7 +371,7 @@ export function build(ctx) {
     h('path', { transform: 'translate(38 -30)', d: sparkle(4.6, 1.1), fill: M('fxStar'), stroke: LINE, 'stroke-width': 0.6 }));
   L.front += h('g', { 'data-ref': 'fx-impG', visibility: 'hidden', ...DD('fx:O:land-bump-marks') }, impact('fx-impR'), impact('fx-impF'));
 
-  // ============================================== feathers, seeds (L-fx-front)
+  // ============================================== feathers (L-fx-front), seeds (L-fx-back, behind the rider)
   const vane = 'M0 0C3 -4 10 -7 18 -6.4C23 -6 26 -3.6 27 -1C24 1.6 19 3.2 12 3.2L10.6 1.2L9 3.2C5 3 2 2 0 0Z';
   const contourFeather = (tag) => h('g', tag ? DD('fx:O:feather-contour') : {},
     h('path', { d: vane, fill: PAPER }),
@@ -378,16 +382,19 @@ export function build(ctx) {
   const downD = [[0, 0, -8, -9], [0, 0, 0, -12], [0, 0, 8, -9], [0, 0, 11, -2], [0, 0, -11, -2], [0, 0, -5, -11], [0, 0, 5, -11]]
     .map(([x0, y0, x1, y1]) => `M${x0} ${y0}Q${f(x1 * 0.3 + y1 * 0.25)} ${f(y1 * 0.55 - x1 * 0.2)} ${x1} ${y1}`).join('');
   const downFeather = h('g', { ...DD('fx:O:feather-down') },
-    h('path', { d: downD + 'M0 0L0.6 5', fill: 'none', stroke: SOFT, 'stroke-width': 3, 'stroke-linecap': 'round' }),
+    h('path', { d: downD + 'M0 0L0.6 5', fill: 'none', stroke: LINE, 'stroke-width': 3.6, 'stroke-linecap': 'round', opacity: 0.6 }),
+    h('path', { d: downD + 'M0 0L0.6 5', fill: 'none', stroke: SOFT, 'stroke-width': 2.6, 'stroke-linecap': 'round' }),
     h('path', { d: downD + 'M0 0L0.6 5', fill: 'none', stroke: PAPER, 'stroke-width': 1.8, 'stroke-linecap': 'round' }));
   L.front += h('g', {}, [contourFeather(true), downFeather, contourFeather(false)].map((fe, i) => h('g', { 'data-ref': 'fx-fea' + i, visibility: 'hidden' }, fe)));
   const seedRays = Array.from({ length: 9 }, (_, i) => { const a = (-165 + i * (150 / 8)) * D2R; return [Math.cos(a) * 6, Math.sin(a) * 6]; });
   const seed = h('g', {},
+    h('path', { d: seedRays.map(([x, y]) => `M0 0L${f(x)} ${f(y)}`).join('') + 'M0 0L0.4 9', fill: 'none', stroke: LINE, 'stroke-width': 1.7, 'stroke-linecap': 'round', opacity: 0.55 }),
+    h('path', { d: seedRays.map(([x, y]) => circ(x, y, 1.25)).join(''), fill: LINE, opacity: 0.5 }),
     h('path', { d: seedRays.map(([x, y]) => `M0 0L${f(x)} ${f(y)}`).join('') + 'M0 0L0.4 9', fill: 'none', stroke: PAPER, 'stroke-width': 0.8, 'stroke-linecap': 'round' }),
     h('path', { d: seedRays.map(([x, y]) => circ(x, y, 0.8)).join(''), fill: PAPER }),
     h('path', { d: seedRays.map(([x, y]) => `M0 0L${f(x)} ${f(y)}`).join(''), fill: 'none', stroke: SOFT, 'stroke-width': 0.3, opacity: 0.6 }),
     h('ellipse', { cx: 0.45, cy: 10.4, rx: 0.95, ry: 2, fill: M('trunk') }));
-  L.front += h('g', { 'data-ref': 'fx-seedG' }, [0, 1, 2, 3].map(i => h('g', { 'data-ref': 'fx-seed' + i, ...DD('fx:O:seed-dandelion') }, seed)));
+  L.back += h('g', { 'data-ref': 'fx-seedG' }, [0, 1, 2, 3].map(i => h('g', { 'data-ref': 'fx-seed' + i, ...DD('fx:O:seed-dandelion') }, seed)));
 
   // ============================================== butterflies, dragonfly, leaf, fly, ladybird (L-fx-front)
   const FW = 'M0.5 -1C2 -6 5 -13 7.5 -17C4 -18.8 -2 -17.8 -5 -14C-4.5 -9 -2.5 -4 0.5 -1Z';
@@ -742,18 +749,22 @@ export function attach(svg, ctx) {
       // Only when really pedalling hard (> 75 rpm), about one in three 14-second windows, high in the sky; it draws on
       // slowly, holds, drifts a little and wipes off. Never while the weather's wind band is showing.
       {
-        const curlOn = !reduced && cad > 75 && !((fr.weather && fr.weather.wind) > 0.3);
-        const P = 14, k = Math.floor(t / P), age = t - k * P, el = r.curl0, LIFE = 6;
-        const act = curlOn && age < LIFE && hash(k, 30) < 0.4;
+        const curlOn = !reduced && !((fr.weather && fr.weather.wind) > 0.3);
+        const P = 19, k = Math.floor(t / P), age = t - k * P, el = r.curlG, LIFE = 12;
+        const act = curlOn && age < LIFE && (k === 0 || hash(k, 30) < 0.65);
         vis(el, act);
         if (act) {
           const u = age / LIFE, hk = hash(k, 40);
-          const x = RIDER_X + 120 + 260 * hk - 16 * age, y = 190 + 70 * hash(k, 41);
-          set(el, 'transform', `translate(${f1(x)} ${f1(y)}) scale(${f(0.85 + 0.2 * hk)})`);
-          const draw = sstep(0, 0.35, u), wipe = sstep(0.7, 1, u);
-          set(r.curl0p0, 'stroke-dashoffset', f(1 - draw - wipe));
-          set(r.curl0p2, 'stroke-dashoffset', f(1 - draw - wipe));
-          set(r.curl0p1, 'stroke-dashoffset', f(1 - sstep(0.1, 0.45, u) - sstep(0.62, 0.95, u)));
+          const x = RIDER_X + 400 + 120 * hk - 9 * age, y = 262 + 22 * hash(k, 41) + 4 * Math.sin(age * 0.5);   // under the caption card, clear of the head
+          set(el, 'transform', `translate(${f1(x)} ${f1(y)}) scale(${f(0.9 + 0.2 * hk)})`);
+          for (let i = 0; i < 3; i++) {
+            const d0 = 0.08 * i, draw = sstep(d0, d0 + 0.3, u), wipe = sstep(0.72 + 0.06 * i - 0.12, 0.98 - 0.06 * (2 - i), u);
+            const o = f(1 - draw - wipe);
+            set(r['curl' + i + 'p0'], 'stroke-dashoffset', o);
+            set(r['curl' + i + 'u'], 'stroke-dashoffset', o);
+            set(r['curl' + i + 'p2'], 'stroke-dashoffset', o);
+            set(r['curl' + i + 'p1'], 'stroke-dashoffset', f(1 - sstep(d0 + 0.1, d0 + 0.42, u) - sstep(0.6, 0.94, u)));
+          }
         }
       }
       const slW = (tg.speedlines !== false && !reduced) ? sstep(86, 98, cad) : 0;   // only a real sprint
@@ -784,7 +795,7 @@ export function attach(svg, ctx) {
         vis(el, true);
         const u = age / LIFE_F, hk = hash(k, 80 + i);
         const vx = 70 + 0.05 * sp + 40 * hk;
-        const x = RIDER_X - 40 - vx * age - 14 * Math.sin(age * 2.2 + hk * 5);
+        const x = RIDER_X - 215 - vx * age - 14 * Math.sin(age * 2.2 + hk * 5);   // lets go behind the tail, never over the plumage
         const y = GROUND_Y - 350 + (i === 1 ? -30 : 20) - 30 * Math.sin(Math.min(1, age * 0.9) * Math.PI / 2) + 60 * age * age / LIFE_F + 10 * Math.sin(age * 3.1 + hk * 4);
         const rot = (i === 1 ? 0 : -15) + 35 * Math.sin(age * 2.2 + hk * 5);
         set(el, 'transform', `translate(${f1(x)} ${f1(y)}) rotate(${f1(rot)}) scale(${i === 1 ? 1.6 : 1.25})`);
@@ -793,7 +804,7 @@ export function attach(svg, ctx) {
       for (let i = 0; i < 4; i++) {
         const el = r['seed' + i], hk = hash(i, 90);
         const x = wrap(1700 - (60 + 0.035 * sp + 30 * hk) * t - i * 520, 2000) - 200;
-        const y = 250 + 90 * i + 40 * Math.sin(0.5 * t + i * 2) + 12 * Math.sin(1.7 * t + i);
+        const y = 190 + 62 * i + 26 * Math.sin(0.5 * t + i * 2) + 8 * Math.sin(1.7 * t + i);   // upper air, behind the rider
         set(el, 'transform', `translate(${f1(x)} ${f1(y)}) rotate(${f1(-20 + 18 * Math.sin(1.1 * t + i))}) scale(${f(1.35 + 0.3 * hk)})`);
         set(el, 'opacity', f(clamp(day * 1.2 - 0.2, 0, 1)));
       }
@@ -864,10 +875,10 @@ export function attach(svg, ctx) {
         const on = day > 0.3 && tg.critters !== false;
         vis(r.beeG, on);
         if (on) {
-          const bp = tt => [330 + 70 * Math.sin(0.43 * tt) + 26 * Math.sin(1.3 * tt + 1), 600 + 34 * Math.sin(0.71 * tt + 2) + 12 * Math.sin(2.3 * tt)];
+          const bp = tt => [320 + 70 * Math.sin(0.43 * tt) + 26 * Math.sin(1.3 * tt + 1), 712 + 16 * Math.sin(0.71 * tt + 2) + 7 * Math.sin(2.3 * tt)];   // over the kerb verge flowers, not the sea
           const p = bp(t), q = bp(t + 0.05), dir = q[0] >= p[0] ? 1 : -1;
           const bob = reduced ? 0 : 2.2 * Math.sin(t * 9);
-          set(r.bee, 'transform', `translate(${f1(p[0])} ${f1(p[1] + bob)}) scale(${dir * 1.7} 1.7) rotate(${f1(clamp((q[1] - p[1]) * 6, -18, 18) * dir)})`);
+          set(r.bee, 'transform', `translate(${f1(p[0])} ${f1(p[1] + bob)}) scale(${dir * 1.15} 1.15) rotate(${f1(clamp((q[1] - p[1]) * 6, -18, 18) * dir)})`);
           set(r.beeW, 'transform', `scale(1 ${f(reduced ? 0.8 : 0.35 + 0.65 * Math.abs(Math.sin(t * 57)))})`);
           let d = '';
           for (let i = 1; i <= 7; i++) { const s = bp(t - i * 0.09); d += `${i === 1 ? 'M' : 'L'}${f1(s[0])} ${f1(s[1] + 4)}`; }

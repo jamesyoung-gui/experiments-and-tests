@@ -2,7 +2,8 @@
 // then exercises the live detectors (Konami keys, typed words, clicks on the sun / moon / bottle / page corner, bell spam,
 // gulp at night, 30 s of coasting at night).
 // usage: node tools/check-eggs.mjs [--out shots/eggs] [--sheet]      exits 1 on any console error or failed check
-import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+// Playwright: $PB_PLAYWRIGHT (a path or package name) overrides this box's global install
+const { chromium } = await import(process.env.PB_PLAYWRIGHT || '/opt/node22/lib/node_modules/playwright/index.mjs');
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

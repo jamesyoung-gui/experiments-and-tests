@@ -3,7 +3,8 @@
 // Rules (rubric.json definitions.detailItem): repeated instances count once; an item counts if it covers ≥2 px²
 // at 1600×900 in the wide or close view and is visibly un-occluded (sampled hit-test, ≥1 own hit and ≥50% of hits on
 // its own geometry among samples that land on it or on something drawn above it).
-import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+// Playwright: $PB_PLAYWRIGHT (a path or package name) overrides this box's global install
+const { chromium } = await import(process.env.PB_PLAYWRIGHT || '/opt/node22/lib/node_modules/playwright/index.mjs');
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -25,16 +26,20 @@ page.on('pageerror', e => errors.push(e.message));
 await page.goto(url + '?freeze&nohud');
 await page.waitForFunction(() => window.__pb && window.__pb.ready, null, { timeout: 20000 });
 // #scene is a stack of full-size <svg> sheets (src/core/sheets.js): their own boxes must not catch the hit tests
-await page.addStyleTag({ content: '#scene, #scene * { pointer-events: all !important } #scene > svg { pointer-events: none !important } #ui { display: none !important }' });
+await page.addStyleTag({ content: '#scene, #scene * { pointer-events: all !important } #scene > svg { pointer-events: none !important } #ui { display: none !important } #scene [data-pb-veil], #scene [data-pb-veil] * { pointer-events: none !important }' });
 
 const views = [['wide', { t: 3.2, tod: 0.7, cam: 'wide' }], ['close', { t: 3.2, tod: 0.7, cam: 'close' }]];
+// calm page (src/main.js): the sky toys and the small critters appear one at a time as timed beats. Each beat is also
+// inspected at its showcase time, counting ONLY the items inside that mover (nothing else from that moment of the route).
+const beats = await page.evaluate(() => (window.__pb.calm ? window.__pb.calm.showcase() : []));
+for (const b of beats) for (const cam of ['wide', 'close']) views.push([`beat:${b.ref}:${cam}`, { t: b.t, tod: 0.7, cam, only: b.ref }]);
 const found = new Map(); // key -> {views:[], area}
 for (const [name, o] of views) {
   await page.evaluate(o => window.__pb.renderAt(o.t, o), o);
   await page.waitForTimeout(50);
-  const res = await page.evaluate(() => {
+  const res = await page.evaluate(only => {
     const out = [];
-    const els = [...document.querySelectorAll('#scene [data-detail]')];
+    const els = only ? [...document.querySelectorAll(`#scene [data-ref="${only}"] [data-detail], #scene [data-ref="${only}"][data-detail]`)] : [...document.querySelectorAll('#scene [data-detail]')];
     for (const el of els) {
       const key = el.getAttribute('data-detail');
       const r = el.getBoundingClientRect();
@@ -55,7 +60,7 @@ for (const [name, o] of views) {
       out.push({ key, own, other, area, hidden: style.visibility === 'hidden' || style.display === 'none' });
     }
     return out;
-  });
+  }, o.only || null);
   for (const r of res) {
     const ok = !r.hidden && r.own >= 1 && r.area >= 2 && r.own / Math.max(1, r.own + r.other) >= 0.5;
     const cur = found.get(r.key) || { views: [], ok: false };
@@ -67,7 +72,10 @@ await browser.close(); srv?.close();
 
 const counts = Object.fromEntries(LAYERS.map(l => [l, { O: 0, T: 0, total: 0, rejected: [] }]));
 const bad = [];
+// weather veils (fog banks, the fog beam) are atmosphere, not drawn detail: listed, never counted
+const NOT_DETAIL = /:wx-fog/;
 for (const [key, v] of found) {
+  if (NOT_DETAIL.test(key)) continue;
   const [layer, kind] = key.split(':');
   if (!counts[layer] || !['O', 'T'].includes(kind) || key.split(':').length < 3) { bad.push(key); continue; }
   if (v.ok) { counts[layer][kind]++; counts[layer].total++; } else counts[layer].rejected.push(key);

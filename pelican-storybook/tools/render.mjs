@@ -1,6 +1,7 @@
 // Render an .svg or .html file to PNG with headless Chromium.
 // usage: node tools/render.mjs <input> <out.png> [width=1600] [height=900] [waitMs=300]
-import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+// Playwright: $PB_PLAYWRIGHT (a path or package name) overrides this box's global install
+const { chromium } = await import(process.env.PB_PLAYWRIGHT || '/opt/node22/lib/node_modules/playwright/index.mjs');
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';

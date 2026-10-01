@@ -272,7 +272,7 @@ export function build(ctx) {
   // generated once by the brush filter, fixed colours at a few percent
   sky += h('g', { ...DD('sky:T:flat-brush-drag'), class: 'gw-tex', 'pointer-events': 'none' },
     h('rect', { x: X0, y: -420, width: X1 - X0, height: 896, fill: '#FFF3DE', style: 'opacity:calc(0.2 - 0.15 * var(--pb-n-night))', filter: 'url(#sky-gw-brush)' }),
-    h('rect', { x: X0, y: -420, width: X1 - X0, height: 896, fill: '#3E2E58', opacity: 0.06, filter: 'url(#sky-gw-brush)', transform: 'translate(0 900) scale(1 -1)' }));
+    h('rect', { x: X0, y: 396, width: X1 - X0, height: 80, fill: '#3E2E58', opacity: 0.06, filter: 'url(#sky-gw-brush)', transform: 'translate(0 900) scale(1 -1)' }));   // flipped: y 424..504, only the band above the sea horizon shows (was 424..1320 under opaque sea/land: a full-height composited sheet)
   sky += h('rect', { ...DD('sky:O:horizon-glow'), x: X0, y: 400, width: X1 - X0, height: 76, fill: 'url(#sky-hzGlow)' });
   {
     const R = rng('hzline'); const pts = [];

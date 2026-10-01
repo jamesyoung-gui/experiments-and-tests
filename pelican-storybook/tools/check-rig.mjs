@@ -60,7 +60,7 @@ for (const cadence of [20, 40, 60, 90, 110]) {
   }
   if (b.kneeMax > 155) fail(`BDC knee ${b.kneeMax.toFixed(1)}° > 155 @${cadence}`);
   if (b.kneeMin < 68) fail(`TDC knee ${b.kneeMin.toFixed(1)}° < 68 @${cadence}`);
-  if (Math.abs(b.kops) > 12) fail(`KOPS ${b.kops.toFixed(1)} u @${cadence}`);
+  if (Math.abs(b.kops) > 10) fail(`KOPS ${b.kops.toFixed(1)} u @${cadence}`);
   if (b.hipX < -75 || b.hipX > -49) fail(`hip x ${b.hipX.toFixed(1)} not in the saddle's middle third @${cadence}`);
   if (b.pelvisMax - b.pelvisMin > 3.2) fail(`pelvis travel ${(b.pelvisMax - b.pelvisMin).toFixed(2)} u > 3 @${cadence}`);
   if (b.rotMax - b.rotMin > 4.2) fail(`pelvis roll range ${(b.rotMax - b.rotMin).toFixed(2)}° @${cadence}`);
@@ -222,12 +222,31 @@ eventScan('wave', TIMING.wave.dur);
 eventScan('gulp', TIMING.gulp.dur);
 eventScan('hop', TIMING.hop.dur);
 {
+  // the ev-hop screenshot (tools/shoot.mjs, τ = 0.42 s) must land near the airborne apex (both wheels clearly off)
+  const p = solvePose(6.42, { ...state(6.42, 60, 6.42 * 2 * Math.PI), events: [{ type: 'hop', t0: 6 }] });
+  info.push(`hop: τ 0.42 s lift ${(-p.riderY).toFixed(1)} u (apex τ ${TIMING.hop.apex.toFixed(3)} s)`);
+  if (-p.riderY < 0.8 * TIMING.hop.height) fail(`hop: shot sample τ 0.42 s is not near the apex (lift ${(-p.riderY).toFixed(1)} u)`);
+  if (TIMING.hop.takeoff < 0.133) fail('hop: crouch shorter than 8 frames');
+}
+{
   // wave: far wing keeps steering (bars move ≥1°), body counter-leans, head looks at the camera, hand back on grip
   const t0 = 30, ev = [{ type: 'wave', t0 }];
   let steerMin = 1e9, steerMax = -1e9, lookCam = 0;
   for (let i = 0; i < 200; i++) { const t = t0 + 0.4 + i * 0.005; const p = solvePose(t, { ...state(t, 60, t * 2 * Math.PI), events: ev }); steerMin = Math.min(steerMin, p.steer); steerMax = Math.max(steerMax, p.steer); if (p.gaze.target === 'camera') lookCam++; }
   if (steerMax - steerMin < 1) fail(`wave: bars steer only ${(steerMax - steerMin).toFixed(2)}°`);
   if (lookCam < 100) fail('wave: head does not look at the camera');
+  // not a clump (STYLE-B §3): the waving wing stays below the head line and clear of the neck; wrist leads the tips
+  let headClear = 1e9, wristMin = 1e9;
+  for (let i = 0; i <= 270; i++) {
+    const t = t0 + i * 0.01, p = solvePose(t, { ...state(t, 60, t * 2 * Math.PI), events: ev });
+    const H = p.joints.wingNearHand, hr = H.rot / D, tip = [H.x + 100 * Math.cos(hr), H.y + 100 * Math.sin(hr)];
+    const hy = p.joints.head.y;
+    headClear = Math.min(headClear, tip[1] - hy, H.y - hy);
+    wristMin = Math.min(wristMin, H.y);
+  }
+  info.push(`wave: bars steer ${(steerMax - steerMin).toFixed(2)}°, wing tips stay ≥ ${headClear.toFixed(0)} u below the head joint (wrist highest y ${wristMin.toFixed(0)})`);
+  if (headClear < 25) fail(`wave: near wing rises into the head / bill (${headClear.toFixed(0)} u below head joint)`);
+  if (steerMax - steerMin > 4) fail(`wave: bars over-steer ${(steerMax - steerMin).toFixed(2)}° (want 1–3° corrections)`);
   const e = solvePose(t0 + TIMING.wave.dur - 0.05, { ...state(t0 + 2.05, 60, 0), events: ev });
   const g = steered(e, 'Near'); const h = e.joints.wingNearHand;
   if (Math.hypot(h.x - g[0], h.y - g[1]) > 0.5) fail('wave: near hand not back on the grip');

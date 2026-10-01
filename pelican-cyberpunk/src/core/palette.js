@@ -1,167 +1,195 @@
-// Time-of-day palette. The ONLY place raw colours live.
-// Style C (retro screen-print travel poster, docs/STYLE-C.md §1): every surface is one of SEVEN INKS whose ROLES never
-// change (P paper · K light-warm · O warm · R accent · B cool · T green · N dark). Time of day is an INK SWAP: each
-// keyframe is a complete 7-ink set, plus a role map that says which ink each environment token prints in at that hour
-// (e.g. the sky bands are B/R/O/K at golden hour but B/B/B/P at noon and N/N/B/B at night). Keyframes are resolved to
-// hex and interpolated in linear RGB. Materials map to ink ROLES (plume -> P, bill -> K ...), so they swap with the
-// hour instead of being multiplied by a light grade: the night is a navy/slate/cream night poster, not a darkened day.
+// Time-of-day palette. The ONLY place raw colours live (modules may also keep a local neon table for their own art).
+// Style X ("Neon Pelican", docs/STYLE-X.md §1): time of day is a CITY MOOD, not daylight. Six keyframes on tod:
+//   dawn   0.27  smog sunrise — orange haze bleeding through the towers
+//   noon   0.34–0.62  overcast grey-violet day — the signs dim, the holograms still run
+//   golden 0.70  NEON DUSK — the hero: void zenith, violet smog, a hot magenta/coral horizon
+//   sunset 0.765 acid-rain magenta night
+//   dusk   0.81 (and 0.235 pre-dawn) the late violet night between the two
+//   night  0.865+ deep night — maximum neon, the searchlights sweep
+// Every keyframe is a complete set of environment tokens (hex), interpolated in linear RGB. NEON tokens are EMISSIVE:
+// the same bright hue at every hour (only --pb-n-neon dims them a little at noon). Materials are the style-X base
+// colours, graded by the mood's light and tinted toward the smog for their `-far` variant.
+// Compatibility: the seven-ink interface of edition C (INK_ROLES / INKS / pal.inks / v('inkP')… and role-letter
+// materials) is kept, re-inked as neon roles: P plume-white · K amber · O coral · R magenta · B haze-violet · T cyan · N void.
 import { hexToLin, linToHex, mixLin, smoothstep, clamp, wrap } from './math.js';
 
 export const INK_ROLES = ['P', 'K', 'O', 'R', 'B', 'T', 'N'];
-// ---- the seven-ink sets -------------------------------------------------------------------------------------
+// ---- the seven neon roles per mood (compat + UI) -------------------------------------------------------------
 export const INKS = {
-  //        paper      light-warm  warm       accent     cool       green      dark
-  golden: { P: '#F4E7CD', K: '#F2AE86', O: '#EB8A33', R: '#D4513A', B: '#56679E', T: '#1D8882', N: '#1A1F35' }, // = the draft
-  dawn:   { P: '#F7E6DA', K: '#F3AE9E', O: '#EC9064', R: '#CF5670', B: '#6C5F9F', T: '#2B8784', N: '#26193F' }, // pink-purple + peach
-  noon:   { P: '#FBF5E6', K: '#F4BC90', O: '#F29A2E', R: '#D94B38', B: '#4A8BCB', T: '#138F88', N: '#1A2C63' }, // sky blue + white, ultramarine
-  sunset: { P: '#F6DEC2', K: '#F09C7C', O: '#E4702F', R: '#BE3A3C', B: '#4C4489', T: '#16727A', N: '#1D1535' }, // deeper vermilion + purple
-  dusk:   { P: '#EADDC8', K: '#DF9D8E', O: '#DA7B3B', R: '#A9405C', B: '#3B3D79', T: '#1A6069', N: '#131431' }, // indigo
-  night:  { P: '#EFE5C6', K: '#E7AE7E', O: '#E8912F', R: '#B84A3E', B: '#3A4B7E', T: '#1C6663', N: '#0D1127' }, // navy/slate + cream moon + amber lamps
+  //        plume      amber      coral      magenta    haze       cyan       void
+  golden: { P: '#E9E6F2', K: '#FFB547', O: '#FF6A5C', R: '#FF2E88', B: '#4A3372', T: '#19D2EE', N: '#0B0918' },
+  dawn:   { P: '#F1E8E6', K: '#FFC27A', O: '#FF8A4A', R: '#E8407A', B: '#5A4378', T: '#2FB8C8', N: '#1A1230' },
+  noon:   { P: '#EDEBF3', K: '#E8C08A', O: '#D9866A', R: '#D84A8A', B: '#666280', T: '#3AA6B8', N: '#1E1B30' },
+  sunset: { P: '#EDE2F2', K: '#FFB547', O: '#FF4F7E', R: '#FF2E88', B: '#4A2566', T: '#19E6FF', N: '#0E0719' },
+  dusk:   { P: '#E6E4F2', K: '#FFB547', O: '#E8487A', R: '#F02E88', B: '#2E2352', T: '#19DCF6', N: '#0A0816' },
+  night:  { P: '#E4E2F0', K: '#FFB547', O: '#E0457A', R: '#FF2E88', B: '#231A42', T: '#19E6FF', N: '#07060F' },
 };
 
-// ---- environment tokens -> ink role, per keyframe -------------------------------------------------------------
-// Sky tokens (owned by sky.js): sky0 top band · sky1 mid · sky1b lower-mid · sky2 horizon band · skyZen zenith dots ·
-// skyLine horizon hairline · ray0/rayDot1 halftone dots inside the sunburst wedges · ray1/ray1b/ray2 the wedge tint of
-// each lower band (one ink lighter) · sun*/moon*/star*/cloud* bodies.
-const BASE = {
-  sky0: 'B', sky1: 'R', sky1b: 'O', sky2: 'K', skyZen: 'N', skyLine: 'P',
-  ray0: 'P', ray1: 'O', ray1b: 'K', ray2: 'P',
-  sunCore: 'P', sunGlow: 'O', sunHalo: 'K', sunRing: 'P', sunBar1: 'K', sunBar2: 'O', sunDog: 'P',
-  cloudLit: 'K', cloudShade: 'O', cloudDots: 'O', cloudRim: 'P', cloudBank: 'B', cloudHigh: 'P',
-  moon: 'P', moonShade: 'B', moonHalo1: 'B', moonHalo2: 'B', moonRing: 'P', star: 'P', starLine: 'B', milky: 'B',
-  seaFar: 'B', seaNear: 'N', foam: 'P', hillFar: 'B', hillNear: 'T', sand: 'P', road: 'K', roadLine: 'P',
-  grassFar: 'T', grassNear: 'T', foliage: 'T', trunk: 'N', rim: 'P', grade: 'P',
+// ---- emissive neon (STYLE-X §1): never graded --------------------------------------------------------------------
+export const NEON = {
+  magenta: '#FF2E88', magentaCore: '#FFD3E7', cyan: '#19E6FF', cyanCore: '#D8FBFF', acid: '#C6FF3D', acidCore: '#F1FFD0',
+  amber: '#FFB547', amberCore: '#FFF0D2', red: '#FF3B4E', redCore: '#FFD0D6', violet: '#9B5CFF', violetCore: '#E4D4FF',
+  void: '#07060F', nightA: '#141029', nightB: '#261A45',
+  lamp: '#FFB547', lampGlow: '#FF8A4A', beacon: '#19E6FF', headlamp: '#D8FBFF',
 };
-const ROLEMAP = {
-  golden: {},
+
+// ---- city moods: every environment token as hex ------------------------------------------------------------------
+// Sky tokens (sky.js): sky0 zenith · sky1 upper · sky1b middle · sky2 lower smog · sky3 hot horizon band · skyLine the
+// horizon glow line · skyZen fine strata lines · smog0 smog body · smog1 mid smog · smogLit bellies lit by the city ·
+// smogHi top edges · mega/megaHi/megaFar the arcology and distant megatowers · cityGlow the light dome · search the
+// searchlight tint · haze the violet atmosphere · sun*/moon*/star.
+// World tokens (sea / land / fx): seaFar seaNear foam hillFar hillNear sand road roadLine grassFar grassNear foliage
+// trunk rim grade, plus edition-C sky names kept for compatibility (cloud*, sunRing, sunDog, milky …).
+const MOOD = {
+  golden: {
+    sky0: '#07060F', sky1: '#130D2C', sky1b: '#28194C', sky2: '#633079', sky3: '#C63F72', skyLine: '#FF7A5E', skyZen: '#3A2663',
+    smog0: '#1C1238', smog1: '#3A2360', smogLit: '#FF5E8E', smogHi: '#8C4BAA',
+    mega: '#191132', megaHi: '#3A2A66', megaFar: '#2C1D4E', cityGlow: '#FF4F7E', search: '#BFEFFF', haze: '#5B3F7A',
+    sunCore: '#FFF3D6', sunGlow: '#FF4F7E', sunHalo: '#FFB547', moon: '#F4ECFF', moonShade: '#B3A2D6', moonHalo1: '#8C4BAA', star: '#E9E6F2',
+    seaFar: '#1C1434', seaNear: '#0B0918', foam: '#E9E6F2', hillFar: '#2A1C4A', hillNear: '#1C1434',
+    sand: '#3A2A5C', road: '#15112A', roadLine: '#E9E6F2', grassFar: '#1A5A6A', grassNear: '#157A8A', foliage: '#1A6A7A', trunk: '#0B0918', rim: '#FF2E88', grade: '#F0E8FF',
+  },
   dawn: {
-    sky0: 'B', sky1: 'R', sky1b: 'K', sky2: 'P', skyZen: 'N', skyLine: 'P',
-    ray0: 'P', ray1: 'K', ray1b: 'P', ray2: 'P',
-    sunGlow: 'R', sunHalo: 'K', sunBar1: 'R', sunBar2: 'K',
-    cloudLit: 'K', cloudShade: 'R', cloudDots: 'R', cloudRim: 'P', cloudBank: 'B',
+    sky0: '#161128', sky1: '#2E2142', sky1b: '#5A3656', sky2: '#A6545C', sky3: '#E8804E', skyLine: '#FFC27A', skyZen: '#4E3A5E',
+    smog0: '#3A2A48', smog1: '#6A4A62', smogLit: '#FF9A5A', smogHi: '#B07A8A',
+    mega: '#291D3B', megaHi: '#5E4260', megaFar: '#4A3452', cityGlow: '#FF8A4A', search: '#FFE2C0', haze: '#7A5068',
+    sunCore: '#FFF0D2', sunGlow: '#FF8A4A', sunHalo: '#FFB547', moon: '#F4E6E0', moonShade: '#C6A6A8', moonHalo1: '#A06A70', star: '#F1E8E6',
+    seaFar: '#3A2A48', seaNear: '#1A1230', foam: '#F1E8E6', hillFar: '#4A3452', hillNear: '#2A1E3C',
+    sand: '#5A4262', road: '#221A34', roadLine: '#F1E8E6', grassFar: '#2A6A70', grassNear: '#2A8084', foliage: '#2A7078', trunk: '#1A1230', rim: '#FF8A4A', grade: '#FFE8DC',
   },
   noon: {
-    sky0: 'B', sky1: 'B', sky1b: 'B', sky2: 'P', skyZen: 'N', skyLine: 'P',
-    ray0: 'P', rayDot1: 'P', rayDot1b: 'P', rayDot2: 'B', ray1: 'B', ray1b: 'B', ray2: 'P',
-    sunGlow: 'B', sunHalo: 'P', sunRing: 'P', sunBar1: 'B', sunBar2: 'B',
-    cloudLit: 'P', cloudShade: 'P', cloudDots: 'B', cloudRim: 'P', cloudBank: 'P', cloudHigh: 'P',
-    sand: 'P', road: 'K',
+    sky0: '#3C3854', sky1: '#524D6A', sky1b: '#69637E', sky2: '#827B92', sky3: '#9C94A6', skyLine: '#B8AEBA', skyZen: '#5E5874',
+    smog0: '#4A4560', smog1: '#666080', smogLit: '#A290AA', smogHi: '#A8A2B8',
+    mega: '#39354F', megaHi: '#57516F', megaFar: '#5A5470', cityGlow: '#B08AA0', search: '#E0E0F0', haze: '#7A7490',
+    sunCore: '#F4F2FA', sunGlow: '#C8C0D4', sunHalo: '#B0A8BE', moon: '#E4E0EC', moonShade: '#B0A8BE', moonHalo1: '#8A8298', star: '#EDEBF3',
+    seaFar: '#4A4560', seaNear: '#262238', foam: '#EDEBF3', hillFar: '#5A5470', hillNear: '#39354F',
+    sand: '#6A6480', road: '#2A2640', roadLine: '#EDEBF3', grassFar: '#3A7A84', grassNear: '#3A8A92', foliage: '#3A7C86', trunk: '#1E1B30', rim: '#D84A8A', grade: '#E8E6F0',
   },
   sunset: {
-    sky0: 'B', sky1: 'R', sky1b: 'O', sky2: 'O', skyZen: 'N', skyLine: 'K',
-    ray0: 'O', ray1: 'O', ray1b: 'K', ray2: 'K',
-    sunGlow: 'O', sunHalo: 'K', sunBar1: 'R', sunBar2: 'K',
-    cloudLit: 'K', cloudShade: 'R', cloudDots: 'R', cloudRim: 'O', cloudBank: 'B', cloudHigh: 'K',
-    hillFar: 'B', sand: 'K',
+    sky0: '#0A0616', sky1: '#1C0A2E', sky1b: '#3A0F4C', sky2: '#761A66', sky3: '#CC2A7A', skyLine: '#FF3E8E', skyZen: '#3A1250',
+    smog0: '#1E0A2E', smog1: '#44145A', smogLit: '#FF2E88', smogHi: '#A83AA0',
+    mega: '#160A27', megaHi: '#3E1650', megaFar: '#2C0E40', cityGlow: '#FF2E88', search: '#FFB9DE', haze: '#6A2070',
+    sunCore: '#FFE0EE', sunGlow: '#FF2E88', sunHalo: '#FF6A9C', moon: '#FFE6F4', moonShade: '#C090C8', moonHalo1: '#A03A9A', star: '#EDE2F2',
+    seaFar: '#1E0A2E', seaNear: '#0E0719', foam: '#EDE2F2', hillFar: '#2C0E40', hillNear: '#1E0A2E',
+    sand: '#3E1A56', road: '#160A26', roadLine: '#EDE2F2', grassFar: '#145868', grassNear: '#10788C', foliage: '#146A7C', trunk: '#0E0719', rim: '#FF2E88', grade: '#FFE0F0',
   },
   dusk: {
-    sky0: 'N', sky1: 'B', sky1b: 'R', sky2: 'K', skyZen: 'N', skyLine: 'K',
-    ray0: 'B', rayDot1: 'R', ray1: 'B', ray1b: 'R', ray2: 'K',
-    sunGlow: 'R', sunHalo: 'K', sunBar1: 'R', sunBar2: 'K',
-    cloudLit: 'B', cloudShade: 'R', cloudDots: 'R', cloudRim: 'K', cloudBank: 'N', cloudHigh: 'B',
-    moonHalo1: 'B', moonHalo2: 'B', starLine: 'B', milky: 'B',
-    seaFar: 'B', hillFar: 'N', sand: 'B', road: 'B', rim: 'K',
+    sky0: '#07060F', sky1: '#0E0B22', sky1b: '#1C153E', sky2: '#38215E', sky3: '#732C76', skyLine: '#B03A80', skyZen: '#2A1E4A',
+    smog0: '#150F2A', smog1: '#2A1C48', smogLit: '#C83A88', smogHi: '#5E3E8E',
+    mega: '#100B21', megaHi: '#2A1E4A', megaFar: '#1E1636', cityGlow: '#C0307A', search: '#C8F4FF', haze: '#3E2A62',
+    sunCore: '#FFE8F0', sunGlow: '#C0307A', sunHalo: '#8C3A8A', moon: '#EEEAFF', moonShade: '#A89CD0', moonHalo1: '#5E3E8E', star: '#E6E4F2',
+    seaFar: '#150F2A', seaNear: '#0A0816', foam: '#E6E4F2', hillFar: '#1E1636', hillNear: '#150F2A',
+    sand: '#2A1E4A', road: '#100C20', roadLine: '#E6E4F2', grassFar: '#12505E', grassNear: '#10687A', foliage: '#125C6C', trunk: '#0A0816', rim: '#19E6FF', grade: '#E0DCF4',
   },
   night: {
-    sky0: 'N', sky1: 'N', sky1b: 'B', sky2: 'B', skyZen: 'N', skyLine: 'B',
-    ray0: 'N', ray1: 'N', ray1b: 'B', ray2: 'B',
-    sunGlow: 'B', sunHalo: 'B', sunBar1: 'B', sunBar2: 'B',
-    cloudLit: 'B', cloudShade: 'N', cloudDots: 'N', cloudRim: 'P', cloudBank: 'N', cloudHigh: 'B',
-    moonHalo1: 'B', moonHalo2: 'B', starLine: 'B', milky: 'B',
-    seaFar: 'B', hillFar: 'N', sand: 'B', road: 'B', rim: 'P',
+    sky0: '#05040C', sky1: '#0A0819', sky1b: '#141029', sky2: '#251A44', sky3: '#472A64', skyLine: '#7A3A8A', skyZen: '#1E1638',
+    smog0: '#100C22', smog1: '#1E1638', smogLit: '#9A3A8E', smogHi: '#3E2E6A',
+    mega: '#0C0A1C', megaHi: '#221A42', megaFar: '#17122E', cityGlow: '#8A2E7A', search: '#D8FBFF', haze: '#2E2250',
+    sunCore: '#FFE8F0', sunGlow: '#8A2E7A', sunHalo: '#5E2E6A', moon: '#F0EEFF', moonShade: '#9C94C4', moonHalo1: '#3E2E6A', star: '#E4E2F0',
+    seaFar: '#100C22', seaNear: '#07060F', foam: '#E4E2F0', hillFar: '#17122E', hillNear: '#100C22',
+    sand: '#221A42', road: '#0C0A1A', roadLine: '#E4E2F0', grassFar: '#0E4654', grassNear: '#0E6070', foliage: '#0E5262', trunk: '#07060F', rim: '#19E6FF', grade: '#D8D8F0',
   },
 };
+// numeric mood values (interpolated like the colours)
+//   night: how night-like the mood is (lamps, windows) · starAlpha: stars through the smog · lampOn: street practicals
+//   rimAlpha: neon rim-light strength · shadowAlpha: contact shadow · neon: sign brightness (emissive, dimmer at noon)
+//   search: searchlight strength · smog: smog density
+const NUM = {
+  golden: { night: 0.72, starAlpha: 0.32, lampOn: 1, rimAlpha: 1, shadowAlpha: 0.3, neon: 1, search: 0.75, smog: 0.62 },
+  dawn:   { night: 0.35, starAlpha: 0, lampOn: 0.6, rimAlpha: 0.7, shadowAlpha: 0.35, neon: 0.8, search: 0.3, smog: 0.85 },
+  noon:   { night: 0.08, starAlpha: 0, lampOn: 0.3, rimAlpha: 0.45, shadowAlpha: 0.26, neon: 0.55, search: 0, smog: 1 },
+  sunset: { night: 0.9, starAlpha: 0.12, lampOn: 1, rimAlpha: 1, shadowAlpha: 0.25, neon: 1, search: 0.9, smog: 0.75 },
+  dusk:   { night: 0.96, starAlpha: 0.6, lampOn: 1, rimAlpha: 0.9, shadowAlpha: 0.2, neon: 1, search: 1, smog: 0.5 },
+  night:  { night: 1, starAlpha: 1, lampOn: 1, rimAlpha: 0.9, shadowAlpha: 0.2, neon: 1, search: 1, smog: 0.4 },
+};
+// edition-C token names still read by some modules: aliased to their closest cyberpunk role
+const ALIAS = {
+  sky: t => ({
+    cloudLit: t.smogHi, cloudShade: t.smog1, cloudDots: t.smog1, cloudRim: t.smogLit, cloudBank: t.smog0, cloudHigh: t.smogHi,
+    ray0: t.sky1, ray1: t.sky2, ray1b: t.sky3, ray2: t.skyLine, rayDot1: t.sky2, rayDot1b: t.sky3, rayDot2: t.skyLine,
+    sunRing: t.sunHalo, sunDog: t.sunCore, sunBar1: t.smog1, sunBar2: t.smogLit,
+    moonHalo2: t.haze, moonRing: t.moonShade, starLine: t.skyZen, milky: t.skyZen,
+  }),
+};
 const resolveEnv = name => {
-  const ink = INKS[name], map = { ...BASE, ...ROLEMAP[name] }, out = {};
-  // dots inside the lower sunburst wedges default to the wedge ink itself (i.e. no dots) unless a keyframe asks
-  for (const [dotTok, rayTok] of [['rayDot1', 'ray1'], ['rayDot1b', 'ray1b'], ['rayDot2', 'ray2']]) map[dotTok] ??= map[rayTok];
-  for (const [k, role] of Object.entries(map)) out[k] = ink[role];
-  for (const r of INK_ROLES) out['ink' + r] = ink[r];       // raw inks: v('inkP') … v('inkN')
-  return out;
+  const t = { ...MOOD[name] };
+  Object.assign(t, ALIAS.sky(t));
+  const ink = INKS[name];
+  for (const r of INK_ROLES) t['ink' + r] = ink[r];     // raw roles: v('inkP') … v('inkN')
+  return t;
 };
-const SET = Object.fromEntries(Object.keys(INKS).map(n => [n, resolveEnv(n)]));
+const SET = Object.fromEntries(Object.keys(MOOD).map(n => [n, resolveEnv(n)]));
 
-// [tod, tokens]; wraps around 1.0. 0.27 dawn · 0.34–0.62 noon · 0.70 golden · 0.765 sunset · 0.81 dusk · 0.86+ night.
-export const ENV_KEYS = [
-  [0.00, SET.night], [0.19, SET.night], [0.235, SET.dusk], [0.27, SET.dawn], [0.34, SET.noon], [0.62, SET.noon],
-  [0.70, SET.golden], [0.765, SET.sunset], [0.81, SET.dusk], [0.865, SET.night], [1.00, SET.night],
-];
+// [tod, name]; wraps around 1.0. 0.235 pre-dawn · 0.27 dawn · 0.34–0.62 noon · 0.70 neon dusk · 0.765 acid night · 0.81 late · 0.865+ deep night
+const KEYS = [[0.00, 'night'], [0.19, 'night'], [0.235, 'dusk'], [0.27, 'dawn'], [0.34, 'noon'], [0.62, 'noon'],
+  [0.70, 'golden'], [0.765, 'sunset'], [0.81, 'dusk'], [0.865, 'night'], [1.00, 'night']];
+export const ENV_KEYS = KEYS.map(([t, n]) => [t, SET[n]]);
 export const ENV_TOKENS = Object.keys(SET.golden);
+export const MOODS = Object.keys(MOOD);
 
-// ---- materials -> ink roles (STYLE-C §1) ----------------------------------------------------------------------
-// Each material prints in its ink of the hour; its `-far` variant is the flat dark ink (B or N) per STYLE-C §1.
+// ---- materials (STYLE-X base colours; graded by the mood, `-far` sinks into the smog) ------------------------------
 export const MATERIALS = {
-  plume: 'P', plumeShade: 'B', plumeDeep: 'B',
-  flight: 'N', flightSheen: 'B',
-  bill: 'K', billEdge: 'R', billNail: 'R',
-  pouch: 'O', pouchDeep: 'R', skin: 'K', iris: 'R', pupil: 'N',
-  foot: 'O', web: 'O',
-  bikeFrame: 'T', bikeAccent: 'P', saddle: 'N', basket: 'O',
-  tyre: 'N', rim: 'P', steel: 'B', chain: 'N', ink: 'N',
+  plume: '#E9E6F2', plumeShade: '#B8B0D8', plumeDeep: '#8A80B4',
+  flight: '#15121F', flightSheen: '#3E3A5E',
+  bill: '#F4A58E', billEdge: '#D9705A', billNail: '#C4CBE6',
+  pouch: '#F9C74F', pouchDeep: '#F4A340', skin: '#F7C1B5', iris: '#8B1E1E', pupil: '#0A0816',
+  foot: '#F08A3C', web: '#F5A05A',
+  bikeFrame: '#14121C', bikeAccent: '#19E6FF', saddle: '#0E0C15', basket: '#1C1932',
+  tyre: '#0C0A14', rim: '#C4CBE6', steel: '#3A3F5C', chain: '#8A90B0', ink: '#0A0816',
 };
-const FAR = { P: 'B', K: 'B', O: 'B', R: 'N', B: 'N', T: 'N', N: 'N' };
-// Emissive: lamps / lighthouse / headlamp print in the light-warm inks of the hour (not dimmed at night).
-export const EMISSIVE = { lamp: 'K', lampGlow: 'O', beacon: 'P', headlamp: 'P' };
+// Emissive: lamps / beacon / headlamp and every NEON token print at full hue at every hour.
+export const EMISSIVE = { lamp: NEON.lamp, lampGlow: NEON.lampGlow, beacon: NEON.beacon, headlamp: NEON.headlamp };
 
-// Module `materials` exports are style-C inks: an ink role letter ('T'), 'ink:T', or a golden-set hex (mapped to the
-// nearest golden ink so it swaps with the hour like the core materials).
 const lin = {};
 const L = hex => (lin[hex] ||= hexToLin(hex));
-const roleCache = {};
-function roleOf(val) {
-  if (INK_ROLES.includes(val)) return val;
-  if (typeof val === 'string' && val.startsWith('ink:') && INK_ROLES.includes(val[4])) return val[4];
-  if (roleCache[val]) return roleCache[val];
-  const c = L(val); let best = 'N', bd = Infinity;
-  for (const r of INK_ROLES) {
-    const g = L(INKS.golden[r]);
-    const d = (c[0] - g[0]) ** 2 + (c[1] - g[1]) ** 2 + (c[2] - g[2]) ** 2;
-    if (d < bd) { bd = d; best = r; }
-  }
-  return (roleCache[val] = best);
-}
+const mixTok = (a, b, u) => linToHex(mixLin(L(a), L(b), u));
+const mulHex = (a, g) => { const x = L(a), y = L(g); return linToHex([x[0] * y[0], x[1] * y[1], x[2] * y[2]]); };
 
 function keyIndex(tod) {
   let i = 0; while (i < ENV_KEYS.length - 2 && ENV_KEYS[i + 1][0] <= tod) i++;
   const [t0] = ENV_KEYS[i], [t1] = ENV_KEYS[i + 1];
   return [i, smoothstep(0, 1, (tod - t0) / (t1 - t0 || 1))];
 }
-const mixTok = (a, b, u) => linToHex(mixLin(L(a), L(b), u));
 
-// Sun/moon placement (spec §3)
+// Sun/moon placement (spec §3). The cyberpunk moon keeps its own slow arc over the city (it is a composition element,
+// not an anti-sun): it rises at the left at tod 0.55, hangs low left of the arcology at the neon-dusk hero, grazes
+// its shoulder at the acid night, sits right of it at deep night and sets at the right by tod 0.05; hidden by day.
 export function sunPos(tod) {
   const a = 2 * Math.PI * (tod - 0.25);
   return { x: 800 - 700 * Math.cos(a), y: 470 - 380 * Math.sin(a), elev: Math.sin(a) };
 }
+export function moonPos(tod) {
+  const u = wrap(tod - 0.55, 1) / 0.5;
+  if (u > 1) return { x: -300, y: 620, elev: -1 };
+  const s = Math.sin(Math.PI * u);
+  return { x: 150 + 1350 * u, y: 380 - 190 * s, elev: s };
+}
 
-// -> { env:{token:hex}, mat:{name:hex, 'name-far':hex}, num:{night, starAlpha, lampOn, rimAlpha, shadowAlpha}, sun, moon, inks }
+// -> { env:{token:hex}, mat:{name:hex, 'name-far':hex}, num:{…}, sun, moon, inks, mood }
 export function samplePalette(tod, extraMaterials = {}) {
   tod = wrap(tod, 1);
   const [i, u] = keyIndex(tod);
   const A = ENV_KEYS[i][1], B = ENV_KEYS[i + 1][1];
   const env = {};
   for (const k of ENV_TOKENS) env[k] = mixTok(A[k], B[k], u);
+  for (const k in NEON) env[k] = NEON[k];
   const inks = {}; for (const r of INK_ROLES) inks[r] = env['ink' + r];
+  const nA = NUM[KEYS[i][1]], nB = NUM[KEYS[i + 1][1]];
+  const num = {};
+  for (const k in nA) num[k] = nA[k] + (nB[k] - nA[k]) * u;
   const mat = {};
+  const far = env.megaFar;
   for (const [k, val] of Object.entries({ ...MATERIALS, ...extraMaterials })) {
-    const r = roleOf(val);
-    mat[k] = inks[r];
-    mat[k + '-far'] = inks[FAR[r]];
+    let base = val;
+    if (INK_ROLES.includes(val)) base = inks[val];
+    else if (typeof val === 'string' && val.startsWith('ink:') && INK_ROLES.includes(val[4])) base = inks[val[4]];
+    const lit = INK_ROLES.includes(val) || String(val).startsWith('ink:') ? base : mulHex(base, env.grade);
+    mat[k] = lit;
+    mat[k + '-far'] = mixTok(lit, far, 0.55);
   }
-  for (const [k, r] of Object.entries(EMISSIVE)) mat[k] = inks[r];
-  const sun = sunPos(tod), moon = sunPos(tod + 0.5);
-  // night is 0 through sunset (sun just under the sea) and reaches 1 by full night
-  const night = clamp(1 - smoothstep(-0.45, -0.05, sun.elev), 0, 1);
-  return {
-    env, mat, sun, moon, inks,
-    num: {
-      night,
-      starAlpha: smoothstep(0.35, 0.9, night),
-      lampOn: smoothstep(0.2, 0.55, night),
-      rimAlpha: clamp(1 - Math.abs(sun.elev - 0.18) * 2.2, 0.15, 1) * (1 - night * 0.6),
-      shadowAlpha: clamp(0.35 * (1 - night) + 0.12, 0.1, 0.45),
-    },
-  };
+  for (const [k, hex] of Object.entries(EMISSIVE)) mat[k] = hex;
+  const sun = sunPos(tod), moon = moonPos(tod);
+  return { env, mat, sun, moon, inks, num, mood: KEYS[u < 0.5 ? i : i + 1][1] };
 }
 
 // Write palette as CSS custom properties on the scene root (call ≤ 10 Hz). Only changed values are written: a custom

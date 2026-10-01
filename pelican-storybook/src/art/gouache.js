@@ -110,7 +110,9 @@ export function gouacheTile(id, o = {}) {
   const put = (fn) => { for (const dx of [-S, 0, S]) for (const dy of [-S, 0, S]) b += fn(dx, dy); };
   for (let i = 0; i < (o.nBlot ?? 9); i++) {
     const x = R() * S, y = R() * S, r = S * (0.08 + R() * 0.14), dk = R() < 0.45, op = (dk ? kd : kl) * (0.6 + R() * 0.8), sd = (R() * 1e6) | 0;
-    if (x - r < 0 || x + r > S || y - r < 0 || y + r > S) put((dx, dy) => `<path d="${blot(x + dx, y + dy, r, sd, 0.7)}" fill="${dk ? dark : light}" opacity="${f(op)}"/>`);
+    // wrap copies only where they reach into the tile
+    const m = r * 1.35;
+    if (x - r < 0 || x + r > S || y - r < 0 || y + r > S) put((dx, dy) => (x + dx + m > 0 && x + dx - m < S && y + dy + m > 0 && y + dy - m < S) ? `<path d="${blot(x + dx, y + dy, r, sd, 0.7)}" fill="${dk ? dark : light}" opacity="${f(op)}"/>` : '');
     else b += `<path d="${blot(x, y, r, sd, 0.7)}" fill="${dk ? dark : light}" opacity="${f(op)}"/>`;
   }
   const ca = Math.cos(ang * Math.PI / 180), sa = Math.sin(ang * Math.PI / 180);

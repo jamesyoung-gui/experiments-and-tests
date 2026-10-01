@@ -1,4 +1,4 @@
-// OWNER: director. Build-time step: TrueType outlines -> SVG path data for the director's signs and pop words.
+// OWNER: print (generated for director.js). Build-time step: TrueType outlines -> SVG path data for the director's signs and pop words.
 // usage: node src/world/director-glyphs.gen.mjs   (writes src/world/director-glyphs.js; no runtime fonts)
 // Latin: DejaVu Sans Bold (Bitstream Vera licence). CJK: WenQuanYi Zen Hei (GPL + font embedding exception).
 import fs from 'node:fs';
@@ -8,7 +8,11 @@ import { loadFont } from '../../tools/ttf.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const LAT_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?.,'-:&";
-const ZH_CHARS = '下坡冲刺风筝节你好喵嘎哗啦雾灯塔前方有雨慢行啊呀守人烟花';
+// every CJK / kana character that appears in director.js string literals is added automatically, so the director's
+// signs and pop words can be re-worded (cyberpunk: 霓虹 …) without editing this list
+const dirSrc = fs.readFileSync(path.join(here, 'director.js'), 'utf8');
+const lits = (dirSrc.match(/'[^'\n]*'|"[^"\n]*"|`[^`]*`/g) || []).join('');
+const ZH_CHARS = [...new Set('下坡冲刺风筝节你好喵嘎哗啦雾灯塔前方有雨慢行啊呀守人烟花' + [...lits].filter(c => c.codePointAt(0) >= 0x2e80 && c.codePointAt(0) < 0xff00).join(''))].join('');
 function pack(file, chars) {
   const font = loadFont(file), out = {};
   for (const ch of chars) {

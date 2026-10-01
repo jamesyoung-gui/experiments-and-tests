@@ -1,16 +1,18 @@
-// OWNER: ui. The HTML overlay (#ui): a screen-printed railway-ticket control card (style C), a mechanical odometer HUD,
-// an inked-keyboard help dialog, the idle hint and the screen-reader announcer.
+// OWNER: ui. The HTML overlay (#ui), style X "Neon Pelican": the courier's translucent HUD terminal (the control card),
+// rolling neon telemetry counters + a cadence spectrum, a neon-keyboard help dialog, the idle callout, the egg chip and
+// the screen-reader announcer.
 //
 // Single sources of truth (exported so tools / README can import them):
 //   STRINGS  — every user-visible string, zh + en, keys 100 % aligned (bilingual mode shows 中文 first, English second)
 //   KEYMAP   — every shortcut: the key handler, the help keyboard, the legend and aria-keyshortcuts are derived from it
-// Progressive disclosure: the collapsed ticket shows the odometer + 4 entries (play/pause · ring · feed · controls);
+// Progressive disclosure: the collapsed panel shows the telemetry + 4 entries (play/pause · ring · feed · controls);
 // the card opens into Ride / Time / Camera / More sections (tabs on phones, where the card is a bottom sheet).
 // The card docks to whichever corner is free of the rider's live screen box, so it never covers the pelican.
-// Colours: the card is re-inked with the scene — ui.js copies the live 7 inks into --pb-ink* on #ui (≤10 Hz, on change).
+// Colours: neon is emissive, so the HUD keeps FIXED colours at every city mood (styles.js), which keeps the contrast
+// constant. Sound: 'sound' opens the ambience; 'music' is its own switch (off by default even with sound on) and is sent
+// to the audio module as ui:toggle { key:'music' } (state.toggles.music); turning music on also opens the sound.
 import { DIST_PER_REV, CADENCE, CAMERAS, BIKE } from '../contract.js';
-import { samplePalette, INK_ROLES } from '../core/palette.js';
-import { LAT, ZH } from '../world/print-glyphs.js';
+import * as PG from '../world/print-glyphs.js';
 import { injectStyles } from './styles.js';
 import { TIMING } from '../rig/solve.js';
 
@@ -20,14 +22,14 @@ export const detailItems = [];   // no scene detail quota: the UI lives outside 
 // ------------------------------------------------------------------ i18n
 export const STRINGS = {
   zh: {
-    docTitle: '鹈鹕湾 · 骑车的鹈鹕', card: '控制卡', sub: '海滨路 · 单程', serial: '车票号',
+    docTitle: '霓虹鹈鹕 · 鹈鹕湾', card: '控制面板', sub: '外卖终端', serial: '骑手编号',
     play: '播放', pause: '暂停', bell: '响铃', feed: '喂鱼', controls: '控制', hide: '收起',
     ride: '骑行', time: '时光', view: '镜头', more: '更多',
     cadence: '踏频', coast: '滑行', wave: '挥手', hop: '蹦跳',
     stroll: '散步', cruise: '巡航', sprint: '冲刺',
     tod: '时刻', auto: '自动昼夜',
     wide: '远景', close: '特写', cinematic: '电影',
-    sound: '声音', dlSvg: '动画 SVG', dlFrame: '当前帧', keys: '快捷键', lang: '语言',
+    sound: '声音', music: '音乐', dlSvg: '动画 SVG', dlFrame: '当前帧', keys: '快捷键', lang: '语言',
     langBi: '中 / EN', langZh: '中文', langEn: 'EN',
     dist: '里程', speed: '时速', rpm: '踏频', km: '公里', kmh: '公里/时', rpmU: '转/分',
     riding: '骑行中', paused: '已暂停', coasting: '滑行中',
@@ -35,28 +37,28 @@ export const STRINGS = {
     aBell: '叮铃叮铃！', aWave: '鹈鹕挥了挥翅膀', aHop: '蹦！', aNotYet: '还没落地呢，稍等', aFeed: '喂了一条鱼，咕嘟！',
     aPaused: '已暂停', aPlaying: '继续骑行', aCoastOn: '滑行中', aCoastOff: '继续踩踏',
     aCam: '镜头：{x}', aTod: '时刻：{x}', aAutoOn: '自动昼夜已开启', aAutoOff: '自动昼夜已关闭',
-    aSoundOn: '声音已开启', aSoundOff: '声音已关闭', aCadence: '{rpm} 转/分 · {kmh} 公里/时',
-    aBeat: '按你的节拍骑：{rpm} 转/分', aPrinting: '正在印制……', aSaved: '已下载 {x}', aLang: '语言：中文与英文',
+    aSoundOn: '声音已开启', aSoundOff: '声音已关闭', aMusicOn: '合成器音乐已开启', aMusicOff: '音乐已关闭', aCadence: '{rpm} 转/分 · {kmh} 公里/时',
+    aBeat: '按你的节拍骑：{rpm} 转/分', aPrinting: '正在导出……', aSaved: '已下载 {x}', aLang: '语言：中文与英文',
     aLangZh: '语言：中文', aLangEn: '语言：英文', aKeysOff: '单键快捷键已关闭', aKeysOn: '单键快捷键已开启',
     hintFine: '点一下鹈鹕，喂它一条鱼', hintCoarse: '轻触鹈鹕，喂它一条鱼',
     helpTitle: '快捷键', helpTry: '按下任意快捷键，键盘上对应的键会亮起。', helpEnable: '启用单键快捷键',
     helpClose: '关闭', helpTouch: '触屏手势',
-    gTap: '轻触鹈鹕：喂一条鱼', gSheet: '上滑或轻触底部车票：展开控制', gSlide: '拖动滑块：调节踏频与时刻',
+    gTap: '轻触鹈鹕：喂一条鱼', gSheet: '上滑或轻触底部面板：展开控制', gSlide: '拖动滑块：调节踏频与时刻',
     reduced: '已开启减少动态：画面静止，按播放开始骑行', reducedToast: '已切换为减少动态效果',
-    region: '鹈鹕湾控制卡', odo: '里程表',
+    region: '鹈鹕湾控制面板', odo: '骑行遥测', telemetry: '遥测',
     kbBell: '响铃', kbWave: '挥手', kbHop: '蹦跳', kbFeed: '喂鱼', kbCam: '换镜头', kbTod: '换时刻', kbAuto: '自动昼夜',
-    kbSlower: '慢一点', kbFaster: '快一点', kbCoast: '滑行', kbSound: '声音', kbPause: '暂停', kbHelp: '帮助', kbLang: '语言',
-    aEgg: '发现彩蛋：{x}', beatTip: '交替敲 ← → 可以踩出你的节拍', printed: '鹈鹕湾印制', plate: '七色套印',
+    kbSlower: '慢一点', kbFaster: '快一点', kbCoast: '滑行', kbSound: '声音', kbMusic: '音乐', kbPause: '暂停', kbHelp: '帮助', kbLang: '语言',
+    aEgg: '发现彩蛋：{x}', beatTip: '交替敲 ← → 可以踩出你的节拍', printed: '霓虹网在线', plate: '信号满格',
   },
   en: {
-    docTitle: 'Pelican Bay · a pelican on a bicycle', card: 'Control card', sub: 'Coast road', serial: 'Ticket',
+    docTitle: 'Neon Pelican · a pelican on a bicycle', card: 'Control panel', sub: 'Courier HUD', serial: 'Courier',
     play: 'Play', pause: 'Pause', bell: 'Ring', feed: 'Feed fish', controls: 'Controls', hide: 'Hide',
     ride: 'Ride', time: 'Time', view: 'Camera', more: 'More',
     cadence: 'Cadence', coast: 'Coast', wave: 'Wave', hop: 'Hop',
     stroll: 'Stroll', cruise: 'Cruise', sprint: 'Sprint',
     tod: 'Time of day', auto: 'Auto day cycle',
     wide: 'Wide', close: 'Close-up', cinematic: 'Cinematic',
-    sound: 'Sound', dlSvg: 'Animated SVG', dlFrame: 'This frame', keys: 'Shortcuts', lang: 'Language',
+    sound: 'Sound', music: 'Music', dlSvg: 'Animated SVG', dlFrame: 'This frame', keys: 'Shortcuts', lang: 'Language',
     langBi: '中 / EN', langZh: '中文', langEn: 'EN',
     dist: 'Distance', speed: 'Speed', rpm: 'Cadence', km: 'km', kmh: 'km/h', rpmU: 'rpm',
     riding: 'Riding', paused: 'Paused', coasting: 'Coasting',
@@ -64,18 +66,18 @@ export const STRINGS = {
     aBell: 'Ring ring!', aWave: 'The pelican waves a wing', aHop: 'Hop!', aNotYet: 'Not landed yet, one moment', aFeed: 'Fed a fish. Gulp!',
     aPaused: 'Paused', aPlaying: 'Riding on', aCoastOn: 'Coasting', aCoastOff: 'Pedalling again',
     aCam: 'Camera: {x}', aTod: 'Time of day: {x}', aAutoOn: 'Auto day cycle on', aAutoOff: 'Auto day cycle off',
-    aSoundOn: 'Sound on', aSoundOff: 'Sound off', aCadence: '{rpm} rpm · {kmh} km/h',
-    aBeat: 'Pedalling to your beat: {rpm} rpm', aPrinting: 'Printing…', aSaved: 'Downloaded {x}', aLang: 'Language: Chinese and English',
+    aSoundOn: 'Sound on', aSoundOff: 'Sound off', aMusicOn: 'Synthwave music on', aMusicOff: 'Music off', aCadence: '{rpm} rpm · {kmh} km/h',
+    aBeat: 'Pedalling to your beat: {rpm} rpm', aPrinting: 'Exporting…', aSaved: 'Downloaded {x}', aLang: 'Language: Chinese and English',
     aLangZh: 'Language: Chinese', aLangEn: 'Language: English', aKeysOff: 'Single-key shortcuts off', aKeysOn: 'Single-key shortcuts on',
     hintFine: 'Click the pelican to feed it a fish', hintCoarse: 'Tap the pelican to feed it a fish',
     helpTitle: 'Keyboard shortcuts', helpTry: 'Press any shortcut and its key lights up on the keyboard.', helpEnable: 'Single-key shortcuts',
     helpClose: 'Close', helpTouch: 'Touch gestures',
-    gTap: 'Tap the pelican: feed it a fish', gSheet: 'Swipe up or tap the ticket: open the controls', gSlide: 'Drag the sliders: cadence and time of day',
+    gTap: 'Tap the pelican: feed it a fish', gSheet: 'Swipe up or tap the panel: open the controls', gSlide: 'Drag the sliders: cadence and time of day',
     reduced: 'Reduced motion on: the poster holds still, press Play to ride', reducedToast: 'Reduced motion on',
-    region: 'Pelican Bay control card', odo: 'Odometer',
+    region: 'Pelican Bay control panel', odo: 'Ride telemetry', telemetry: 'Telemetry',
     kbBell: 'Ring', kbWave: 'Wave', kbHop: 'Hop', kbFeed: 'Feed', kbCam: 'Camera', kbTod: 'Time', kbAuto: 'Auto day',
-    kbSlower: 'Slower', kbFaster: 'Faster', kbCoast: 'Coast', kbSound: 'Sound', kbPause: 'Pause', kbHelp: 'Help', kbLang: 'Language',
-    aEgg: 'Easter egg found: {x}', beatTip: 'Tap ← → alternately to pedal to your own beat', printed: 'Printed at Pelican Bay', plate: 'Seven inks',
+    kbSlower: 'Slower', kbFaster: 'Faster', kbCoast: 'Coast', kbSound: 'Sound', kbMusic: 'Music', kbPause: 'Pause', kbHelp: 'Help', kbLang: 'Language',
+    aEgg: 'Easter egg found: {x}', beatTip: 'Tap ← → alternately to pedal to your own beat', printed: 'Neon-Net online', plate: 'Signal 5/5',
   },
 };
 
@@ -93,6 +95,7 @@ export const KEYMAP = [
   { act: 'faster', keys: ['ArrowRight'], cap: '→', aria: 'ArrowRight', label: 'kbFaster', once: false },
   { act: 'coast', keys: ['s'], cap: 'S', aria: 'S', label: 'kbCoast', once: true },
   { act: 'sound', keys: ['m'], cap: 'M', aria: 'M', label: 'kbSound', once: true },
+  { act: 'music', keys: ['u'], cap: 'U', aria: 'U', label: 'kbMusic', once: true },
   { act: 'pause', keys: ['p'], cap: 'P', aria: 'P', label: 'kbPause', once: true },
   { act: 'lang', keys: ['l'], cap: 'L', aria: 'L', label: 'kbLang', once: true },
   { act: 'help', keys: ['?'], cap: '?', aria: 'Shift+?', label: 'kbHelp', once: true, always: true },
@@ -101,7 +104,7 @@ const KEY_TO = new Map(KEYMAP.flatMap(k => k.keys.map(key => [key, k])));
 const ariaKeys = act => KEYMAP.find(k => k.act === act)?.aria || '';
 const capOf = act => KEYMAP.find(k => k.act === act)?.cap || '';
 // short keycap labels (the legend keeps the full words): a 3.7rem cap fits ~5 caps letters
-const CAPSHORT = { en: { kbAuto: 'Auto', kbLang: 'Lang', kbCam: 'Cam', kbSlower: 'Slow', kbFaster: 'Fast', kbSound: 'Sound' }, zh: { kbAuto: '自动', kbTod: '时刻', kbCam: '镜头', kbSlower: '慢', kbFaster: '快' } };
+const CAPSHORT = { en: { kbAuto: 'Auto', kbLang: 'Lang', kbCam: 'Cam', kbSlower: 'Slow', kbFaster: 'Fast', kbSound: 'Sound', kbMusic: 'Music' }, zh: { kbAuto: '自动', kbTod: '时刻', kbCam: '镜头', kbSlower: '慢', kbFaster: '快' } };
 const capLab = (lang, k) => CAPSHORT[lang][k] || STRINGS[lang][k];
 
 // ------------------------------------------------------------------ units
@@ -116,6 +119,7 @@ const todName = (tod, L) => {
 const clock = tod => { const m = Math.round(tod * 1440) % 1440; return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
 
 // ------------------------------------------------------------------ glyph lettering (the poster's own outlines)
+const LAT = PG.LAT || {}, ZH = PG.ZH || {}, MONO = PG.MONO && PG.MONO['0'] ? PG.MONO : (PG.LAT || {});
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function glyphRun(text, set, track = 60) {
   let x = 0, d = '';
@@ -127,9 +131,11 @@ function glyphRun(text, set, track = 60) {
   }
   return { d, w: x - track };
 }
-function wordmark(text, set, track, h = 1000, top = -780) {
+function wordmark(text, set, track, h = 1000, top = -780, split = 0) {
   const r = glyphRun(text, set, track);
-  return `<svg viewBox="0 ${top} ${r.w} ${h}" aria-hidden="true" focusable="false" preserveAspectRatio="xMinYMid meet">${r.d}</svg>`;
+  // split: a chromatic cyan echo offset behind the face (the scene title's glitch split, as static geometry)
+  const echo = split ? `<g class="ui-wm-c" transform="translate(${-split} ${split * 0.4})">${r.d}</g>` : '';
+  return `<svg viewBox="${split ? -split : 0} ${top} ${r.w + split} ${h}" aria-hidden="true" focusable="false" preserveAspectRatio="xMinYMid meet">${echo}<g>${r.d}</g></svg>`;
 }
 
 // ------------------------------------------------------------------ icons (24×24, stroke = currentColor)
@@ -150,6 +156,9 @@ const IC = {
   cinematic: '<rect x="2.5" y="5" width="19" height="14" rx="1"/><path d="M2.5 8.5h19M2.5 15.5h19" stroke-width="3"/>',
   soundOn: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/>',
   soundOff: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9.5l5 5M20.5 9.5l-5 5"/>',
+  // music: a synth keyboard under a sawtooth (the darksynth arpeggio); off = the same with the wave cut
+  music: '<rect x="3" y="12.5" width="18" height="8" rx="1"/><path d="M7.5 12.5v4.5M12 12.5v4.5M16.5 12.5v4.5"/><path d="M3 8.5l4-5v5l4-5v5l4-5v5l4-5v5" stroke-width="1.6"/>',
+  musicOff: '<rect x="3" y="12.5" width="18" height="8" rx="1"/><path d="M7.5 12.5v4.5M12 12.5v4.5M16.5 12.5v4.5"/><path d="M3 8.5l4-5v5l4-5" stroke-width="1.6"/><path d="M14 4l6 6M20 4l-6 6" stroke-width="1.6"/>',
   dl: '<path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5M4 17v3.5h16V17"/>',
   frame: '<rect x="3.5" y="4.5" width="17" height="15" rx="1"/><rect x="6.5" y="7.5" width="11" height="9"/><circle cx="14.5" cy="10" r="1.3" fill="currentColor"/>',
   keys: '<rect x="2.5" y="6" width="19" height="12" rx="1.5"/><path d="M6 9.5h1M9.5 9.5h1M13 9.5h1M16.5 9.5h1M6 12.5h1M17 12.5h1M8.5 15h7"/>',
@@ -160,11 +169,19 @@ const IC = {
 };
 const icon = (name, cls = 'ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${IC[name]}</svg>`;
 
-// ticket security band: two interlaced sine ropes (guilloche), R over B
-const GUILLOCHE = (() => {
-  const rope = (ph, amp) => { let d = ''; for (let x = 0; x <= 300; x += 2) d += (x ? 'L' : 'M') + x + ' ' + (4 + amp * Math.sin(x / 300 * Math.PI * 2 * 18 + ph)).toFixed(2); return d; };
-  return `<path d="${rope(0, 2.6)}" stroke="var(--pb-inkB)"/><path d="${rope(Math.PI, 2.6)}" stroke="var(--pb-inkB)"/><path d="${rope(Math.PI / 2, 3.2)}" stroke="var(--pb-inkR)"/>`;
+// header data strip (static): a seeded barcode on the left, a tick ruler across, a magenta progress block on the right
+const DATASTRIP = (() => {
+  let seed = 719, bars = '', x = 0;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  while (x < 96) { const w = 1 + Math.floor(rnd() * 3); if (rnd() > 0.35) bars += `M${x} 0h${w}v7h${-w}z`; x += w + 1; }
+  let ticks = '';
+  for (let t = 104; t <= 236; t += 4) ticks += `M${t} ${t % 20 === 0 ? 0 : 3}v${t % 20 === 0 ? 7 : 4}`;
+  return `<path d="${bars}" fill="#E9E6F2" opacity=".55"/><path d="${ticks}" stroke="#19E6FF" stroke-width="1" opacity=".75"/>` +
+    `<path d="M244 2h56v3h-56z" fill="#3A3F5C"/><path d="M244 2h36v3h-36z" fill="#FF2E88"/><path d="M296 0h4v7h-4z" fill="#C6FF3D"/>`;
 })();
+
+// cadence spectrum: 32 bars of fixed, seeded heights (the lit copy is clipped to cadence / max)
+const EQBARS = (() => { let s = 23, o = ''; for (let i = 0; i < 32; i++) { s = (s * 16807) % 2147483647; const h = 35 + Math.round(((s / 2147483647) * 0.5 + 0.5 * Math.abs(Math.sin(i * 0.55))) * 65); o += `<i style="height:${h}%"></i>`; } return o; })();
 
 // ------------------------------------------------------------------ odometer drum (a reel of path-glyph numerals)
 // Cells top→bottom: 9 0 1 2 3 4 5 6 7 8 9 0 1  (index = digit + 1); a forward wrap rolls on into the spare "0 1".
@@ -172,10 +189,10 @@ const CELL = 1000, DIG = '9012345678901';
 function drumMarkup(red) {
   let cells = '';
   for (let i = 0; i < DIG.length; i++) {
-    const g = LAT[DIG[i]];
+    const g = MONO[DIG[i]] || LAT[DIG[i]];
     cells += `<path transform="translate(${(760 - g[0]) / 2} ${i * CELL + 872})" d="${g[1]}"/>`;
   }
-  return `<span class="ui-drum${red ? ' red' : ''}"><svg viewBox="0 0 760 ${CELL}" aria-hidden="true" focusable="false"><g class="ui-reel">${cells}</g></svg></span>`;
+  return `<span class="ui-drum${red ? ' red' : ''}"><svg viewBox="0 0 760 ${CELL}" preserveAspectRatio="xMidYMin slice" aria-hidden="true" focusable="false"><g class="ui-reel">${cells}</g></svg></span>`;
 }
 function makeDrum(el) {
   const reel = el.querySelector('.ui-reel');
@@ -243,8 +260,8 @@ export function createUI(host, bus, init) {
     return `<button type="button" class="ui-btn" data-act="${act}" ${kb ? `aria-keyshortcuts="${kb}"` : ''} ${extra}>${icon(ico)}<span class="lab">${bi(key)}</span>${kb ? `<span class="kbd" aria-hidden="true">${esc(capOf(act === 'play' ? 'pause' : act))}</span>` : ''}</button>`;
   };
   const rowb = html => html.replace('class="ui-btn"', 'class="ui-btn row"');
-  const seal = wordmark('鹈鹕湾', ZH, 40, 1000, -860);
-  const word = wordmark('PELICAN BAY', LAT, 70, 760, -740);
+  const seal = wordmark('鹈鹕外卖', ZH, 40, 1000, -860);
+  const word = wordmark('PELICAN EXPRESS', LAT, 70, 760, -740, 55);
   const serialNo = '0719';
   const drumsKm = drumMarkup() + drumMarkup() + drumMarkup() + '<span class="ui-dot"></span>' + drumMarkup(true) + drumMarkup(true);
   host.innerHTML = `
@@ -256,22 +273,22 @@ export function createUI(host, bus, init) {
     <header class="ui-head">
       <span class="ui-seal" aria-hidden="true">${seal}</span>
       <span class="ui-wordmark"><h2 id="ui-card-h" class="ui-sr" data-name="region"></h2>${word}<span class="ui-sub">${bi('sub')}</span></span>
-      <span class="ui-serial" aria-hidden="true">№<b>${serialNo}</b></span>
+      <span class="ui-serial" aria-hidden="true">ID<b>#${serialNo}</b></span>
     </header>
-    <svg class="ui-guil" viewBox="0 0 300 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">${GUILLOCHE}</svg>
+    <svg class="ui-guil" viewBox="0 0 300 7" preserveAspectRatio="none" aria-hidden="true" focusable="false">${DATASTRIP}</svg>
     <div class="ui-odo" role="group" aria-labelledby="ui-odo-h">
       <span id="ui-odo-h" class="ui-sr" data-name="odo"></span>
+      <span class="ui-odo-t" aria-hidden="true"><i></i>${bi('telemetry')}</span>
+      <div class="ui-state" aria-hidden="true"><span class="ui-lamp run"></span><span data-state></span></div>
+      <div class="ui-meter"><span class="ui-meter-lab" aria-hidden="true">${bi('speed')}</span><span class="ui-drums big" data-drums="kmh">${drumMarkup() + drumMarkup()}</span><span class="ui-unit" aria-hidden="true">${unit('kmh')}</span><span class="ui-sr" data-live="kmh"></span></div>
+      <div class="ui-meter"><span class="ui-meter-lab" aria-hidden="true">${bi('rpm')}</span><span class="ui-drums" data-drums="rpm">${drumMarkup() + drumMarkup() + drumMarkup()}</span><span class="ui-unit" aria-hidden="true">${unit('rpmU')}</span><span class="ui-sr" data-live="rpm"></span></div>
       <div class="ui-meter">
         <span class="ui-meter-lab" aria-hidden="true">${bi('dist')}</span>
-        <span class="ui-drums big" data-drums="km">${drumsKm}</span>
+        <span class="ui-drums" data-drums="km">${drumsKm}</span>
         <span class="ui-unit" aria-hidden="true">${unit('km')}</span>
         <span class="ui-sr" data-live="km"></span>
       </div>
-      <div class="ui-state" aria-hidden="true"><span class="ui-lamp run"></span><span data-state></span></div>
-      <div class="ui-odo-row2">
-        <div class="ui-meter"><span class="ui-meter-lab" aria-hidden="true">${bi('speed')}</span><span class="ui-drums" data-drums="kmh">${drumMarkup() + drumMarkup()}</span><span class="ui-unit" aria-hidden="true">${unit('kmh')}</span><span class="ui-sr" data-live="kmh"></span></div>
-        <div class="ui-meter"><span class="ui-meter-lab" aria-hidden="true">${bi('rpm')}</span><span class="ui-drums" data-drums="rpm">${drumMarkup() + drumMarkup() + drumMarkup()}</span><span class="ui-unit" aria-hidden="true">${unit('rpmU')}</span><span class="ui-sr" data-live="rpm"></span></div>
-      </div>
+      <div class="ui-eq" aria-hidden="true"><span>${EQBARS}</span><span class="lit">${EQBARS}</span></div>
     </div>
     <div class="ui-quick">
       ${btn('play', 'pause', 'pause')}
@@ -317,22 +334,25 @@ export function createUI(host, bus, init) {
       </section>
       <section class="ui-sec" id="ui-sec-more" data-sec="more" role="tabpanel" aria-labelledby="ui-tab-more">
         <h3 class="ui-sec-h" id="ui-sec-more-h"><i></i>${bi('more')}</h3>
-        <div class="ui-row">
-          ${btn('sound', 'soundOff', 'sound', 'aria-pressed="false"').replace('</button>', '<span class="pip" aria-hidden="true"></span></button>')}
-          ${btn('dlSvg', 'dl', 'dlSvg')}
-          ${btn('dlFrame', 'frame', 'dlFrame')}
+        <div class="ui-row two">
+          ${rowb(btn('sound', 'soundOff', 'sound', 'aria-pressed="false"').replace('</button>', '<span class="pip" aria-hidden="true"></span></button>'))}
+          ${rowb(btn('music', 'musicOff', 'music', 'aria-pressed="false"').replace('</button>', '<span class="pip" aria-hidden="true"></span></button>'))}
         </div>
-        <div class="ui-row two" style="margin-top:5px">
+        <div class="ui-row two">
+          ${rowb(btn('dlSvg', 'dl', 'dlSvg'))}
+          ${rowb(btn('dlFrame', 'frame', 'dlFrame'))}
+        </div>
+        <div class="ui-row two">
           ${rowb(btn('help', 'keys', 'keys', 'aria-haspopup="dialog"'))}
           ${rowb(btn('lang', 'lang', 'lang'))}
         </div>
-        <div class="ui-foot" aria-hidden="true"><span>${bi('printed')}</span><span>${bi('plate')} · № ${serialNo}</span></div>
+        <div class="ui-foot" aria-hidden="true"><span>${bi('printed')}</span><span>${bi('plate')} · #${serialNo}</span></div>
       </section>
     </div>
    </div>
   </div>
 </section>
-<div class="ui-hint" aria-hidden="true"><span data-hint></span><svg viewBox="0 0 34 30"><path d="M6 1c-2 10 2 20 22 25M28 26l-8 1M28 26l-3-7"/></svg></div>
+<div class="ui-hint" aria-hidden="true"><span data-hint></span><svg viewBox="0 0 40 34"><path d="M34 0v10L10 30"/><circle cx="8" cy="31.5" r="2.6"/></svg></div>
 <div class="ui-toast" aria-hidden="true"></div>
 <div class="ui-sr" role="status" aria-live="polite" aria-atomic="true" data-announcer></div>`;
 
@@ -354,7 +374,7 @@ export function createUI(host, bus, init) {
   <div class="ui-kb-row"><span class="ui-cap wide" data-cap=" ">Space<small class="zh" lang="zh-CN">${esc(STRINGS.zh.kbBell)}</small><small class="en" lang="en">${esc(STRINGS.en.kbBell)}</small></span></div>
   <div class="ui-kb-row arrows">${capHTML('ArrowLeft').replace('>ARROWLEFT', '>←')}${capHTML('ArrowUp').replace('>ARROWUP', '>↑')}${capHTML('ArrowRight').replace('>ARROWRIGHT', '>→')}</div>
 </div>
-<ul class="ui-legend">${KEYMAP.map(k => `<li><kbd>${esc(k.cap)}${k.keys.includes('ArrowUp') ? ' / ↑' : ''}</kbd>${bi(k.label)}</li>`).join('')}<li><kbd>← →</kbd><span class="zh" lang="zh-CN">${esc(STRINGS.zh.beatTip)}</span><span class="en" lang="en">${esc(STRINGS.en.beatTip)}</span></li></ul>
+<ul class="ui-legend">${KEYMAP.map(k => `<li><kbd>${esc(k.cap)}${k.keys.includes('ArrowUp') ? ' / ↑' : ''}</kbd>${bi(k.label)}</li>`).join('')}<li class="beat"><kbd>← →</kbd><span class="zh" lang="zh-CN">${esc(STRINGS.zh.beatTip)}</span><span class="en" lang="en">${esc(STRINGS.en.beatTip)}</span></li></ul>
 <ul class="ui-gestures">
   <li>${icon('tap', '')}${bi('gTap')}</li><li>${icon('swipe', '')}${bi('gSheet')}</li><li>${icon('slide', '')}${bi('gSlide')}</li>
 </ul>
@@ -396,15 +416,7 @@ export function createUI(host, bus, init) {
     } };
   };
 
-  // ---------- ink: copy the palette's seven inks onto #ui and the dialog ----------
-  const inkCache = {};
-  function applyInks(inks) {
-    for (const r of INK_ROLES) {
-      const v = inks[r];
-      if (v && inkCache[r] !== v) { inkCache[r] = v; host.style.setProperty('--pb-ink' + r, v); dlg.style.setProperty('--pb-ink' + r, v); }
-    }
-  }
-  applyInks(samplePalette(S.tod).inks);
+  const eqLit = $('.ui-eq .lit');
 
   // ---------- announcer: exactly one polite message per user action ----------
   let annTimer = 0, annFlip = false;
@@ -418,7 +430,7 @@ export function createUI(host, bus, init) {
   function applyLang() {
     host.dataset.lang = lang; dlg.dataset.lang = lang;
     doc.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
-    doc.title = lang === 'en' ? 'Pelican Bay' : lang === 'zh' ? '鹈鹕湾' : '鹈鹕湾 · Pelican Bay';
+    doc.title = lang === 'en' ? 'Neon Pelican · Pelican Bay' : lang === 'zh' ? '霓虹鹈鹕 · 鹈鹕湾' : '霓虹鹈鹕 · 鹈鹕湾 · Neon Pelican';
     for (const el of host.querySelectorAll('[data-name]')) el.textContent = t(el.dataset.name);
     card.setAttribute('aria-label', t('region'));
     card.removeAttribute('aria-labelledby');
@@ -447,6 +459,7 @@ export function createUI(host, bus, init) {
     setIf('stateTxt', `${playing}${S.coasting}${lang}`, () => { stateEl.innerHTML = bi(!playing ? 'paused' : S.coasting ? 'coasting' : 'riding'); });
     setIf('auto', !!S.todAuto, a => B.auto.setAttribute('aria-pressed', a));
     setIf('sound', !!S.toggles.sound, s => { B.sound.setAttribute('aria-pressed', s); B.sound.querySelector('.ico').innerHTML = IC[s ? 'soundOn' : 'soundOff']; });
+    setIf('music', S.toggles.music === true, m => { B.music.setAttribute('aria-pressed', m); B.music.querySelector('.ico').innerHTML = IC[m ? 'music' : 'musicOff']; });
     setIf('cam', S.cam, m => camBtns.forEach(b => { const on = b.dataset.cam === m; b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1; }));
     setIf('hud', S.toggles.hud !== false, on => { host.dataset.hud = on ? 'on' : 'off'; });
     // cadence slider shows the target; its value text speaks the unit in the current language
@@ -474,7 +487,7 @@ export function createUI(host, bus, init) {
   // ---------- HUD (≤10 Hz) ----------
   function hud(frame) {
     const k = km(frame.distance);
-    const dk = odoDigits(Math.min(k, 999.99) * 100, 5);
+    const dk = odoDigits(Math.floor(Math.min(k, 999.99) * 100), 5);   // digital counter: whole digits that roll on change
     dk.forEach((p, i) => drums.km[i].set(p));
     const sp = Math.round(kmh(frame.cadence));
     const rp = Math.round(frame.coasting ? frame.cadence : frame.cadence);
@@ -483,6 +496,8 @@ export function createUI(host, bus, init) {
     [...d3].forEach((c, i) => drums.rpm[i].set(+c));
     setIf('srKm', k.toFixed(2) + lang, () => { srKm.textContent = lang === 'en' ? `${k.toFixed(2)} km` : `${k.toFixed(2)} 公里`; });
     setIf('srKmh', sp + lang, () => { srKmh.textContent = lang === 'en' ? `${nf.en.format(sp)} km/h` : `${nf.zh.format(sp)} 公里/时`; });
+    // spectrum: lit bars = cadence / max, quantised to whole bars (one style write per change)
+    setIf('eq', Math.round(Math.min(1, frame.cadence / CADENCE.max) * 32), n => eqLit.style.setProperty('--eq', `${((32 - n) / 32 * 100).toFixed(2)}%`));
     setIf('srRpm', rp + lang, () => { srRpm.textContent = lang === 'en' ? `${rp} rpm` : `${rp} 转/分`; });
   }
 
@@ -519,6 +534,13 @@ export function createUI(host, bus, init) {
     auto() { const on = !S.todAuto; bus.emit('ui:tod', { auto: on }); announce(on ? 'aAutoOn' : 'aAutoOff'); },
     coast() { const on = !S.coasting; bus.emit('ui:coast', { on }); announce(on ? 'aCoastOn' : 'aCoastOff'); },
     sound() { const on = !S.toggles.sound; bus.emit('ui:sound', { on }); announce(on ? 'aSoundOn' : 'aSoundOff'); },
+    // music is its own switch (off by default, even after sound is enabled); turning it on also opens the sound
+    music() {
+      const on = S.toggles.music !== true;
+      bus.emit('ui:toggle', { key: 'music', value: on });
+      if (on && !S.toggles.sound) bus.emit('ui:sound', { on: true });
+      announce(on ? 'aMusicOn' : 'aMusicOff');
+    },
     speed(c, say) {
       const v = Math.max(CADENCE.min, Math.min(CADENCE.max, Math.round(c)));
       if (S.coasting) bus.emit('ui:coast', { on: false });
@@ -773,21 +795,9 @@ export function createUI(host, bus, init) {
   placeBody();
   requestAnimationFrame(() => { measure(); dock(true); });
 
-  // ---------- easter-egg counter (feature of src/fx/eggs.js): a tiny stamped ticket stub, hidden until the first find ----------
+  // ---------- easter-egg counter (feature of src/fx/eggs.js): a small HUD chip, hidden until the first find ----------
   {
-    const css = doc.createElement('style');
-    css.textContent = `.ui-eggs{position:absolute; right:30px; top:30px; pointer-events:none; display:flex; flex-direction:column; align-items:flex-end; gap:6px; font:700 12px/1.2 var(--ui-font)}
-.ui-eggs[hidden]{display:none}
-.ui-eggs-stub{position:relative; display:flex; align-items:center; gap:7px; background:var(--pb-inkP); color:var(--pb-inkN); padding:4px 10px 4px 14px; border:2px solid var(--pb-inkN); box-shadow:3px 3px 0 var(--pb-inkN);
-  background-image:radial-gradient(circle 3.2px at 0 50%,var(--pb-inkN) 3px,transparent 3.4px); background-size:7px 7px; background-repeat:repeat-y; background-position:-1px 0; letter-spacing:.06em}
-.ui-eggs-stub i{display:block; width:12px; height:15px; background:var(--pb-inkO); border:1.5px solid var(--pb-inkN); border-radius:50% 50% 46% 46%/60% 60% 40% 40%; box-shadow:inset 0 -4px 0 var(--pb-inkR)}
-.ui-eggs-stub b{color:var(--pb-inkR); font-size:14px}
-.ui-eggs-stub.pop{animation:ui-egg-pop .5s cubic-bezier(.2,1.6,.4,1)}
-@keyframes ui-egg-pop{0%{transform:scale(.6) rotate(-6deg)}100%{transform:none}}
-.ui-eggs-toast{background:var(--pb-inkN); color:var(--pb-inkP); padding:4px 10px; border:2px solid var(--pb-inkP); outline:2px solid var(--pb-inkN); font-size:11px; opacity:0; transition:opacity .3s; white-space:nowrap}
-.ui-eggs-toast.on{opacity:1}
-@media (max-width:600px){.ui-eggs{right:12px; top:12px}}`;
-    doc.head.appendChild(css);
+    // (its stylesheet lives in styles.js with the rest of the HUD)
     const box = doc.createElement('div');
     box.className = 'ui-eggs'; box.hidden = true;
     box.innerHTML = '<div class="ui-eggs-stub" role="status" aria-live="polite"><i aria-hidden="true"></i><span data-egg-lab></span><b data-egg-n></b></div><div class="ui-eggs-toast" aria-hidden="true"></div>';
@@ -815,7 +825,7 @@ export function createUI(host, bus, init) {
       acc += frame.dt || 0;
       if (frame.dt !== 0 && acc < 0.1) return;
       acc = 0;
-      applyInks(frame.pal.inks);
+      setIf('still', shooting || frame.dt === 0, v => host.toggleAttribute('data-still', v));   // deterministic renders: no mid-roll digits
       sync();
       hud(frame);
       dockT += 1;

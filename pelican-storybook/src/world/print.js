@@ -22,13 +22,16 @@ import { fmt2 } from '../core/math.js';
 import { h } from '../core/svg.js';
 import { VIEW, RIDER_X, GROUND_Y, CAMERAS } from '../contract.js';
 import { LAT, SER, ZH } from './print-glyphs.js';
-import { stretchAt, lapOf, lapPos } from './route.js';
+import { stretchAt, lapOf, lapPos, LAP } from './route.js';
+import { weatherAt } from './director.js';
 import { paperDefs, paperSheet } from '../art/gouache.js';
 
 export const id = 'print';
 // the animated title and the fading captions get their own composited sheets: the page itself never re-rasterises
-// the gouache PAPER (grain + pigment mottle + fibre + vignette, soft-light over the painting) is one static sheet too
-export const isolate = ['[data-ref="gw-paper"]', '#print-captions', '#print-title'];
+// the gouache PAPER (grain + pigment mottle + fibre + vignette) stays IN the static page sheet (integrator perf: as its
+// own sheet it split the page into three full-screen composited layers, ~2-3 ms of compositing every frame; the page
+// repaints only on rare changes: page number, margins, bookmark)
+export const isolate = ['#print-captions', '#print-title'];
 // page paints (graded by the hour like every material: the bedtime page at night is a lavender-dusk cream)
 export const materials = {
   pgPaper: '#F8EDD8', pgPaperHi: '#FFF8EC', pgPaperLo: '#E6D2B2', pgEdge: '#EADAC0',
@@ -168,6 +171,31 @@ const EN_NUM = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', '
 const titleCase = s => s.toLowerCase().split(' ').map((w, i) => (i && /^(the|of|and)$/.test(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 const chapterOf = lap => ({ zh: `第${zhNum(lap + 1)}章`, en: `Chapter ${EN_NUM[lap + 1] || lap + 1}` });
 const pageCache = new Map();
+// director beats: a stretch whose road holds a shower, a rainbow, a sea mist or a breeze gets that beat's page instead
+// (weatherAt is a pure function of road distance, so the page is the same in every still and in the bake)
+const BEAT = {
+  rain: ['哗啦啦，下雨啦！鹈鹕缩起脖子，继续往前骑。', 'Pitter-patter, here comes the rain! Pelican tucks in its neck and pedals on.'],
+  bow: ['雨停了，天上挂起一道弯弯的彩虹！', 'The rain stops, and a rainbow smiles across the sky.'],
+  fog: ['海雾轻轻飘来，鹈鹕按响车铃，慢慢地骑。', 'A soft sea mist rolls in, so Pelican rings the bell and rides slowly.'],
+};
+// a breeze only gets its own page where the place has one (elsewhere the stretch's own story stays)
+const BEAT_AT = {
+  lighthouse: { fog: ['雾里的灯塔亮着灯，鹈鹕向守护人挥挥翅膀。', 'The lighthouse shines through the mist, and Pelican waves to the keeper.'] },
+  cliffs: { wind: ['断崖上起风了，红围巾在身后飘呀飘。', 'Up on the windy cliffs, the red scarf flutters out behind.'] },
+  pier: { wind: ['栈桥上起风了，钓鱼的爷爷们按住了帽子。', 'The wind blows along the pier, and the old anglers hold on to their hats.'] },
+  dunes: { wind: ['风吹过沙丘，沙子沙沙地唱歌。', 'The wind combs the dunes, and the sand sings shh, shh.'] },
+  pines: { wind: ['风吹过松林，松果咚咚地掉下来。', 'The wind hums in the pines, and the cones go plop, plop.'] },
+};
+// the later laps are a new chapter: the first page says so
+const againLine = lap => [`第${zhNum(lap + 1)}圈啦！鹈鹕挥挥翅膀，又出发了。`, `Round we go again, lap ${lap + 1}! Pelican waves a wing and sets off once more.`];
+function beatOf(s, lap) {
+  const acc = { rain: 0, bow: 0, fog: 0, wind: 0 }, N = 11, base = lap * LAP;
+  for (let i = 0; i < N; i++) {
+    const w = weatherAt(base + s.a + (s.b - s.a) * (0.1 + 0.8 * i / (N - 1)));
+    for (const k in acc) if (w[k] > 0.5) acc[k] += 1 / N;
+  }
+  return acc.rain >= 0.35 ? 'rain' : acc.bow >= 0.35 ? 'bow' : acc.fog >= 0.4 ? 'fog' : acc.wind >= 0.6 ? 'wind' : '';
+}
 function pageOf(D, night) {
   const s = stretchAt(D), lap = Math.max(0, lapOf(D)), ck = (lap * 12 + s.i) * 2 + (night ? 1 : 0);
   let pg = pageCache.get(ck);
@@ -175,9 +203,15 @@ function pageOf(D, night) {
   return pg;
 }
 function makePage(s, lap, night) {
-  const n = lap * 12 + s.i + 1;
-  const [zh, en] = (night && STORY_NIGHT[s.key]) || STORY[s.key];
-  return { key: `${lap}:${s.i}:${night && STORY_NIGHT[s.key] ? 'n' : 'd'}`, n, lap, s, zh, en,
+  const n = lap * 12 + s.i + 1, beat = beatOf(s, lap);
+  let line, v;
+  if (beat === 'rain' || beat === 'bow') { line = BEAT[beat]; v = beat; }
+  else if (night && STORY_NIGHT[s.key]) { line = STORY_NIGHT[s.key]; v = 'n'; }
+  else if (beat && ((BEAT_AT[s.key] && BEAT_AT[s.key][beat]) || BEAT[beat])) { line = (BEAT_AT[s.key] && BEAT_AT[s.key][beat]) || BEAT[beat]; v = beat; }
+  else if (lap > 0 && s.key === 'village') { line = againLine(lap); v = 'again'; }
+  else { line = STORY[s.key]; v = 'd'; }
+  const [zh, en] = line;
+  return { key: `${lap}:${s.i}:${v}`, n, lap, s, zh, en, beat,
     headZh: `第${zhNum(n)}页 · ${s.cn}`, headEn: `Page ${n} · ${titleCase(s.en)}` };
 }
 
@@ -192,14 +226,17 @@ const ZHW = measure('鹈鹕湾', ZS, { track: 5 });
 const SUB_TXT = 'a seaside picture book · 海边的图画书';
 const SUBW = measure(SUB_TXT, SUBS, { zs: 0.95 });
 const PW = 286, PH = 46;              // chapter plate
+const ZH_LOGO = 1.34, LOGO_MAX = 0.32;
 const LAYOUTS = {
   line: { w1: [0, 0], w2: [W1 + GAP, 0], zh: [4, 76], sw: [0, 76], sub: [6, 118], plate: [LINE_W - PW + 26, 34],
     box: [-16, -96, LINE_W + 46, 126], k: 1 },
   stack: { w1: [0, 0], w2: [0, 104], zh: [W2 + 26, 104], sw: [W2 + 22, 104], sub: [2, 152], plate: [0, 172],
     box: [-16, -96, Math.max(W1 + 30, W2 + 26 + ZHW + 20, SUBW + 8, PW) + 10, 224], k: 0.74 },
-  logo: { w1: [0, 0], w2: [W1 + GAP, 0], zh: [LINE_W + 34, 0], sw: [LINE_W + 30, 0], sub: [6, 60], plate: [LINE_W + 34 + ZHW + 30, -52, 0.92],
-    box: [-12, -90, LINE_W + 34 + ZHW + 30 + PW * 0.92 + 8, 30], k: 1 },
+  // the compact corner title: no chapter plate (it would be ~6 px), 鹈鹕湾 enlarged ×1.3 and repainted in plain line-brown
+  logo: { w1: [0, 0], w2: [W1 + GAP, 0], zh: [LINE_W + 30, -6, ZH_LOGO], sw: [LINE_W + 26, -6, ZH_LOGO], sub: [6, 60], plate: [LINE_W + 30, -52, 0.5],
+    box: [-12, -90, LINE_W + 30 + ZHW * ZH_LOGO + 14, 30], k: 1 },
 };
+const PAGE_LEAD = 2200;                // road units (~1.2 s at 60 rpm) the page turns ahead of the stretch
 const RIBBON = { w: 15, len: 62 };   // hangs this far into the picture below the top margin
 
 export const detailItems = [
@@ -226,6 +263,7 @@ export const detailItems = [
   ['title-shadow', 'O', 'painted mauve shadow behind the title letters'],
   ['title-pencil', 'T', 'offset pencil double line along the title letters'],
   ['title-zh', 'O', '鹈鹕湾 in scarf red with a brown outline'],
+  ['title-zh-compact', 'O', 'compact corner 鹈鹕湾 repainted in plain line-brown with a cream halo, enlarged so it reads at 1×'],
   ['title-swash', 'O', 'yellow gouache brush swash under 鹈鹕湾, ending in a little wave curl'],
   ['title-twinkles', 'O', 'three painted twinkles that pop around the title'],
   ['title-subtitle', 'O', 'subtitle "a seaside picture book · 海边的图画书"'],
@@ -555,7 +593,10 @@ export function build({ v }) {
     P(star4(0, 0, r), { fill: c.gold, stroke: c.line, 'stroke-width': 1.3, 'stroke-linejoin': 'round' }), P(star4(0, 0, r * 0.35), { fill: c.pHi }));
   const w1 = h('g', { 'data-ref': 'print-w1', 'data-text': 'Pelican' }, tw('a', G1, false), tag('title-twinkles', {}, twinkle('print-tw0', -20, -78, 10)));
   const w2 = h('g', { 'data-ref': 'print-w2', 'data-text': 'Bay' }, tw('b', G2, false), tag('title-twinkles', {}, twinkle('print-tw1', W2 + 22, -66, 13), twinkle('print-tw2', W2 + 40, -30, 7)));
-  const zhG = h('g', { 'data-ref': 'print-zh', 'data-text': '鹈鹕湾' }, tw('z', GZ, true));
+  const zhPlain = GZ.map(g => g.d).join('');
+  const zhG = h('g', { 'data-ref': 'print-zh', 'data-text': '鹈鹕湾' }, h('g', { 'data-ref': 'print-zh-red' }, tw('z', GZ, true)));
+  const zhC = h('g', { 'data-ref': 'print-zhc', opacity: 0 }, tag('title-zh-compact', { 'data-text': '鹈鹕湾' },
+    P(zhPlain, { fill: c.line, stroke: c.pHi, 'stroke-width': 7, 'stroke-linejoin': 'round', 'paint-order': 'stroke' })));
   // swash under 鹈鹕湾: tapered yellow gouache stroke with streaks, a wave curl at the end
   const SWL = ZHW + 18;
   const swC = t => [lerp(-6, SWL, t), 13 + Math.sin(t * Math.PI * 1.1) * 3.2 - t * 2];
@@ -587,7 +628,7 @@ export function build({ v }) {
       P(plateOut, { fill: c.mauve, opacity: 0.35, transform: 'translate(3 3.5)' }),
       P(plateOut, { fill: c.pHi, stroke: c.line, 'stroke-width': 1.7, 'stroke-linejoin': 'round' }), P(plateIn, { ...LN(0.8, c.soft) }),
       P(pt0.zh + pt0.dot, { 'data-ref': 'print-plate-zh', fill: c.rb }), P(pt0.en, { 'data-ref': 'print-plate-en', fill: c.line }))));
-  const title = h('g', { id: 'print-title', 'data-ref': 'print-title' }, plate, sub, sw, zhG, w1, w2);
+  const title = h('g', { id: 'print-title', 'data-ref': 'print-title' }, plate, sub, sw, zhG, w1, w2, zhC);
 
   // ---- captions: on a gouache patch (poster) and printed on the margin (cinematic bar) ----
   const pg0 = pageOf(0, false), cl0 = captionLayout(pg0, 'line'), cb0 = captionLayout(pg0, 'bar');
@@ -696,11 +737,42 @@ export function attach(svg) {
     return [X(RIDER_X - 262) - pad, Y(oy - 572) - pad, X(RIDER_X + 305) + pad, Y(oy + 6) + pad];
   };
 
+  // the sky's toy biplane towing its "Pelican Bay" banner flies a fixed lane across the top of the sky (sky.js: y 78 ± 5,
+  // plane-local x -452 (banner streamers) .. +48 (prop), screen speed +20 u/s, layer depth 0). The corner title and the
+  // story caption keep out of it: as the plane approaches one of them, that text block glides down below the lane and
+  // back up once the banner has passed. Read from the plane's own transform (set by sky earlier in the same frame), so
+  // it is a pure function of the frame: every still and the bake agree.
+  let planeEl = null, planeTries = 0;
+  const skyMap = cam => {
+    const z = 1 + ((cam.zoom || 1) - 1) * 0.15, ty = VIEW.cy + ((cam.fy ?? VIEW.cy) - VIEW.cy) * 0.15;
+    return { X: x => VIEW.cx + z * (x - VIEW.cx), Y: y => VIEW.cy + z * (y - ty) };
+  };
+  // the runtime's calm scheduler (main.js CALM_TOYS: period 320 s, 80 s slots, the plane owns slot 1, 3 s fades) shows
+  // the plane only in its beat; outside it nothing needs to make way (a pure function of t, like the scheduler)
+  const busy = (() => { try { return new URLSearchParams(view.location.search).has('busy'); } catch { return false; } })();
+  const planeBeat = t => busy || (() => { const c = Math.floor(t / 320) * 320 + 80; return [c - 320, c, c + 320].some(a => t > a - 2 && t < a + 80 + 2); })();
+  const planeSpan = (cam, t) => {
+    if (!planeEl && planeTries < 240) { planeTries++; planeEl = doc.querySelector('[data-ref="sky-plane"]'); }
+    if (!planeEl || !planeBeat(t) || planeEl.getAttribute('visibility') === 'hidden') return null;
+    const m = /translate\(\s*([-+\d.e]+)[\s,]+([-+\d.e]+)/.exec(planeEl.getAttribute('transform') || '');
+    if (!m) return null;
+    const M = skyMap(cam);
+    return [M.X(+m[1] - 452), M.X(+m[1] + 48)];
+  };
+  const laneOf = cam => { const M = skyMap(cam); return [M.Y(78 - 5 - 27), M.Y(78 + 5 + 31)]; };
+  // 0 = clear, 1 = the plane is over the block: ramps over 170 u ahead of the prop and 90 u behind the streamers
+  const duckOf = (span, lane, b) => {
+    if (!span || !b || b[3] < lane[0] || b[1] > lane[1]) return 0;
+    const g = span[1] < b[0] ? (b[0] - span[1]) / 170 : span[0] > b[2] ? (span[0] - b[2]) / 90 : 0;
+    return g >= 1 ? 0 : easeInOut(1 - g);
+  };
+
   // runtime text caches (a stretch / lap change rebuilds a few paths, once)
   const cxCache = new Map(), gcx = el => { let v = cxCache.get(el); if (v === undefined) cxCache.set(el, v = +el.getAttribute('data-cx') || 0); return v; };
   const capCache = new Map();
   const capFor = (pg, mode) => { const k = pg.key + mode; let L = capCache.get(k); if (!L) { if (capCache.size > 40) capCache.clear(); capCache.set(k, L = captionLayout(pg, mode)); } return L; };
   let curCap = { cap: '', bar: '' }, curLap = 0, curPn = '';
+  let warmFor = '';
   const fillCap = (k, L, pg) => {
     if (curCap[k] === pg.key + L.w) return;
     curCap[k] = pg.key + L.w;
@@ -722,11 +794,20 @@ export function attach(svg) {
       const ti = t >= skipAt ? 99 : t;
       // the page: which stretch / lap, and the caption fade across stretch boundaries (pure function of distance)
       const D = frame.distance || 0, night = (frame.night || 0) > 0.6;
-      const pg = pageOf(D, night), p = lapPos(D);
+      // the page turns a little before the stretch begins (as its road sign comes up), so a new lap / stretch opens on a
+      // page that is already turned: the bake, which starts exactly on a lap boundary, freezes on a readable page
+      const DP = D + PAGE_LEAD, pg = pageOf(DP, night), p = lapPos(DP);
+      // pre-build the next page's caption paths in idle time, so the page turn never costs a frame
+      if (pg.s.b - p < 6000 && warmFor !== pg.key && view.requestIdleCallback) {
+        warmFor = pg.key;
+        const nx = pageOf(DP + (pg.s.b - p) + 10, night);
+        view.requestIdleCallback(() => { capFor(nx, 'line'); capFor(nx, 'col'); capFor(nx, 'bar'); }, { timeout: 1500 });
+      }
       let capA = Math.min(clamp01((pg.s.b - p) / 1500), pg.lap === 0 && pg.s.i === 0 ? clamp01((ti - 1.85) / 0.5) : clamp01((p - pg.s.a) / 1800));
       if (reduced) capA = capA > 0.5 ? 1 : 0;
       const rb = riderBox(cam, frame.pose), rbQ = [Math.round(rb[0] / 6), Math.round(rb[1] / 6), Math.round(rb[2] / 6), Math.round(rb[3] / 6)];
-      const sig = `${V.w}|${V.h}|${V.x0}|${V.y0}|${f(lb)}|${ti >= 4.3 ? 'post' : f(ti)}|${reduced ? 1 : 0}|${rbQ[0]},${rbQ[1]},${rbQ[2]},${rbQ[3]}|${uiBox ? uiKey : ''}|${pg.key}|${f(capA)}`;
+      const span = planeSpan(cam, t), lane = laneOf(cam);
+      const sig = `${V.w}|${V.h}|${V.x0}|${V.y0}|${f(lb)}|${ti >= 4.3 ? 'post' : f(ti)}|${reduced ? 1 : 0}|${rbQ[0]},${rbQ[1]},${rbQ[2]},${rbQ[3]}|${uiBox ? uiKey : ''}|${pg.key}|${f(capA)}|${span ? Math.round(span[0] / 2) : ''}|${Math.round(lane[0])}`;
       if (sig === lastSig) return;
       lastSig = sig;
 
@@ -830,23 +911,41 @@ export function attach(svg) {
           || { i: 0, S: 0.3, X: area[0], Y: area[1] };
         const cardName = pc.i ? 'stack' : 'line';
         const cardP = { name: cardName, S: pc.S, X: pc.X - LB(cardName)[0] * pc.S, Y: pc.Y - LB(cardName)[1] * pc.S };
-        const lrects = freeRects([xL + 12, yT + 10, xR - 12, Math.min(yT + 10 + 44, yB)], obs);
-        const pl = placeBox([[bw('logo'), bh('logo'), 1]], lrects, 0.3, false) || { S: 0.22, X: xL + 12, Y: yT + 10 };
+        const lrects = freeRects([xL + 12, yT + 10, xR - 12, Math.min(yT + 10 + 40, yB)], obs);
+        const pl = placeBox([[bw('logo'), bh('logo'), 1]], lrects, LOGO_MAX, false) || { S: 0.22, X: xL + 12, Y: yT + 10 };
         const logoP = { name: 'logo', S: pl.S, X: pl.X - LB('logo')[0] * pl.S, Y: pl.Y - LB('logo')[1] * pl.S };
         const barH = lb - (RIM + 22) - 12;
         const bS = Math.max(0.05, Math.min(0.62, barH / bh('logo'), (halfW * 1.2) / bw('logo')));
         const barP = { name: 'logo', S: bS, X: xL + 20 - LB('logo')[0] * bS, Y: V.y0 + RIM + 22 + (barH - bh('logo') * bS) / 2 - LB('logo')[1] * bS };
 
-        const titleBox = s => { const q = s === 'card' ? cardP : logoP, b = LB(q.name); return [q.X + b[0] * q.S - 8, q.Y + b[1] * q.S - 8, q.X + b[2] * q.S + 8, q.Y + b[3] * q.S + 8]; };
-        const crects = freeRects(area, [...obs, titleBox('card'), titleBox('logo')]);
+        const boxOf = q => { const b = LB(q.name); return [q.X + b[0] * q.S - 8, q.Y + b[1] * q.S - 8, q.X + b[2] * q.S + 8, q.Y + b[3] * q.S + 8]; };
+        const titleBox = s => boxOf(s === 'card' ? cardP : logoP);
+        // the compact title's place below the biplane lane (null: nowhere, it fades while the plane passes)
+        const lBot = lane[1] + 6;
+        let logoD = logoP;
+        if (hit(titleBox('logo'), [V.x0 - 99, lane[0], V.x1 + 99, lane[1]])) {
+          const pd = placeBox([[bw('logo'), bh('logo'), 1]], freeRects([xL + 12, lBot, xR - 12, Math.min(lBot + 40, yB)], obs), LOGO_MAX, false);
+          logoD = pd && pd.S > 0.2 ? { name: 'logo', S: pd.S, X: pd.X - LB('logo')[0] * pd.S, Y: pd.Y - LB('logo')[1] * pd.S } : null;
+        }
+        const tObs = [titleBox('card'), titleBox('logo'), logoD && boxOf(logoD)];
+        const crects = freeRects(area, [...obs, ...tObs]);
         const Lline = capFor(pg, 'line'), Lcol = capFor(pg, 'col');
         const pcap = placeBox([[Lline.w, Lline.h, 1], [Lcol.w, Lcol.h, 0.9]], crects, 1, true);
-        return { cardP, logoP, barP, pcap, Lline, Lcol };
+        // the caption's place below the lane, same layout and never bigger (null: it fades while the plane passes)
+        let pcapD = pcap;
+        if (pcap) {
+          const L = pcap.i ? Lcol : Lline, cb = [pcap.X, pcap.Y, pcap.X + L.w * pcap.S, pcap.Y + L.h * pcap.S];
+          if (hit(cb, [V.x0 - 99, lane[0], V.x1 + 99, lane[1]])) {
+            const pd = placeBox([[L.w, L.h, 1]], freeRects([area[0], Math.max(area[1], lBot), area[2], area[3]], [...obs, ...tObs]), pcap.S, true);
+            pcapD = pd && pd.S > 0.42 ? { ...pd, i: pcap.i } : null;
+          }
+        }
+        return { cardP, logoP, logoD, barP, pcap, pcapD, Lline, Lcol };
       }
       // placements are memoised: they change only with the page geometry, the rider box, the UI card and the page
-      const lk = [xL, yT, xR, yB, rEnd, V.y0, lb * 4].map(Math.round).join() + '|' + rbQ.join() + '|' + (uiBox ? uiBox.map(Math.round).join() : '') + '|' + pg.key;
+      const lk = [xL, yT, xR, yB, rEnd, V.y0, lb * 4, lane[0], lane[1]].map(Math.round).join() + '|' + rbQ.join() + '|' + (uiBox ? uiBox.map(Math.round).join() : '') + '|' + pg.key;
       if (lk !== layKey) { layKey = lk; lay = computeLayout(); }
-      const { cardP, logoP, barP, pcap, Lline, Lcol } = lay;
+      const { cardP, logoP, logoD, barP, pcap, pcapD, Lline, Lcol } = lay;
       // intro beats
       const E = reduced ? () => 1 : (a, d) => clamp01((ti - a) / d);
       let shrink = easeInOut(clamp01((ti - 3.55) / 0.62)), alpha = 1;
@@ -854,10 +953,25 @@ export function attach(svg) {
       if (ti >= 99) shrink = 1;
       const at = (pl, g) => { const a = LAYOUTS[pl.name][g]; return [pl.X + pl.S * a[0], pl.Y + pl.S * a[1], pl.S * (a[2] || 1)]; };
       const mix3 = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
-      const pose = g => { const q = mix3(mix3(at(cardP, g), at(barP, g), kc), mix3(at(logoP, g), at(barP, g), kc), shrink); return `translate(${f(q[0])} ${f(q[1])}) scale(${f(q[2])})`; };
+      // the compact title ducks under the passing biplane (glides to logoD, or fades if there is no room below the lane)
+      const lb0 = LAYOUTS.logo.box, logoBox = [logoP.X + lb0[0] * logoP.S, logoP.Y + lb0[1] * logoP.S, logoP.X + lb0[2] * logoP.S, logoP.Y + lb0[3] * logoP.S];
+      const duckT = reduced ? (duckOf(span, lane, logoBox) > 0.5 ? 1 : 0) : duckOf(span, lane, logoBox);
+      const logoAt = (g) => logoD ? mix3(at(logoP, g), at(logoD, g), duckT) : at(logoP, g);
+      const pose0 = (g, k) => mix3(mix3(at(cardP, g), at(barP, g), kc), mix3(logoAt(g), at(barP, g), kc), k);
+      const pose = g => { const q = pose0(g, shrink); return `translate(${f(q[0])} ${f(q[1])}) scale(${f(q[2])})`; };
       for (const g of ['w1', 'w2', 'zh', 'sw', 'sub', 'plate']) set(R[g], 'transform', pose(g));
+      // the compact brown 鹈鹕湾 is pinned just after the word "Bay" as it shrinks (so it never slides across it)
+      { const b = pose0('w2', shrink), a = LAYOUTS.logo.zh, w = LAYOUTS.logo.w2;
+        set(R.zhc, 'transform', `translate(${f(b[0] + (a[0] - w[0]) * b[2])} ${f(b[1] + (a[1] - w[1]) * b[2])}) scale(${f(b[2] * a[2])})`); }
+      if (!logoD) alpha *= 1 - duckT * shrink * (1 - kc);
       set(R.title, 'opacity', f(alpha));
       set(R.sub, 'opacity', f(E(1.35, 0.45) * (1 - Math.max(shrink, kc))));
+      // compact state: the chapter plate goes (it would be unreadable), the scarf-red 鹈鹕湾 stamp and its swash give way
+      // to the plain line-brown lettering (the cinematic bar keeps the red stamp: it is printed large there)
+      const cz = shrink * (1 - kc);
+      const czOut = clamp01(cz / 0.35), czIn = clamp01((cz - 0.45) / 0.45);
+      set(R['zh-red'], 'opacity', f(1 - czOut)); set(R.zhc, 'opacity', f(czIn));
+      set(R.sw, 'opacity', f(1 - czOut)); set(R.plate, 'opacity', f((1 - shrink) * (1 - kc)));
       // letters pop in one by one (a squash-and-settle), then the 鹈鹕湾 stamp, the swash, the twinkles, the plate
       const pop = (el, e, cxx, rot) => {
         if (e >= 1) { set(el, 'transform', ''); set(el, 'opacity', 1); return; }
@@ -879,20 +993,33 @@ export function attach(svg) {
       set(R['plate-in'], 'transform', pe >= 1 ? '' : `translate(${PW / 2} ${PH / 2}) rotate(${f(-5 * (1 - pe))}) scale(${f(1.35 - 0.35 * pb)}) translate(${-PW / 2} ${-PH / 2})`);
 
       // ---- the story caption ----
+      // page turn: at a stretch boundary the old page folds shut onto its left edge (the spine side) and the new page
+      // opens out of it, the free edge lifting as it turns. Pure function of road distance (capA), like the fade.
       const capOn = pcap && pcap.S > 0.42;
+      let capOp = capOn ? capA * (1 - kc) : 0;
+      const flip = (el, w, cxx) => {
+        if (capA >= 1 || reduced) { set(el, 'transform', ''); return; }
+        const e = easeInOut(capA), sx = Math.max(0.02, e), lift = (1 - e) * 0.16;
+        set(el, 'transform', `translate(${f(cxx)} 0) matrix(${f(sx)} ${f(-lift)} 0 1 0 ${f(-(1 - e) * 10)}) translate(${f(-cxx)} 0)`);
+      };
       if (pcap) {
         const L = pcap.i ? Lcol : Lline;
         fillCap('cap', L, pg);
-        set(R.cap, 'transform', `translate(${f(pcap.X)} ${f(pcap.Y)}) scale(${f(pcap.S)})`);
+        const duckC = duckOf(span, lane, [pcap.X, pcap.Y, pcap.X + L.w * pcap.S, pcap.Y + L.h * pcap.S]) * (1 - kc);
+        const dC = reduced ? (duckC > 0.5 ? 1 : 0) : duckC;
+        const q = pcapD ? { X: lerp(pcap.X, pcapD.X, dC), Y: lerp(pcap.Y, pcapD.Y, dC), S: lerp(pcap.S, pcapD.S, dC) } : pcap;
+        if (!pcapD) capOp *= 1 - dC;
+        set(R.cap, 'transform', `translate(${f(q.X)} ${f(q.Y)}) scale(${f(q.S)})`);
+        flip(R['cap-in'], L.w, 0);
       }
-      set(R.cap, 'opacity', capOn ? f(capA * (1 - kc)) : 0);
-      set(R['cap-in'], 'transform', capA >= 1 || reduced ? '' : `translate(0 ${f(6 * (1 - easeOut(capA)))})`);
+      set(R.cap, 'opacity', f(capOp));
       if (kc > 0.001) {
         const Lb = capFor(pg, 'bar');
         fillCap('bar', Lb, pg);
         const zone = [xL + 110, yB + 8, xR - 110, V.y1 - RIM - 28];
         const s = Math.max(0.05, Math.min(1, (zone[2] - zone[0]) / Lb.w, (zone[3] - zone[1]) / Lb.h));
         set(R.bar, 'transform', `translate(${f((zone[0] + zone[2]) / 2 - Lb.w * s / 2)} ${f(zone[1] + ((zone[3] - zone[1]) - Lb.h * s) / 2)}) scale(${f(s)})`);
+        flip(R['bar-in'], Lb.w, 0);
       }
       set(R.bar, 'opacity', kc > 0.001 ? f(capA * kc) : 0);
     },

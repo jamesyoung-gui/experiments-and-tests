@@ -33,7 +33,8 @@ const softMax = (a, x, k) => a + k * Math.log1p(Math.exp((x - a) / k));   // smo
 // Fit (C3.2 / C3.3): pelvis 22 u further back than SKEL.pelvis so the belly contact centres on the saddle
 // (x ≈ −64, saddle −101…−23), the hip sits in the middle third and KOPS is ≈ +8 u. The torso carries a
 // 3° forward lean at rest (body axis 15° head-up), up to +7.5° when sprinting and −3° when coasting.
-export const FIT = { dx: -22, lean: 3, sit: 2.6, head: [120, -518] };
+// Neon edition: a cooler, laid-back cruise — 2.2° rest lean (was 3), softer hip rock, a half-time head nod.
+export const FIT = { dx: -22, lean: 2.2, sit: 2.6, head: [120, -518] };
 export const G = 2885;                              // scene gravity, u/s² (1 u = 3.4 mm)
 const hopT = (() => {
   const H = 48, v0 = Math.sqrt(2 * G * H), air = 2 * v0 / G, takeoff = 0.24;
@@ -114,8 +115,12 @@ export const GAZE = {
   sky: { x: 0.35, y: -0.8, turn: -0.1, pitch: -12 },
   basket: { x: 0.3, y: 0.85, turn: 0.1, pitch: 14 },
   camera: { x: -0.05, y: 0.1, turn: 1, pitch: 2 },
+  hud: { x: 0.52, y: 0.62, turn: 0, pitch: 10 },          // the holographic speedometer projected above the stem
 };
-const GAZE_BAG = [['ahead', 0.3], ['sea', 0.2], ['road', 0.08], ['sky', 0.12], ['basket', 0.15], ['camera', 0.15]];
+const GAZE_BAG = [['ahead', 0.3], ['sea', 0.18], ['road', 0.07], ['sky', 0.12], ['basket', 0.09], ['camera', 0.12], ['hud', 0.12]];
+// HUD scan: a glance down at the speedometer is a short check, not a stare — after HUD_HOLD the eye saccades back
+// 'ahead' (only when the next scheduled change is far enough away that both holds stay ≥ 0.6 s).
+const HUD_HOLD = 0.75, HUD_MIN_GAP = 1.5;
 const GAZE_CELL = 2.6, BLINK_CELL = 5.0;
 function gazeName(key) {
   let u = hash01(key, 11);
@@ -127,18 +132,29 @@ function gazeChange(c, k) {
   const key = cellKey(k, c.n);
   return { time: c.base + k * c.cell + 0.3 + hash01(key, 12) * (c.cell - 0.8), name: gazeName(key) };
 }
+// scheduled changes of cells k0..k1 plus the HUD-glance returns, in time order
+function gazeEvents(c, k0, k1) {
+  const out = [];
+  for (let k = k0; k <= k1; k++) {
+    const ch = gazeChange(c, k);
+    out.push(ch);
+    if (ch.name === 'hud' && gazeChange(c, k + 1).time - ch.time >= HUD_MIN_GAP) out.push({ time: ch.time + HUD_HOLD, name: 'ahead', scan: true });
+  }
+  return out;
+}
 export function gazeAt(t, loopT) {
   const c = cellOf(t, GAZE_CELL, loopT);
-  let cur = gazeChange(c, c.k), prev = gazeChange(c, c.k - 1);
-  if (t < cur.time) { cur = prev; prev = gazeChange(c, c.k - 2); }
+  const ev = gazeEvents(c, c.k - 3, c.k);
+  let i = ev.length - 1; while (i > 1 && ev[i].time > t) i--;
+  const cur = ev[i], prev = ev[i - 1];
   const since = t - cur.time;
   const A = GAZE[prev.name], B = GAZE[cur.name];
   const eye = smooth01(since / 0.07);                    // saccade: 70 ms
-  const head = smooth01((since - 0.08) / 0.34);          // head follows 80 ms later, 340 ms move
+  const head = smooth01((since - 0.08) / 0.42);          // head follows 80 ms later over a smooth 420 ms move
   return {
     x: lerp(A.x, B.x, eye), y: lerp(A.y, B.y, eye),
     pitch: lerp(A.pitch, B.pitch, head), turn: lerp(A.turn, B.turn, head),
-    target: cur.name, from: prev.name, since, big: Math.abs(A.pitch - B.pitch) > 14 || Math.abs(A.turn - B.turn) > 0.6, changeT: cur.time,
+    target: cur.name, from: prev.name, since, big: Math.abs(A.pitch - B.pitch) >= 12 || Math.abs(A.turn - B.turn) > 0.6, changeT: cur.time,
   };
 }
 const lidCurve = tau => (tau < 0 || tau > 0.19 ? 0 : tau < 0.055 ? smooth01(tau / 0.055) : 1 - smooth01((tau - 0.055) / 0.135));
@@ -443,7 +459,7 @@ export function solvePose(t, s = {}) {
   const phi2 = 2 * phi;
   const bobP = phasor(bobA, th0);
   const lean = FIT.lean + 4.5 * cadN - 3 * coastW + leanEv + wv.lean + gl.lean + 0.5 * bobA * Math.cos(phi2 - th0 - 0.4);
-  const rock = 1.1 * (0.6 + 0.6 * sprint) * pedalling * Math.cos(phi - 10 * D2R);   // hip rocks toward the pushing leg
+  const rock = 0.95 * (0.6 + 0.6 * sprint) * pedalling * Math.cos(phi - 10 * D2R);   // hip rocks toward the pushing leg
   const bodyRot = lean + rock;
   const sq = stretch, bodySy = (1 + 0.045 * sq) * (1 + 0.011 * breath), bodySx = (1 - 0.045 * sq) * (1 + 0.005 * breath);
   const depth = softMax(0.6, FIT.sit + evalPh(bobP, phi2) + sitEv + 0.35 * sprint, 0.35);
@@ -534,7 +550,13 @@ export function solvePose(t, s = {}) {
   // ---------------- 5. head, face slots ----------------
   const headBob = child(phasor(0.25 * bobA, th0), w2, TAU * 1.8, 0.6);          // stabilised head: 25% of the bob, lagged
   const headP = add(FIT.head, [hd.dx + 10 * cadN - 4 * coastW, hd.dy + evalPh(headBob, phi2) + 7 * cadN - 0.6 * breath]);
-  const headR = hd.r - 0.5 * rock + 2 * cadN - 2 * coastW + 2 * delight * Math.sin(TAU * 0.9 * (gl.tau - 1.7)) * (gl.tau > 1.7 ? 1 : 0);
+  // half-time nod to the beat: the head dips 25° of crank after the near leg's push (once per crank turn, so it
+  // reads as nodding along to the cadence-locked track); the crest and pouch lag it. Fades while sprinting,
+  // looking at something, airborne or coasting.
+  const nodA = 1.8 * pedalling * (1 - 0.6 * sprint) * (1 - lookW) * (1 - airborne) * (1 - 0.5 * (enc0 ? enc0.w : 0));
+  const nodTh = 25 * D2R, nod = nodA * (0.85 * Math.cos(phi - nodTh) + 0.15 * Math.cos(2 * (phi - nodTh)));
+  const nodLag = nodA * Math.cos(phi - nodTh - 0.55);
+  const headR = hd.r + nod - 0.5 * rock + 2 * cadN - 2 * coastW + 2 * delight * Math.sin(TAU * 0.9 * (gl.tau - 1.7)) * (gl.tau > 1.7 ? 1 : 0);
   const head = { p: headP, r: headR };
   J.head = { x: headP[0], y: headP[1], rot: headR };
   const eyeP = at(head, SKEL.eye);
@@ -551,7 +573,7 @@ export function solvePose(t, s = {}) {
   const fV = follow(vFall, t, TAU * 2.4, 0.3, 28, 0.7) + vFall(t);            // lagged world vertical velocity
   const crestFlat = -(3 + 5 * clamp(wind, 0, 1.6)) - 6 * gRider;              // wind presses the crest flat (monotonic in speed)
   const crestFlut = wind * 1.2 * Math.sin(7 * psiD) + gRider * 4 * Math.sin((TAU * 126 * t) / 24);
-  const crestRoot = crestFlat + evalPh(crestRootP, phi2) + 0.8 * fR1 - 1.1 * fY1 + 12 * surprise + 0.012 * fV + 5 * landKick + crestFlut;
+  const crestRoot = crestFlat - 0.8 * nodLag + evalPh(crestRootP, phi2) + 0.8 * fR1 - 1.1 * fY1 + 12 * surprise + 0.012 * fV + 5 * landKick + crestFlut;
   const crestBend = [
     evalPh(crestMidP, phi2) + 0.5 * (fR2 - fR1) + 0.008 * fV + 4 * landKickSlow + 1.4 * crestFlut + 3 * surprise,
     evalPh(crestTipP, phi2) + 0.6 * (fR3 - fR2) + 0.01 * fV + 3 * landKickSlow + 1.8 * crestFlut + 2 * surprise,
@@ -573,7 +595,7 @@ export function solvePose(t, s = {}) {
   const pouchPh = child(headBob, w2, TAU * 1.6, 0.22, 0.05);
   const jig = evalPh(pouchPh, phi2) + 0.01 * fYp + 0.1 * landKickSlow - 0.0002 * fV;
   J.pouch = {
-    x: pouchP[0], y: pouchP[1], rot: lowerR + 0.35 * follow(tt => HD(tt).r, t, TAU * 1.6, 0.25, 10, 0.8),
+    x: pouchP[0], y: pouchP[1], rot: lowerR - 0.4 * nodLag + 0.35 * follow(tt => HD(tt).r, t, TAU * 1.6, 0.25, 10, 0.8),
     sx: gl.psx * (1 - 0.35 * jig) * (1 - 0.08 * pStretch), sy: gl.psy * (1 + jig + flutterG) * (1 + 0.3 * pStretch),
   };
 
@@ -644,7 +666,7 @@ export function solvePose(t, s = {}) {
     spokeBlur: smoothstep(0.6, 1.4, wheelRevPerSec),
     // ---- added fields (documented in the rig report) ----
     steer, gaze: { x: gz.x, y: gz.y, turn: gz.turn, target: lookW > 0.5 ? (wv.look > gl.look ? 'camera' : 'basket') : gz0.target },
-    face, crestBend, scarf, fish, wing, feet, breath,
+    nod, face, crestBend, scarf, fish, wing, feet, breath,
     bill: { open: billOpen, flutter: flutterG },
     hop: { air: airborne, surprise, compress: sitEv }, tyre: { rear: Math.max(0, tyre), front: Math.max(0, tyre) * 0.8 },
     saddle: clamp(depth, 0, 8), belly: { x: pelvis.p[0] + low.x, depth }, basket, bell: { flick, strike: bells.some(tau => tau >= 0.1 && tau < 0.135) },

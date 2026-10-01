@@ -30,7 +30,7 @@ export const BAKE_DEFAULTS = {
   // the world (sky, sea, shore, roadside, road, foreground) is recorded as ONE long own-loop band, so the background
   // runs a real journey (village → pier → harbour → funfair → railway) instead of repeating with the 4 s rider loop.
   // Set pieces that the land module mounts / unmounts on the way are baked as presence (display) animations.
-  band: { P: 96, fps: 30, layers: ['L-hills-far', 'L-lighthouse', 'L-sea', 'L-boats', 'L-shore', 'L-roadside', 'L-road', 'L-foreground'] },
+  band: { P: 60, fps: 12, layers: ['L-hills-far', 'L-lighthouse', 'L-sea', 'L-boats', 'L-shore', 'L-roadside', 'L-road', 'L-foreground'] },
   // easter-egg cameos on long prime periods (the combined cycle is 4·96·41·53·67 s): [egg id, subtree, period, at]
   cameos: [['sunwink', '[data-ref="egg-sunFace"]', 41, 9], ['chorus', '[data-ref="egg-chorus"]', 53, 31], ['flight', '[data-ref="egg-flight"]', 67, 18]],
   reducedMotion: true, // prefers-reduced-motion: every animated attribute is frozen at its t0 value by CSS (!important)
@@ -40,9 +40,9 @@ export const BAKE_DEFAULTS = {
   toggles: { skeleton: false },
   probe: { horizon: 480, step: 0.25 },   // long horizon to find the wrap width of slow, non-closing layers
   tol: { len: 0.12, ang: 0.08, scale: 0.0015, d: 0.45, opacity: 0.008, dash: 0.05, num: 0.05 },          // rider (u, °)
-  tolWorld: { len: 0.3, ang: 0.3, scale: 0.004, d: 0.35, opacity: 0.012, dash: 0.1, num: 0.1 },       // everything else
+  tolWorld: { len: 0.45, ang: 0.6, scale: 0.008, d: 0.45, opacity: 0.015, dash: 0.1, num: 0.1 },       // everything else
   blend: 1,            // seconds of seam cross-fade for channels that don't close within the loop
-  dGap: 3,             // path-data keyframes at most every 2nd sample (30 Hz); SMIL interpolates in between
+  dGap: 6,             // path-data keyframes at most every 6th sample (10 Hz); SMIL interpolates in between (G5 size)
   strip: true,         // drop data-* attributes, comments and ids nothing references
   width: 1600, height: 900,
   title: 'Pelican Bay · 鹈鹕湾 — 骑自行车的鹈鹕 · A pelican riding a bicycle',
@@ -721,7 +721,10 @@ function decimateWithBreaks(sig, chans, m, step, stats, u) {
   segs.push([a, m]);
   let errMax = 0;
   segs.forEach(([s0, s1], si) => {
-    const keep = rdp(sig, chans, s0, s1, u.kind === 'd' && u.step < 1 / 45 ? cfg_minGapD : 1);   // the gap cap only at the 60 fps master rate
+    // the gap cap only at the 60 fps master rate; fine interior marks that ride on an animated shape (knit stitches, neck feather marks)
+    // get a sparser cap: sub-pixel at the baked wide camera, and they are the largest per-frame paths in the file
+    const fine = u.kind === 'd' && u.el && u.el.getAttribute && /(Knit|Fringe|neckFlow2|neckCrease)$/.test(u.el.getAttribute('data-ref') || '');
+    const keep = rdp(sig, chans, s0, s1, u.kind === 'd' && u.step < 1 / 45 ? (fine ? cfg_minGapD * 2 : cfg_minGapD) : 1);
     errMax = Math.max(errMax, keep.err);
     for (const i of keep.idx) kf.push({ t: i * step, v: sig.map(s => s[i]) });
     if (si < segs.length - 1) {
@@ -908,6 +911,8 @@ function emit(target, u, anims, cfg, stats, cssRules) {
   let bytes = 0;
   if (viaCss) {
     const prop = attr.slice(6);
+    // custom properties are dead in the baked file: finish() resolves every var() to a literal, so nothing reads them
+    if (prop.startsWith('--')) { stats.deadVarAnims = (stats.deadVarAnims || 0) + 1; return 0; }
     if (!target.id) target.id = 'bk' + (++stats.anims).toString(36);
     const a = anims[anims.length - 1];
     const name = 'bk-' + target.id;
@@ -1001,7 +1006,7 @@ function finish(svg, clone, cfg, stats, cssRules, origOf) {
   for (let i = 0; i < svg.style.length; i++) { const k = svg.style[i]; if (k.startsWith('--')) vars[k] = svg.style.getPropertyValue(k).trim(); }
   const resolve = s => {
     let guard = 0;
-    while (s.includes('var(') && guard++ < 8) s = s.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^()]*))?\)/g, (m, k, fb) => { const v = vars[k] ?? (cs.getPropertyValue(k).trim() || fb); if (v === undefined || v === '') { stats.warnings.push('unresolved ' + k); return fb || 'none'; } return v; });
+    while (s.includes('var(') && guard++ < 8) s = s.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*((?:[^()]|\([^()]*\))*))?\)/g, (m, k, fb) => { const v = vars[k] ?? (cs.getPropertyValue(k).trim() || fb); if (v === undefined || v === '') { stats.warnings.push('unresolved ' + k); return fb || 'none'; } return v; });
     return s;
   };
   clone.removeAttribute('style');
@@ -1027,8 +1032,11 @@ function finish(svg, clone, cfg, stats, cssRules, origOf) {
   for (const p of clone.querySelectorAll('path[d]')) {
     const o = origOf.get(p), d0 = p.getAttribute('d');
     let dec = 2;
-    try { const m = o && o.getScreenCTM && o.getScreenCTM(); if (m) { const sc = Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)) / rootScale; dec = sc <= 1.05 ? 1 : sc <= 10.5 ? 2 : 3; } } catch (e) { /* keep 2 */ }
-    if (p.closest('clipPath,mask,pattern,symbol,marker')) dec = Math.max(dec, 2);
+    // large texture tiles (world-scale patterns, no screen CTM): soft blotches / specks, 0.05 u is plenty
+    const pat = p.closest('pattern'), bigTex = pat && !pat.getAttribute('patternTransform') && +pat.getAttribute('width') >= 40;
+    if (bigTex) dec = 1;
+    else try { const m = o && o.getScreenCTM && o.getScreenCTM(); if (m) { const sc = Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)) / rootScale; dec = sc <= 1.05 ? 1 : sc <= 10.5 ? 2 : 3; } } catch (e) { /* keep 2 */ }
+    if (!bigTex && p.closest('clipPath,mask,pattern,symbol,marker')) dec = Math.max(dec, 2);
     const d1 = minPath(d0, dec); dBefore += d0.length; dAfter += d1.length;
     p.setAttribute('d', d1);
   }

@@ -2,8 +2,10 @@
 // usage: node tools/shoot.mjs [--dist] [--out shots/lead] [--set hero,frames,tods,cams,mobile,events,zoom,strip] [--query "solo=bike"] [--perf] [--sheet]
 //   --set strip : real-time filmstrips, 30 consecutive 60 fps frames (renderAt(t0 + i/60), ?nofx=1) per event
 //                 (bell, wave, hop, gulp, coast start, cadence jump) -> strip-<event>.png contact sheets
-//   --perf      : 5 s live run; exits non-zero when tools/budgets.json perf budgets are missed
-import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+//   --perf      : 5 s live run; exits non-zero when tools/budgets.json perf budgets are missed (writes perf.json + shots/perf-latest.json)
+//   --set compare : compare-keyframe.png = the draft keyframe next to the live hero (needs hero in the set)
+// Playwright: $PB_PLAYWRIGHT (a path or package name) overrides this box's global install
+const { chromium } = await import(process.env.PB_PLAYWRIGHT || '/opt/node22/lib/node_modules/playwright/index.mjs');
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -49,7 +51,8 @@ if (sets.includes('frames')) for (let i = 0; i < 24; i++) await shot(page, `fram
 if (sets.includes('tods')) for (const [n, tod] of [['dawn', 0.27], ['noon', 0.5], ['golden', 0.70], ['sunset', 0.765], ['night', 0.93]]) await shot(page, `tod-${n}`, { t: 4, tod, cam: 'wide' });
 if (sets.includes('cams')) for (const cam of ['wide', 'close', 'cinematic']) await shot(page, `cam-${cam}`, { t: 5, tod: 0.70, cam });
 if (sets.includes('events')) {
-  await shot(page, 'ev-hop', { t: 6.45, tod: 0.7, cam: 'close', events: [{ type: 'hop', t0: 6.0 }] });
+  // wide camera (it does not follow the hop) at τ = 0.42 s, the apex: rear off 0.241 s, front on 0.628 s (check-rig)
+  await shot(page, 'ev-hop', { t: 6.42, tod: 0.7, cam: 'wide', events: [{ type: 'hop', t0: 6.0 }] });
   await shot(page, 'ev-wave', { t: 6.8, tod: 0.7, cam: 'close', events: [{ type: 'wave', t0: 6.0 }] });
   await shot(page, 'ev-gulp', { t: 6.6, tod: 0.7, cam: 'close', events: [{ type: 'gulp', t0: 6.0 }] });
 }
@@ -99,16 +102,35 @@ if (arg('perf', false)) {
     return { frames: a.length, fps: +(1 / (dts.reduce((s, x) => s + x, 0) / dts.length)).toFixed(1), p95dtMs: +(q(dts, 0.95) * 1000).toFixed(1), jsMedMs: +q(js, 0.5).toFixed(2), jsP95Ms: +q(js, 0.95).toFixed(2), nodes: document.querySelectorAll('#scene *').length };
   });
   console.log('perf', JSON.stringify(perf));
+  // the measured numbers feed README.md (tools/build.mjs): never hand-typed
+  const rec = { ...perf, when: new Date().toISOString(), target: arg('dist', false) ? 'dist' : 'dev', load: (await import('node:os')).loadavg()[0] };
+  fs.writeFileSync(path.join(out, 'perf.json'), JSON.stringify(rec, null, 1));
+  fs.writeFileSync(path.join(ROOT, 'shots/perf-latest.json'), JSON.stringify(rec, null, 1));
   const B = BUDGET.perf, miss = [];
   if (perf.fps < B.fpsMin) miss.push(`fps ${perf.fps} < ${B.fpsMin}`);
   if (perf.jsP95Ms > B.jsP95MaxMs) miss.push(`JS p95 ${perf.jsP95Ms} ms > ${B.jsP95MaxMs}`);
   if (perf.nodes > B.domMax) miss.push(`DOM ${perf.nodes} > ${B.domMax}`);
   if (miss.length) errors.push('PERF BUDGET MISSED: ' + miss.join('; '));
 }
+// side by side with the chosen draft (drafts/B-storybook/keyframe.png): which style is live, at a glance
+if (sets.includes('compare') && shots.find(x => x[0] === 'hero')) {
+  const cp = await browser.newPage({ viewport: { width: 1600 * 2 + 48, height: 900 + 90 } });
+  const html = path.join(out, '.compare.html'), key = path.join(ROOT, 'drafts/B-storybook/keyframe.png');
+  fs.copyFileSync(key, path.join(out, '.draft-keyframe.png'));
+  fs.writeFileSync(html, `<!doctype html><body style="margin:0;background:#2a2320;color:#f6ead0;font:22px Georgia,serif"><div style="display:flex;gap:16px;padding:16px">${[['.draft-keyframe.png', 'Draft B keyframe (the style the user chose)'], ['hero.png', 'Live page now: hero, t = 3.2 s, golden hour']].map(([f, c]) => `<figure style="margin:0"><img style="width:1600px;height:900px;display:block" src="${f}"><figcaption style="padding:10px 4px">${c}</figcaption></figure>`).join('')}</div></body>`);
+  await cp.goto(pathToFileURL(html).href); await cp.waitForLoadState('load');
+  await cp.screenshot({ path: path.join(out, 'compare-keyframe.png') }); await cp.close();
+  fs.rmSync(html, { force: true }); fs.rmSync(path.join(out, '.draft-keyframe.png'), { force: true });
+  console.log('compare', path.join(out, 'compare-keyframe.png'));
+}
 if (arg('sheet', false) && shots.length > 1) {
   const sp = await browser.newPage({ viewport: { width: 4 * 416 + 16, height: 400 } });
-  await sp.setContent(`<body style="margin:0;background:#15171c;color:#eee;font:14px system-ui"><div style="display:grid;grid-template-columns:repeat(4,400px);gap:16px;padding:8px">${shots.map(([n, f]) => `<figure style="margin:0"><img style="width:400px;display:block" src="data:image/png;base64,${fs.readFileSync(f).toString('base64')}"><figcaption>${n}</figcaption></figure>`).join('')}</div></body>`);
+  // file:// page referencing the PNGs (full-size base64 of textured gouache shots overflowed the renderer)
+  const html = path.join(out, '.sheet.html');
+  fs.writeFileSync(html, `<!doctype html><body style="margin:0;background:#15171c;color:#eee;font:14px system-ui"><div style="display:grid;grid-template-columns:repeat(4,400px);gap:16px;padding:8px">${shots.map(([n, f]) => `<figure style="margin:0"><img style="width:400px;display:block" src="${encodeURI(path.basename(f))}"><figcaption>${n}</figcaption></figure>`).join('')}</div></body>`);
+  await sp.goto(pathToFileURL(html).href); await sp.waitForLoadState('load');
   await sp.screenshot({ path: path.join(out, 'sheet.png'), fullPage: true });
+  fs.rmSync(html, { force: true });
   console.log('sheet', path.join(out, 'sheet.png'));
 }
 await browser.close(); srv?.close();

@@ -332,6 +332,9 @@ const DETAILS = [
   ['O', 'spoke-card', 'courier spoke card PB-X clipped to a rear spoke (turns with the wheel)'], ['O', 'spoke-magnet', 'speed-sensor magnet on a front spoke'],
   ['O', 'fork-speed-sensor', 'reed sensor on the fork blade with its cyan wire up to the holo emitter'], ['O', 'hub-qr-lever', 'chrome quick-release lever on the front axle'],
   ['O', 'rack-bungee', 'magenta bungee cord over the courier bag with chrome hooks'], ['O', 'u-lock', 'acid U-lock hanging from the rack'],
+  ['T', 'tyre-pressure-mark', 'sidewall pressure mark "4.5 BAR" (glyph paths)'], ['O', 'tyre-direction-arrow', 'rotation-direction arrow moulded on the sidewall'],
+  ['O', 'fork-side-marker', 'amber LED side marker on the fork blade'], ['O', 'rack-reflector', 'amber reflector on the rack strut'],
+  ['O', 'fender-lettering', '"PELICAN EXPRESS" lettered along the rear fender'], ['T', 'seatpost-etch', 'etched height marks on the chrome seatpost'],
   ['O', 'rear-mud-flap', 'rear mud flap with hazard chevrons'], ['O', 'charge-port', 'charge port with a cyan ring on the power cell'],
 ];
 const DK = new Map(DETAILS.map(([k, n]) => [n, k]));
@@ -384,22 +387,24 @@ export function build() {
     }
     return d;
   })();
-  const treadD = Array.from({ length: 12 }, (_, k) => Array.from({ length: 8 }, (_, j) => { const i = k * 8 + j; return band([0, 0], 98.6, 100.3, i * 3.75 - 1.05, i * 3.75 + 1.05); }).join(''));
+  const sideArc = (str, a0, size) => { const rb = 93.1, w = textW(str, size, 0.3), start = a0 * D2R - (w / 2) / rb;
+    return textD(str, size, ([x, y]) => { const a = start + x / rb, r = rb - y; return [r * Math.cos(a), r * Math.sin(a)]; }, 0.3).d; };
+  const arrowD = a0 => { const P = (r, a) => pol([0, 0], r, a); return poly([P(94.2, a0 - 7), P(94.2, a0 + 3), P(93.1, a0 + 3), P(94.9, a0 + 6.5), P(96.7, a0 + 3), P(95.6, a0 + 3), P(95.6, a0 - 7)]); };
+  const treadD = Array.from({ length: 6 }, (_, k) => Array.from({ length: 16 }, (_, j) => { const i = k * 16 + j; return band([0, 0], 98.6, 100.3, i * 3.75 - 1.05, i * 3.75 + 1.05); }).join(''));
   function wheel(which) {
     const rear = which === 'rear', W = 'bike-w' + (rear ? 'R' : 'F');
     const col = rear ? X.mag : X.cyan, core = rear ? X.magCore : X.cyanCore, col2 = rear ? X.cyan : X.mag, core2 = rear ? X.cyanCore : X.magCore;
     const vg = VALVE_GAPS[rear ? 0 : 5].ang;              // different valve phase front / rear
     const refl = LACING.find(s => s.side === 'near' && Math.abs(((s.ah - (rear ? 200 : 40)) % 360 + 360) % 360) < 11.3) || LACING[3];
     const [r0, r1] = spokeEnds(refl), rp = lerp2(r0, r1, 0.62), ra = angOf(sub(r1, r0));
-    const N = 12, AP = (r0, r1) => arcPieces([0, 0], r0, r1, -90, 270, N);
+    const AP = (r0, r1, n = 6) => arcPieces([0, 0], r0, r1, -90, 270, n);   // 60° pieces: tight bounding boxes for the hit-test sampling
     const dotsIn = (i, r, rr, n = 32, a0 = 0) => Array.from({ length: n }, (_, m) => a0 + m * 360 / n).filter(a => { const u = ((a + 90) % 360 + 360) % 360; return u >= i * 60 && u < (i + 1) * 60; }).map(a => circ(pol([0, 0], r, a), rr)).join('');
     const nipIn = i => LACING.filter(s => { const u = ((s.ar + 90) % 360 + 360) % 360; return u >= i * 60 && u < (i + 1) * 60; }).map(s => seg(pol([0, 0], 85.4, s.ar), pol([0, 0], 88.2, s.ar))).join('');
-    const glowO = AP(81, 86.6), neonT = AP(86.5, 88.05);
+    const neonT = AP(86.5, 88.05);
     return h('g', {},
       h('g', { 'data-ref': `${W}-spk`, ...tag('spokes-far') }, h('use', { href: '#bike-spk-far' })),
       // neon glow thrown inward from the LED tube on the rim's inner wall (filled bands: honest hit areas, no filter)
-      Fp(ringNZ([0, 0], 84, 86.6), col, { 'fill-rule': 'evenodd', opacity: 0.12 }),
-      ...glowO.map(d => h('path', { ...tag('rim-glow'), d, fill: col, opacity: 0.08 })),
+      ...AP(81, 86.6).map(d => h('path', { ...tag('rim-glow'), d, fill: col, opacity: 0.1 })), Fp(ringNZ([0, 0], 84.2, 86.6), col, { opacity: 0.08 }),
       // rim: dark alloy band with a machined chrome edge; the neon tube + pale core sit on its inner wall
       h('g', {}, ...AP(88, 91).map(d => h('path', { ...tag('rim'), d, fill: '#1A1826' })),
         Fp(ringNZ([0, 0], 90.45, 91), X.chromeLo, { 'fill-rule': 'evenodd' }),
@@ -412,7 +417,9 @@ export function build() {
         h('g', { 'data-ref': `${W}-tread` }, ...treadD.map(d => h('path', { ...tag('tyre-tread'), d, fill: X.rubber2 }))),
         h('path', { ...tag('tyre-tread'), 'data-ref': `${W}-treadblur`, d: ringNZ([0, 0], 98.7, 99.9), fill: X.rubber2, 'fill-rule': 'evenodd', opacity: 0 }),
         ...AP(91.9, 92.4).map(d => h('path', { ...tag('tyre-bead-line'), d, fill: X.steel })),
-        ...tyreText.map(d => h('path', { ...tag('tyre-sidewall-lettering'), d, fill: X.sidewall }))),
+        ...tyreText.map(d => h('path', { ...tag('tyre-sidewall-lettering'), d, fill: X.sidewall })),
+        h('path', { ...tag('tyre-pressure-mark'), d: sideArc('4.5 BAR', rear ? 10 : 190, 3.6), fill: X.sidewall }),
+        h('path', { ...tag('tyre-direction-arrow'), d: arrowD(rear ? 40 : 220), fill: col, opacity: 0.85 })),
       h('g', { 'data-ref': `${W}-spkN`, ...tag('spokes-near') }, h('use', { href: '#bike-spk-near' })),
       // hub (front flange visible; the rear one sits under the 16T cog)
       rear ? '' : G('hub-front',
@@ -461,6 +468,10 @@ export function build() {
     const Hl = arcPieces(c, 106.8, 109.4, a0 + 4, a1 - 4, n);
     return A.map((d, i) => G(name, Fp(d, CARB, { stroke: X.ink, 'stroke-width': 0.8 }), Fp(U[i], X.steel)) + G('fender-led-edge', Fp(Hl[i], col, { opacity: 0.22 }), Fp(Pn[i], col), Fp(Pc[i], core))).join(''); };
   fr += fender(RH, -200, -12, 'fender-rear', X.mag, X.magCore) + fender(FH, -121, 27, 'fender-front', X.cyan, X.cyanCore);
+  { // rear fender lettering along the arc (reads clockwise, letters upright = outward)
+    const str = 'PELICAN EXPRESS', size = 3.5, rb = 104.4, w = textW(str, size, 0.4), a0 = -121 * D2R - (w / 2) / rb;
+    fr += h('path', { ...tag('fender-lettering'), d: textD(str, size, ([x, y]) => { const a = a0 + x / rb, r = rb - y; return [RH[0] + r * Math.cos(a), RH[1] + r * Math.sin(a)]; }, 0.4).d, fill: X.cyanCore, opacity: 0.9 });
+  }
   { // front fender mascot (holo flying fish), front LED, rear winged roundel
     const mA = -52, mp = pol(FH, 107.6, mA);
     fr += G('fender-mascot', h('g', { transform: `translate(${pt(mp)}) rotate(${f(mA + 90)})` },
@@ -508,6 +519,8 @@ export function build() {
     const yT = -216.5, x0 = -57, x1 = -194;
     const s1a = [-190, yT], s2a = [-151, yT], e1 = add(RH, [-4.5, -3]), e2 = add(RH, [-2.4, -4.6]);
     fr += G('rack-struts', S(seg(s1a, e1), X.ink, 3), S(seg(s1a, e1), X.steelHi, 1.3), Fp(circ(e1, 1.5), X.chrome)) + G('rack-struts', S(seg(s2a, e2), X.ink, 3), S(seg(s2a, e2), X.steelHi, 1.3), Fp(circ(e2, 1.3), X.chrome));
+    { const rp0 = lerp2(s1a, e1, 0.55), ru = norm(sub(e1, s1a));
+      fr += G('rack-reflector', Fp(rrect(rp0, ru, -6, 6, -2.6, 2.6, 1), X.ink), Fp(rrect(rp0, ru, -5.2, 5.2, -1.9, 1.9, 0.7), X.amber), S(seg(add(rp0, mul(ru, -4)), add(rp0, mul(ru, 4))), X.amberCore, 0.6), S(`M${pt(add(rp0, mul(ru, -3)))}l1 1.4M${pt(add(rp0, mul(ru, 0)))}l1 1.4M${pt(add(rp0, mul(ru, 3)))}l1 1.4`, '#B8741E', 0.4)); }
     // whip antenna (courier flag) from the rack tail, pennant 外卖 trailing back, beacon at the tip
     {
       const b0 = [x1 + 5, yT - 1], tip = [x1 - 14, yT - 118];
@@ -539,10 +552,10 @@ export function build() {
       const cd = splitQ(resample(hk, 3));
       fr += G('rack-bungee', S(cd, X.ink, 2.2), S(cd, X.mag, 1.3), S(cd, X.magCore, 0.35, { opacity: 0.8 }),
         S(`M${hk[0][0] + 1.4} ${hk[0][1] - 1}q-3 0.4 -2.4 3.4M${hk[6][0] - 1.4} ${hk[6][1] - 1}q3 0.4 2.4 3.4`, X.chrome, 0.9)); }
-    { const lx = -104, lw = 11, top = yT + 0.8, bot = yT + 12.6;
-      const sh = splitQ([[lx, top], [lx, bot - lw / 2], ...Array.from({ length: 7 }, (_, i) => pol([lx + lw / 2, bot - lw / 2], lw / 2, 180 - i * 30)), [lx + lw, bot - lw / 2], [lx + lw, top]]);
+    { const lx = -104, lw = 11, top = yT + 12, bot = yT - 5.2;
+      const sh = splitQ([[lx, top], [lx, bot + lw / 2], ...Array.from({ length: 7 }, (_, i) => pol([lx + lw / 2, bot + lw / 2], lw / 2, 180 + i * 30)), [lx + lw, bot + lw / 2], [lx + lw, top]]);
       fr += G('u-lock', S(sh, X.ink, 3.6), S(sh, X.acid, 2), S(sh, X.acidCore, 0.5, { opacity: 0.8 }),
-        Fp(rrect([lx - 3.4, yT - 4], [1, 0], 0, lw + 6.8, 0, 5, 1.6), X.ink), Fp(rrect([lx - 2.6, yT - 3.3], [1, 0], 0, lw + 5.2, 0, 3.6, 1.2), X.steel), Fp(circ([lx + lw / 2, yT - 1.5], 0.8), X.acid)); }
+        Fp(rrect([lx - 3.4, top - 1], [1, 0], 0, lw + 6.8, 0, 5, 1.6), X.ink), Fp(rrect([lx - 2.6, top - 0.3], [1, 0], 0, lw + 5.2, 0, 3.6, 1.2), X.steel), Fp(circ([lx + lw / 2, top + 1.5], 0.8), X.acid)); }
     fr += G('bag-drawcord', S(`M${tx0 + 5} ${ty1 - 1}q-2 5 -1 9M${tx0 + 7} ${ty1 - 1}q1 5 3 8`, X.cyan, 0.7), Fp(rrect([tx0 + 2.6, ty1 + 7.6], [1, 0], 0, 2.8, 0, 3.4, 0.9) + rrect([tx0 + 8.6, ty1 + 6.6], [1, 0], 0, 2.8, 0, 3.4, 0.9), X.acid));
     // licence plate bolted to the struts: 霓虹区 0719, cyan LED border
     const cnW = textW('霓虹区', 5.7), nmW = textW('0719', 6.2, 0.2), pw = cnW + nmW + 7.6, px0 = -169 - pw / 2, px1 = -169 + pw / 2, py0 = yT + 2.2, py1 = yT + 15;
@@ -717,10 +730,14 @@ export function build() {
     fr += G('cable-ferrules', Fp(rrect(onSS(112.8), mul(uSS, -1), 0, 2.4, -1.25, 1.25, 0.4), X.cyan), S(seg(onSS(110.4), add(onSS(106.5), mul(perp(uSS), 2.6))), X.chromeHi, 0.55));
   }
   // LED wire from the dynamo, along the down tube and chainstay to the tail light (clipped)
-  fr += G('led-wire', S(splitQ(resample([add(onDT(DT_LEN - 30), mul(nDT, -5.4)), add(onDT(90), mul(nDT, -5.4)), add(onDT(40), mul(nDT, -5.4)), add(BB, [-8, -8]), add(onCS(60), mul(nCS, -3.8)), add(onCS(16), mul(nCS, -3.8)), add(RH, [-1, -7.5]), lerp2(add(RH, [0.8, -6.8]), [-147.6, -214.5], 0.5), [-147.6, -213.6], [-176, -213.8], [-196, -213.8]], 3)), X.mag, 0.75),
-    Fp([onDT(120), onDT(70)].map(p => circ(add(p, mul(nDT, -5.4)), 1)).join(''), X.chrome));
+  fr += G('led-wire', S(splitQ(resample([add(BB, [10, 12]), add(BB, [-8, 11]), add(onCS(60), mul(nCS, -3.8)), add(onCS(16), mul(nCS, -3.8)), add(RH, [-1, -7.5]), lerp2(add(RH, [0.8, -6.8]), [-147.6, -214.5], 0.5), [-147.6, -213.6], [-176, -213.8], [-196, -213.8]], 3)), X.mag, 0.75),
+    Fp([onCS(60), onCS(16)].map(p => circ(add(p, mul(nCS, -3.8)), 1)).join(''), X.chrome));
   // seatpost, clamp, saddle
+  let etchD = '';
+  { let et = ''; for (let k = 0; k < 7; k++) { const p0 = lerp2(STT, SCL, 0.12 + k * 0.06), n = mul(nST, 2.6); et += seg(add(p0, n), add(p0, mul(n, k % 3 ? -0.2 : -1))); }
+    etchD = et; }
   fr += G('seatpost', S(seg(STT, SCL), X.ink, 7.4, { 'stroke-linecap': 'butt' }), S(seg(STT, SCL), X.chrome, 5.4, { 'stroke-linecap': 'butt' }), S(seg(add(STT, mul(nST, 1.3)), add(SCL, mul(nST, 1.3))), X.chromeHi, 1), S(seg(add(STT, mul(nST, -1.6)), add(SCL, mul(nST, -1.6))), X.chromeLo, 1));
+  fr += h('path', { ...tag('seatpost-etch'), d: etchD, stroke: X.ink, 'stroke-width': 0.55, fill: 'none' });
   {
     // sprung saddle: rails loop under two chrome coil springs that carry the cantle
     const railPts = [[-28.5, -282.2], [-42, -277.8], [-60.5, -275], [-78, -270.8], [-90.5, -267], [-98.5, -266.5], [-102.8, -267.6], [-103.8, -270.6]];
@@ -763,12 +780,14 @@ export function build() {
     fk += G('fork-end', Fp(`M${Q([-7.5, -2.8])}L${Q([2.2, -3.4])}Q${Q([5.8, 0])} ${Q([2.2, 3.4])}L${Q([-7.5, 2.4])}Z`, X.chrome, { stroke: X.ink, 'stroke-width': 0.6 }),
       Fp(circ(eyeF, 1.6), X.chrome), Fp(circ(eyeF, 0.65), X.ink), G('axle-nut-front', Fp(hex(FH, 3.3, 0), X.ink), Fp(hex(FH, 2.1, 30), X.chromeLo), Fp(circ(FH, 0.9), X.chromeHi))); }
   { // front QR lever along the blade; reed speed sensor where the spoke magnet passes (r ≈ 41), wire up to the emitter
-    const up = norm(sub(FORK_C[FORK_C.length - 5], FH)), nf = perp(up), q0 = add(FH, mul(nf, 1.2));
+    const up = norm([-1, 0.3]), nf = perp(up), q0 = FH;
     fk += G('hub-qr-lever', Fp(circ(FH, 3.9), X.ink), Fp(circ(FH, 3.1), X.chrome), Fp(taper([q0, add(q0, mul(up, 9)), add(q0, mul(up, 18))], 3.4, 2.4), X.ink), Fp(taper([q0, add(q0, mul(up, 9)), add(q0, mul(up, 17.4))], 2.4, 1.5), X.chrome),
       Fp(rrect(add(q0, mul(up, 15.2)), up, 0, 4.4, -2.1, 2.1, 1), X.chromeHi, { stroke: X.ink, 'stroke-width': 0.5 }));
     const sp = FORK_C.reduce((b, p) => Math.abs(len(sub(p, FH)) - 41.5) < Math.abs(len(sub(b, FH)) - 41.5) ? p : b), u = norm(sub(FORK_C[FORK_C.indexOf(sp) - 1], sp)), n = mul(perp(u), -1);
     const box = add(sp, mul(n, 3.6));
-    fk += G('fork-speed-sensor', S(splitQ([add(box, mul(u, 3)), ...FORK_C.slice(3, FORK_C.indexOf(sp)).reverse().map(p => add(p, mul(perp(norm(sub(FORK_C[0], FH))), 3.4)))].reverse().concat([add(box, mul(u, 3))]).slice(-6)), X.cyan, 0.5),
+    { const mp = FORK_C[FORK_C.length - 7], mu = norm(sub(FORK_C[FORK_C.length - 8], mp)), mn = perp(mu);
+      fk += G('fork-side-marker', Fp(circ(add(mp, mul(mn, -0.5)), 7), 'url(#bike-rg-amber)', { opacity: 0.7 }), Fp(rrect(add(mp, mul(mn, -0.5)), mu, -3.6, 3.6, -1.9, 1.9, 1.2), X.ink), Fp(rrect(add(mp, mul(mn, -0.5)), mu, -2.8, 2.8, -1.2, 1.2, 0.8), X.amber), S(seg(add(mp, mul(mu, -2)), add(mp, mul(mu, 2))), X.amberCore, 0.5)); }
+    fk += G('fork-speed-sensor',
       Fp(rrect(box, u, -3.4, 3.4, -2, 2, 0.8), X.ink), Fp(rrect(box, u, -2.4, 2.4, -1.1, 1.1, 0.5), X.steel), Fp(circ(add(box, mul(u, -1.6)), 0.6), X.cyan));
   }
   // bottle dynamo on the blade, roller on the sidewall
@@ -1099,13 +1118,14 @@ export function attach(svg) {
       for (let i = 0; i < CAD_SEGS; i++) set(r['cad' + i], 'opacity', i < nLit ? '1' : '0');
       const ph = ((t * 0.37) % 1 + 1) % 1, ph2 = ((t * 0.113 + 0.4) % 1 + 1) % 1;
       set(r.holo, 'opacity', ph < 0.018 || (ph2 > 0.5 && ph2 < 0.508) ? '0.55' : '0.95');
-      // courier box: countdown (29:59 → 00:00, one-second steps), colon + status LED blink at 1 Hz
+      // courier box: countdown (29:59 → 00:00, one-second steps), colon + status LED blink
       const remain = 1799 - (Math.floor(Math.max(0, t)) % 1800), mm = Math.floor(remain / 60), ss = remain % 60;
       digit('tm', 0, Math.floor(mm / 10)); digit('tm', 1, mm % 10); digit('tm', 2, Math.floor(ss / 10)); digit('tm', 3, ss % 10);
-      const half = ((t % 1) + 1) % 1 < 0.5;
-      set(r.tmColon, 'opacity', half ? '1' : '0.2');
-      set(r.boxLed, 'opacity', half ? '1' : '0.35');
-      set(r.cellBlink, 'opacity', ((t * 0.5) % 1 + 1) % 1 < 0.5 ? '1' : '0.15');
+      // all blinks switch on whole seconds, together with the countdown digit: one repaint of the static bike sheet per second
+      const even = Math.floor(Math.max(0, t)) % 2 === 0;
+      set(r.tmColon, 'opacity', even ? '1' : '0.2');
+      set(r.boxLed, 'opacity', even ? '1' : '0.35');
+      set(r.cellBlink, 'opacity', even ? '0.15' : '1');
     },
     bake(kit) {
       const T = 1;   // baked at 60 rpm: one crank turn per second

@@ -439,25 +439,26 @@ const SP_AT = {
 function textures(v) {
   const R = (() => { let s = 90210; return () => ((s = (s * 16807) % 2147483647) / 2147483647); })();
   const pat = (id, w, hh, body) => h('pattern', { id, x: 0, y: 0, width: w, height: hh, patternUnits: 'userSpaceOnUse' }, body);
+  const IN = (x, y, m, w, hh) => x > -m && x < w + m && y > -m && y < hh + m;   // a wrap copy that reaches into the tile
   const tiled = (w, hh, fn) => { let d = ''; for (const dx of [-w, 0, w]) for (const dy of [-hh, 0, hh]) d += fn(dx, dy); return d; };
   let out = '';
   // sand: speckle (dark + light grains) and a few soft dry-brush drags
   { const pts = Array.from({ length: 70 }, () => [R() * 60, R() * 44, 0.35 + R() * 0.7, R() < 0.55]);
     const drags = Array.from({ length: 4 }, () => [R() * 60, R() * 44, 10 + R() * 14]);
     out += pat('land-tx-sand', 60, 44,
-      F(tiled(60, 44, (dx, dy) => pts.filter(p => p[3]).map(p => circ(p[0] + dx, p[1] + dy, p[2])).join('')), v('lSandLo'), { opacity: 0.55 }) +
-      F(tiled(60, 44, (dx, dy) => pts.filter(p => !p[3]).map(p => circ(p[0] + dx, p[1] + dy, p[2] * 0.9)).join('')), v('lSandHi'), { opacity: 0.7 }) +
+      F(tiled(60, 44, (dx, dy) => pts.filter(p => p[3] && IN(p[0] + dx, p[1] + dy, 2, 60, 44)).map(p => circ(p[0] + dx, p[1] + dy, p[2])).join('')), v('lSandLo'), { opacity: 0.55 }) +
+      F(tiled(60, 44, (dx, dy) => pts.filter(p => !p[3] && IN(p[0] + dx, p[1] + dy, 2, 60, 44)).map(p => circ(p[0] + dx, p[1] + dy, p[2] * 0.9)).join('')), v('lSandHi'), { opacity: 0.7 }) +
       F(tiled(60, 44, (dx, dy) => drags.map(p => dab(p[0] + dx, p[1] + dy, p[2], 1.1, 2)).join('')), v('lSandHi'), { opacity: 0.35 })); }
   // dry brush: horizontal tapered strokes, light and dark (walls, road, boards)
   { const st = Array.from({ length: 9 }, (_, i) => [R() * 120, (i + R() * 0.6) * 26 / 9, 18 + R() * 34, 0.6 + R() * 1.1, i % 3 === 0, (R() - 0.5) * 3]);
     out += pat('land-tx-brush', 120, 26,
-      F(tiled(120, 26, (dx, dy) => st.filter(s => !s[4]).map(s => dab(s[0] + dx, s[1] + dy, s[2], s[3], s[5])).join('')), v('lPaper'), { opacity: 0.13 }) +
-      F(tiled(120, 26, (dx, dy) => st.filter(s => s[4]).map(s => dab(s[0] + dx, s[1] + dy, s[2], s[3] * 0.8, 1)).join('')), v('lDark'), { opacity: 0.07 })); }
+      F(tiled(120, 26, (dx, dy) => st.filter(s => !s[4] && IN(s[0] + dx, s[1] + dy, 56, 120, 26)).map(s => dab(s[0] + dx, s[1] + dy, s[2], s[3], s[5])).join('')), v('lPaper'), { opacity: 0.13 }) +
+      F(tiled(120, 26, (dx, dy) => st.filter(s => s[4] && IN(s[0] + dx, s[1] + dy, 56, 120, 26)).map(s => dab(s[0] + dx, s[1] + dy, s[2], s[3] * 0.8, 1)).join('')), v('lDark'), { opacity: 0.07 })); }
   // road: fine speckle + drags
   { const pts = Array.from({ length: 46 }, () => [R() * 90, R() * 40, 0.4 + R() * 0.9, R() < 0.5]);
     out += pat('land-tx-road', 90, 40,
-      F(tiled(90, 40, (dx, dy) => pts.filter(p => p[3]).map(p => circ(p[0] + dx, p[1] + dy, p[2])).join('')), v('lDark'), { opacity: 0.22 }) +
-      F(tiled(90, 40, (dx, dy) => pts.filter(p => !p[3]).map(p => circ(p[0] + dx, p[1] + dy, p[2])).join('')), v('lPaper'), { opacity: 0.2 }) +
+      F(tiled(90, 40, (dx, dy) => pts.filter(p => p[3] && IN(p[0] + dx, p[1] + dy, 2, 90, 40)).map(p => circ(p[0] + dx, p[1] + dy, p[2])).join('')), v('lDark'), { opacity: 0.22 }) +
+      F(tiled(90, 40, (dx, dy) => pts.filter(p => !p[3] && IN(p[0] + dx, p[1] + dy, 2, 90, 40)).map(p => circ(p[0] + dx, p[1] + dy, p[2])).join('')), v('lPaper'), { opacity: 0.2 }) +
       F(tiled(90, 40, (dx, dy) => dab(8 + dx, 12 + dy, 40, 1.1, 1) + dab(50 + dx, 31 + dy, 30, 0.9, -1)), v('lPaper'), { opacity: 0.08 })); }
   // wood grain: wavy vertical lines + a knot
   { let g = ''; for (let i = 0; i < 5; i++) { const x = 2 + i * 4.8 + R() * 1.5; g += `M${f(x)} -2q${f(1.4)} 20 0 42t0 42`; }
@@ -469,24 +470,26 @@ function textures(v) {
   // mottle: soft blotches (stone, plaster, rock)
   { const bl = Array.from({ length: 12 }, () => [R() * 56, R() * 48, 3 + R() * 6, 2 + R() * 3, R() < 0.5]);
     out += pat('land-tx-dab', 56, 48,
-      F(tiled(56, 48, (dx, dy) => bl.filter(b => b[4]).map(b => ell(b[0] + dx, b[1] + dy, b[2], b[3])).join('')), v('lPaper'), { opacity: 0.12 }) +
-      F(tiled(56, 48, (dx, dy) => bl.filter(b => !b[4]).map(b => ell(b[0] + dx, b[1] + dy, b[2] * 0.8, b[3] * 0.7)).join('')), v('lDark'), { opacity: 0.06 })); }
+      F(tiled(56, 48, (dx, dy) => bl.filter(b => b[4] && IN(b[0] + dx, b[1] + dy, 10, 56, 48)).map(b => ell(b[0] + dx, b[1] + dy, b[2], b[3])).join('')), v('lPaper'), { opacity: 0.12 }) +
+      F(tiled(56, 48, (dx, dy) => bl.filter(b => !b[4] && IN(b[0] + dx, b[1] + dy, 10, 56, 48)).map(b => ell(b[0] + dx, b[1] + dy, b[2] * 0.8, b[3] * 0.7)).join('')), v('lDark'), { opacity: 0.06 })); }
   // gouache mottle: big soft blotches of lighter and darker paint (the uneven body of a hand-laid gouache wash),
   // each blotch a wobbly blob with a paler core, so large flat areas (road, sand, lawns, walls) read as painted
   { const bl = Array.from({ length: 16 }, (_, i) => [R() * 260, R() * 140, 14 + R() * 30, 5 + R() * 11, i % 2]);
-    const d = (on, k) => tiled(260, 140, (dx, dy) => bl.filter(b => b[4] === on).map((b, i) => blob(b[0] + dx, b[1] + dy, b[2] * k, b[3] * k, 0.22, i)).join(''));
+    // only the wrap copies that reach into the tile (same pixels, ~1/3 of the path data)
+    const inTile = (x, y, rx, ry) => x + rx * 1.3 > 0 && x - rx * 1.3 < 260 && y + ry * 1.3 > 0 && y - ry * 1.3 < 140;
+    const d = (on, k) => tiled(260, 140, (dx, dy) => bl.filter(b => b[4] === on).map((b, i) => inTile(b[0] + dx, b[1] + dy, b[2] * k, b[3] * k) ? blob(b[0] + dx, b[1] + dy, b[2] * k, b[3] * k, 0.22, i) : '').join(''));
     out += pat('land-tx-mottle', 260, 140,
       F(d(1, 1), v('lPaper'), { opacity: 0.075 }) + F(d(1, 0.55), v('lPaper'), { opacity: 0.06 }) +
       F(d(0, 1), v('mauve'), { opacity: 0.085 }) + F(d(0, 0.5), v('mauve'), { opacity: 0.06 })); }
   // painted grass: tapered blade strokes in a light and a dark green, varied lean (lawns and banks)
   { const bl = Array.from({ length: 34 }, () => [R() * 90, R() * 60, 6 + R() * 9, -70 - R() * 40, R() < 0.5, 0.9 + R() * 0.9]);
-    const d = on => tiled(90, 60, (dx, dy) => bl.filter(b => b[4] === on).map(b => dab(b[0] + dx, b[1] + dy, b[2], b[5], b[3])).join(''));
+    const d = on => tiled(90, 60, (dx, dy) => bl.filter(b => b[4] === on && IN(b[0] + dx, b[1] + dy, 17, 90, 60)).map(b => dab(b[0] + dx, b[1] + dy, b[2], b[5], b[3])).join(''));
     out += pat('land-tx-blades', 90, 60, F(d(true), v('lGrassHi'), { opacity: 0.55 }) + F(d(false), v('lGrassLo'), { opacity: 0.45 })); }
   // road wash: long horizontal dry-brush drags, visibly painted, light and warm-dark
   { const st = Array.from({ length: 14 }, (_, i) => [R() * 300, (i + R() * 0.7) * 110 / 14, 40 + R() * 90, 0.7 + R() * 1.4, i % 3 === 0, (R() - 0.5) * 1.6]);
     out += pat('land-tx-drag', 300, 110,
-      F(tiled(300, 110, (dx, dy) => st.filter(q => !q[4]).map(q => dab(q[0] + dx, q[1] + dy, q[2], q[3], q[5])).join('')), v('lPaper'), { opacity: 0.1 }) +
-      F(tiled(300, 110, (dx, dy) => st.filter(q => q[4]).map(q => dab(q[0] + dx, q[1] + dy, q[2], q[3], q[5])).join('')), v('mauve'), { opacity: 0.14 })); }
+      F(tiled(300, 110, (dx, dy) => st.filter(q => !q[4] && IN(q[0] + dx, q[1] + dy, 135, 300, 110)).map(q => dab(q[0] + dx, q[1] + dy, q[2], q[3], q[5])).join('')), v('lPaper'), { opacity: 0.1 }) +
+      F(tiled(300, 110, (dx, dy) => st.filter(q => q[4] && IN(q[0] + dx, q[1] + dy, 135, 300, 110)).map(q => dab(q[0] + dx, q[1] + dy, q[2], q[3], q[5])).join('')), v('mauve'), { opacity: 0.14 })); }
   // gingham (picnic blanket, awnings in the stream)
   out += pat('land-tx-gingham', 8, 8, F(rect(0, 0, 8, 8), v('lPaper')) + F(rect(0, 0, 4, 8) + rect(0, 0, 8, 4), v('lRed'), { opacity: 0.45 }) + F(rect(0, 0, 4, 4), v('lRed'), { opacity: 0.4 }));
   return out;
@@ -849,9 +852,9 @@ function setPieces(ctx) {
     const Lr = 3 * KM * 0.6 + 400, y = 652;
     let wf = '', wf2 = '', gr = '';
     for (let x = -200; x < Lr + 200; x += 26) { const k = hash(x | 0, 77); if (k < 0.3) wf += circ(x + k * 20, 668 + k * 30, 2); else if (k < 0.5) wf2 += circ(x + k * 20, 672 + k * 26, 1.8) + circ(x + k * 20 + 3, 671 + k * 26, 1.6); }
-    for (let x = -200; x < Lr + 200; x += 9) gr += circ(x + hash(x | 0, 5) * 6, 652 + hash(x | 0, 6) * 5, 1 + hash(x | 0, 7) * 1.1);
+    // gravel ballast: a seamless 117 u pattern tile (13 seeded stones) instead of ~one circle per 9 u of line (bake size)
     let m = F(rect(-200, 654, Lr + 400, 50), v('grassFar')) + F(rect(-200, 654, Lr + 400, 50), 'url(#land-tx-blades)') + F(rect(-200, 654, Lr + 400, 50), 'url(#land-tx-mottle)') +
-      Ft(wf, M.Red, { opacity: 0.85 }) + Ft(wf2, M.Paper, { opacity: 0.9 }) + F(rect(-200, y - 3, Lr + 400, 11), M.StoneLo) + Ft(gr, M.StoneDk, { opacity: 0.6 }) +
+      Ft(wf, M.Red, { opacity: 0.85 }) + Ft(wf2, M.Paper, { opacity: 0.9 }) + F(rect(-200, y - 3, Lr + 400, 11), M.StoneLo) + F(rect(-200, 651, Lr + 400, 8), 'url(#land-gravel)') +
       F(rect(-200, y - 4, Lr + 400, 6), 'url(#land-sleepers)') + S(`M-200 ${y - 5}H${Lr + 200}`, N, 2.2) + S(`M-200 ${y - 6}H${Lr + 200}`, P, 0.7) +
       F(rect(-200, 560, Lr + 400, 94), 'url(#land-poles)') + S(`M-200 568H${Lr + 200}M-200 575H${Lr + 200}`, N, 0.5);
     // the halt: platform, canopy, sign 海滨铁路, clock, bench, luggage
@@ -1696,6 +1699,8 @@ export function build(ctx) {
 
   // ========================================================================= assemble
   const J = journeyArt(ctx), SPS = setPieces(ctx);
+  { let gv = ''; for (let x = 0; x < 117; x += 9) gv += circ(x + hash(x, 5) * 6 + 1.2, 1 + hash(x, 6) * 5, 1 + hash(x, 7) * 1.1);
+    defs += h('pattern', { id: 'land-gravel', x: 0, y: 651, width: 117, height: 8, patternUnits: 'userSpaceOnUse' }, F0(gv, M.StoneDk, { opacity: 0.6 })); }
   defs += h('pattern', { id: 'land-sleepers', x: 0, y: 646, width: 13, height: 8, patternUnits: 'userSpaceOnUse' }, F(rect(2, 2, 7, 6), M.WoodLo) + F(rect(2, 2, 7, 1.2), M.WoodHi));
   defs += h('pattern', { id: 'land-poles', x: 0, y: 560, width: 520, height: 94, patternUnits: 'userSpaceOnUse' },
     F(rect(258, 6, 4, 88) + rect(246, 6, 28, 3), M.WoodLo) + F(circ(248, 5, 1.8) + circ(260, 5, 1.8) + circ(272, 5, 1.8), M.Cream));

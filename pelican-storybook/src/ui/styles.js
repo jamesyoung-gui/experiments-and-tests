@@ -418,7 +418,8 @@ export const CSS = String.raw`
   .ui-quick .ui-btn .ico{width:18px; height:18px}
   #ui .ui-quick .ui-btn .en{letter-spacing:0; font-size:.64rem}
   .ui-field{margin-bottom:2px}
-  .ui-ticks{margin-top:-6px}
+  .ui-ticks{margin-top:-4px; padding-bottom:4px; line-height:1.35; min-height:1.6rem}
+  .ui-sec{padding-bottom:6px}
   .ui-grip{display:block; width:48px; height:6px; margin:0 auto 4px; border-radius:4px 3px 4px 3px; background:var(--u-ink-soft); position:relative; cursor:grab; touch-action:none}
   .ui-grip::before{content:""; position:absolute; inset:-14px -30px}
   .ui-head{display:none}
@@ -434,6 +435,7 @@ export const CSS = String.raw`
   .ui-foot{display:none}
   .ui-under{display:none}
 }
+@media (max-width:400px){ .ui-ticks .en{display:none} .ui-ticks span{padding-top:7px} }
 @media (max-width:600px) and (pointer:coarse), (pointer:coarse){
   .ui-btn, .ui-tabs .ui-btn{min-height:44px; min-width:44px}
   .ui-range{height:44px}

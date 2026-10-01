@@ -1,6 +1,7 @@
 // Compose PNGs into a labelled grid.
 // usage: node tools/sheet.mjs <out.png> <cols> <tileWidth> "Label=path.png" ...
-import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+// Playwright: $PB_PLAYWRIGHT (a path or package name) overrides this box's global install
+const { chromium } = await import(process.env.PB_PLAYWRIGHT || '/opt/node22/lib/node_modules/playwright/index.mjs');
 import fs from 'node:fs';
 
 const [out, cols = '2', tw = '800', ...items] = process.argv.slice(2);

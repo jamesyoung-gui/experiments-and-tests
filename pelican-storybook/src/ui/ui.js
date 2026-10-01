@@ -792,7 +792,10 @@ export function createUI(host, bus, init) {
     const order = [dockSide, 'left', 'right', 'right-top', 'left-top'];
     const prevLevel = card.dataset.level;
     let pick = null;
-    for (let lv = H < 560 ? 1 : 0; lv <= 2 && !(pick && pick.o === 0); lv++) {
+    // after the intro the ticket folds to its compact level (no header band, one-line odometer) so the picture-book page
+    // breathes; hovering, focusing or opening the card unfolds it again
+    const settled = uiT > 9 && card.dataset.open !== 'true' && !card.matches(':hover, :focus-within');
+    for (let lv = H < 560 || settled ? 1 : 0; lv <= 2 && !(pick && pick.o === 0); lv++) {
       card.dataset.level = lv;
       const cw = card.offsetWidth, ch = card.offsetHeight;
       const boxes = {
@@ -805,7 +808,10 @@ export function createUI(host, bus, init) {
     host.style.setProperty('--ui-inset', inset + 'px');
     if (String(pick.lv) !== prevLevel) measure();
     if (pick.sd !== dockSide) { dockSide = pick.sd; card.dataset.dock = pick.sd; placeBody(); }
+    if (eggAvoid) eggAvoid();
   }
+  let eggAvoid = null, uiT = 0;
+  for (const ev of ['mouseenter', 'mouseleave', 'focusin', 'focusout']) card.addEventListener(ev, () => { dockDue = true; });
   win.addEventListener('resize', () => { measure(); dock(true); });
 
   // ---------- idle hint (once per browser, bilingual, pointer-adapted) ----------
@@ -877,6 +883,15 @@ export function createUI(host, bus, init) {
     host.appendChild(box);
     const stub = box.firstChild, lab = box.querySelector('[data-egg-lab]'), num = box.querySelector('[data-egg-n]'), eToast = box.lastChild;
     let eTimer = 0;
+    // keep the stub + toast off the control card (landscape phones dock the card top-right): slide them left of it
+    const avoidCard = () => {
+      if (box.hidden) return;
+      box.style.right = '';
+      const c = card.getBoundingClientRect(), b = box.getBoundingClientRect();
+      const hit = b.right > c.left && b.left < c.right && b.bottom > c.top && b.top < c.bottom;
+      if (hit && c.width < win.innerWidth * 0.8) box.style.right = Math.round(win.innerWidth - c.left + 10) + 'px';
+    };
+    eggAvoid = avoidCard;
     bus.on('egg:found', ({ id, zh, en, count, total }) => {
       box.hidden = false;
       lab.textContent = lang === 'en' ? 'EGGS' : lang === 'zh' ? '彩蛋' : '彩蛋 EGGS';
@@ -886,6 +901,7 @@ export function createUI(host, bus, init) {
       eToast.textContent = lang === 'en' ? `Egg found: ${en}` : lang === 'zh' ? `发现彩蛋：${zh}` : `发现彩蛋：${zh} · ${en}`;
       eToast.classList.add('on'); clearTimeout(eTimer); eTimer = setTimeout(() => eToast.classList.remove('on'), 3200);
       announce('aEgg', { x: { zh, en } });
+      avoidCard();
     });
   }
 
@@ -895,6 +911,7 @@ export function createUI(host, bus, init) {
   win.requestAnimationFrame(early);
   return {
     update(frame) {
+      uiT = frame.t || 0;
       acc += frame.dt || 0;
       if (frame.dt !== 0 && acc < 0.1) return;
       acc = 0;

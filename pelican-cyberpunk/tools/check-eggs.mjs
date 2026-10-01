@@ -48,6 +48,9 @@ const plan = {
   bottle:   { T: 4, tod: 0.7, at: [1.0] },
   wish:     { T: 4, tod: 0.93, at: [0.4], clip: { x: 1030, y: 60, width: 300, height: 200 } },
   flight:   { T: 5, tod: 0.7, at: [4.5] },
+  hack:     { T: 3.2, tod: 0.7, at: [0.15, 1.6], clip: { x: 380, y: 40, width: 840, height: 220 } },
+  welcome:  { T: 18.35, tod: 0.81, at: [0.2, 0.62], cam: 'wide' },
+  gold:     { T: 3.2, tod: 0.7, at: [1.2], cam: 'close' },
 };
 const page = await open();
 const list = await page.evaluate(() => window.__pb.eggs.list.map(e => e.id));
@@ -78,19 +81,34 @@ await render(live, 4, { tod: 0.7, cam: 'wide' });
 for (const k of ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']) await live.keyboard.press(k);
 await live.keyboard.type('gimini');
 await live.keyboard.type('bird');
+const cam0 = await live.evaluate(() => window.__pb.state.cam);
+await live.keyboard.type('hack');
+await live.keyboard.type('888');
 const sun = await live.evaluate(() => { const f = window.__pb.renderAt(4, { tod: 0.7, cam: 'wide' }); return f.sun; });
 await live.mouse.click(sun.x, sun.y);
 const bottle = await live.evaluate(() => { const el = document.querySelector('[data-ref="egg-bottle"]'); const r = el.getBoundingClientRect(); return r.width ? { x: r.x + r.width / 2, y: r.y + r.height / 2 - 4 } : null; });
 if (bottle) await live.mouse.click(bottle.x, bottle.y); else fails.push('bottle not on screen at t=4');
 const moon = await live.evaluate(() => window.__pb.renderAt(4, { tod: 0.93, cam: 'wide' }).moon);
 await live.mouse.click(moon.x, moon.y);
+// a neon meteor at night: find one, click its head while it glows
+const met = await live.evaluate(() => { for (let t = 4; t < 120; t += 0.05) { const m = window.__pb.eggs.shootAt(t); if (m && m.u > 0.3 && m.u < 0.6) { window.__pb.renderAt(t, { tod: 0.93, cam: 'wide' }); return { x: m.x, y: m.y }; } } return null; });
+if (met) await live.mouse.click(met.x, met.y); else fails.push('no shooting star in 120 s');
 await live.evaluate(() => { for (let i = 0; i < 7; i++) window.__pb.bus.emit('rig:event', { type: 'bell', t0: 4 + i * 0.3 }); });
 await live.evaluate(() => window.__pb.bus.emit('rig:event', { type: 'gulp', t0: 4 }));
+// the NO PELICANS sign: ride to the first time it is centred on screen, then ring
+const tSign = await live.evaluate(() => { for (let t = 4; t < 90; t += 0.05) { const f = window.__pb.renderAt(t, { tod: 0.7, cam: 'wide' }); const s = window.__pb.eggs.signAt(f.distance)[1]; if (s > 500 && s < 1100) return t; } return -1; });
+if (tSign < 0) fails.push('NO PELICANS sign never on screen in 90 s'); else {
+  await render(live, tSign, { tod: 0.7, cam: 'wide' });
+  await live.evaluate(t => window.__pb.bus.emit('rig:event', { type: 'bell', t0: t }), tSign);
+}
 await render(live, 4.5, { tod: 0.93, cam: 'wide' });
 const liveFound = await live.evaluate(() => window.__pb.eggs.found());
-for (const id of ['brown', 'velo', 'flight', 'sunwink', 'bottle', 'moonwink', 'chorus', 'ufo']) if (!liveFound.includes(id)) fails.push(`live detector did not find "${id}"`);
-const st = await live.evaluate(() => ({ auto: window.__pb.state.todAuto, sound: window.__pb.state.toggles.sound }));
-if (st.auto || st.sound) fails.push('Konami / GIMINI left a side effect: ' + JSON.stringify(st));
+for (const id of ['brown', 'velo', 'flight', 'sunwink', 'bottle', 'moonwink', 'chorus', 'ufo', 'hack', 'gold', 'welcome', 'wish']) if (!liveFound.includes(id)) fails.push(`live detector did not find "${id}"`);
+const st = await live.evaluate(() => ({ auto: window.__pb.state.todAuto, sound: window.__pb.state.toggles.sound, cam: window.__pb.state.cam }));
+if (st.auto || st.sound || st.cam !== cam0) fails.push('Konami / GIMINI / HACK left a side effect: ' + JSON.stringify(st) + ' (camera was ' + cam0 + ')');
+// HACK must hand the city back: no wireframe class and no jittered sheet once it has run out
+const after = await live.evaluate(() => { window.__pb.renderAt(40, { tod: 0.7, cam: 'wide' }); const sc = document.querySelector('#scene'); return { cls: sc.className, tr: [...sc.querySelectorAll('svg.pb-sheet')].filter(s => s.style.translate).length }; });
+if (/egg-hack|egg-wire/.test(after.cls) || after.tr) fails.push('HACK left the city in wireframe: ' + JSON.stringify(after));
 await snap(live, 'live-counter');
 await live.close();
 

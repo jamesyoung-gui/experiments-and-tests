@@ -19,12 +19,14 @@
 //                 the leading edge is always one clean curve and the elbow never seams), marginal / lesser / median
 //                 / greater covert rows, deep secondaries hanging below the arm line as a fringe (pale blooms) and
 //                 the trailing primaries sweeping back and down from the wrist (rotated with the hand).
-//   hand slot   = carpal bend, primary coverts, the alula (the bird's "thumb", flicks the bell) and five outer
-//                 primaries that share one wrap round the grip and peel off one by one into five separate tips that
-//                 curl like fingers (each with its own pale edge, so they never read as a clump or a brush);
-//                 they open into a fan for the wave.
-// Legs: feathered "trousers" merge into the belly and hide the rig knee in a pointed feather cuff (bare skin starts
-//   ≥ 15 u below the knee pivot at every knee angle); orange tarsus 13.6→10 u with painted scale rings, reticulate
+//   hand slot   = carpal bend, primary coverts, the alula (the bird's "thumb", flicks the bell) and four broad outer
+//                 primaries that share one wrap round the grip and peel off at well-spaced angles into four separate
+//                 round tips that curl over the front of the grip like fingers (each with its own warm-white edge,
+//                 so they never read as a clump or a brush); for the wave they open into a fan whose inner half is
+//                 covered by white primary coverts.
+// Legs: a short fluffy feathered "trouser" leaves the lower flank and ends at ~55 % of the thigh in a feather
+//   fringe; below it the tibia is bare orange skin down to a round knee knob that hides the rig knee at every
+//   angle (so the leg reads as a long bird leg, not a person in a bird suit); orange tarsus 13.6→10 u with painted scale rings, reticulate
 //   rear scales and an intertarsal heel pad; totipalmate foot (all four toes webbed, incl. the hallux web) flat on the
 //   pedal, sole on the pedal's top face (foot-local y = 6), toes draping over its front edge.
 //
@@ -44,7 +46,7 @@ export const id = 'pelican-limbs';
 // explicit glazes (the draft-B far(): darker, cooler), so its look does not depend on the generic -far mapping.
 const NEAR = {
   Ink: '#4A2C20', InkSoft: '#6B4632', Paper: '#FFF6EC', Glow: '#FFFBF4', Rose: '#E9D3D2', RoseDeep: '#C7AFC2',
-  Deep: '#231D26', Sheen: '#4A4458', Bloom: '#A195AB', Foot: '#F08A3C', FootHi: '#F9B676', FootLo: '#C9652A',
+  Deep: '#231D26', Sheen: '#4A4458', Mid: '#554B63', Bloom: '#A195AB', Foot: '#F08A3C', FootHi: '#F9B676', FootLo: '#C9652A',
   FootDeep: '#9A4A22', Web: '#F7A860', Pad: '#D9705A', Claw: '#3B2C2A',
 };
 function farHex(hex, k = 0.78) {
@@ -52,7 +54,7 @@ function farHex(hex, k = 0.78) {
   return '#' + c.map((v, i) => Math.round(Math.min(255, v * k * s[i] + 10 * (i === 2))).toString(16).padStart(2, '0')).join('');
 }
 export const materials = {};
-for (const [k, hex] of Object.entries(NEAR)) { materials['pl' + k] = hex; materials['plF' + k] = farHex(hex, k === 'Deep' || k === 'Sheen' ? 0.95 : 0.8); }
+for (const [k, hex] of Object.entries(NEAR)) { materials['pl' + k] = hex; materials['plF' + k] = farHex(hex, k === 'Deep' || k === 'Sheen' || k === 'Mid' ? 0.95 : 0.8); }
 
 // ---------------------------------------------------------------- helpers (pure)
 const D2R = Math.PI / 180;
@@ -137,7 +139,11 @@ function feather(b, a, L, w, k = 0, tip = 'point', w0 = 0.55, seed = 0, jit = 0.
   const u = dir(a), n = perp(u);
   const P = (s, t) => add(b, add(mul(u, s * L), mul(n, t + k * L * s * s)));
   const hw = w / 2;
-  const ring = tip === 'round'
+  // 'finger': a broad vane that narrows at the emargination (s ≈ 0.55) into a slim, blunt-round finger tip, so a
+  // row of them reads as separate fingers with gaps between the tips, never as a comb of spikes
+  const ring = tip === 'finger'
+    ? [P(0, -hw * w0), P(0.28, -hw * 1.02), P(0.48, -hw * 0.96), P(0.6, -hw * 0.64), P(0.8, -hw * 0.6), P(0.94, -hw * 0.46), P(1, 0), P(0.94, hw * 0.46), P(0.8, hw * 0.6), P(0.6, hw * 0.7), P(0.45, hw * 1.0), P(0.25, hw * 1.02), P(0, hw * w0)]
+    : tip === 'round'
     ? [P(0, -hw * w0), P(0.3, -hw * 1.02), P(0.62, -hw * 1.04), P(0.86, -hw * 0.82), P(0.985, -hw * 0.3), P(0.985, hw * 0.3), P(0.86, hw * 0.82), P(0.62, hw * 1.04), P(0.3, hw * 1.02), P(0, hw * w0)]
     : [P(0, -hw * w0), P(0.3, -hw * 1.04), P(0.62, -hw * 0.86), P(0.86, -hw * 0.42), P(1, 0), P(0.86, hw * 0.42), P(0.62, hw * 0.86), P(0.3, hw * 1.04), P(0, hw * w0)];
   const d = smooth(jit ? wob(ring, jit * Math.min(1, w / 8), seed) : ring, true, 0.16);
@@ -247,28 +253,32 @@ function wingUpper(I, far) {
 }
 
 // ---- lower wing (elbow-local; +x toward the wrist, +y = down below the arm line)
-const PRIM = Array.from({ length: 5 }, (_, i) => { const u = i / 4; return { b: [lerp(66, 76, u), lerp(8, 3, u)], a: lerp(160, 140, u), L: lerp(90, 72, u), w: lerp(12, 13.5, u) }; });
+// four broad trailing primaries (staggered lengths so the tips stand apart as separate fingers)
+const PRIM = Array.from({ length: 4 }, (_, i) => { const u = i / 3; return { b: [lerp(66, 76, u), lerp(8, 3, u)], a: lerp(158, 136, u), L: lerp(90, 66, u), w: lerp(16.5, 15, u) }; });
 const V = { rim: '' };
 function wingLower(I, far, side) {
   const s = [], ref = n => `pl-${side}-${n}`;
-  // secondaries: deep fringe hanging below the arm line, pale bloom edges, sheen strokes, shafts
+  // secondaries: a softer plum-grey fringe hanging below the arm line (lighter than the primaries, so the dark
+  // mass lightens from the wing tip toward the body), broad pale bloom edges, sheen strokes, shafts
   const sec = [];
-  for (let i = 0; i < 10; i++) { const u = i / 9; sec.push(feather([lerp(-12, 62, u), lerp(5, 4, u)], lerp(106, 98, u), lerp(33, 27, u), 11.5, 0.05, 'round', 0.8, 60 + i)); }
+  for (let i = 0; i < 9; i++) { const u = i / 8; sec.push(feather([lerp(-12, 62, u), lerp(5, 4, u)], lerp(106, 98, u), lerp(32, 27, u), 12.5, 0.05, 'round', 0.8, 60 + i)); }
   const secG = G('secondaries-fringe', 'O', far, [
-    ...[...sec].reverse().map(t => fill(t.d, I.N, { stroke: I.ink, 'stroke-width': 0.8 })),
-    G('secondary-sheen', 'T', far, fill(sec.map((t, i) => ribbon([t.P(0.3, 1.2), t.P(0.62, 1.8), t.P(0.9, 0.8)], 2.2, 2, i)).join(''), I.NS)),
-    line(sec.map(t => `M${pt(t.P(0.5, -4.9))}Q${pt(t.P(0.78, -5.4))} ${pt(t.P(0.93, -2.6))}`).join(''), I.NB, far ? 0.8 : 1.05, { 'data-detail': tag('T', (far ? 'far-' : '') + 'secondary-pale-edges') }),
-    far ? '' : line(sec.map(t => `M${pt(t.P(0.42, 0))}L${pt(t.P(0.86, 0))}`).join(''), I.NS, 0.75, { 'data-detail': tag('T', 'secondary-rachis') }),
+    ...[...sec].reverse().map(t => fill(t.d, I.NM, { stroke: I.ink, 'stroke-width': 0.85 })),
+    G('secondary-sheen', 'T', far, fill(sec.map((t, i) => ribbon([t.P(0.3, 1.4), t.P(0.62, 2.2), t.P(0.9, 1)], 2.6, 2, i)).join(''), I.NS)),
+    line(sec.map(t => `M${pt(t.P(0.45, -5.2))}Q${pt(t.P(0.78, -5.9))} ${pt(t.P(0.94, -2.8))}`).join(''), I.NB, far ? 0.9 : 1.3, { 'data-detail': tag('T', (far ? 'far-' : '') + 'secondary-pale-edges') }),
+    far ? '' : line(sec.map(t => `M${pt(t.P(0.42, 0))}L${pt(t.P(0.86, 0))}`).join(''), I.NB, 0.7, { opacity: 0.7, 'data-detail': tag('T', 'secondary-rachis') }),
   ]);
   // trailing primaries, folded under the secondaries (as in a real folded wing) and sweeping back and down from
   // the wrist past the fringe; rotated about the wrist by the wrist angle each frame, each can fan open (wave).
-  const prim = PRIM.map((q, i) => feather(q.b, q.a, q.L, q.w, -0.07, 'point', 0.9, 80 + i));
+  // Each is a broad vane narrowing into a blunt finger with a warm-white edge line, so the tips read one by one.
+  const prim = PRIM.map((q, i) => feather(q.b, q.a, q.L, q.w, -0.06, 'finger', 0.9, 80 + i, 0.22));
   s.push(G('primaries-trailing', 'O', far, [
-    h('g', { 'data-ref': ref('prims') }, prim.map((p, i) => h('g', { 'data-ref': ref('p' + i) }, fill(p.d, I.N, { stroke: I.ink, 'stroke-width': 0.95, 'stroke-linejoin': 'round' }),
-      fill(ribbon([p.P(0.2, -1.4), p.P(0.55, -2.4), p.P(0.88, -1)], 2.4, 2, i), I.NS),
-      far ? '' : line(`M${pt(p.P(0.5, p.hw * 0.72))}Q${pt(p.P(0.8, p.hw * 0.55))} ${pt(p.P(0.95, p.hw * 0.12))}`, I.NB, 0.8),
-      far ? '' : line(p.r, I.NS, 0.8),
-      far || i < 2 ? '' : line(`M${pt(p.P(0.55, 3.6))}L${pt(p.P(0.66, 1.3))}`, I.NB, 0.9)))),
+    h('g', { 'data-ref': ref('prims') }, prim.map((p, i) => h('g', { 'data-ref': ref('p' + i) }, fill(p.d, I.N, { stroke: I.ink, 'stroke-width': 1.05, 'stroke-linejoin': 'round' }),
+      fill(ribbon([p.P(0.18, -1.6), p.P(0.5, -2.6), p.P(0.9, -0.8)], 2.8, 2, i), I.NS),
+      // warm-white edge highlight along the lit (leading) edge of the finger, from the emargination to the tip
+      line(`M${pt(p.P(0.5, -p.hw * 0.72))}Q${pt(p.P(0.78, -p.hw * 0.5))} ${pt(p.P(0.97, -p.hw * 0.14))}`, I.P, far ? 0.8 : 1.15, { opacity: far ? 0.45 : 0.8, 'data-detail': tag('T', (far ? 'far-' : '') + 'primary-edge-highlights') }),
+      far ? '' : line(`M${pt(p.P(0.3, p.hw * 0.72))}Q${pt(p.P(0.5, p.hw * 0.8))} ${pt(p.P(0.62, p.hw * 0.56))}`, I.NB, 0.9),
+      far ? '' : line(p.r, I.NS, 0.8)))),
     secG]));
   // covert panel: propatagium + arm-line fill (per frame), elbow cap, greater coverts, clipped rows, marginal row
   const g0 = propGeom(-58);
@@ -310,51 +320,69 @@ function wingLower(I, far, side) {
 
 // ---- hand (wrist-local, pivot ON the grip; grip radius 6; bell at about (8,−8))
 function fingerFeathers() {
-  // five outer primaries leave the carpal bend at the front-top of the grip and share one wrap band round its
-  // front; one by one they peel away, so five separate tips splay round the lower half of the grip, each curling
-  // back at its end like a finger — never a coil of knuckles, never a brush. Returned innermost-last (on top).
-  const F = [], R0 = 9.2, W = 6, a0 = -44;
-  for (let i = 4; i >= 0; i--) {
-    const a1 = 16 + 26 * i, n = 6 + i;
+  // four broad outer primaries leave the carpal bend at the top of the grip and wrap round its front in one band;
+  // one by one they peel away at well-spaced angles, and each free end curls back over the front of the grip like a
+  // finger with a round tip. Spacing 38° at r ≈ 22 leaves a clear gap between neighbouring tips, and every finger
+  // gets its own warm-white edge, so the grip reads as four fingers, never a clump or a brush.
+  // Returned back-most first (the front finger is drawn last, on top).
+  const F = [], R0 = 10.8, W = 9.2, a0 = -52, A1 = [-4, 38, 80, 122];
+  for (let i = 3; i >= 0; i--) {
+    const a1 = A1[i], n = 7 + i;
     const L = [], R = [], C = [];
     for (let j = 0; j <= n; j++) {
       const a = lerp(a0, a1, j / n), nr = dir(a), c = mul(nr, R0);
       C.push(c); L.push(add(c, mul(nr, W / 2))); R.push(add(c, mul(nr, -W / 2)));
     }
-    const td = dir(a1 + 40), td2 = dir(a1 + 40 + 26), tipL = 19 - 1.1 * i, e = C[n];
+    const e = C[n], td = dir(a1 + 58), td2 = dir(a1 + 112), l1 = 13 - 0.8 * i, l2 = 8 - 0.4 * i;
     const nn = perp(td), nn2 = perp(td2);
-    const mid = add(e, mul(td, tipL * 0.55)), tip = add(mid, mul(td2, tipL * 0.5));
-    const m2 = lerp2(mid, tip, 0.55);
-    const ring = [...L, add(mid, mul(nn, -W * 0.46)), add(m2, mul(nn2, -W * 0.36)), add(tip, mul(nn2, -W * 0.16)), add(tip, mul(td2, 0.9)), add(tip, mul(nn2, W * 0.1)), add(m2, mul(nn2, W * 0.24)), add(mid, mul(nn, W * 0.38)), ...R.reverse()];
-    const d = smooth(wob(ring, 0.14, 200 + i), true, 0.15);
-    // pale bloom along the outer (leading) edge of the free part of each finger: every tip reads on its own
-    const o = W * 0.3;
-    const edge = `M${pt(add(C[n - 1], mul(dir(lerp(a0, a1, (n - 1) / n)), o)))}Q${pt(add(e, mul(nn, -o)))} ${pt(add(mid, mul(nn, -o * 0.95)))}Q${pt(add(m2, mul(nn2, -o * 0.55)))} ${pt(lerp2(m2, tip, 0.7))}`;
-    const sheen = ribbon([lerp2(e, mid, 0.1), lerp2(e, mid, 0.7), lerp2(mid, tip, 0.35)], 1.5, 2, 30 + i);
-    F.push({ d, tip, edge, sheen, td2 });
+    const mid = add(e, mul(td, l1)), tip = add(mid, mul(td2, l2));
+    const m2 = lerp2(mid, tip, 0.5), w = W / 2;
+    // outer (away from the grip) side first, round bulb at the tip, inner side back
+    const ring = [...L, add(mid, mul(nn, -w * 0.98)), add(m2, mul(nn2, -w * 0.92)), add(tip, mul(nn2, -w * 0.72)), add(tip, mul(td2, w * 0.62)),
+      add(tip, mul(nn2, w * 0.62)), add(m2, mul(nn2, w * 0.66)), add(mid, mul(nn, w * 0.7)), ...R.reverse()];
+    const d = smooth(wob(ring, 0.16, 200 + i), true, 0.15);
+    // warm-white edge line along the outer rim of the free finger, from its peel point round the tip
+    const o = -w * 0.62;
+    const edge = `M${pt(add(C[n - 2], mul(dir(lerp(a0, a1, (n - 2) / n)), -o)))}Q${pt(add(e, mul(nn, o * 1.05)))} ${pt(add(mid, mul(nn, o)))}Q${pt(add(m2, mul(nn2, o * 1.05)))} ${pt(add(tip, mul(nn2, o * 0.72)))}`;
+    // the shadowed inner lip where the finger folds over the grip (separates it from the finger beneath)
+    const lip = `M${pt(add(mid, mul(nn, w * 0.4)))}Q${pt(add(m2, mul(nn2, w * 0.36)))} ${pt(add(tip, mul(nn2, w * 0.3)))}`;
+    const sheen = ribbon([add(lerp2(e, mid, 0.05), mul(nn, -w * 0.25)), add(lerp2(e, mid, 0.75), mul(nn, -w * 0.3)), add(lerp2(mid, tip, 0.5), mul(nn2, -w * 0.2))], w * 0.95, 2, 30 + i);
+    F.push({ d, tip, edge, lip, sheen, td2 });
   }
   return F;
 }
 function wingHand(I, far, side) {
   const s = [], ref = n => `pl-${side}-${n}`;
-  // open fan (wave): six primaries splayed from the wrist; hidden while gripping
-  const fan = [];
-  for (let i = 0; i < 6; i++) fan.push(feather([-2 + i * 0.6, 2 - i * 0.8], lerp(52, -26, i / 5), lerp(42, 56, i / 5) - (i > 3 ? (i - 3) * 5 : 0), 12.5, -0.05, 'round', 0.8, 300 + i));
+  // open fan (wave): six primaries splayed from the wrist, hidden while gripping. The inner half of the fan is
+  // covered by warm-white primary coverts (so the open wing is white with a dark fringe on its outer half) and the
+  // dark primaries narrow into separate fingers with gaps between the tips.
+  const FAN = Array.from({ length: 6 }, (_, i) => { const u = i / 5; return { b: [-2 + i * 0.6, 2 - i * 0.8], a: lerp(56, -30, u), L: lerp(48, 62, u) - (i > 3 ? (i - 3) * 6 : 0), w: 16 }; });
+  const fan = FAN.map((q, i) => feather(q.b, q.a, q.L, q.w, -0.04, 'finger', 0.8, 300 + i, 0.22));
+  const fcov = FAN.map((q, i) => feather(q.b, q.a, q.L * (0.56 + 0.05 * jr(i, 7)), 17, -0.03, 'round', 0.9, 360 + i, 0.3));
   // (the far wing never lets go of its grip, so only the near hand carries the fan)
-  if (!far) s.push(h('g', { 'data-ref': ref('fan'), style: 'display:none' },
-    [...fan].reverse().map((p, i) => h('g', { 'data-ref': ref('fan' + (5 - i)) }, fill(p.d, I.N, { stroke: I.ink, 'stroke-width': 1 }),
-      fill(ribbon([p.P(0.15, 1.2), p.P(0.5, 2), p.P(0.85, 1)], 2.6, 2, i), I.NS),
-      line(`M${pt(p.P(0.3, -4))}Q${pt(p.P(0.6, -5.4))} ${pt(p.P(0.88, -3))}`, I.NB, 1)))));
+  if (!far) {
+    s.push(h('g', { 'data-ref': ref('fan'), style: 'display:none' }, G('open-wing-fan', 'O', far, [
+      ...[...fan].reverse().map((p, i) => h('g', { 'data-ref': ref('fan' + (5 - i)) }, fill(p.d, I.N, { stroke: I.ink, 'stroke-width': 1.05 }),
+        fill(ribbon([p.P(0.3, 1.4), p.P(0.62, 2), p.P(0.9, 0.8)], 2.8, 2, i), I.NS),
+        line(`M${pt(p.P(0.5, -p.hw * 0.7))}Q${pt(p.P(0.8, -p.hw * 0.5))} ${pt(p.P(0.97, -p.hw * 0.12))}`, I.P, 1.15, { opacity: 0.8 }),
+        line(p.r, I.NB, 0.8))),
+      // white primary coverts over the fan base: one rotating group per feather, drawn after all primaries
+      ...[...fcov].reverse().map((p, i) => h('g', { 'data-ref': ref('fanc' + (5 - i)) }, fill(p.d, I.P, { stroke: I.inkSoft, 'stroke-width': 1 }),
+        fill(ribbon([p.P(0.3, p.hw * 0.4), p.P(0.65, p.hw * 0.5), p.P(0.92, p.hw * 0.2)], p.hw * 0.7, 2, i), I.S))),
+      h('circle', { cx: 0, cy: 0, r: 9, fill: I.P }),
+    ])));
+  }
   const F = fingerFeathers();
   s.push(h('g', { 'data-ref': ref('grip') }, G('primary-fingers', 'O', far, [
     h('circle', { cx: -1, cy: 0, r: 7.6, fill: I.N }),        // the grip end-on is fully inside the hand
-    ...F.map(p => fill(p.d, I.N, { stroke: I.ink, 'stroke-width': far ? 0.7 : 0.85, 'stroke-linejoin': 'round' }) + fill(p.sheen, I.NS) + line(p.edge, I.NB, far ? 0.75 : 0.95)),
-    far ? '' : G('finger-tip-blooms', 'T', far, fill(F.map(p => ribbon([sub(p.tip, mul(p.td2, 3.6)), sub(p.tip, mul(p.td2, 1.6)), sub(p.tip, mul(p.td2, 0.3))], 1.2, 2, 3)).join(''), I.NB)),
+    ...F.map((p, i) => fill(p.d, i % 2 ? I.N : I.NM, { stroke: I.ink, 'stroke-width': far ? 0.9 : 1.3, 'stroke-linejoin': 'round' }) + fill(p.sheen, i % 2 ? I.NM : I.NS) +
+      line(p.lip, I.ink, far ? 0.6 : 0.8, { opacity: 0.7 }) + line(p.edge, I.P, far ? 0.9 : 1.6, { opacity: far ? 0.5 : 0.9 })),
+    far ? '' : G('finger-tip-blooms', 'T', far, fill(F.map(p => ribbon([sub(p.tip, mul(p.td2, 3.4)), sub(p.tip, mul(p.td2, 1.6)), sub(p.tip, mul(p.td2, 0.2))], 1.5, 2, 3)).join(''), I.NB)),
   ])));
   // primary coverts: short deep feathers on the back of the hand, over the bases of the trailing primaries
   const pc = [];
   for (let i = 0; i < 4; i++) pc.push(feather([-6 - i * 2.6, -1 + i * 0.4], lerp(160, 126, i / 3), lerp(16, 12, i / 3), 7.5, -0.05, 'round', 0.9, 320 + i));
-  s.push(G('primary-coverts', 'O', far, [...pc.map(p => fill(p.d, I.N, { stroke: I.ink, 'stroke-width': 0.85 })),
+  s.push(G('primary-coverts', 'O', far, [...pc.map(p => fill(p.d, I.NM, { stroke: I.ink, 'stroke-width': 0.85 })),
     line(pc.map(p => `M${pt(p.P(0.3, -p.hw * 0.6))}Q${pt(p.P(0.7, -p.hw * 0.8))} ${pt(p.P(0.95, -p.hw * 0.2))}`).join(''), I.NB, 0.8, { 'data-detail': tag('T', (far ? 'far-' : '') + 'primary-covert-edges') })]));
   // carpal bend: warm-white end of the leading edge folding over the top of the grip (the "palm" rests on the bar)
   const carpal = smooth(wob([[-21, -10], [-10, -15], [1, -13.6], [7.4, -8.4], [6.4, -3.2], [0, -1.6], [-8, -0.6], [-17, -1.6], [-22, -5]], 0.2, 12));
@@ -372,67 +400,93 @@ function wingHand(I, far, side) {
 }
 
 // ================================================================ LEGS
-// Knee cuff: a fringe of pointed feather tips round the knee over the sector the shank can leave through
-// (33..108° in thigh-local, ± the tarsus half-width); notches stay at r ≥ 16.8 so bare skin always starts
-// ≥ 15 u below the knee pivot. Tips curl toward the rear (the feathers flow down and back).
-function cuffGeom(K) {
-  const A0 = -12, A1 = 146, n = 8, step = (A1 - A0) / n;
-  const at = (a, r) => add([K, 0], mul(dir(a), r));
-  const N = [], T = [];
-  for (let j = 0; j <= n; j++) N.push(at(A0 + j * step, j === 0 || j === n ? 12 : 16.8));
-  let d = `M${pt([K - 16, -9.8])}L${pt(N[0])}`, edge = '', glaze = '';
+// Trouser fringe: the feathered drumstick ends at about 55 % of the thigh in a ring of pointed, down-curling
+// feather tips (longer on the rear, as body feathers hang back), below which the tibia is bare orange skin.
+// FX = where the fringe crosses the leg axis; the tips point down the leg (+x) and a little to the rear (+y).
+const FX = 70;
+function fringeGeom(far) {
+  const n = 5, top = -13.4, bot = 13.2;                        // fringe spans the trouser from its front to its rear edge
+  const base = j => [FX - 12 + 4 * (j / n) + 1.4 * jr(j, 51), lerp(top, bot, j / n)];
+  let d = `M${pt([FX - 30, top - 3])}L${pt(base(0))}`, edge = '', glaze = '', shafts = '';
+  const T = [];
   for (let j = 0; j < n; j++) {
-    const a = A0 + j * step, r = 21.6 + [0, 1.4, -0.6, 1.8, 0.2, 1.2, -0.4, 0.8][j];
-    const tip = at(a + step * 0.72, r), c1 = at(a + step * 0.28, r - 1.2), c2 = at(a + step * 0.95, r - 3.6);
+    const b0 = base(j), b1 = base(j + 1), u = (j + 0.5) / n;
+    const len = lerp(12, 19, u) + 1.6 * jr(j, 52);            // rear feathers hang longer
+    const tip = add(lerp2(b0, b1, 0.62), [len, 2.2 + 1.6 * u]);
+    const c1 = add(lerp2(b0, tip, 0.5), [0, -3.4]), c2 = add(lerp2(tip, b1, 0.5), [-3.6, 1]);
     T.push(tip);
-    d += `Q${pt(c1)} ${pt(tip)}Q${pt(c2)} ${pt(N[j + 1])}`;
-    edge += `M${pt(N[j])}Q${pt(c1)} ${pt(tip)}M${pt(tip)}Q${pt(c2)} ${pt(N[j + 1])}`;
-    // rose glaze in the shadowed half of every cuff feather
-    glaze += ribbon([at(a + step * 0.62, 13), at(a + step * 0.78, 17.6), at(a + step * 0.8, r - 1.6)], 2.6, 2, j);
+    d += `Q${pt(c1)} ${pt(tip)}Q${pt(c2)} ${pt(b1)}`;
+    edge += `M${pt(lerp2(b0, c1, 0.3))}Q${pt(c1)} ${pt(tip)}Q${pt(c2)} ${pt(lerp2(c2, b1, 0.6))}`;
+    glaze += ribbon([lerp2(b1, tip, 0.1), lerp2(c2, tip, 0.35), lerp2(tip, c2, 0.2)], 3.4, 2, j);
+    shafts += `M${pt(lerp2(lerp2(b0, b1, 0.55), tip, 0.2))}L${pt(lerp2(lerp2(b0, b1, 0.55), tip, 0.72))}`;
   }
-  d += `L${pt([K - 16, 11.6])}Z`;
-  return { d, edge, T, glaze };
+  d += `L${pt([FX - 30, bot + 2])}Z`;
+  return { d, edge, glaze, shafts, T };
 }
 function thigh(I, far) {
   const K = SKEL.thigh;
-  // drumstick: broad where it leaves the belly, tapering to a slim feathered shin at the knee
-  const top = [[-14, -25], [12, -27], [44, -21], [76, -14], [106, -10.5], [128, -10], [140, -9.6]];
-  const bottom = [[140, 11.6], [112, 11.5], [86, 11], [60, 9.5], [36, 6.5], [14, 4], [-4, 3], [-17, -8]];
-  const cuff = cuffGeom(K);
-  const body = smooth(wob([...top, ...bottom], 0.3, 7));
-  const kids = [fill(body, I.P), fill(cuff.d, I.P)];
-  kids.push(fill(body, 'url(#pl-mottle)', { opacity: far ? 0.4 : 0.6, 'data-detail': tag('T', (far ? 'far-' : '') + 'gouache-mottle') }));
-  // shadow side: a broad rose glaze along the rear, a deeper rose core line inside it
-  kids.push(G('trouser-shade-glaze', 'T', far, [fill(ribbon([[30, 3.5], [60, 6.4], [90, 7.6], [120, 8], [138, 8.2]], 7.5, 3, 3, 0.45), I.S),
-    fill(ribbon([[50, 7.4], [86, 9.2], [124, 9.6]], 2.4, 3, 4), I.S2, { opacity: 0.85 })]));
-  kids.push(fill(cuff.glaze, I.S, { 'data-detail': tag('T', (far ? 'far-' : '') + 'cuff-feather-glaze') }));
-  if (!far) {
-    kids.push(fill(ribbon([[56, -15.8], [80, -11.6], [106, -8.4], [130, -7.6]], 3.2, 3, 5), I.glow, { 'data-detail': tag('T', 'trouser-lit-edge') }));
-    // dry-brush flecks where the feathers break the silhouette
-    kids.push(fill(ribbon([[70, -13.4], [76, -15.2], [81, -14.8]], 1.3, 2, 1) + ribbon([[98, -10.6], [103, -12.2], [107, -11.6]], 1.2, 2, 2) +
-      ribbon([[80, 10.6], [86, 12.8], [92, 12.4]], 1.2, 2, 3) + ribbon([[108, 11.2], [113, 13], [118, 12.4]], 1.1, 2, 4), I.ink, { opacity: 0.7, 'data-detail': tag('T', 'dry-brush-feather-breaks') }));
+  // bare tibia: orange skin from under the fringe to the knee, slightly thickening toward the knee knob
+  const tw = x => lerp(5.6, 6.6, clamp((x - 52) / (K - 52), 0, 1));
+  const tib = `M52 ${f(-tw(52))}C90 ${f(-tw(90))} 120 ${f(-tw(120))} ${K} ${f(-tw(K))}L${K} ${f(tw(K))}C120 ${f(tw(120))} 90 ${f(tw(90))} 52 ${f(tw(52))}Z`;
+  const kids = [];
+  const tibKids = [fill(tib, I.O),
+    fill(`M76 ${f(tw(76) - 2.6)}C104 ${f(tw(104) - 2.8)} 124 ${f(tw(124) - 2.9)} ${K} ${f(tw(K) - 2.8)}L${K} ${f(tw(K))}C124 ${f(tw(124))} 104 ${f(tw(104))} 76 ${f(tw(76))}Z`, I.OL, { 'data-detail': tag('T', (far ? 'far-' : '') + 'tibia-shade-band') })];
+  // reticulate skin: small rounded scales in staggered rows (the bare tibia is finer-scaled than the tarsus)
+  let ret = '';
+  for (let x = 84, k = 0; x <= K - 10; x += 6.4, k++) for (const t of [-0.45, 0.4]) {
+    const y = tw(x) * t + (k % 2 ? 0.9 : -0.9); ret += `M${f(x)} ${f(y)}q1.4 -1.3 2.9 0q-1.5 1.2 -2.9 0`;
   }
+  tibKids.push(line(ret, I.OD, far ? 0.55 : 0.65, { opacity: 0.6, 'data-detail': tag('T', (far ? 'far-' : '') + 'tibia-reticulate-scales') }));
   if (!far) {
-      kids.push(ink([[50, -19.6], [76, -14], [106, -10.5], [128, -10], [141, -8.8], [150, -5.4], [K + 11.7, -2.5]], I, 2.1, 1));
-      kids.push(ink([[44, 7.8], [60, 9.5], [86, 11], [112, 11.5], [128, 11.6]], I, 2, 2));
-  }
-  // contour-feather scallops flowing down the leg (tips toward the knee), shrinking toward the knee
-  const u = [1, 0.1];
-  kids.push(line(scallops(rowPts([46, -15.5], [54, 6], 4), u, 2.6, 1) + scallops(rowPts([74, -12], [78, 9], 3), u, 2.5, 2) +
-    scallops(rowPts([100, -9.6], [102, 10], 3), u, 2.2, 3) + scallops(rowPts([124, -8.6], [124, 9.6], 3), u, 2, 4), I.S2, far ? 1.05 : 1.35, { 'data-detail': tag('T', (far ? 'far-' : '') + 'trouser-feather-scallops'), 'data-tract': 'leg' }));
-  if (!far) {
-    // front + rear key lines only where the leg is outside the body; the fringe line
-    kids.push(line(cuff.edge, I.ink, 1.6, { 'data-detail': tag('O', 'knee-feather-cuff') }));
-    kids.push(line(cuff.T.map(t => `M${pt(lerp2([K, 0], t, 0.55))}L${pt(lerp2([K, 0], t, 0.82))}`).join(''), I.inkSoft, 0.75, { opacity: 0.8, 'data-detail': tag('T', 'cuff-feather-shafts') }));
-    kids.push(line('M62 6.4q9 2.6 18 2.4M90 8.2q9 1.8 16 1.2M112 8.6q6 1.2 11 0.2', I.inkSoft, 0.8, { opacity: 0.7, 'data-detail': tag('T', 'trouser-rear-hatching') }));
-    kids.push(line('M24 -21q5 3 4 8M35 -20.4q4.6 3.2 3.4 8.2M28 1.6q3.4 -2 7.2 -0.8', I.S2, 1.2, { 'data-detail': tag('O', 'flank-plume-curls') }));
-    kids.push(line(curve([[64, -15.4], [88, -12.6], [112, -10.2], [132, -9.6]]), V.rim, 1.4, { 'data-ref': 'pl-thighRim', 'data-detail': tag('O', 'thigh-rim-light'), style: 'opacity:var(--pb-n-rimAlpha)' }));
+    tibKids.push(fill(ribbon([[86, -tw(86) + 1.9], [106, -tw(106) + 1.8], [126, -tw(126) + 1.9]], 1.7, 2, 6), I.OH, { 'data-detail': tag('T', 'tibia-highlight') }));
+    tibKids.push(ink([[80, -tw(80) - 0.1], [112, -tw(112)], [K - 6, -tw(K - 6)]], I, 1.5, 13));
+    tibKids.push(ink([[86, tw(86) + 0.1], [116, tw(116)], [K - 6, tw(K - 6)]], I, 1.3, 14));
   } else {
-    kids.push(ink([[56, -18.8], [86, -12.8], [112, -10.2], [136, -9.6], [148, -6]], I, 1.3, 3));
-    kids.push(ink([[60, 9.2], [86, 10.8], [112, 11.3], [128, 11.4]], I, 1.2, 4));
-    kids.push(line(cuff.edge, I.ink, 1.1, { 'data-detail': tag('O', 'far-knee-feather-cuff') }));
+    tibKids.push(ink([[92, -tw(92)], [K - 6, -tw(K - 6)]], I, 1.05, 15));
+    tibKids.push(ink([[96, tw(96)], [K - 6, tw(K - 6)]], I, 0.95, 16));
   }
-  return G('thigh-trousers', 'O', far, kids);
+  kids.push(G('tibia-bare-skin', 'O', far, tibKids));
+  // knee knob: the round joint capping tibia and tarsus (hides the rig knee at every angle)
+  const knob = smooth(wob(Array.from({ length: 10 }, (_, i) => add([K, 0], mul(dir(i * 36), 8.4 + 0.3 * jr(i, 61)))), 0.2, 62));
+  kids.push(G('knee-joint', 'O', far, [fill(knob, I.O),
+    fill(`M${K - 7.2} 2.6Q${K} 9.4 ${K + 7.2} 2.6Q${K + 6} 8.6 ${K} 8.7Q${K - 6} 8.6 ${K - 7.2} 2.6Z`, I.OL),
+    ink([[K - 6.6, -4.4], [K - 1, -8.4], [K + 5.6, -6.4], [K + 8.4, -0.4]], I, far ? 1.1 : 1.6, 63, {}, 2),
+    far ? '' : fill(ribbon([[K - 5, -4.2], [K - 1.6, -6.4], [K + 2.6, -6]], 1.7, 2, 7), I.OH, { 'data-detail': tag('T', 'knee-knob-highlight') }),
+    far ? '' : line(`M${K - 3.4} -1.8q2.6 2.2 5.4 0.2M${K - 2.4} 2.2q2 1.4 4 0`, I.OD, 0.85, { 'data-detail': tag('T', 'knee-creases') })]));
+  // the feathered trouser: fluffy where it leaves the belly, ending in the fringe at ~55 % of the thigh
+  const top = [[-14, -28], [10, -31], [32, -28], [48, -21.5], [FX - 12, -15.4]];
+  const bottom = [[FX - 12, 14.4], [46, 14.6], [26, 12], [8, 8.4], [-6, 5.4], [-18, -8]];
+  const fr = fringeGeom(far);
+  const body = smooth(wob([...top, ...bottom], 0.35, 7));
+  const tk = [fill(body, I.P), fill(fr.d, I.P)];
+  tk.push(fill(body, 'url(#pl-mottle)', { opacity: far ? 0.4 : 0.6, 'data-detail': tag('T', (far ? 'far-' : '') + 'gouache-mottle') }));
+  tk.push(G('trouser-shade-glaze', 'T', far, [fill(ribbon([[10, 6.4], [28, 10], [46, 12], [FX - 8, 12.4], [FX + 2, 12.4]], 8.4, 3, 3, 0.45), I.S),
+    fill(ribbon([[24, 11], [44, 13], [FX - 4, 13]], 2.6, 3, 4), I.S2, { opacity: 0.85 })]));
+  tk.push(fill(fr.glaze, I.S, { 'data-detail': tag('T', (far ? 'far-' : '') + 'fringe-feather-glaze') }));
+  if (!far) {
+    tk.push(fill(ribbon([[24, -26.6], [40, -22.6], [52, -18.4], [FX - 10, -14]], 3.4, 3, 5), I.glow, { 'data-detail': tag('T', 'trouser-lit-edge') }));
+    // fluffy dry-brush breaks on the silhouette: little wisps standing out of the down
+    tk.push(fill(ribbon([[38, -24.6], [43, -27.4], [47, -26.6]], 1.4, 2, 1) + ribbon([[50, -19.6], [55, -21.8], [58, -21]], 1.3, 2, 2) +
+      ribbon([[36, 11], [42, 14], [48, 13.6]], 1.3, 2, 3) + ribbon([[48, 14.4], [54, 17], [59, 16.2]], 1.2, 2, 4), I.ink, { opacity: 0.7, 'data-detail': tag('T', 'dry-brush-feather-breaks') }));
+    tk.push(fill(dabs(8, 4, 52, -22, 6, 2, 19), I.glow, { opacity: 0.9, 'data-detail': tag('T', 'trouser-down-dabs') }));
+    tk.push(ink([[38, -25.6], [48, -21.5], [FX - 12, -15.4], [FX - 10, -14]], I, 2.1, 1));
+    tk.push(ink([[26, 12], [46, 14.6], [FX - 12, 14.4], [FX - 9, 13.4]], I, 2, 2));
+    tk.push(line(fr.edge, I.inkSoft, 1.25, { 'data-detail': tag('O', 'trouser-feather-fringe') }));
+    tk.push(line(fr.shafts, I.S2, 0.9, { 'data-detail': tag('T', 'fringe-feather-shafts') }));
+    tk.push(line('M30 8.4q8 2.4 14 2.2M46 10.6q6 1.6 10 1.2', I.inkSoft, 0.8, { opacity: 0.7, 'data-detail': tag('T', 'trouser-rear-hatching') }));
+    tk.push(line('M18 -24q5 3 4 8M29 -23.6q4.6 3.2 3.4 8.2M22 4.6q3.4 -2 7.2 -0.8', I.S2, 1.2, { 'data-detail': tag('O', 'flank-plume-curls') }));
+    tk.push(line(curve([[30, -27.4], [44, -23], [54, -19], [FX - 12, -15]]), V.rim, 1.4, { 'data-ref': 'pl-thighRim', 'data-detail': tag('O', 'thigh-rim-light'), style: 'opacity:var(--pb-n-rimAlpha)' }));
+  } else {
+    tk.push(ink([[38, -25.6], [48, -21.5], [FX - 12, -15.2]], I, 1.3, 3));
+    tk.push(ink([[26, 12], [46, 14.6], [FX - 12, 14.2]], I, 1.2, 4));
+    tk.push(line(fr.edge, I.ink, 1.05, { 'data-detail': tag('O', 'far-trouser-feather-fringe') }));
+  }
+  // contour-feather scallops flowing down the trouser (tips toward the fringe)
+  const u = [1, 0.12];
+  tk.push(line(scallops(rowPts([20, -25], [22, 8], 5), u, 2.8, 1) + scallops(rowPts([38, -22], [40, 11], 5), u, 2.7, 2) +
+    scallops(rowPts([52, -17.6], [52, 12.6], 4), u, 2.4, 3), I.S2, far ? 1.05 : 1.35, { 'data-detail': tag('T', (far ? 'far-' : '') + 'trouser-feather-scallops'), 'data-tract': 'leg' }));
+  kids.push(G('thigh-trousers', 'O', far, tk));
+  return kids.join('');
 }
 // ---- shank / tarsus (knee-local; +x toward the ankle, +y = rear)
 function shank(I, far) {
@@ -441,11 +495,10 @@ function shank(I, far) {
   const outline = `M0 ${f(-hw(0))}C40 ${f(-hw(40))} 90 ${f(-hw(90))} ${L} ${f(-hw(L))}A5 5 0 0 1 ${L} ${f(hw(L))}` +
     `C92 ${f(hw(92))} 36 ${f(hw(36) + 0.4)} 29 ${f(hw(29) + 0.6)}C26 ${f(hw(26) + 3.6)} 20 ${f(hw(20) + 3.8)} 16 ${f(hw(16) + 1.2)}C10 ${f(hw(10))} 4 ${f(hw(0))} 0 ${f(hw(0))}Z`;
   // intertarsal knuckle: the joint bulges forward just below the cuff and the tarsus leaves it at a slight angle
-  const knuckle = 'M13 -6.4C16 -10.6 25 -11 30 -7.6C33 -5.6 34 -3 33 0L14 0Z';
-  const kids = [fill(outline, I.O), fill(knuckle, I.O)];
+  const kids = [fill(outline, I.O)];
   // hand-inked contour: front and rear edges (stops short of the ankle so no line crosses the joint)
-  kids.push(ink([[31, -hw(31) - 0.2], [70, -hw(70) - 0.1], [110, -hw(110)], [L - 3, -hw(L - 3)]], I, far ? 1.1 : 1.55, 11));
-  kids.push(ink([[34, hw(34) + 0.2], [72, hw(72)], [110, hw(110)], [L - 3, hw(L - 3)]], I, far ? 1 : 1.35, 12));
+  kids.push(ink([[9, -hw(9) - 0.1], [40, -hw(40) - 0.2], [70, -hw(70) - 0.1], [110, -hw(110)], [L - 3, -hw(L - 3)]], I, far ? 1.1 : 1.55, 11));
+  kids.push(ink([[31, hw(31) + 0.6], [52, hw(52) + 0.2], [72, hw(72)], [110, hw(110)], [L - 3, hw(L - 3)]], I, far ? 1 : 1.35, 12));
   // rear shade band keeps the tarsus round; reticulate rear scales sit on it
   const band = `M30 ${f(hw(30) - 3)}C70 ${f(hw(70) - 3.4)} 110 ${f(hw(110) - 3)} ${L} ${f(hw(L) - 2.4)}L${L} ${f(hw(L))}C110 ${f(hw(110))} 70 ${f(hw(70))} 30 ${f(hw(30))}Z`;
   let rt = '';
@@ -453,7 +506,7 @@ function shank(I, far) {
   kids.push(G('tarsus-shade-band', 'T', far, [fill(band, I.OL), line(rt, I.OD, 0.75, { 'data-detail': tag('T', (far ? 'far-' : '') + 'tarsus-reticulate-scales') })]));
   // painted scale rings (transverse scutes) across the front: a dark ring and a lit lip just below each one
   let sc = '', lip = '';
-  for (let x = 24, j = 0; x <= 126; x += 7.4, j++) {
+  for (let x = 14, j = 0; x <= 126; x += 7.4, j++) {
     const w = hw(x), dx = 0.5 * jr(j, 31);
     sc += `M${f(x + dx)} ${f(-w + 0.3)}Q${f(x + 2.8 + dx)} ${f(-w * 0.15)} ${f(x + 0.8 + dx)} ${f(w * 0.5)}`;
     lip += `M${f(x + 1.9 + dx)} ${f(-w + 1.1)}Q${f(x + 3.9 + dx)} ${f(-w * 0.45)} ${f(x + 3.4 + dx)} ${f(-w * 0.05)}`;
@@ -469,9 +522,9 @@ function shank(I, far) {
       ribbon([[100, -hw(100) + 2], [112, -hw(112) + 2], [119, -hw(119) + 2.1]], 1.6, 2, 3), I.OH, { 'data-detail': tag('T', 'tarsus-highlight') }));
     // intertarsal heel pad: the bird's "backward knee" just below the feather cuff
     kids.push(line('M17 7.6Q21 11.4 23.4 10.6Q27 9.6 29.5 7.4M19.5 5.2q3.6 2.4 7.2 0', I.OD, 1.25, { 'data-detail': tag('O', 'intertarsal-heel-pad') }));
-    kids.push(line('M15.6 -7.8Q23 -11.6 30.4 -7.2M18 -3.6Q23 -1.2 28.6 -3.8M31.6 -5.4Q34.6 -1 31.4 3.2', I.OD, 1.05, { 'data-detail': tag('O', 'intertarsal-knuckle') }));
+    kids.push(line('M11 -5.6Q14 -1 11.4 4.6M15.4 -6Q18.6 -0.6 15.8 5.4', I.OD, 1, { 'data-detail': tag('O', 'intertarsal-knuckle') }));
   } else {
-    kids.push(line('M17 7.6Q21 11.4 23.4 10.6Q27 9.6 29.5 7.4M15.6 -7.8Q23 -11.6 30.4 -7.2', I.OD, 1, { 'data-detail': tag('O', 'far-intertarsal-knuckle') }));
+    kids.push(line('M17 7.6Q21 11.4 23.4 10.6Q27 9.6 29.5 7.4M11 -5.6Q14 -1 11.4 4.6', I.OD, 1, { 'data-detail': tag('O', 'far-intertarsal-knuckle') }));
   }
   return G('tarsus', 'O', far, kids);
 }
@@ -557,10 +610,10 @@ function mottle(v) {
     line('M6 30q6 -3 12 -1M26 9q5 -2.4 11 -0.6', v('plRose'), 1.1, { opacity: 0.45 }));
 }
 export function build({ v }) {
-  V.rim = v('rim');
+  V.rim = v('rimLight');
   const pal = pre => ({
     ink: v(pre + 'Ink'), inkSoft: v(pre + 'InkSoft'), P: v(pre + 'Paper'), glow: v(pre + 'Glow'), S: v(pre + 'Rose'), S2: v(pre + 'RoseDeep'),
-    N: v(pre + 'Deep'), NS: v(pre + 'Sheen'), NB: v(pre + 'Bloom'), O: v(pre + 'Foot'), OH: v(pre + 'FootHi'), OL: v(pre + 'FootLo'),
+    N: v(pre + 'Deep'), NS: v(pre + 'Sheen'), NM: v(pre + 'Mid'), NB: v(pre + 'Bloom'), O: v(pre + 'Foot'), OH: v(pre + 'FootHi'), OL: v(pre + 'FootLo'),
     OD: v(pre + 'FootDeep'), OW: v(pre + 'Web'), pad: v(pre + 'Pad'), claw: v(pre + 'Claw'),
   });
   const near = { ...pal('pl'), pencil: true }, farI = pal('plF');
@@ -575,7 +628,7 @@ export function build({ v }) {
     s['wing' + side + 'Hand'] = wingHand(I, far, side);
   }
   const gw = gouacheTile('pl-gw', { size: 64, seed: 21, dark: v('plRoseDeep'), light: '#FFFDF7', kd: 0.12, kl: 0.3, nBlot: 11, nStroke: 9, nFleck: 16, ang: 12 });
-  const gzd = glazeGrads('pl', { rose: v('plRose'), deep: v('plRoseDeep'), warm: v('rim'), lite: '#FFFDF6' });
+  const gzd = glazeGrads('pl', { rose: v('plRose'), deep: v('plRoseDeep'), warm: v('rimLight'), lite: '#FFFDF6' });
   return { defs: mottle(v) + gw + gzd, slots: s };
 }
 
@@ -591,7 +644,7 @@ export function limbState(pose, reduced = false) {
     out[side] = {
       e: wrapA(L.rot - U.rot),
       prims: `rotate(${f(wrapA(H.rot - L.rot) + 0.35 * lag)} 74 0)`,
-      p: PRIM.map((q, i) => { const k = clamp(open * 1.35 - (4 - i) * 0.09, 0, 1); return k > 0.001 ? `rotate(${f(-k * (26 + i * 17))} ${f(q.b[0])} ${f(q.b[1])})` : 'rotate(0)'; }),
+      p: PRIM.map((q, i) => { const k = clamp(open * 1.35 - (PRIM.length - 1 - i) * 0.09, 0, 1); return k > 0.001 ? `rotate(${f(-k * (12 + i * 11))} ${f(q.b[0])} ${f(q.b[1])})` : 'rotate(0)'; }),
       fanOn: grip < 0.5,
       fan: Array.from({ length: 6 }, (_, i) => `rotate(${f((1 - clamp(open * 1.3 - i * 0.06, 0, 1)) * (40 + i * 10))})`),
       alula: `rotate(${f(24 * (wg.thumb || 0))} -5 -13)`,
@@ -623,10 +676,11 @@ export function attach(svg) {
           for (const k of (side === 'Near' ? PER_FRAME : ['key'])) r[side + '-' + k]?.setAttribute('d', g[k]);
         }
         set(side + 'prims', r[side + '-prims'], 'transform', S.prims);
+        show(side + 'primsOn', r[side + '-prims'], !S.fanOn);
         S.p.forEach((v, i) => set(side + 'p' + i, r[side + '-p' + i], 'transform', v));
         show(side + 'fan', r[side + '-fan'], S.fanOn);
         show(side + 'grip', r[side + '-grip'], !S.fanOn);
-        if (S.fanOn) S.fan.forEach((v, i) => set(side + 'fan' + i, r[side + '-fan' + i], 'transform', v));
+        if (S.fanOn) S.fan.forEach((v, i) => { set(side + 'fan' + i, r[side + '-fan' + i], 'transform', v); set(side + 'fanc' + i, r[side + '-fanc' + i], 'transform', v); });
         set(side + 'alula', r[side + '-alula'], 'transform', S.alula);
         set(side + 'gc', r[side + '-gc'], 'transform', S.gc);
         set(side + 'toes', r[side + '-toes'], 'transform', S.toes);
@@ -668,11 +722,12 @@ export const detailItems = [
   ['humeral-covert-scallops', 'T', 'finer humeral covert row nearest the shoulder'],
   ['scapular-fine-row', 'T', 'a third, paler scallop row high on the cape'],
   ['cape-highlight-dabs', 'T', 'warm-white gouache dabs on the lit cape'],
-  ['secondaries-fringe', 'O', 'ten deep secondaries hanging below the arm line as a fringe'],
+  ['secondaries-fringe', 'O', 'nine softer plum-grey secondaries hanging below the arm line as a fringe (lighter than the primaries)'],
+  ['primary-edge-highlights', 'T', 'warm-white edge line along the lit edge of every trailing primary finger'],
   ['secondary-sheen', 'T', 'plum sheen brush strokes down each secondary'],
   ['secondary-pale-edges', 'T', "pale bloom edges on the secondaries (the pelican's grey bloom)"],
   ['secondary-rachis', 'T', 'sheen shafts of the secondaries'],
-  ['primaries-trailing', 'O', 'five deep primaries sweeping back and down from the wrist, sheen strokes, pale edges and emarginations (rotate with the hand; fan open in sequence in the wave)'],
+  ['primaries-trailing', 'O', 'four broad deep primaries narrowing into blunt fingers with staggered tips sweeping back and down from the wrist, sheen strokes, pale edges and emarginations (rotate with the hand; fan open in sequence in the wave)'],
   ['covert-panel', 'O', 'propatagium: skin fold shoulder→wrist, outline rebuilt from the elbow angle so it never seams'],
   ['greater-coverts', 'O', 'ten rounded greater coverts over the secondary bases (lift in gusts)'],
   ['greater-covert-glaze', 'T', 'rose glaze crescent on each greater covert'],
@@ -686,21 +741,30 @@ export const detailItems = [
   ['wing-rim-light', 'O', 'rim light inside the leading edge on the sun side'],
   ['pencil-double-line', 'T', 'faint offset pencil line doubling the leading-edge ink (per frame)'],
   ['wing-leading-edge', 'O', 'hand-wobbled warm-brown key line of the leading edge, thin where it leaves the breast'],
-  ['primary-fingers', 'O', 'five outer primaries wrapping the grip, peeling off into five separate tips that curl like fingers, each with a pale bloom edge and a sheen stroke'],
-  ['finger-tip-blooms', 'T', 'pale bloom strokes at the ends of the five curled finger tips'],
+  ['primary-fingers', 'O', 'four broad outer primaries wrapping the grip, peeling off at well-spaced angles into four separate round tips that curl over the front of the grip like fingers, each with a warm-white edge, a shadowed lip and a sheen stroke'],
+  ['finger-tip-blooms', 'T', 'pale bloom strokes at the ends of the four curled finger tips'],
+  ['open-wing-fan', 'O', 'wave: six primaries spread from the wrist under warm-white primary coverts, dark only on the outer half, narrowing into separate fingers'],
   ['primary-coverts', 'O', 'short deep primary coverts on the back of the hand'],
   ['primary-covert-edges', 'T', 'pale bloom edges on the primary coverts'],
   ['carpal-bend', 'O', 'warm-white bend of the wing folding over the wrist; ink line continuing the leading edge'],
   ['carpal-shade-glaze', 'T', 'rose glaze under the carpal bend'],
   ['carpal-covert-scallops', 'T', 'small covert scallops on the carpal bend'],
   ['alula', 'O', 'three-feather alula (bastard wing) that flicks the bell'],
-  ['thigh-trousers', 'O', 'feathered warm-white thigh merging into the belly, tapering to a slim shin; gouache mottle texture'],
+  ['thigh-trousers', 'O', 'short, fluffy warm-white feathered trouser leaving the lower flank and ending at ~55 % of the thigh; gouache mottle texture'],
   ['trouser-shade-glaze', 'T', 'broad rose glaze + deeper core on the shadow side of the trousers'],
   ['trouser-lit-edge', 'T', 'warm lit brush stroke along the front of the trousers'],
   ['thigh-rim-light', 'O', 'rim light along the front of the thigh on the sun side'],
-  ['knee-feather-cuff', 'O', 'pointed feather fringe hiding the rig knee'],
-  ['cuff-feather-glaze', 'T', 'rose glaze in the shadowed half of every cuff feather'],
-  ['cuff-feather-shafts', 'T', 'shaft ticks in the cuff feathers'],
+  ['trouser-feather-fringe', 'O', 'ring of pointed, down-curling feather tips where the short trouser ends (longer at the rear)'],
+  ['fringe-feather-glaze', 'T', 'rose glaze in the shadowed half of every fringe feather'],
+  ['fringe-feather-shafts', 'T', 'shaft ticks in the fringe feathers'],
+  ['trouser-down-dabs', 'T', 'warm-white gouache dabs of fluffy down on the trouser'],
+  ['tibia-bare-skin', 'O', 'bare orange tibia between the trouser fringe and the knee, hand-inked'],
+  ['tibia-shade-band', 'T', 'burnt-orange shade band on the rear of the tibia'],
+  ['tibia-reticulate-scales', 'T', 'fine staggered reticulate scales on the bare tibia'],
+  ['tibia-highlight', 'T', 'lit gouache stroke down the front of the tibia'],
+  ['knee-joint', 'O', 'round orange knee knob capping tibia and tarsus (hides the rig knee at every angle)'],
+  ['knee-knob-highlight', 'T', 'lit stroke on the knee knob'],
+  ['knee-creases', 'T', 'skin creases on the knee knob'],
   ['trouser-feather-scallops', 'T', 'painted contour-feather scallops flowing down the leg'],
   ['trouser-rear-hatching', 'T', 'fine brown hatching on the rear of the trousers'],
   ['dry-brush-feather-breaks', 'T', 'dry-brush flecks where feathers break the trouser silhouette'],

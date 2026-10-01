@@ -1,0 +1,4493 @@
+{
+ "file": "dist/pelican-bicycle.svg",
+ "bytes": 3066186,
+ "gzip": 704846,
+ "sha256": "f4c10c30501e6f6f38774d2bac52014b3d1c58cf17f83f18c3d0aa090f75793f",
+ "bakeMs": 53396,
+ "opts": {},
+ "stats": {
+  "period": 4,
+  "fps": 60,
+  "start": 250,
+  "samples": 7770,
+  "tracks": 1064,
+  "animated": 1052,
+  "anims": 1075,
+  "keyframes": 38003,
+  "warnings": [],
+  "nonClosing": [
+   "j-wingFarUpper.transform:translate[1] Δ=-0.15 (spread)",
+   "j-wingFarUpper.transform:rotate[0] Δ=-0.1 (spread)",
+   "j-wingFarLower.transform:translate[0] Δ=0.13 (spread)",
+   "j-wingFarLower.transform:translate[1] Δ=-0.19 (spread)",
+   "j-wingFarLower.transform:rotate[0] Δ=0.17 (spread)",
+   "j-wingFarHand.transform:rotate[0] Δ=0.24 (spread)",
+   "j-thighFar.transform:translate[1] Δ=-0.15 (spread)",
+   "j-bars.transform:translate[0] Δ=-1.07 (spread)",
+   "j-bars.transform:translate[1] Δ=-0.44 (spread)",
+   "j-bars.transform:rotate[0] Δ=0.23 (spread)",
+   "j-tail.transform:translate[1] Δ=-0.14 (spread)",
+   "j-body.transform:translate[1] Δ=-0.14 (spread)",
+   "j-body.transform:scale[1] Δ=0.02",
+   "j-thighNear.transform:translate[1] Δ=-0.14 (spread)",
+   "j-pouch.transform:translate[1] Δ=-0.6 (spread)",
+   "j-billLower.transform:translate[1] Δ=-0.6 (spread)",
+   "j-billUpper.transform:translate[1] Δ=-0.6 (spread)",
+   "j-head.transform:translate[1] Δ=-0.6 (spread)",
+   "j-eye.transform:translate[1] Δ=-0.6 (spread)",
+   "j-crest.transform:translate[1] Δ=-0.6 (spread)",
+   "j-wingNearUpper.transform:translate[1] Δ=-0.14 (spread)",
+   "j-wingNearLower.transform:translate[1] Δ=-0.18 (spread)",
+   "j-wingNearLower.transform:rotate[0] Δ=0.17 (spread)",
+   "j-wingNearHand.transform:rotate[0] Δ=0.24 (spread)",
+   "sky-shipG.transform:translate[1] Δ=4.15 (spread)",
+   "sky-balloonG.transform:translate[1] Δ=24.15",
+   "sky-skein.transform:translate[1] Δ=4.42 (spread)",
+   "sky-gullsG.transform:translate[1] Δ=6.26",
+   "sky-flockG.transform:translate[1] Δ=7.94",
+   "fx-sh-body.transform:scale[1] Δ=0.02 (spread)",
+   "fx-sh-crest.transform:translate[1] Δ=-0.6 (spread)",
+   "fx-sh-head.transform:translate[1] Δ=-0.6 (spread)",
+   "fx-sh-pouch.transform:translate[1] Δ=-0.6 (spread)",
+   "fx-sh-billLower.transform:translate[1] Δ=-0.6 (spread)",
+   "fx-sh-billUpper.transform:translate[1] Δ=-0.6 (spread)",
+   "fx-shNeck.d[5] Δ=-0.6 (spread)",
+   "fx-gfar0.transform:translate[1] Δ=8.3",
+   "fx-gfar1.transform:translate[1] Δ=-9.3",
+   "fx-gfar2.transform:translate[1] Δ=2.9 (spread)",
+   "fx-gfar3.transform:translate[1] Δ=-8.3",
+   "fx-gfar4.transform:translate[1] Δ=9.9",
+   "fx-gfar5.transform:translate[1] Δ=11.1",
+   "fx-gfar6.transform:translate[1] Δ=-9.8",
+   "fx-esc0.transform:translate[1] Δ=16",
+   "fx-esc0.transform:rotate[0] Δ=-3.5 (spread)",
+   "fx-dust3.transform:translate[0] Δ=35.5",
+   "fx-dust3.transform:translate[1] Δ=10.9",
+   "fx-dust3.transform:scale[0] Δ=0.46",
+   "fx-dust3.transform:scale[1] Δ=0.46",
+   "fx-dust3.opacity[0] Δ=0.33",
+   "fx-dust4.transform:translate[0] Δ=34.4",
+   "fx-dust4.transform:translate[1] Δ=21.2",
+   "fx-dust4.transform:scale[0] Δ=-0.11",
+   "fx-dust4.transform:scale[1] Δ=-0.11",
+   "fx-dust5.transform:translate[0] Δ=25.4",
+   "fx-dust5.transform:translate[1] Δ=-5.7",
+   "fx-dust5.transform:scale[0] Δ=0.04 (spread)",
+   "fx-dust5.transform:scale[1] Δ=0.04 (spread)",
+   "fx-dust5.opacity[0] Δ=0.65",
+   "fx-dust6.transform:translate[0] Δ=85.8",
+   "fx-dust6.transform:translate[1] Δ=28.2",
+   "fx-dust6.transform:scale[0] Δ=-0.71",
+   "fx-dust6.transform:scale[1] Δ=-0.71",
+   "fx-dust6.opacity[0] Δ=0.48",
+   "fx-dust7.transform:translate[0] Δ=71",
+   "fx-dust7.transform:translate[1] Δ=8.4",
+   "fx-dust7.transform:scale[0] Δ=0.04 (spread)",
+   "fx-dust7.transform:scale[1] Δ=0.04 (spread)",
+   "fx-dust8.transform:translate[0] Δ=75.5",
+   "fx-dust8.transform:translate[1] Δ=11.2",
+   "fx-dust8.transform:scale[0] Δ=-0.64",
+   "fx-dust8.transform:scale[1] Δ=-0.64",
+   "fx-dust9.transform:translate[0] Δ=-137.9",
+   "fx-dust9.transform:translate[1] Δ=-46.2",
+   "fx-dust9.transform:scale[0] Δ=0.01 (spread)",
+   "fx-dust9.transform:scale[1] Δ=0.01 (spread)",
+   "fx-dust9.opacity[0] Δ=-0.82",
+   "fx-grit7.transform:translate[0] Δ=-57.3",
+   "fx-grit7.transform:translate[1] Δ=33.9",
+   "fx-grit7.transform:rotate[0] Δ=37.5",
+   "fx-grit8.transform:translate[0] Δ=-19.2",
+   "fx-grit8.transform:translate[1] Δ=-20.7",
+   "fx-grit8.transform:rotate[0] Δ=26.1",
+   "fx-curlG.transform:translate[0] Δ=-36",
+   "fx-curlG.transform:translate[1] Δ=-5.4",
+   "fx-curl0p1.stroke-dashoffset[0] Δ=-0.55 (spread)",
+   "fx-curl1p0.stroke-dashoffset[0] Δ=-0.4 (spread)",
+   "fx-curl1u.stroke-dashoffset[0] Δ=-0.4 (spread)",
+   "fx-curl1p2.stroke-dashoffset[0] Δ=-0.4 (spread)",
+   "fx-seed0.transform:translate[1] Δ=39.6",
+   "fx-seed0.transform:rotate[0] Δ=21.5",
+   "fx-seed1.transform:translate[0] Δ=-603.3",
+   "fx-seed1.transform:translate[1] Δ=-28.1",
+   "fx-seed1.transform:rotate[0] Δ=-4.9 (spread)",
+   "fx-seed2.transform:translate[0] Δ=-509.1",
+   "fx-seed2.transform:translate[1] Δ=-11.9",
+   "fx-seed2.transform:rotate[0] Δ=-26.8",
+   "fx-seed3.transform:translate[0] Δ=-568.4",
+   "fx-seed3.transform:translate[1] Δ=45.9",
+   "fx-seed3.transform:rotate[0] Δ=-24.1",
+   "fx-bf0.transform:translate[0] Δ=53.9",
+   "fx-bf0.transform:translate[1] Δ=-2.7",
+   "fx-bf0.transform:rotate[0] Δ=4 (spread)",
+   "fx-bfw0.transform:scale[1] Δ=-0.58",
+   "fx-bf1.transform:translate[0] Δ=-39.4",
+   "fx-bf1.transform:translate[1] Δ=-12.3",
+   "fx-bf1.transform:rotate[0] Δ=-2.4 (spread)",
+   "fx-bfw1.transform:scale[1] Δ=0.58",
+   "fx-dfly.transform:translate[0] Δ=-33.4",
+   "fx-dfly.transform:translate[1] Δ=-10.1",
+   "fx-dflyW.transform:scale[1] Δ=0.02 (spread)",
+   "fx-fly.transform:translate[0] Δ=25.2",
+   "fx-fly.transform:translate[1] Δ=20.7",
+   "fx-flyW.transform:rotate[0] Δ=23.5",
+   "fx-bee.transform:translate[0] Δ=-5.4",
+   "fx-bee.transform:translate[1] Δ=5.1",
+   "fx-bee.transform:scale[0] Δ=-2.3",
+   "fx-beeW.transform:scale[1] Δ=0.48",
+   "fx-beeTrail.d[0] Δ=1.8",
+   "fx-beeTrail.d[1] Δ=3.6",
+   "fx-beeTrail.d[2] Δ=9",
+   "fx-beeTrail.d[3] Δ=-1.2",
+   "fx-beeTrail.d[4] Δ=16.2",
+   "fx-beeTrail.d[5] Δ=-5.6",
+   "fx-beeTrail.d[6] Δ=23.3",
+   "fx-beeTrail.d[7] Δ=-9.8",
+   "fx-beeTrail.d[8] Δ=30.4",
+   "fx-beeTrail.d[9] Δ=-13.4",
+   "fx-beeTrail.d[10] Δ=37.4",
+   "fx-beeTrail.d[11] Δ=-16.6",
+   "fx-beeTrail.d[12] Δ=44.2",
+   "fx-beeTrail.d[13] Δ=-19.1",
+   "fx-lady.transform:translate[0] Δ=-37.2",
+   "fx-glR.transform:rotate[0] Δ=-32",
+   "pb-neckPath.d[37] Δ=-0.45 (spread)",
+   "pb-neckPath.d[39] Δ=-0.45 (spread)",
+   "pb-neckPath.d[51] Δ=-0.78 (spread)",
+   "pb-neckPath.d[53] Δ=-0.77 (spread)",
+   "pb-neckPath.d[55] Δ=-0.76 (spread)",
+   "pb-neckPath.d[57] Δ=-0.74 (spread)",
+   "pb-neckPath.d[59] Δ=-0.72 (spread)",
+   "pb-neckPath.d[61] Δ=-0.68 (spread)",
+   "pb-neckPath.d[63] Δ=-0.64 (spread)",
+   "pb-neckPath.d[65] Δ=-0.6 (spread)",
+   "pb-neckPath.d[67] Δ=-0.56 (spread)",
+   "pb-neckPath.d[69] Δ=-0.52 (spread)",
+   "pb-neckPath.d[71] Δ=-0.48 (spread)",
+   "pb-neckFlow.d[41] Δ=-0.47 (spread)",
+   "pb-neckFlow.d[49] Δ=-0.47 (spread)",
+   "pb-neckFlow.d[51] Δ=-0.54 (spread)",
+   "pb-neckFlow.d[53] Δ=-0.5 (spread)",
+   "pb-neckFlow.d[55] Δ=-0.5 (spread)",
+   "pb-neckFlow.d[57] Δ=-0.52 (spread)",
+   "pb-neckFlow.d[59] Δ=-0.54 (spread)",
+   "pb-neckFlow.d[61] Δ=-0.61 (spread)",
+   "pb-neckFlow.d[63] Δ=-0.56 (spread)",
+   "pb-neckFlow.d[65] Δ=-0.55 (spread)",
+   "pb-neckFlow.d[67] Δ=-0.58 (spread)",
+   "pb-neckFlow.d[69] Δ=-0.61 (spread)",
+   "pb-neckFlow.d[71] Δ=-0.67 (spread)",
+   "pb-neckFlow.d[73] Δ=-0.61 (spread)",
+   "pb-neckFlow.d[75] Δ=-0.59 (spread)",
+   "pb-neckFlow.d[77] Δ=-0.62 (spread)",
+   "pb-neckFlow.d[79] Δ=-0.67 (spread)",
+   "pb-neckFlow.d[81] Δ=-0.72 (spread)",
+   "pb-neckFlow.d[83] Δ=-0.65 (spread)",
+   "pb-neckFlow.d[85] Δ=-0.61 (spread)",
+   "pb-neckFlow.d[87] Δ=-0.66 (spread)",
+   "pb-neckFlow.d[89] Δ=-0.72 (spread)",
+   "pb-neckFlow2.d[25] Δ=-0.48 (spread)",
+   "pb-neckFlow2.d[27] Δ=-0.46 (spread)",
+   "pb-neckFlow2.d[31] Δ=-0.53 (spread)",
+   "pb-neckFlow2.d[33] Δ=-0.51 (spread)",
+   "pb-neckFlow2.d[35] Δ=-0.49 (spread)",
+   "pb-neckFlow2.d[37] Δ=-0.58 (spread)",
+   "pb-neckFlow2.d[39] Δ=-0.54 (spread)",
+   "pb-neckFlow2.d[41] Δ=-0.51 (spread)",
+   "pb-neckFlow2.d[43] Δ=-0.61 (spread)",
+   "pb-neckFlow2.d[45] Δ=-0.56 (spread)",
+   "pb-neckFlow2.d[47] Δ=-0.53 (spread)",
+   "pb-neckFlow2.d[49] Δ=-0.62 (spread)",
+   "pb-neckFlow2.d[51] Δ=-0.57 (spread)",
+   "pb-neckFlow2.d[53] Δ=-0.52 (spread)",
+   "pb-neckRimF.d[49] Δ=-0.45 (spread)",
+   "pb-neckShade.d[25] Δ=-0.48 (spread)",
+   "pb-neckShade.d[27] Δ=-0.52 (spread)",
+   "pb-neckShade.d[29] Δ=-0.56 (spread)",
+   "pb-neckShade.d[31] Δ=-0.6 (spread)",
+   "pb-neckShade.d[33] Δ=-0.64 (spread)",
+   "pb-neckShade.d[35] Δ=-0.68 (spread)",
+   "pb-neckShade.d[37] Δ=-0.71 (spread)",
+   "pb-neckShade.d[39] Δ=-0.74 (spread)",
+   "pb-neckShade.d[41] Δ=-0.75 (spread)",
+   "pb-neckShade.d[43] Δ=-0.76 (spread)",
+   "pb-neckShade.d[45] Δ=-0.76 (spread)",
+   "pb-neckShade.d[47] Δ=-0.76 (spread)",
+   "pb-neckShade.d[49] Δ=-0.75 (spread)",
+   "pb-neckShade.d[51] Δ=-0.74 (spread)",
+   "pb-neckShade.d[53] Δ=-0.72 (spread)",
+   "pb-neckShade.d[55] Δ=-0.68 (spread)",
+   "pb-neckShade.d[57] Δ=-0.65 (spread)",
+   "pb-neckShade.d[59] Δ=-0.61 (spread)",
+   "pb-neckShade.d[61] Δ=-0.57 (spread)",
+   "pb-neckShade.d[63] Δ=-0.53 (spread)",
+   "pb-neckShade.d[65] Δ=-0.49 (spread)",
+   "pb-neckShade.d[67] Δ=-0.46 (spread)",
+   "pb-neckPencil.d[31] Δ=-0.47 (spread)",
+   "pb-neckPencil.d[33] Δ=-0.5 (spread)",
+   "pb-neckPencil.d[35] Δ=-0.5 (spread)",
+   "pb-neckPencil.d[37] Δ=-0.53 (spread)",
+   "pb-neckPencil.d[39] Δ=-0.58 (spread)",
+   "pb-neckPencil.d[41] Δ=-0.58 (spread)",
+   "pb-neckPencil.d[43] Δ=-0.61 (spread)",
+   "pb-neckPencil.d[45] Δ=-0.64 (spread)",
+   "pb-neckPencil.d[47] Δ=-0.64 (spread)",
+   "pb-neckPencil.d[49] Δ=-0.68 (spread)",
+   "pb-scarfA.transform:translate[0] Δ=-0.62 (spread)",
+   "pb-scarfA.transform:translate[1] Δ=1.28 (spread)",
+   "pb-scarfB.transform:translate[0] Δ=-0.62 (spread)",
+   "pb-scarfB.transform:translate[1] Δ=1.28 (spread)",
+   "pb-scarfC.transform:translate[0] Δ=-0.62 (spread)",
+   "pb-scarfC.transform:translate[1] Δ=1.28 (spread)",
+   "pb-snPath.d[0] Δ=-1 (spread)",
+   "pb-snPath.d[2] Δ=-0.8 (spread)",
+   "pb-snPath.d[3] Δ=2 (spread)",
+   "pb-snPath.d[4] Δ=-0.7 (spread)",
+   "pb-snPath.d[5] Δ=2.9 (spread)",
+   "pb-snPath.d[6] Δ=-0.5 (spread)",
+   "pb-snPath.d[7] Δ=3.8 (spread)",
+   "pb-snPath.d[9] Δ=4.5 (spread)",
+   "pb-snPath.d[11] Δ=5.3 (spread)",
+   "pb-snPath.d[13] Δ=5.1 (spread)",
+   "pb-snPath.d[15] Δ=4.8 (spread)",
+   "pb-snPath.d[17] Δ=4.4 (spread)",
+   "pb-snPath.d[19] Δ=4.2 (spread)",
+   "pb-snPath.d[21] Δ=3.7 (spread)",
+   "pb-snPath.d[23] Δ=3.2 (spread)",
+   "pb-snPath.d[25] Δ=2.7 (spread)",
+   "pb-snPath.d[27] Δ=2.1 (spread)",
+   "pb-snPath.d[29] Δ=1.6 (spread)",
+   "pb-snPath.d[30] Δ=-0.5 (spread)",
+   "pb-snPath.d[31] Δ=1.1 (spread)",
+   "pb-snPath.d[32] Δ=-0.6 (spread)",
+   "pb-snPath.d[33] Δ=0.7 (spread)",
+   "pb-snPath.d[34] Δ=-0.7 (spread)",
+   "pb-snPath.d[36] Δ=-0.8 (spread)",
+   "pb-snPath.d[37] Δ=0.5 (spread)",
+   "pb-snPath.d[38] Δ=-0.8 (spread)",
+   "pb-snPath.d[39] Δ=0.6 (spread)",
+   "pb-snPath.d[40] Δ=-0.7 (spread)",
+   "pb-snPath.d[41] Δ=1.4 (spread)",
+   "pb-snPath.d[42] Δ=-0.7 (spread)",
+   "pb-snPath.d[43] Δ=2.1 (spread)",
+   "pb-snPath.d[44] Δ=-0.6 (spread)",
+   "pb-snPath.d[45] Δ=2.9 (spread)",
+   "pb-snPath.d[47] Δ=3.7 (spread)",
+   "pb-snPath.d[49] Δ=3 (spread)",
+   "pb-snPath.d[51] Δ=3.6 (spread)",
+   "pb-snPath.d[53] Δ=3.9 (spread)",
+   "pb-snPath.d[55] Δ=4.3 (spread)",
+   "pb-snPath.d[57] Δ=4.4 (spread)",
+   "pb-snPath.d[59] Δ=4.5 (spread)",
+   "pb-snPath.d[61] Δ=4.3 (spread)",
+   "pb-snPath.d[63] Δ=4.1 (spread)",
+   "pb-snPath.d[65] Δ=3.8 (spread)",
+   "pb-snPath.d[67] Δ=3.5 (spread)",
+   "pb-snPath.d[69] Δ=3.2 (spread)",
+   "pb-snPath.d[71] Δ=2.8 (spread)",
+   "pb-snPath.d[72] Δ=-0.5 (spread)",
+   "pb-snPath.d[73] Δ=2.3 (spread)",
+   "pb-snPath.d[74] Δ=-0.6 (spread)",
+   "pb-snPath.d[75] Δ=1.8 (spread)",
+   "pb-snPath.d[76] Δ=-0.6 (spread)",
+   "pb-snPath.d[77] Δ=1.3 (spread)",
+   "pb-snPath.d[78] Δ=-0.7 (spread)",
+   "pb-snPath.d[79] Δ=0.8 (spread)",
+   "pb-snPath.d[80] Δ=-0.8 (spread)",
+   "pb-snPath.d[82] Δ=-0.8 (spread)",
+   "pb-snPath.d[84] Δ=-0.7 (spread)",
+   "pb-snPath.d[86] Δ=-0.5 (spread)",
+   "pb-snPath.d[88] Δ=-0.5 (spread)",
+   "pb-snPath.d[89] Δ=0.8 (spread)",
+   "pb-snPath.d[91] Δ=1.3 (spread)",
+   "pb-snPath.d[93] Δ=1.9 (spread)",
+   "pb-snPath.d[95] Δ=2.4 (spread)",
+   "pb-snStripe.d[0] Δ=-0.9 (spread)",
+   "pb-snStripe.d[1] Δ=1 (spread)",
+   "pb-snStripe.d[2] Δ=-0.8 (spread)",
+   "pb-snStripe.d[3] Δ=2 (spread)",
+   "pb-snStripe.d[4] Δ=-0.7 (spread)",
+   "pb-snStripe.d[5] Δ=2.9 (spread)",
+   "pb-snStripe.d[6] Δ=-0.5 (spread)",
+   "pb-snStripe.d[7] Δ=3.8 (spread)",
+   "pb-snStripe.d[9] Δ=4.5 (spread)",
+   "pb-snStripe.d[10] Δ=-0.7 (spread)",
+   "pb-snStripe.d[12] Δ=-0.5 (spread)",
+   "pb-snStripe.d[14] Δ=-0.5 (spread)",
+   "pb-snStripe.d[15] Δ=0.8 (spread)",
+   "pb-snStripe.d[17] Δ=1.3 (spread)",
+   "pb-snStripe.d[19] Δ=1.9 (spread)",
+   "pb-snStripe.d[21] Δ=5.1 (spread)",
+   "pb-snStripe.d[23] Δ=4.8 (spread)",
+   "pb-snStripe.d[25] Δ=4.4 (spread)",
+   "pb-snStripe.d[27] Δ=4.2 (spread)",
+   "pb-snStripe.d[29] Δ=3.7 (spread)",
+   "pb-snStripe.d[30] Δ=-0.5 (spread)",
+   "pb-snStripe.d[31] Δ=2.3 (spread)",
+   "pb-snStripe.d[32] Δ=-0.6 (spread)",
+   "pb-snStripe.d[33] Δ=1.8 (spread)",
+   "pb-snStripe.d[34] Δ=-0.6 (spread)",
+   "pb-snStripe.d[35] Δ=1.3 (spread)",
+   "pb-snStripe.d[36] Δ=-0.7 (spread)",
+   "pb-snStripe.d[37] Δ=0.8 (spread)",
+   "pb-snStripe.d[38] Δ=-0.8 (spread)",
+   "pb-snStripe.d[41] Δ=2.7 (spread)",
+   "pb-snStripe.d[43] Δ=2.1 (spread)",
+   "pb-snStripe.d[45] Δ=1.6 (spread)",
+   "pb-snStripe.d[46] Δ=-0.5 (spread)",
+   "pb-snStripe.d[47] Δ=1.1 (spread)",
+   "pb-snStripe.d[48] Δ=-0.6 (spread)",
+   "pb-snStripe.d[49] Δ=0.7 (spread)",
+   "pb-snStripe.d[51] Δ=4.3 (spread)",
+   "pb-snStripe.d[53] Δ=4.1 (spread)",
+   "pb-snStripe.d[55] Δ=3.8 (spread)",
+   "pb-snStripe.d[57] Δ=3.5 (spread)",
+   "pb-snStripe.d[59] Δ=3.2 (spread)",
+   "pb-snStripe.d[60] Δ=-0.8 (spread)",
+   "pb-snStripe.d[61] Δ=0.5 (spread)",
+   "pb-snStripe.d[62] Δ=-0.8 (spread)",
+   "pb-snStripe.d[63] Δ=0.6 (spread)",
+   "pb-snStripe.d[64] Δ=-0.7 (spread)",
+   "pb-snStripe.d[65] Δ=1.4 (spread)",
+   "pb-snStripe.d[66] Δ=-0.7 (spread)",
+   "pb-snStripe.d[67] Δ=2.1 (spread)",
+   "pb-snStripe.d[68] Δ=-0.6 (spread)",
+   "pb-snStripe.d[69] Δ=2.9 (spread)",
+   "pb-snStripe.d[71] Δ=3.3 (spread)",
+   "pb-snStripe.d[73] Δ=3.6 (spread)",
+   "pb-snStripe.d[75] Δ=3.9 (spread)",
+   "pb-snStripe.d[77] Δ=4.3 (spread)",
+   "pb-snStripe.d[79] Δ=4.4 (spread)",
+   "pb-snFringe.d[1] Δ=3.7 (spread)",
+   "pb-snFringe.d[3] Δ=-1.4 (spread)",
+   "pb-snFringe.d[5] Δ=3.5 (spread)",
+   "pb-snFringe.d[7] Δ=-0.9 (spread)",
+   "pb-snFringe.d[9] Δ=3.4 (spread)",
+   "pb-snFringe.d[11] Δ=0.7 (spread)",
+   "pb-snFringe.d[13] Δ=3.2 (spread)",
+   "pb-snFringe.d[15] Δ=2.1 (spread)",
+   "pb-snFringe.d[17] Δ=3.1 (spread)",
+   "pb-snFringe.d[19] Δ=1.8 (spread)",
+   "pb-snFringe.d[21] Δ=3 (spread)",
+   "pb-sfFill.d[0] Δ=-0.9 (spread)",
+   "pb-sfFill.d[1] Δ=2.3 (spread)",
+   "pb-sfFill.d[2] Δ=-1 (spread)",
+   "pb-sfFill.d[3] Δ=3.8 (spread)",
+   "pb-sfFill.d[4] Δ=-1 (spread)",
+   "pb-sfFill.d[5] Δ=3.9 (spread)",
+   "pb-sfFill.d[6] Δ=-0.9 (spread)",
+   "pb-sfFill.d[7] Δ=4.2 (spread)",
+   "pb-sfFill.d[8] Δ=-0.9 (spread)",
+   "pb-sfFill.d[9] Δ=3.9 (spread)",
+   "pb-sfFill.d[10] Δ=-0.9 (spread)",
+   "pb-sfFill.d[11] Δ=3.7 (spread)",
+   "pb-sfFill.d[12] Δ=-0.8 (spread)",
+   "pb-sfFill.d[13] Δ=3.4 (spread)",
+   "pb-sfFill.d[14] Δ=-0.7 (spread)",
+   "pb-sfFill.d[15] Δ=3.2 (spread)",
+   "pb-sfFill.d[16] Δ=-0.7 (spread)",
+   "pb-sfFill.d[17] Δ=2.7 (spread)",
+   "pb-sfFill.d[18] Δ=-0.7 (spread)",
+   "pb-sfFill.d[19] Δ=2.4 (spread)",
+   "pb-sfFill.d[20] Δ=-0.8 (spread)",
+   "pb-sfFill.d[21] Δ=2 (spread)",
+   "pb-sfFill.d[22] Δ=-0.8 (spread)",
+   "pb-sfFill.d[23] Δ=1.6 (spread)",
+   "pb-sfFill.d[24] Δ=-0.8 (spread)",
+   "pb-sfFill.d[25] Δ=1.2 (spread)",
+   "pb-sfFill.d[26] Δ=-0.9 (spread)",
+   "pb-sfFill.d[27] Δ=0.8 (spread)",
+   "pb-sfFill.d[28] Δ=-1 (spread)",
+   "pb-sfFill.d[29] Δ=0.5 (spread)",
+   "pb-sfFill.d[30] Δ=-1 (spread)",
+   "pb-sfFill.d[32] Δ=-1 (spread)",
+   "pb-sfFill.d[33] Δ=0.7 (spread)",
+   "pb-sfFill.d[34] Δ=-0.9 (spread)",
+   "pb-sfFill.d[35] Δ=1.1 (spread)",
+   "pb-sfFill.d[36] Δ=-0.9 (spread)",
+   "pb-sfFill.d[37] Δ=1.6 (spread)",
+   "pb-sfFill.d[38] Δ=-0.9 (spread)",
+   "pb-sfFill.d[39] Δ=2.1 (spread)",
+   "pb-sfFill.d[40] Δ=-0.8 (spread)",
+   "pb-sfFill.d[41] Δ=2.9 (spread)",
+   "pb-sfFill.d[42] Δ=-0.8 (spread)",
+   "pb-sfFill.d[43] Δ=3.5 (spread)",
+   "pb-sfFill.d[44] Δ=-0.8 (spread)",
+   "pb-sfFill.d[45] Δ=4.1 (spread)",
+   "pb-sfFill.d[46] Δ=-0.6 (spread)",
+   "pb-sfFill.d[47] Δ=4.7 (spread)",
+   "pb-sfFill.d[48] Δ=-0.6 (spread)",
+   "pb-sfFill.d[49] Δ=1.2 (spread)",
+   "pb-sfFill.d[50] Δ=-0.6 (spread)",
+   "pb-sfFill.d[51] Δ=1.7 (spread)",
+   "pb-sfFill.d[52] Δ=-0.6 (spread)",
+   "pb-sfFill.d[53] Δ=2 (spread)",
+   "pb-sfFill.d[54] Δ=-0.7 (spread)",
+   "pb-sfFill.d[55] Δ=2.4 (spread)",
+   "pb-sfFill.d[56] Δ=-0.6 (spread)",
+   "pb-sfFill.d[57] Δ=2.9 (spread)",
+   "pb-sfFill.d[58] Δ=-0.6 (spread)",
+   "pb-sfFill.d[59] Δ=3.4 (spread)",
+   "pb-sfFill.d[60] Δ=-0.5 (spread)",
+   "pb-sfFill.d[61] Δ=4 (spread)",
+   "pb-sfFill.d[63] Δ=4.5 (spread)",
+   "pb-sfFill.d[65] Δ=4.4 (spread)",
+   "pb-sfFill.d[67] Δ=4.3 (spread)",
+   "pb-sfFill.d[68] Δ=-0.5 (spread)",
+   "pb-sfFill.d[69] Δ=4.1 (spread)",
+   "pb-sfFill.d[70] Δ=-0.5 (spread)",
+   "pb-sfFill.d[71] Δ=3.8 (spread)",
+   "pb-sfFill.d[72] Δ=-0.5 (spread)",
+   "pb-sfFill.d[73] Δ=3.4 (spread)",
+   "pb-sfFill.d[74] Δ=-0.5 (spread)",
+   "pb-sfFill.d[75] Δ=3 (spread)",
+   "pb-sfFill.d[76] Δ=-0.6 (spread)",
+   "pb-sfFill.d[77] Δ=2.5 (spread)",
+   "pb-sfFill.d[78] Δ=-0.6 (spread)",
+   "pb-sfFill.d[79] Δ=2 (spread)",
+   "pb-sfFill.d[80] Δ=-0.5 (spread)",
+   "pb-sfFill.d[81] Δ=1.4 (spread)",
+   "pb-sfFill.d[82] Δ=-0.5 (spread)",
+   "pb-sfFill.d[83] Δ=0.9 (spread)",
+   "pb-sfFill.d[89] Δ=-0.5 (spread)",
+   "pb-sfFill.d[91] Δ=-0.6 (spread)",
+   "pb-sfStripe.d[0] Δ=-1 (spread)",
+   "pb-sfStripe.d[1] Δ=3 (spread)",
+   "pb-sfStripe.d[2] Δ=-1 (spread)",
+   "pb-sfStripe.d[3] Δ=3.8 (spread)",
+   "pb-sfStripe.d[4] Δ=-1 (spread)",
+   "pb-sfStripe.d[5] Δ=3.9 (spread)",
+   "pb-sfStripe.d[6] Δ=-0.9 (spread)",
+   "pb-sfStripe.d[7] Δ=4.2 (spread)",
+   "pb-sfStripe.d[8] Δ=-0.9 (spread)",
+   "pb-sfStripe.d[9] Δ=3.9 (spread)",
+   "pb-sfStripe.d[15] Δ=-0.5 (spread)",
+   "pb-sfStripe.d[17] Δ=-0.6 (spread)",
+   "pb-sfStripe.d[20] Δ=-0.8 (spread)",
+   "pb-sfStripe.d[21] Δ=3.4 (spread)",
+   "pb-sfStripe.d[22] Δ=-0.7 (spread)",
+   "pb-sfStripe.d[23] Δ=3.2 (spread)",
+   "pb-sfStripe.d[24] Δ=-0.7 (spread)",
+   "pb-sfStripe.d[25] Δ=2.7 (spread)",
+   "pb-sfStripe.d[26] Δ=-0.7 (spread)",
+   "pb-sfStripe.d[27] Δ=2.4 (spread)",
+   "pb-sfStripe.d[28] Δ=-0.8 (spread)",
+   "pb-sfStripe.d[29] Δ=2 (spread)",
+   "pb-sfStripe.d[30] Δ=-0.5 (spread)",
+   "pb-sfStripe.d[31] Δ=3.4 (spread)",
+   "pb-sfStripe.d[32] Δ=-0.5 (spread)",
+   "pb-sfStripe.d[33] Δ=3 (spread)",
+   "pb-sfStripe.d[34] Δ=-0.6 (spread)",
+   "pb-sfStripe.d[35] Δ=2.5 (spread)",
+   "pb-sfStripe.d[36] Δ=-0.6 (spread)",
+   "pb-sfStripe.d[37] Δ=2 (spread)",
+   "pb-sfStripe.d[38] Δ=-0.5 (spread)",
+   "pb-sfStripe.d[39] Δ=1.4 (spread)",
+   "pb-sfStripe.d[40] Δ=-0.8 (spread)",
+   "pb-sfStripe.d[41] Δ=1.2 (spread)",
+   "pb-sfStripe.d[42] Δ=-0.9 (spread)",
+   "pb-sfStripe.d[43] Δ=0.8 (spread)",
+   "pb-sfStripe.d[44] Δ=-1 (spread)",
+   "pb-sfStripe.d[45] Δ=0.5 (spread)",
+   "pb-sfStripe.d[46] Δ=-1 (spread)",
+   "pb-sfStripe.d[48] Δ=-1 (spread)",
+   "pb-sfStripe.d[49] Δ=0.7 (spread)",
+   "pb-sfStripe.d[50] Δ=-0.5 (spread)",
+   "pb-sfStripe.d[51] Δ=4 (spread)",
+   "pb-sfStripe.d[53] Δ=4.5 (spread)",
+   "pb-sfStripe.d[55] Δ=4.4 (spread)",
+   "pb-sfStripe.d[57] Δ=4.3 (spread)",
+   "pb-sfStripe.d[58] Δ=-0.5 (spread)",
+   "pb-sfStripe.d[59] Δ=4.1 (spread)",
+   "pb-sfStripe.d[60] Δ=-0.9 (spread)",
+   "pb-sfStripe.d[61] Δ=1.6 (spread)",
+   "pb-sfStripe.d[62] Δ=-0.9 (spread)",
+   "pb-sfStripe.d[63] Δ=2.1 (spread)",
+   "pb-sfStripe.d[64] Δ=-0.8 (spread)",
+   "pb-sfStripe.d[65] Δ=2.9 (spread)",
+   "pb-sfStripe.d[66] Δ=-0.8 (spread)",
+   "pb-sfStripe.d[67] Δ=3.5 (spread)",
+   "pb-sfStripe.d[68] Δ=-0.8 (spread)",
+   "pb-sfStripe.d[69] Δ=4.1 (spread)",
+   "pb-sfStripe.d[70] Δ=-0.7 (spread)",
+   "pb-sfStripe.d[71] Δ=1.4 (spread)",
+   "pb-sfStripe.d[72] Δ=-0.6 (spread)",
+   "pb-sfStripe.d[73] Δ=1.7 (spread)",
+   "pb-sfStripe.d[74] Δ=-0.6 (spread)",
+   "pb-sfStripe.d[75] Δ=2 (spread)",
+   "pb-sfStripe.d[76] Δ=-0.7 (spread)",
+   "pb-sfStripe.d[77] Δ=2.4 (spread)",
+   "pb-sfStripe.d[78] Δ=-0.6 (spread)",
+   "pb-sfStripe.d[79] Δ=2.9 (spread)",
+   "pb-sfFringe.d[0] Δ=-0.6 (spread)",
+   "pb-sfFringe.d[1] Δ=4.7 (spread)",
+   "pb-sfFringe.d[3] Δ=2.2 (spread)",
+   "pb-sfFringe.d[4] Δ=-0.6 (spread)",
+   "pb-sfFringe.d[5] Δ=4.1 (spread)",
+   "pb-sfFringe.d[7] Δ=1 (spread)",
+   "pb-sfFringe.d[8] Δ=-0.6 (spread)",
+   "pb-sfFringe.d[9] Δ=3.3 (spread)",
+   "pb-sfFringe.d[11] Δ=-0.7 (spread)",
+   "pb-sfFringe.d[12] Δ=-0.6 (spread)",
+   "pb-sfFringe.d[13] Δ=2.6 (spread)",
+   "pb-sfFringe.d[15] Δ=-1.5 (spread)",
+   "pb-sfFringe.d[16] Δ=-0.6 (spread)",
+   "pb-sfFringe.d[17] Δ=1.9 (spread)",
+   "pb-sfFringe.d[19] Δ=-0.5 (spread)",
+   "pb-sfFringe.d[20] Δ=-0.6 (spread)",
+   "pb-sfFringe.d[21] Δ=1.2 (spread)",
+   "pb-sfFringe.d[23] Δ=1.3 (spread)",
+   "pb-shPath.d[1] Δ=1.9 (spread)",
+   "pb-shPath.d[3] Δ=2.5 (spread)",
+   "pb-shPath.d[5] Δ=2.5 (spread)",
+   "pb-shPath.d[7] Δ=2.7 (spread)",
+   "pb-shPath.d[9] Δ=2.7 (spread)",
+   "pb-shPath.d[11] Δ=2.6 (spread)",
+   "pb-shPath.d[13] Δ=2.1 (spread)",
+   "pb-shPath.d[14] Δ=-0.5 (spread)",
+   "pb-shPath.d[15] Δ=1.4 (spread)",
+   "pb-shPath.d[16] Δ=-0.8 (spread)",
+   "pb-shPath.d[17] Δ=0.9 (spread)",
+   "pb-shPath.d[18] Δ=-1.2 (spread)",
+   "pb-shPath.d[20] Δ=-1.6 (spread)",
+   "pb-shPath.d[22] Δ=-1.9 (spread)",
+   "pb-shPath.d[23] Δ=-0.5 (spread)",
+   "pb-shPath.d[24] Δ=-1.9 (spread)",
+   "pb-shPath.d[26] Δ=-1.8 (spread)",
+   "pb-shPath.d[28] Δ=-1.6 (spread)",
+   "pb-shPath.d[30] Δ=-1.4 (spread)",
+   "pb-shPath.d[31] Δ=0.5 (spread)",
+   "pb-shPath.d[32] Δ=-1.1 (spread)",
+   "pb-shPath.d[33] Δ=0.8 (spread)",
+   "pb-shPath.d[34] Δ=-0.8 (spread)",
+   "pb-shPath.d[35] Δ=1.1 (spread)",
+   "pb-shPath.d[36] Δ=-0.6 (spread)",
+   "pb-shPath.d[37] Δ=1.4 (spread)",
+   "pb-shPath.d[39] Δ=1.6 (spread)",
+   "pb-shPath.d[41] Δ=1.9 (spread)",
+   "pb-shPath.d[43] Δ=2.1 (spread)",
+   "pb-shPath.d[45] Δ=2.3 (spread)",
+   "pb-shPath.d[47] Δ=2.5 (spread)",
+   "pb-shPath.d[48] Δ=-1 (spread)",
+   "pb-shPath.d[49] Δ=0.6 (spread)",
+   "pb-shPath.d[50] Δ=-0.8 (spread)",
+   "pb-shPath.d[51] Δ=0.9 (spread)",
+   "pb-shPath.d[52] Δ=-0.6 (spread)",
+   "pb-shPath.d[53] Δ=1.1 (spread)",
+   "pb-shPath.d[55] Δ=1.4 (spread)",
+   "pb-shPath.d[57] Δ=1.5 (spread)",
+   "pb-shPath.d[59] Δ=1.8 (spread)",
+   "pb-shPath.d[61] Δ=1.9 (spread)",
+   "pb-shPath.d[63] Δ=2.1 (spread)",
+   "pb-shPath.d[65] Δ=2.3 (spread)",
+   "pb-shPath.d[66] Δ=0.5 (spread)",
+   "pb-shPath.d[67] Δ=2.5 (spread)",
+   "pb-shPath.d[68] Δ=0.5 (spread)",
+   "pb-shPath.d[69] Δ=2.6 (spread)",
+   "pb-shPath.d[70] Δ=0.6 (spread)",
+   "pb-shPath.d[71] Δ=2.7 (spread)",
+   "pb-shPath.d[73] Δ=2.3 (spread)",
+   "pb-shPath.d[75] Δ=1.8 (spread)",
+   "pb-shPath.d[76] Δ=-0.6 (spread)",
+   "pb-shPath.d[77] Δ=1.2 (spread)",
+   "pb-shPath.d[78] Δ=-1 (spread)",
+   "pb-shPath.d[79] Δ=0.6 (spread)",
+   "pb-shPath.d[80] Δ=-1.4 (spread)",
+   "pb-shPath.d[82] Δ=-1.7 (spread)",
+   "pb-shPath.d[83] Δ=-0.5 (spread)",
+   "pb-shPath.d[84] Δ=-1.7 (spread)",
+   "pb-shPath.d[85] Δ=-0.6 (spread)",
+   "pb-shPath.d[86] Δ=-1.7 (spread)",
+   "pb-shPath.d[87] Δ=-0.6 (spread)",
+   "pb-shPath.d[88] Δ=-1.5 (spread)",
+   "pb-shPath.d[90] Δ=-1.4 (spread)",
+   "pb-shPath.d[92] Δ=-1.3 (spread)",
+   "pb-shPath.d[94] Δ=-1.1 (spread)",
+   "pb-shPath.d[95] Δ=0.6 (spread)",
+   "pb-shStripe.d[1] Δ=2.2 (spread)",
+   "pb-shStripe.d[3] Δ=2.5 (spread)",
+   "pb-shStripe.d[5] Δ=2.5 (spread)",
+   "pb-shStripe.d[7] Δ=2.7 (spread)",
+   "pb-shStripe.d[9] Δ=2.7 (spread)",
+   "pb-shStripe.d[10] Δ=-1.7 (spread)",
+   "pb-shStripe.d[11] Δ=-0.6 (spread)",
+   "pb-shStripe.d[12] Δ=-1.7 (spread)",
+   "pb-shStripe.d[13] Δ=-0.6 (spread)",
+   "pb-shStripe.d[14] Δ=-1.5 (spread)",
+   "pb-shStripe.d[16] Δ=-1.4 (spread)",
+   "pb-shStripe.d[18] Δ=-1.3 (spread)",
+   "pb-shStripe.d[21] Δ=2.1 (spread)",
+   "pb-shStripe.d[22] Δ=-0.5 (spread)",
+   "pb-shStripe.d[23] Δ=1.4 (spread)",
+   "pb-shStripe.d[24] Δ=-0.8 (spread)",
+   "pb-shStripe.d[25] Δ=0.9 (spread)",
+   "pb-shStripe.d[26] Δ=-1.2 (spread)",
+   "pb-shStripe.d[28] Δ=-1.6 (spread)",
+   "pb-shStripe.d[31] Δ=2.3 (spread)",
+   "pb-shStripe.d[33] Δ=1.8 (spread)",
+   "pb-shStripe.d[34] Δ=-0.6 (spread)",
+   "pb-shStripe.d[35] Δ=1.2 (spread)",
+   "pb-shStripe.d[36] Δ=-1 (spread)",
+   "pb-shStripe.d[37] Δ=0.6 (spread)",
+   "pb-shStripe.d[38] Δ=-1.4 (spread)",
+   "pb-shStripe.d[40] Δ=-1.9 (spread)",
+   "pb-shStripe.d[42] Δ=-1.8 (spread)",
+   "pb-shStripe.d[44] Δ=-1.6 (spread)",
+   "pb-shStripe.d[46] Δ=-1.4 (spread)",
+   "pb-shStripe.d[47] Δ=0.5 (spread)",
+   "pb-shStripe.d[48] Δ=-1.1 (spread)",
+   "pb-shStripe.d[49] Δ=0.8 (spread)",
+   "pb-shStripe.d[51] Δ=1.9 (spread)",
+   "pb-shStripe.d[53] Δ=2.1 (spread)",
+   "pb-shStripe.d[55] Δ=2.3 (spread)",
+   "pb-shStripe.d[56] Δ=0.5 (spread)",
+   "pb-shStripe.d[57] Δ=2.5 (spread)",
+   "pb-shStripe.d[58] Δ=0.5 (spread)",
+   "pb-shStripe.d[59] Δ=2.6 (spread)",
+   "pb-shStripe.d[60] Δ=-0.6 (spread)",
+   "pb-shStripe.d[61] Δ=1.4 (spread)",
+   "pb-shStripe.d[63] Δ=1.6 (spread)",
+   "pb-shStripe.d[65] Δ=1.9 (spread)",
+   "pb-shStripe.d[67] Δ=2.1 (spread)",
+   "pb-shStripe.d[69] Δ=2.3 (spread)",
+   "pb-shStripe.d[70] Δ=-0.9 (spread)",
+   "pb-shStripe.d[71] Δ=0.7 (spread)",
+   "pb-shStripe.d[72] Δ=-0.8 (spread)",
+   "pb-shStripe.d[73] Δ=0.9 (spread)",
+   "pb-shStripe.d[74] Δ=-0.6 (spread)",
+   "pb-shStripe.d[75] Δ=1.1 (spread)",
+   "pb-shStripe.d[77] Δ=1.4 (spread)",
+   "pb-shStripe.d[79] Δ=1.5 (spread)",
+   "pb-shFringe.d[1] Δ=2.5 (spread)",
+   "pb-shFringe.d[3] Δ=-1 (spread)",
+   "pb-shFringe.d[5] Δ=2.2 (spread)",
+   "pb-shFringe.d[7] Δ=-0.6 (spread)",
+   "pb-shFringe.d[9] Δ=1.7 (spread)",
+   "pb-shFringe.d[12] Δ=-0.5 (spread)",
+   "pb-shFringe.d[13] Δ=1.4 (spread)",
+   "pb-shFringe.d[15] Δ=1 (spread)",
+   "pb-shFringe.d[16] Δ=-0.8 (spread)",
+   "pb-shFringe.d[17] Δ=0.9 (spread)",
+   "pb-shFringe.d[19] Δ=0.8 (spread)",
+   "pb-shFringe.d[20] Δ=-1 (spread)",
+   "pb-shFringe.d[21] Δ=0.6 (spread)",
+   "pl-Near-prims.transform:rotate[0] Δ=-0.63 (spread)",
+   "pl-Far-prims.transform:rotate[0] Δ=-0.63 (spread)",
+   "fx-escWn0.transform:scale[1] Δ=-0.01 (spread)",
+   "fx-escWf0.transform:scale[1] Δ=-0.01 (spread)",
+   "fx-dust7.opacity[0] Δ=0.22",
+   "fx-glB.transform:rotate[0] Δ=20.6",
+   "fx-dust0.transform:translate[0] Δ=-98.5",
+   "fx-dust0.transform:translate[1] Δ=-14.6",
+   "fx-dust0.transform:scale[0] Δ=0.06 (spread)",
+   "fx-dust0.transform:scale[1] Δ=0.06 (spread)",
+   "fx-dust0.opacity[0] Δ=-0.82",
+   "bike-pennant.transform:rotate[0] Δ=2.3",
+   "fx-dust8.opacity[0] Δ=-0.49",
+   "bike-tailB.transform:rotate[0] Δ=-5.2",
+   "fx-dust1.transform:translate[0] Δ=-154.5",
+   "fx-dust1.transform:translate[1] Δ=-25.8",
+   "fx-dust1.transform:scale[0] Δ=0.69",
+   "fx-dust1.transform:scale[1] Δ=0.69",
+   "fx-dust1.opacity[0] Δ=-0.18 (spread)",
+   "fx-grit3.transform:translate[0] Δ=-19.1",
+   "fx-grit3.transform:translate[1] Δ=-1.7",
+   "fx-grit3.transform:rotate[0] Δ=5.8 (spread)",
+   "fx-dust2.transform:translate[0] Δ=15.4",
+   "fx-dust2.transform:translate[1] Δ=9.3",
+   "fx-dust2.transform:scale[0] Δ=-0.19",
+   "fx-dust2.transform:scale[1] Δ=-0.19",
+   "fx-grit5.transform:translate[0] Δ=-27.1",
+   "fx-grit5.transform:translate[1] Δ=2.3",
+   "fx-grit5.transform:rotate[0] Δ=-3.6 (spread)",
+   "fx-grit6.transform:translate[0] Δ=-0.8",
+   "fx-grit6.transform:translate[1] Δ=-7.3",
+   "fx-grit6.transform:rotate[0] Δ=61.9",
+   "fx-grit1.transform:translate[0] Δ=65.6",
+   "fx-grit1.transform:rotate[0] Δ=-8.4",
+   "pb-nict.transform:translate[0] Δ=2.38",
+   "fx-grit2.transform:translate[0] Δ=225.7",
+   "fx-grit2.transform:translate[1] Δ=-0.9",
+   "fx-grit2.transform:rotate[0] Δ=-105.3",
+   "fx-grit4.transform:translate[0] Δ=-151.5",
+   "fx-grit4.transform:translate[1] Δ=2.2",
+   "fx-grit4.transform:rotate[0] Δ=166.1",
+   "fx-grit9.transform:translate[0] Δ=259.8",
+   "fx-grit9.transform:translate[1] Δ=-7.4",
+   "fx-grit9.transform:rotate[0] Δ=-30.3",
+   "fx-grit0.transform:translate[0] Δ=-197.3",
+   "fx-grit0.transform:translate[1] Δ=-3.2",
+   "fx-grit0.transform:rotate[0] Δ=-14.5",
+   "fx-fea0.transform:translate[0] Δ=674.5",
+   "fx-fea0.transform:translate[1] Δ=-264.5",
+   "fx-fea0.transform:rotate[0] Δ=-59.4",
+   "fx-fea0.opacity[0] Δ=1",
+   "fx-leaf.transform:translate[0] Δ=-97.2",
+   "fx-leaf.transform:translate[1] Δ=8.4",
+   "fx-leaf.transform:rotate[0] Δ=393.4",
+   "fx-leafS.transform:scale[0] Δ=-0.88",
+   "egg-pf0.transform:translate[0] Δ=2233.4",
+   "egg-pf0.transform:translate[1] Δ=-5",
+   "egg-pf0Wing.transform:scale[1] Δ=0.01 (spread)",
+   "egg-pf0WingF.transform:scale[1] Δ=0.01 (spread)",
+   "egg-pf1.transform:translate[0] Δ=2233.4",
+   "egg-pf1.transform:translate[1] Δ=-4.7",
+   "egg-pf1Wing.transform:scale[1] Δ=-0.06 (spread)",
+   "egg-pf1WingF.transform:scale[1] Δ=-0.06 (spread)",
+   "egg-pf2.transform:translate[0] Δ=2233.4",
+   "egg-pf2Wing.transform:scale[1] Δ=-0.06 (spread)",
+   "egg-pf2WingF.transform:scale[1] Δ=-0.06 (spread)",
+   "egg-pf3.transform:translate[0] Δ=2233.4",
+   "egg-pf3.transform:translate[1] Δ=4.6",
+   "egg-pf3Wing.transform:scale[1] Δ=-0.11",
+   "egg-pf3WingF.transform:scale[1] Δ=-0.11",
+   "egg-pf4.transform:translate[0] Δ=2233.4",
+   "egg-pf4.transform:translate[1] Δ=5",
+   "egg-pf4Wing.transform:scale[1] Δ=-0.11",
+   "egg-pf4WingF.transform:scale[1] Δ=-0.11",
+   "egg-pf5.transform:translate[0] Δ=2233.4",
+   "egg-pf5.transform:translate[1] Δ=0.8",
+   "egg-pf5Wing.transform:scale[1] Δ=-0.14",
+   "egg-pf5WingF.transform:scale[1] Δ=-0.14",
+   "egg-pf6.transform:translate[0] Δ=2233.4",
+   "egg-pf6.transform:translate[1] Δ=-4.2",
+   "egg-pf6Wing.transform:scale[1] Δ=-0.14",
+   "egg-pf6WingF.transform:scale[1] Δ=-0.14",
+   "egg-g0.transform:translate[0] Δ=-3303.2",
+   "egg-g0.transform:translate[1] Δ=-56.2",
+   "egg-g0Wing.transform:scale[1] Δ=-0.89",
+   "egg-g0WingF.transform:scale[1] Δ=-0.89",
+   "egg-g1.transform:translate[0] Δ=-3250.4",
+   "egg-g1.transform:translate[1] Δ=-61.3",
+   "egg-g1Wing.transform:scale[1] Δ=-1.02",
+   "egg-g1WingF.transform:scale[1] Δ=-1.02",
+   "egg-g2.transform:translate[0] Δ=-3200.4",
+   "egg-g2.transform:translate[1] Δ=-64.9",
+   "egg-g2Wing.transform:scale[1] Δ=-0.21",
+   "egg-g2WingF.transform:scale[1] Δ=-0.21",
+   "egg-g3.transform:translate[0] Δ=-2900.4",
+   "egg-g3.transform:translate[1] Δ=-63.4",
+   "egg-g3Wing.transform:scale[1] Δ=0.79",
+   "egg-g3WingF.transform:scale[1] Δ=0.79",
+   "egg-g4.transform:translate[0] Δ=-2840.4",
+   "egg-g4.transform:translate[1] Δ=-58.3",
+   "egg-g4Wing.transform:scale[1] Δ=1.07",
+   "egg-g4WingF.transform:scale[1] Δ=1.07",
+   "egg-chNotes.transform:translate[0] Δ=45.4",
+   "egg-chNotes.transform:translate[1] Δ=-68",
+   "egg-chNotes.transform:rotate[0] Δ=11.4",
+   "egg-chNotes.opacity[0] Δ=-0.09 (spread)",
+   "egg-sunFace.opacity[0] Δ=-0.05 (spread)",
+   "egg-sunFaceSpark.transform:rotate[0] Δ=123",
+   "egg-sunFaceSpark.transform:scale[0] Δ=-0.97",
+   "egg-sunFaceSpark.transform:scale[1] Δ=-0.97"
+  ],
+  "trends": [
+   "j-crankFar.transform:rotate[0] 360 per 1s (W=360)",
+   "j-wheelRear.transform:rotate[0] 1080 per 1s (W=360)",
+   "j-wheelFront.transform:rotate[0] 1080 per 1s (W=360)",
+   "j-cog.transform:rotate[0] 1080 per 1s (W=360)",
+   "j-chainring.transform:rotate[0] 360 per 1s (W=360)",
+   "j-crankNear.transform:rotate[0] 360 per 1s (W=360)",
+   "sky-cl0.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-cl1.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-cl2.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-cl3.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-cl4.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-cl5.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-cl6.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-cl7.transform:translate[0] -3199.995 per 87.5991s (W=3199.995)",
+   "sky-cl8.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-cl9.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-cl10.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-cl11.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-cl12.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-cl13.transform:translate[0] -3200 per 87.5992s (W=3200)",
+   "sky-shipG.transform:translate[0] -2599.99 per 156.461s (W=2599.99)",
+   "sky-balloonG.transform:translate[0] -2800 per 188.5522s (W=2800)",
+   "sky-skein.transform:translate[0] -2600 per 71.6747s (W=2600)",
+   "sky-gullsG.transform:translate[0] -2399.995 per 86.6502s (W=2399.995)",
+   "sky-flockG.transform:translate[0] -2600 per 146.9134s (W=2600)",
+   "fx-gfar0.transform:translate[0] -2800 per 24.8337s (W=2800)",
+   "fx-gfar1.transform:translate[0] -2800 per 24.8337s (W=2800)",
+   "fx-gfar2.transform:translate[0] -2800 per 24.8337s (W=2800)",
+   "fx-gfar3.transform:translate[0] -2800.1 per 24.8346s (W=2800.1)",
+   "fx-gfar4.transform:translate[0] -2800 per 24.8337s (W=2800)",
+   "fx-gfar5.transform:translate[0] -2800 per 24.8337s (W=2800)",
+   "fx-gfar6.transform:translate[0] -2800 per 24.8337s (W=2800)",
+   "fx-seed0.transform:translate[0] -2000 per 15.8636s (W=2000)",
+   "fx-flyTrail.stroke-dashoffset[0] -313.16 per 1.8976s (W=313.16)",
+   "bike-chainfx.stroke-dashoffset[0] -100 per 2.0833s (W=100)",
+   "bike-teeth.transform:rotate[0] 360 per 1s (W=360)",
+   "fx-curl2p0.stroke-dashoffset[0] -2 per 10.2564s (W=2)",
+   "fx-curl2u.stroke-dashoffset[0] -2 per 10.2564s (W=2)",
+   "fx-curl2p2.stroke-dashoffset[0] -2 per 10.2564s (W=2)",
+   "fx-curl1p1.stroke-dashoffset[0] -2 per 9.0909s (W=2)",
+   "fx-curl2p1.stroke-dashoffset[0] -2 per 8s (W=2)",
+   "sea-hills.transform:translate[0] -23561.94 per 250.0002s (W=23561.94)",
+   "sea-w0.transform:translate[0] -2450.45 per 12.8298s (W=2450.45)",
+   "sea-w1.transform:translate[0] -2488.14 per 10.8089s (W=2488.14)",
+   "sea-w2.transform:translate[0] -2638.94 per 9.7958s (W=2638.94)",
+   "sea-w3.transform:translate[0] -2563.54 per 7.829s (W=2563.54)",
+   "sea-harbour.transform:translate[0] -8737.21 per 38.6269s (W=8737.21)",
+   "sea-millSails.transform:rotate[0] 360 per 57.1429s (W=360)",
+   "sea-o-row.transform:translate[0] -4500 per 17.3448s (W=4500)",
+   "sea-o-can.transform:translate[0] -3300 per 12.1492s (W=3300)"
+  ],
+  "subPeriods": {
+   "1": 27,
+   "2": 2,
+   "12": 1,
+   "30": 1,
+   "0.5": 7,
+   "0.1": 1
+  },
+  "errMax": {
+   "xf": 0.9999999999999994,
+   "d": 21.75925925925927,
+   "opacity": 1,
+   "stroke-dashoffset": 0.9999999999999964
+  },
+  "bytesByGroup": {
+   "slot:wingFarUpper": 2409,
+   "slot:wingFarLower": 21445,
+   "slot:wingFarHand": 1096,
+   "slot:pedalFar": 1186,
+   "slot:footFar": 2042,
+   "slot:shankFar": 6429,
+   "slot:thighFar": 3265,
+   "slot:crankFar": 192,
+   "slot:wheelRear": 198,
+   "slot:wheelFront": 197,
+   "slot:bars": 1196,
+   "slot:cog": 198,
+   "slot:chainring": 192,
+   "slot:crankNear": 192,
+   "slot:tail": 3272,
+   "slot:body": 96862,
+   "slot:pedalNear": 1172,
+   "slot:shankNear": 6437,
+   "slot:footNear": 2012,
+   "slot:thighNear": 3197,
+   "slot:pouch": 1468,
+   "slot:billLower": 1120,
+   "slot:billUpper": 1104,
+   "slot:head": 1006,
+   "slot:eye": 3059,
+   "slot:crest": 8851,
+   "slot:wingNearUpper": 2314,
+   "slot:wingNearLower": 50031,
+   "slot:wingNearHand": 1100,
+   "L-clouds": 44906,
+   "L-shadow": 16430,
+   "L-gulls-far": 8995,
+   "L-fx-back": 14225,
+   "L-fx-front": 90492,
+   "slot:chain": 291,
+   "slot:fork": 2276,
+   "slot:neck": 66505,
+   "slot:frame": 737,
+   "L-letterbox": 221,
+   "L-hills-far": 153,
+   "L-lighthouse": 240,
+   "L-sea": 21231,
+   "L-boats": 50753,
+   "L-foreground": 32961,
+   "L-shore": 112300,
+   "L-roadside": 115589,
+   "L-road": 44666,
+   "other": 10217,
+   "L-sunmoon": 1401
+  },
+  "ms": {
+   "record": 36883,
+   "probe": 14470,
+   "analyse": 283,
+   "total": 52626
+  },
+  "childList": [
+   "22 mutations → 11 presence nodes",
+   "21 mutations → 11 presence nodes",
+   "20 mutations → 10 presence nodes",
+   "15 mutations → 8 presence nodes"
+  ],
+  "cameos": [
+   "sunwink every 41s (at 9s)",
+   "chorus every 53s (at 31s)",
+   "flight every 67s (at 18s)"
+  ],
+  "band": {
+   "P": 60,
+   "fps": 12,
+   "layers": 8
+  },
+  "byUnit": [
+   [
+    "j-wingFarUpper.transform",
+    2409,
+    "71@4,70@4"
+   ],
+   [
+    "j-wingFarLower.transform",
+    2824,
+    "79@4,91@4"
+   ],
+   [
+    "j-wingFarHand.transform",
+    1096,
+    "11@4,56@4"
+   ],
+   [
+    "j-pedalFar.transform",
+    1186,
+    "61@1,26@1"
+   ],
+   [
+    "j-footFar.transform",
+    1209,
+    "61@1,26@1"
+   ],
+   [
+    "j-shankFar.transform",
+    6429,
+    "214@4,170@4"
+   ],
+   [
+    "j-thighFar.transform",
+    3265,
+    "52@4,160@4"
+   ],
+   [
+    "j-crankFar.transform",
+    192,
+    "1@4,2@1"
+   ],
+   [
+    "j-wheelRear.transform",
+    198,
+    "1@4,2@1"
+   ],
+   [
+    "j-wheelFront.transform",
+    197,
+    "1@4,2@1"
+   ],
+   [
+    "j-bars.transform",
+    1196,
+    "45@4,25@4"
+   ],
+   [
+    "j-cog.transform",
+    198,
+    "1@4,2@1"
+   ],
+   [
+    "j-chainring.transform",
+    192,
+    "1@4,2@1"
+   ],
+   [
+    "j-crankNear.transform",
+    192,
+    "1@4,2@1"
+   ],
+   [
+    "j-tail.transform",
+    3272,
+    "54@4,156@4"
+   ],
+   [
+    "j-body.transform",
+    1436,
+    "49@4,13@1,12@4"
+   ],
+   [
+    "j-pedalNear.transform",
+    1172,
+    "61@1,25@1"
+   ],
+   [
+    "j-shankNear.transform",
+    6437,
+    "215@4,168@4"
+   ],
+   [
+    "j-footNear.transform",
+    1195,
+    "61@1,25@1"
+   ],
+   [
+    "j-thighNear.transform",
+    3197,
+    "51@4,161@4"
+   ],
+   [
+    "j-pouch.transform",
+    1468,
+    "23@4,40@4,18@0.5"
+   ],
+   [
+    "j-billLower.transform",
+    1120,
+    "23@4,38@4"
+   ],
+   [
+    "j-billUpper.transform",
+    1104,
+    "22@4,38@4"
+   ],
+   [
+    "j-head.transform",
+    1006,
+    "18@4,38@4"
+   ],
+   [
+    "j-eye.transform",
+    1363,
+    "23@4,38@4,12@4"
+   ],
+   [
+    "j-crest.transform",
+    3374,
+    "26@4,193@4"
+   ],
+   [
+    "j-wingNearUpper.transform",
+    2314,
+    "73@4,61@4"
+   ],
+   [
+    "j-wingNearLower.transform",
+    2810,
+    "79@4,90@4"
+   ],
+   [
+    "j-wingNearHand.transform",
+    1100,
+    "11@4,56@4"
+   ],
+   [
+    "sky-cl0.transform",
+    249,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-cl1.transform",
+    247,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-cl2.transform",
+    249,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-cl3.transform",
+    248,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-cl4.transform",
+    247,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-cl5.transform",
+    252,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-cl6.transform",
+    247,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-cl7.transform",
+    247,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-cl8.transform",
+    247,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-cl9.transform",
+    249,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-cl10.transform",
+    218,
+    "2@87.599,1@4"
+   ],
+   [
+    "sky-cl11.transform",
+    247,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-cl12.transform",
+    252,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-cl13.transform",
+    252,
+    "4@87.599,1@4"
+   ],
+   [
+    "sky-shipG.transform",
+    258,
+    "4@156.461,2@4"
+   ],
+   [
+    "sky-balloonG.transform",
+    390,
+    "4@188.552,10@4"
+   ],
+   [
+    "sky-skein.transform",
+    254,
+    "4@71.675,2@0.1"
+   ],
+   [
+    "sky-gullsG.transform",
+    313,
+    "4@86.65,5@4"
+   ],
+   [
+    "sky-g1.href",
+    287,
+    "11@4"
+   ],
+   [
+    "sky-flockG.transform",
+    317,
+    "4@146.913,5@4"
+   ],
+   [
+    "sky-b2.href",
+    737,
+    "36@4"
+   ],
+   [
+    "fx-sh-tail.transform",
+    1157,
+    "21@4,47@4"
+   ],
+   [
+    "fx-sh-wingFarUpper.transform",
+    953,
+    "35@4,10@2"
+   ],
+   [
+    "fx-sh-thighFar.transform",
+    784,
+    "22@4,14@1"
+   ],
+   [
+    "fx-sh-shankFar.transform",
+    2301,
+    "106@4,15@1"
+   ],
+   [
+    "fx-sh-footFar.transform",
+    892,
+    "33@1,9@1"
+   ],
+   [
+    "fx-sh-body.transform",
+    887,
+    "23@4,4@1,12@4"
+   ],
+   [
+    "fx-sh-crest.transform",
+    1452,
+    "10@4,84@4"
+   ],
+   [
+    "fx-sh-head.transform",
+    396,
+    "4@4,12@4"
+   ],
+   [
+    "fx-sh-pouch.transform",
+    751,
+    "9@4,16@4,9@0.5"
+   ],
+   [
+    "fx-sh-billLower.transform",
+    500,
+    "9@4,12@4"
+   ],
+   [
+    "fx-sh-billUpper.transform",
+    496,
+    "9@4,12@4"
+   ],
+   [
+    "fx-sh-thighNear.transform",
+    420,
+    "4@0.5,14@1"
+   ],
+   [
+    "fx-sh-shankNear.transform",
+    892,
+    "29@1,14@1"
+   ],
+   [
+    "fx-sh-footNear.transform",
+    890,
+    "33@1,9@1"
+   ],
+   [
+    "fx-sh-wingNearUpper.transform",
+    880,
+    "34@4,6@1"
+   ],
+   [
+    "fx-sh-wingNearLower.transform",
+    1190,
+    "38@4,26@4"
+   ],
+   [
+    "fx-shNeck.d",
+    1589,
+    "39@4"
+   ],
+   [
+    "fx-gfar0.href",
+    464,
+    "25@4"
+   ],
+   [
+    "fx-gfar0.transform",
+    439,
+    "4@24.834,7@4,1@4"
+   ],
+   [
+    "fx-gfar1.transform",
+    395,
+    "2@24.834,6@4,1@4"
+   ],
+   [
+    "fx-gfar2.transform",
+    380,
+    "2@24.834,5@4,1@4"
+   ],
+   [
+    "fx-gfar3.transform",
+    444,
+    "4@24.835,7@4,1@4"
+   ],
+   [
+    "fx-gfar4.href",
+    1184,
+    "73@4"
+   ],
+   [
+    "fx-gfar4.transform",
+    435,
+    "4@24.834,7@4,1@4"
+   ],
+   [
+    "fx-gfar5.href",
+    1334,
+    "83@4"
+   ],
+   [
+    "fx-gfar5.transform",
+    424,
+    "4@24.834,6@4,1@4"
+   ],
+   [
+    "fx-gfar6.transform",
+    425,
+    "4@24.834,6@4,1@4"
+   ],
+   [
+    "fx-esc0.transform",
+    582,
+    "14@4,4@4,1@4"
+   ],
+   [
+    "fx-dust3.transform",
+    1401,
+    "39@4,40@4"
+   ],
+   [
+    "fx-dust3.opacity",
+    427,
+    "30@4"
+   ],
+   [
+    "fx-dust4.transform",
+    1942,
+    "56@4,61@4"
+   ],
+   [
+    "fx-dust4.opacity",
+    650,
+    "49@4"
+   ],
+   [
+    "fx-dust5.transform",
+    1867,
+    "52@4,57@4"
+   ],
+   [
+    "fx-dust5.opacity",
+    583,
+    "43@4"
+   ],
+   [
+    "fx-dust6.transform",
+    1504,
+    "39@4,48@4"
+   ],
+   [
+    "fx-dust6.opacity",
+    495,
+    "35@4"
+   ],
+   [
+    "fx-dust7.transform",
+    1456,
+    "39@4,43@4"
+   ],
+   [
+    "fx-dust8.transform",
+    2390,
+    "70@4,75@4"
+   ],
+   [
+    "fx-dust9.transform",
+    1544,
+    "45@4,41@4"
+   ],
+   [
+    "fx-dust9.opacity",
+    492,
+    "35@4"
+   ],
+   [
+    "fx-grit7.transform",
+    2239,
+    "90@4,32@4"
+   ],
+   [
+    "fx-grit8.transform",
+    1961,
+    "75@4,36@4"
+   ],
+   [
+    "fx-curlG.transform",
+    359,
+    "9@4,1@4"
+   ],
+   [
+    "fx-curl0p0.stroke-dashoffset",
+    97,
+    "2@4"
+   ],
+   [
+    "fx-curl0u.stroke-dashoffset",
+    97,
+    "2@4"
+   ],
+   [
+    "fx-curl0p2.stroke-dashoffset",
+    97,
+    "2@4"
+   ],
+   [
+    "fx-curl0p1.stroke-dashoffset",
+    120,
+    "3@4"
+   ],
+   [
+    "fx-curl1p0.stroke-dashoffset",
+    123,
+    "3@4"
+   ],
+   [
+    "fx-curl1u.stroke-dashoffset",
+    123,
+    "3@4"
+   ],
+   [
+    "fx-curl1p2.stroke-dashoffset",
+    123,
+    "3@4"
+   ],
+   [
+    "fx-seed0.transform",
+    843,
+    "4@15.864,17@4,13@4,1@4"
+   ],
+   [
+    "fx-seed1.transform",
+    1117,
+    "39@4,8@4,1@4"
+   ],
+   [
+    "fx-seed2.transform",
+    1097,
+    "35@4,14@4,1@4"
+   ],
+   [
+    "fx-seed3.transform",
+    1098,
+    "36@4,14@4,1@4"
+   ],
+   [
+    "fx-bf0.transform",
+    947,
+    "30@4,9@4,1@4"
+   ],
+   [
+    "fx-bfw0.transform",
+    2588,
+    "1@4,171@4,1@4"
+   ],
+   [
+    "fx-bf1.transform",
+    979,
+    "32@4,9@4,1@4"
+   ],
+   [
+    "fx-bfw1.transform",
+    2536,
+    "1@4,161@4,1@4"
+   ],
+   [
+    "fx-dfly.transform",
+    1045,
+    "35@4,8@4,1@4"
+   ],
+   [
+    "fx-dflyW.transform",
+    3783,
+    "1@4,237@4,1@4"
+   ],
+   [
+    "fx-fly.transform",
+    2384,
+    "113@4,1@4"
+   ],
+   [
+    "fx-flyW.transform",
+    5063,
+    "262@4"
+   ],
+   [
+    "fx-flyTrail.stroke-dashoffset",
+    1378,
+    "2@1.898,105@4"
+   ],
+   [
+    "fx-bee.transform",
+    1306,
+    "31@4,20@4,11@4"
+   ],
+   [
+    "fx-beeW.transform",
+    3373,
+    "237@4"
+   ],
+   [
+    "fx-beeTrail.d",
+    1682,
+    "27@4"
+   ],
+   [
+    "fx-lady.transform",
+    347,
+    "9@4,1@4"
+   ],
+   [
+    "fx-ladyL.transform",
+    291,
+    "15@2"
+   ],
+   [
+    "fx-glR.transform",
+    660,
+    "1@4,7@4,25@4"
+   ],
+   [
+    "bike-chainfx.stroke-dashoffset",
+    99,
+    "2@2.083"
+   ],
+   [
+    "bike-teeth.transform",
+    192,
+    "1@4,2@1"
+   ],
+   [
+    "bike-tailA.transform",
+    558,
+    "28@4"
+   ],
+   [
+    "pb-neckPath.d",
+    16961,
+    "41@4"
+   ],
+   [
+    "pb-neckFlow.d",
+    14745,
+    "39@4"
+   ],
+   [
+    "pb-neckFlow2.d",
+    4877,
+    "21@4"
+   ],
+   [
+    "pb-neckCrease.d",
+    3220,
+    "21@4"
+   ],
+   [
+    "pb-neckRimF.d",
+    4719,
+    "29@4"
+   ],
+   [
+    "pb-neckShade.d",
+    14869,
+    "41@4"
+   ],
+   [
+    "pb-neckPencil.d",
+    7114,
+    "41@4"
+   ],
+   [
+    "pb-seat.transform",
+    2130,
+    "121@4"
+   ],
+   [
+    "pb-scarfA.transform",
+    1488,
+    "22@4,63@4"
+   ],
+   [
+    "pb-scarfB.transform",
+    1488,
+    "22@4,63@4"
+   ],
+   [
+    "pb-scarfC.transform",
+    1488,
+    "22@4,63@4"
+   ],
+   [
+    "pb-snPath.d",
+    15716,
+    "41@4"
+   ],
+   [
+    "pb-snStripe.d",
+    13611,
+    "41@4"
+   ],
+   [
+    "pb-snFringe.d",
+    2023,
+    "21@4"
+   ],
+   [
+    "pb-sfFill.d",
+    14148,
+    "41@4"
+   ],
+   [
+    "pb-sfStripe.d",
+    12531,
+    "41@4"
+   ],
+   [
+    "pb-sfFringe.d",
+    1993,
+    "21@4"
+   ],
+   [
+    "pb-shPath.d",
+    14264,
+    "38@4"
+   ],
+   [
+    "pb-shStripe.d",
+    12473,
+    "38@4"
+   ],
+   [
+    "pb-shFringe.d",
+    2073,
+    "21@4"
+   ],
+   [
+    "pb-crestShort.transform",
+    2574,
+    "201@4"
+   ],
+   [
+    "pb-crestLong.transform",
+    2903,
+    "222@4"
+   ],
+   [
+    "pl-Near-prop.d",
+    3722,
+    "41@4"
+   ],
+   [
+    "pl-Near-clipP.d",
+    3722,
+    "41@4"
+   ],
+   [
+    "pl-Near-marg.d",
+    8629,
+    "38@4"
+   ],
+   [
+    "pl-Near-key.d",
+    8071,
+    "38@4"
+   ],
+   [
+    "pl-Near-keyThin.d",
+    2927,
+    "41@4"
+   ],
+   [
+    "pl-Near-pencil.d",
+    6519,
+    "38@4"
+   ],
+   [
+    "pl-Near-rim.d",
+    5431,
+    "38@4"
+   ],
+   [
+    "pl-Near-glow.d",
+    5448,
+    "38@4"
+   ],
+   [
+    "pl-Near-prims.transform",
+    2296,
+    "125@4"
+   ],
+   [
+    "pl-Near-gc.transform",
+    456,
+    "27@4"
+   ],
+   [
+    "pl-Near-toes.transform",
+    293,
+    "12@1"
+   ],
+   [
+    "pl-Far-prop.d",
+    3830,
+    "41@4"
+   ],
+   [
+    "pl-Far-clipP.d",
+    3830,
+    "41@4"
+   ],
+   [
+    "pl-Far-key.d",
+    8199,
+    "39@4"
+   ],
+   [
+    "pl-Far-prims.transform",
+    2306,
+    "124@4"
+   ],
+   [
+    "pl-Far-gc.transform",
+    456,
+    "27@4"
+   ],
+   [
+    "sky-b0.href",
+    719,
+    "35@4"
+   ],
+   [
+    "sky-b4.href",
+    737,
+    "36@4"
+   ],
+   [
+    "fx-gfar3.href",
+    584,
+    "33@4"
+   ],
+   [
+    "fx-escWn0.transform",
+    448,
+    "24@4"
+   ],
+   [
+    "fx-escWf0.transform",
+    448,
+    "24@4"
+   ],
+   [
+    "fx-dust7.opacity",
+    490,
+    "35@4"
+   ],
+   [
+    "fx-glB.transform",
+    617,
+    "1@4,10@4,19@4"
+   ],
+   [
+    "pl-Near-webs.transform",
+    524,
+    "4@1,22@1"
+   ],
+   [
+    "sky-b3.href",
+    737,
+    "36@4"
+   ],
+   [
+    "fx-gfar1.href",
+    1034,
+    "63@4"
+   ],
+   [
+    "fx-gfar2.href",
+    989,
+    "60@4"
+   ],
+   [
+    "fx-dust0.visibility",
+    205,
+    "8@4"
+   ],
+   [
+    "fx-dust0.transform",
+    1873,
+    "53@4,55@4"
+   ],
+   [
+    "fx-dust0.opacity",
+    589,
+    "43@4"
+   ],
+   [
+    "bike-pennant.transform",
+    737,
+    "27@4"
+   ],
+   [
+    "fx-gfar6.href",
+    464,
+    "25@4"
+   ],
+   [
+    "sky-b1.href",
+    737,
+    "36@4"
+   ],
+   [
+    "fx-dust3.visibility",
+    176,
+    "6@4"
+   ],
+   [
+    "fx-curl2p0.stroke-dashoffset",
+    217,
+    "2@10.256,3@4"
+   ],
+   [
+    "fx-curl2u.stroke-dashoffset",
+    217,
+    "2@10.256,3@4"
+   ],
+   [
+    "fx-curl2p2.stroke-dashoffset",
+    217,
+    "2@10.256,3@4"
+   ],
+   [
+    "sky-b5.href",
+    737,
+    "36@4"
+   ],
+   [
+    "fx-grit7.visibility",
+    263,
+    "12@4"
+   ],
+   [
+    "fx-dust8.opacity",
+    703,
+    "53@4"
+   ],
+   [
+    "bike-tailB.transform",
+    1087,
+    "58@4"
+   ],
+   [
+    "sky-b6.href",
+    737,
+    "36@4"
+   ],
+   [
+    "fx-dust1.visibility",
+    191,
+    "7@4"
+   ],
+   [
+    "fx-dust1.transform",
+    2081,
+    "60@4,65@4"
+   ],
+   [
+    "fx-dust1.opacity",
+    631,
+    "45@4"
+   ],
+   [
+    "fx-grit3.visibility",
+    234,
+    "10@4"
+   ],
+   [
+    "fx-grit3.transform",
+    2239,
+    "98@4,22@4"
+   ],
+   [
+    "fx-grit8.visibility",
+    278,
+    "13@4"
+   ],
+   [
+    "fx-dust4.visibility",
+    219,
+    "9@4"
+   ],
+   [
+    "sky-g2.href",
+    287,
+    "11@4"
+   ],
+   [
+    "sky-g0.href",
+    287,
+    "11@4"
+   ],
+   [
+    "fx-dust2.visibility",
+    190,
+    "7@4"
+   ],
+   [
+    "fx-dust2.transform",
+    1805,
+    "51@4,56@4"
+   ],
+   [
+    "fx-dust2.opacity",
+    518,
+    "38@4"
+   ],
+   [
+    "fx-dust5.visibility",
+    220,
+    "9@4"
+   ],
+   [
+    "fx-grit5.visibility",
+    292,
+    "14@4"
+   ],
+   [
+    "fx-grit5.transform",
+    2495,
+    "107@4,28@4"
+   ],
+   [
+    "pb-pupil.transform",
+    224,
+    "9@4"
+   ],
+   [
+    "pl-Far-toes.transform",
+    310,
+    "13@1"
+   ],
+   [
+    "pl-Far-webs.transform",
+    523,
+    "5@1,22@1"
+   ],
+   [
+    "fx-grit6.visibility",
+    234,
+    "10@4"
+   ],
+   [
+    "fx-grit6.transform",
+    2045,
+    "83@4,31@4"
+   ],
+   [
+    "sky-g3.href",
+    305,
+    "12@4"
+   ],
+   [
+    "fx-dust6.visibility",
+    191,
+    "7@4"
+   ],
+   [
+    "fx-curl1p1.stroke-dashoffset",
+    217,
+    "2@9.091,3@4"
+   ],
+   [
+    "fx-dust7.visibility",
+    191,
+    "7@4"
+   ],
+   [
+    "fx-dust8.visibility",
+    249,
+    "11@4"
+   ],
+   [
+    "fx-grit1.visibility",
+    219,
+    "9@4"
+   ],
+   [
+    "fx-grit1.transform",
+    1497,
+    "61@4,19@4"
+   ],
+   [
+    "fx-dust9.visibility",
+    176,
+    "6@4"
+   ],
+   [
+    "pb-lidSkin.transform",
+    299,
+    "9@4,1@4"
+   ],
+   [
+    "pb-lid.transform",
+    299,
+    "9@4,1@4"
+   ],
+   [
+    "pb-nictG.style:display",
+    127,
+    "3@4"
+   ],
+   [
+    "pb-nict.transform",
+    262,
+    "13@4"
+   ],
+   [
+    "pb-lid.style:display",
+    129,
+    "3@4"
+   ],
+   [
+    "pb-happy.style:display",
+    127,
+    "3@4"
+   ],
+   [
+    "pb-lowLid.transform",
+    229,
+    "10@4"
+   ],
+   [
+    "fx-curl2p1.stroke-dashoffset",
+    224,
+    "2@8,4@4"
+   ],
+   [
+    "fx-grit2.visibility",
+    219,
+    "9@4"
+   ],
+   [
+    "fx-grit2.transform",
+    1770,
+    "69@4,26@4"
+   ],
+   [
+    "fx-grit4.visibility",
+    147,
+    "4@4"
+   ],
+   [
+    "fx-grit4.transform",
+    966,
+    "34@4,12@4"
+   ],
+   [
+    "bike-tailC.transform",
+    631,
+    "29@4"
+   ],
+   [
+    "fx-grit9.visibility",
+    234,
+    "10@4"
+   ],
+   [
+    "fx-grit9.transform",
+    1685,
+    "61@4,31@4"
+   ],
+   [
+    "fx-grit0.visibility",
+    161,
+    "5@4"
+   ],
+   [
+    "fx-grit0.transform",
+    1047,
+    "42@4,11@4"
+   ],
+   [
+    "egg-cornerIn.transform",
+    221,
+    "12@4"
+   ],
+   [
+    "fx-fea0.visibility",
+    118,
+    "2@4"
+   ],
+   [
+    "fx-fea0.transform",
+    1059,
+    "32@4,16@4,1@4"
+   ],
+   [
+    "fx-fea0.opacity",
+    263,
+    "16@4"
+   ],
+   [
+    "fx-leaf.visibility",
+    118,
+    "2@4"
+   ],
+   [
+    "fx-leaf.transform",
+    1129,
+    "29@4,24@4,1@4"
+   ],
+   [
+    "fx-leafS.transform",
+    658,
+    "40@4"
+   ],
+   [
+    "egg-flight.display",
+    127,
+    "3@67"
+   ],
+   [
+    "egg-pf0.transform",
+    527,
+    "18@67,1@67"
+   ],
+   [
+    "egg-pf0Wing.transform",
+    2242,
+    "139@67"
+   ],
+   [
+    "egg-pf0WingF.transform",
+    2018,
+    "125@67"
+   ],
+   [
+    "egg-pf1.transform",
+    526,
+    "18@67,1@67"
+   ],
+   [
+    "egg-pf1Wing.transform",
+    2252,
+    "141@67"
+   ],
+   [
+    "egg-pf1WingF.transform",
+    2000,
+    "125@67"
+   ],
+   [
+    "egg-pf2.transform",
+    525,
+    "18@67,1@67"
+   ],
+   [
+    "egg-pf2Wing.transform",
+    2252,
+    "141@67"
+   ],
+   [
+    "egg-pf2WingF.transform",
+    2000,
+    "125@67"
+   ],
+   [
+    "egg-pf3.transform",
+    527,
+    "18@67,1@67"
+   ],
+   [
+    "egg-pf3Wing.transform",
+    2211,
+    "139@67"
+   ],
+   [
+    "egg-pf3WingF.transform",
+    2056,
+    "129@67"
+   ],
+   [
+    "egg-pf4.transform",
+    484,
+    "17@67,1@67"
+   ],
+   [
+    "egg-pf4Wing.transform",
+    2211,
+    "139@67"
+   ],
+   [
+    "egg-pf4WingF.transform",
+    2056,
+    "129@67"
+   ],
+   [
+    "egg-pf5.transform",
+    488,
+    "16@67,1@67"
+   ],
+   [
+    "egg-pf5Wing.transform",
+    2235,
+    "140@67"
+   ],
+   [
+    "egg-pf5WingF.transform",
+    2075,
+    "130@67"
+   ],
+   [
+    "egg-pf6.transform",
+    494,
+    "17@67,1@67"
+   ],
+   [
+    "egg-pf6Wing.transform",
+    2235,
+    "140@67"
+   ],
+   [
+    "egg-pf6WingF.transform",
+    2075,
+    "130@67"
+   ],
+   [
+    "sea-hills.transform",
+    153,
+    "4@250"
+   ],
+   [
+    "sea-cape.transform",
+    240,
+    "10@60"
+   ],
+   [
+    "sea-w0.transform",
+    445,
+    "4@12.83,15@60"
+   ],
+   [
+    "sea-w1.transform",
+    483,
+    "4@10.809,18@60"
+   ],
+   [
+    "sea-w2.transform",
+    498,
+    "4@9.796,22@60"
+   ],
+   [
+    "sea-w3.transform",
+    580,
+    "4@7.829,25@60"
+   ],
+   [
+    "sea-sg0.transform",
+    767,
+    "54@60"
+   ],
+   [
+    "sea-sg1.transform",
+    986,
+    "71@60"
+   ],
+   [
+    "sea-sg2.transform",
+    1178,
+    "86@60"
+   ],
+   [
+    "sea-spk2.transform",
+    3854,
+    "331@60"
+   ],
+   [
+    "sea-harbour.transform",
+    152,
+    "4@38.627"
+   ],
+   [
+    "sea-millSails.transform",
+    279,
+    "2@57.143,8@60"
+   ],
+   [
+    "sea-rocks.transform",
+    160,
+    "4@60"
+   ],
+   [
+    "sea-foam.transform",
+    168,
+    "6@60"
+   ],
+   [
+    "sea-sealHead.transform",
+    154,
+    "6@60"
+   ],
+   [
+    "sea-o-sloop.transform",
+    1092,
+    "34@60,17@60,1@60"
+   ],
+   [
+    "sea-o-yawl.transform",
+    1003,
+    "30@60,16@60,1@60"
+   ],
+   [
+    "sea-o-trawler.transform",
+    1285,
+    "40@60,20@60,1@60"
+   ],
+   [
+    "sea-o-row.transform",
+    1265,
+    "4@17.345,40@60,21@60,1@60"
+   ],
+   [
+    "sea-o-near.transform",
+    1398,
+    "49@60,17@60,1@60"
+   ],
+   [
+    "sea-o-can.transform",
+    1649,
+    "4@12.149,37@60,63@60,1@60"
+   ],
+   [
+    "sea-o-bell.transform",
+    2406,
+    "71@60,69@60,1@60"
+   ],
+   [
+    "sea-bell.transform",
+    820,
+    "67@60"
+   ],
+   [
+    "sea-o-pots.transform",
+    1974,
+    "74@60,23@60,1@60"
+   ],
+   [
+    "sea-o-dolphin.transform",
+    500,
+    "23@60"
+   ],
+   [
+    "sea-sealUp.transform",
+    929,
+    "62@60"
+   ],
+   [
+    "land-t-fg.transform",
+    185,
+    "6@1"
+   ],
+   [
+    "land-bshore0.transform",
+    2066,
+    "119@60"
+   ],
+   [
+    "land-bshore1.transform",
+    1974,
+    "119@60"
+   ],
+   [
+    "land-bshore2.transform",
+    1907,
+    "119@60"
+   ],
+   [
+    "land-broadside0.transform",
+    4034,
+    "239@60"
+   ],
+   [
+    "land-broadside1.transform",
+    3793,
+    "239@60"
+   ],
+   [
+    "land-broadside2.transform",
+    3794,
+    "239@60"
+   ],
+   [
+    "land-broad0.transform",
+    4005,
+    "239@60"
+   ],
+   [
+    "land-broad1.transform",
+    3701,
+    "239@60"
+   ],
+   [
+    "land-broad2.transform",
+    3759,
+    "239@60"
+   ],
+   [
+    "land-sl-roadside-0.transform",
+    3902,
+    "101@60,62@60,62@60"
+   ],
+   [
+    "land-sl-roadside-1.transform",
+    3810,
+    "101@60,56@60,62@60"
+   ],
+   [
+    "land-sl-roadside-2.transform",
+    3382,
+    "94@60,34@60,58@60"
+   ],
+   [
+    "use.href",
+    483,
+    "17@60"
+   ],
+   [
+    "use.href",
+    167,
+    "4@60"
+   ],
+   [
+    "land-sl-roadside-3.transform",
+    3149,
+    "89@60,56@60,37@60"
+   ],
+   [
+    "land-sl-roadside-4.transform",
+    3884,
+    "101@60,67@60,57@60"
+   ],
+   [
+    "land-sl-roadside-5.transform",
+    4037,
+    "105@60,48@60,74@60"
+   ],
+   [
+    "land-sl-roadside-7.transform",
+    3940,
+    "108@60,48@60,66@60"
+   ],
+   [
+    "land-sl-roadside-9.transform",
+    3858,
+    "99@60,58@60,66@60"
+   ],
+   [
+    "land-sl-roadside-10.transform",
+    4545,
+    "117@60,62@60,82@60"
+   ],
+   [
+    "land-sl-roadside-12.transform",
+    3625,
+    "103@60,40@60,62@60"
+   ],
+   [
+    "land-sl-roadside-13.transform",
+    3739,
+    "99@60,56@60,58@60"
+   ],
+   [
+    "land-sl-roadside-14.transform",
+    3899,
+    "104@60,52@60,66@60"
+   ],
+   [
+    "land-sl-roadside-15.transform",
+    3721,
+    "103@60,38@60,66@60"
+   ],
+   [
+    "land-sl-roadside-16.transform",
+    3412,
+    "96@60,56@60,46@60"
+   ],
+   [
+    "land-sl-roadside-17.transform",
+    3904,
+    "107@60,70@60,54@60"
+   ],
+   [
+    "land-sl-roadside-18.transform",
+    4078,
+    "105@60,68@60,66@60"
+   ],
+   [
+    "land-sl-shore-0.transform",
+    1814,
+    "45@60,28@60,26@60"
+   ],
+   [
+    "land-sl-shore-2.transform",
+    2373,
+    "67@60,40@60,26@60"
+   ],
+   [
+    "land-sl-shore-3.transform",
+    2146,
+    "57@60,34@60,26@60"
+   ],
+   [
+    "land-sl-shore-4.transform",
+    2404,
+    "74@60,36@60,26@60"
+   ],
+   [
+    "land-sl-shore-5.transform",
+    2627,
+    "63@60,42@60,46@60"
+   ],
+   [
+    "land-sl-shore-7.transform",
+    2113,
+    "67@60,30@60,18@60"
+   ],
+   [
+    "land-sl-shore-8.transform",
+    2033,
+    "61@60,22@60,26@60"
+   ],
+   [
+    "land-sl-shore-9.transform",
+    2003,
+    "48@60,22@60,34@60"
+   ],
+   [
+    "land-sl-shore-10.transform",
+    3131,
+    "78@60,56@60,50@60"
+   ],
+   [
+    "land-sl-shore-11.transform",
+    2169,
+    "63@60,34@60,22@60"
+   ],
+   [
+    "land-sl-shore-12.transform",
+    1850,
+    "63@60,32@60,2@0.5"
+   ],
+   [
+    "land-sl-shore-13.transform",
+    1804,
+    "55@60,22@60,18@60"
+   ],
+   [
+    "land-sl-shore-14.transform",
+    2195,
+    "61@60,36@60,26@60"
+   ],
+   [
+    "land-sl-shore-15.transform",
+    2257,
+    "65@60,30@60,26@60"
+   ],
+   [
+    "land-sl-shore-16.transform",
+    1943,
+    "64@60,42@60,2@0.5"
+   ],
+   [
+    "land-sl-shore-17.transform",
+    1598,
+    "41@60,16@60,22@60"
+   ],
+   [
+    "land-sl-shore-18.transform",
+    2034,
+    "51@60,34@60,30@60"
+   ],
+   [
+    "land-sl-shore-19.transform",
+    2531,
+    "60@60,44@60,38@60"
+   ],
+   [
+    "land-sl-shore-20.transform",
+    1943,
+    "53@60,32@60,22@60"
+   ],
+   [
+    "land-sl-shore-21.transform",
+    2078,
+    "54@60,36@60,26@60"
+   ],
+   [
+    "land-sl-shore-22.transform",
+    1703,
+    "59@60,30@60,2@0.5"
+   ],
+   [
+    "land-sl-shore-23.transform",
+    1967,
+    "57@60,38@60,14@60"
+   ],
+   [
+    "land-sl-shore-24.transform",
+    2294,
+    "70@60,38@60,18@60"
+   ],
+   [
+    "land-sl-shore-25.transform",
+    2533,
+    "73@60,36@60,34@60"
+   ],
+   [
+    "land-sl-shore-26.transform",
+    2212,
+    "60@60,38@60,26@60"
+   ],
+   [
+    "land-sl-shore-27.transform",
+    1805,
+    "53@60,26@60,18@60"
+   ],
+   [
+    "land-sl-shore-28.transform",
+    1987,
+    "48@60,24@60,34@60"
+   ],
+   [
+    "land-sl-shore-29.transform",
+    1860,
+    "55@60,42@60,1@60"
+   ],
+   [
+    "use.href",
+    297,
+    "10@60"
+   ],
+   [
+    "land-sl-shore-30.transform",
+    1541,
+    "50@60,29@60,2@0.5"
+   ],
+   [
+    "land-sl-shore-31.transform",
+    2329,
+    "66@60,33@60,26@60"
+   ],
+   [
+    "land-sl-shore-32.transform",
+    2435,
+    "66@60,34@60,34@60"
+   ],
+   [
+    "land-sl-road-0.transform",
+    2989,
+    "88@60,34@60,62@60"
+   ],
+   [
+    "land-sl-road-1.transform",
+    2957,
+    "87@60,26@60,66@60"
+   ],
+   [
+    "land-sl-road-2.transform",
+    3737,
+    "105@60,34@60,90@60"
+   ],
+   [
+    "land-sl-road-3.transform",
+    3714,
+    "99@60,42@60,90@60"
+   ],
+   [
+    "land-sl-road-4.transform",
+    3339,
+    "93@60,26@60,82@60"
+   ],
+   [
+    "land-sl-road-5.transform",
+    3854,
+    "107@60,45@60,89@60"
+   ],
+   [
+    "land-sl-road-6.transform",
+    3469,
+    "98@60,34@60,82@60"
+   ],
+   [
+    "land-sl-fg-0.transform",
+    2724,
+    "88@60,60@60,1@60"
+   ],
+   [
+    "land-sl-fg-3.transform",
+    2976,
+    "98@60,64@60,1@60"
+   ],
+   [
+    "land-sl-fg-4.transform",
+    2995,
+    "95@60,70@60,1@60"
+   ],
+   [
+    "land-sl-fg-5.transform",
+    3430,
+    "111@60,86@60,1@60"
+   ],
+   [
+    "land-sl-fg-6.transform",
+    3162,
+    "100@60,74@60,1@60"
+   ],
+   [
+    "land-sl-fg-8.transform",
+    2815,
+    "90@60,66@60,1@60"
+   ],
+   [
+    "g.transform",
+    340,
+    "22@60"
+   ],
+   [
+    "g.transform",
+    441,
+    "31@60"
+   ],
+   [
+    "g.transform",
+    813,
+    "64@60"
+   ],
+   [
+    "g.transform",
+    962,
+    "76@60"
+   ],
+   [
+    "g.transform",
+    1077,
+    "87@60"
+   ],
+   [
+    "g.transform",
+    1217,
+    "98@60"
+   ],
+   [
+    "g.transform",
+    1325,
+    "109@60"
+   ],
+   [
+    "g.transform",
+    1489,
+    "122@60"
+   ],
+   [
+    "g.transform",
+    3536,
+    "208@60"
+   ],
+   [
+    "g.transform",
+    1461,
+    "55@60,41@60"
+   ],
+   [
+    "g.transform",
+    2472,
+    "157@60"
+   ],
+   [
+    "g.transform",
+    2344,
+    "196@60"
+   ],
+   [
+    "g.transform",
+    963,
+    "81@60"
+   ],
+   [
+    "g.transform",
+    960,
+    "81@60"
+   ],
+   [
+    "g.transform",
+    977,
+    "82@60"
+   ],
+   [
+    "g.transform",
+    971,
+    "82@60"
+   ],
+   [
+    "g.transform",
+    259,
+    "13@60"
+   ],
+   [
+    "g.transform",
+    773,
+    "54@60"
+   ],
+   [
+    "egg-bottle.transform",
+    2073,
+    "103@60"
+   ],
+   [
+    "egg-bottleB.transform",
+    1349,
+    "107@60"
+   ],
+   [
+    "egg-bottleRip.transform",
+    2176,
+    "150@60"
+   ],
+   [
+    "egg-puddle.display",
+    245,
+    "12@60"
+   ],
+   [
+    "sea-spk1.transform",
+    2946,
+    "253@60"
+   ],
+   [
+    "use.href",
+    494,
+    "18@60"
+   ],
+   [
+    "use.href",
+    368,
+    "13@60"
+   ],
+   [
+    "land-tile-shore.transform",
+    206,
+    "7@60"
+   ],
+   [
+    "land-fanimshore.transform",
+    206,
+    "7@60"
+   ],
+   [
+    "land-bshore2.display",
+    129,
+    "3@60"
+   ],
+   [
+    "land-tile-shore.display",
+    127,
+    "3@60"
+   ],
+   [
+    "land-fanimshore.display",
+    127,
+    "3@60"
+   ],
+   [
+    "land-sl-roadside-5.display",
+    389,
+    "23@60"
+   ],
+   [
+    "use.href",
+    379,
+    "13@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "land-sl-road-0.display",
+    259,
+    "13@60"
+   ],
+   [
+    "use.href",
+    603,
+    "21@60"
+   ],
+   [
+    "use.href",
+    331,
+    "11@60"
+   ],
+   [
+    "use.href",
+    607,
+    "22@60"
+   ],
+   [
+    "land-sl-roadside-6.display",
+    271,
+    "14@60"
+   ],
+   [
+    "land-sl-roadside-6.transform",
+    4053,
+    "104@60,56@60,70@60"
+   ],
+   [
+    "use.href",
+    363,
+    "13@60"
+   ],
+   [
+    "land-sl-shore-1.display",
+    205,
+    "9@60"
+   ],
+   [
+    "land-sl-shore-1.transform",
+    2138,
+    "66@60,34@60,18@60"
+   ],
+   [
+    "use.href",
+    658,
+    "24@60"
+   ],
+   [
+    "use.href",
+    389,
+    "14@60"
+   ],
+   [
+    "sea-ensign.transform",
+    4424,
+    "182@60,159@60"
+   ],
+   [
+    "use.href",
+    535,
+    "19@60"
+   ],
+   [
+    "land-sl-roadside-8.display",
+    427,
+    "26@60"
+   ],
+   [
+    "land-sl-roadside-8.transform",
+    3251,
+    "90@60,30@60,58@60"
+   ],
+   [
+    "use.href",
+    400,
+    "14@60"
+   ],
+   [
+    "use.href",
+    513,
+    "17@60"
+   ],
+   [
+    "land-sl-fg-3.display",
+    401,
+    "24@60"
+   ],
+   [
+    "sea-burgee.transform",
+    3653,
+    "213@60"
+   ],
+   [
+    "land-sl-roadside-9.display",
+    337,
+    "19@60"
+   ],
+   [
+    "use.href",
+    410,
+    "15@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "use.href",
+    610,
+    "21@60"
+   ],
+   [
+    "use.href",
+    230,
+    "7@60"
+   ],
+   [
+    "use.href",
+    364,
+    "12@60"
+   ],
+   [
+    "use.href",
+    672,
+    "24@60"
+   ],
+   [
+    "use.href",
+    674,
+    "23@60"
+   ],
+   [
+    "use.href",
+    502,
+    "18@60"
+   ],
+   [
+    "land-sl-roadside-11.display",
+    297,
+    "16@60"
+   ],
+   [
+    "land-sl-roadside-11.transform",
+    3313,
+    "89@60,52@60,50@60"
+   ],
+   [
+    "land-sl-shore-7.display",
+    219,
+    "10@60"
+   ],
+   [
+    "land-sl-fg-5.display",
+    323,
+    "18@60"
+   ],
+   [
+    "use.href",
+    589,
+    "21@60"
+   ],
+   [
+    "land-sl-shore-8.display",
+    271,
+    "14@60"
+   ],
+   [
+    "land-sl-roadside-13.display",
+    441,
+    "27@60"
+   ],
+   [
+    "land-sl-shore-9.display",
+    245,
+    "12@60"
+   ],
+   [
+    "land-sl-fg-6.display",
+    363,
+    "21@60"
+   ],
+   [
+    "use.href",
+    578,
+    "21@60"
+   ],
+   [
+    "land-sl-shore-10.display",
+    193,
+    "8@60"
+   ],
+   [
+    "use.href",
+    679,
+    "23@60"
+   ],
+   [
+    "use.href",
+    242,
+    "6@60"
+   ],
+   [
+    "use.href",
+    585,
+    "21@60"
+   ],
+   [
+    "land-sl-shore-11.display",
+    219,
+    "10@60"
+   ],
+   [
+    "sea-spk0.transform",
+    2131,
+    "181@60"
+   ],
+   [
+    "land-sl-roadside-15.display",
+    337,
+    "19@60"
+   ],
+   [
+    "land-sl-shore-12.display",
+    219,
+    "10@60"
+   ],
+   [
+    "g.transform",
+    485,
+    "34@30"
+   ],
+   [
+    "land-sl-roadside-16.display",
+    363,
+    "21@60"
+   ],
+   [
+    "land-sl-shore-13.display",
+    323,
+    "18@60"
+   ],
+   [
+    "use.href",
+    637,
+    "21@60"
+   ],
+   [
+    "use.href",
+    242,
+    "6@60"
+   ],
+   [
+    "use.href",
+    212,
+    "6@60"
+   ],
+   [
+    "land-sl-roadside-17.display",
+    337,
+    "19@60"
+   ],
+   [
+    "land-sl-shore-14.display",
+    271,
+    "14@60"
+   ],
+   [
+    "use.href",
+    560,
+    "21@60"
+   ],
+   [
+    "use.href",
+    147,
+    "3@60"
+   ],
+   [
+    "land-sl-shore-15.display",
+    271,
+    "14@60"
+   ],
+   [
+    "land-sl-fg-0.display",
+    363,
+    "21@60"
+   ],
+   [
+    "use.href",
+    566,
+    "21@60"
+   ],
+   [
+    "use.href",
+    148,
+    "3@60"
+   ],
+   [
+    "land-sl-shore-16.display",
+    245,
+    "12@60"
+   ],
+   [
+    "land-tile-roadside.transform",
+    206,
+    "7@60"
+   ],
+   [
+    "land-fanimroadside.transform",
+    206,
+    "7@60"
+   ],
+   [
+    "land-broadside2.display",
+    129,
+    "3@60"
+   ],
+   [
+    "land-tile-roadside.display",
+    127,
+    "3@60"
+   ],
+   [
+    "land-fanimroadside.display",
+    127,
+    "3@60"
+   ],
+   [
+    "land-tile-road.transform",
+    206,
+    "7@60"
+   ],
+   [
+    "land-fanimroad.transform",
+    206,
+    "7@60"
+   ],
+   [
+    "land-broad2.display",
+    129,
+    "3@60"
+   ],
+   [
+    "land-tile-road.display",
+    127,
+    "3@60"
+   ],
+   [
+    "land-fanimroad.display",
+    127,
+    "3@60"
+   ],
+   [
+    "land-sl-roadside-0.display",
+    285,
+    "15@60"
+   ],
+   [
+    "land-sl-shore-17.display",
+    167,
+    "6@60"
+   ],
+   [
+    "land-sl-road-5.display",
+    155,
+    "5@60"
+   ],
+   [
+    "land-sl-roadside-1.display",
+    285,
+    "15@60"
+   ],
+   [
+    "land-sl-shore-18.display",
+    219,
+    "10@60"
+   ],
+   [
+    "land-sl-fg-1.display",
+    361,
+    "21@60"
+   ],
+   [
+    "land-sl-fg-1.transform",
+    2511,
+    "78@60,58@60,1@60"
+   ],
+   [
+    "land-sl-roadside-2.display",
+    415,
+    "25@60"
+   ],
+   [
+    "land-sl-shore-19.display",
+    245,
+    "12@60"
+   ],
+   [
+    "land-sl-shore-20.display",
+    271,
+    "14@60"
+   ],
+   [
+    "use.href",
+    376,
+    "14@60"
+   ],
+   [
+    "land-sl-fg-2.display",
+    349,
+    "20@60"
+   ],
+   [
+    "land-sl-fg-2.transform",
+    3346,
+    "107@60,80@60,1@60"
+   ],
+   [
+    "land-sl-roadside-3.display",
+    311,
+    "17@60"
+   ],
+   [
+    "land-sl-shore-21.display",
+    297,
+    "16@60"
+   ],
+   [
+    "land-sl-road-6.display",
+    207,
+    "9@60"
+   ],
+   [
+    "land-sl-roadside-4.display",
+    297,
+    "16@60"
+   ],
+   [
+    "land-sl-shore-22.display",
+    233,
+    "11@60"
+   ],
+   [
+    "land-bshore1.display",
+    129,
+    "3@60"
+   ],
+   [
+    "land-sl-shore-23.display",
+    285,
+    "15@60"
+   ],
+   [
+    "sea-fish0.visibility",
+    509,
+    "29@60"
+   ],
+   [
+    "sea-fish0.transform",
+    3753,
+    "159@60,70@60"
+   ],
+   [
+    "sea-fishRing.visibility",
+    509,
+    "29@60"
+   ],
+   [
+    "land-sl-shore-24.display",
+    207,
+    "9@60"
+   ],
+   [
+    "land-sl-shore-25.display",
+    207,
+    "9@60"
+   ],
+   [
+    "land-sl-roadside-7.display",
+    349,
+    "20@60"
+   ],
+   [
+    "land-sl-shore-26.display",
+    259,
+    "13@60"
+   ],
+   [
+    "land-sl-shore-27.display",
+    271,
+    "14@60"
+   ],
+   [
+    "land-sl-shore-28.display",
+    245,
+    "12@60"
+   ],
+   [
+    "land-sl-road-1.display",
+    233,
+    "11@60"
+   ],
+   [
+    "land-broadside1.display",
+    129,
+    "3@60"
+   ],
+   [
+    "land-broad1.display",
+    129,
+    "3@60"
+   ],
+   [
+    "land-sl-shore-29.display",
+    219,
+    "10@60"
+   ],
+   [
+    "land-sl-shore-30.display",
+    219,
+    "10@60"
+   ],
+   [
+    "use.href",
+    335,
+    "12@60"
+   ],
+   [
+    "land-sl-fg-7.display",
+    361,
+    "21@60"
+   ],
+   [
+    "land-sl-fg-7.transform",
+    2837,
+    "88@60,66@60,1@60"
+   ],
+   [
+    "use.href",
+    160,
+    "3@60"
+   ],
+   [
+    "land-sl-shore-32.display",
+    193,
+    "8@60"
+   ],
+   [
+    "land-sl-fg-8.display",
+    415,
+    "25@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "use.href",
+    589,
+    "21@60"
+   ],
+   [
+    "sea-o-fish.visibility",
+    147,
+    "4@60"
+   ],
+   [
+    "sea-o-fish.transform",
+    532,
+    "25@60"
+   ],
+   [
+    "use.href",
+    307,
+    "10@60"
+   ],
+   [
+    "land-sl-shore-6.display",
+    257,
+    "13@60"
+   ],
+   [
+    "land-sl-shore-6.transform",
+    2112,
+    "58@60,20@60,34@60"
+   ],
+   [
+    "land-sl-roadside-18.display",
+    389,
+    "23@60"
+   ],
+   [
+    "use.href",
+    362,
+    "13@60"
+   ],
+   [
+    "land-broadside0.display",
+    129,
+    "3@60"
+   ],
+   [
+    "land-broad0.display",
+    129,
+    "3@60"
+   ],
+   [
+    "use.href",
+    331,
+    "11@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "use.href",
+    322,
+    "10@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "use.href",
+    643,
+    "22@60"
+   ],
+   [
+    "use.href",
+    437,
+    "15@60"
+   ],
+   [
+    "use.href",
+    480,
+    "16@60"
+   ],
+   [
+    "use.href",
+    276,
+    "9@60"
+   ],
+   [
+    "use.href",
+    282,
+    "10@60"
+   ],
+   [
+    "land-fx0.display",
+    335,
+    "19@60"
+   ],
+   [
+    "land-fx0.transform",
+    821,
+    "47@60"
+   ],
+   [
+    "use.href",
+    302,
+    "10@60"
+   ],
+   [
+    "land-bshore0.display",
+    129,
+    "3@60"
+   ],
+   [
+    "use.href",
+    328,
+    "11@60"
+   ],
+   [
+    "use.href",
+    324,
+    "10@60"
+   ],
+   [
+    "use.href",
+    361,
+    "13@60"
+   ],
+   [
+    "use.href",
+    300,
+    "9@60"
+   ],
+   [
+    "sea-dolph.visibility",
+    219,
+    "9@60"
+   ],
+   [
+    "sea-dolph.transform",
+    2293,
+    "70@60,70@60"
+   ],
+   [
+    "sea-spl0.visibility",
+    132,
+    "3@12"
+   ],
+   [
+    "sea-spl0.transform",
+    378,
+    "1@60,17@60"
+   ],
+   [
+    "use.href",
+    359,
+    "12@60"
+   ],
+   [
+    "g.display",
+    141,
+    "4@60"
+   ],
+   [
+    "use.href",
+    396,
+    "14@60"
+   ],
+   [
+    "land-sl-roadside-10.display",
+    389,
+    "23@60"
+   ],
+   [
+    "use.href",
+    323,
+    "11@60"
+   ],
+   [
+    "use.href",
+    160,
+    "3@60"
+   ],
+   [
+    "use.href",
+    335,
+    "12@60"
+   ],
+   [
+    "use.href",
+    214,
+    "6@60"
+   ],
+   [
+    "use.href",
+    309,
+    "10@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "sea-fish1.visibility",
+    364,
+    "19@60"
+   ],
+   [
+    "sea-fish1.transform",
+    2514,
+    "103@60,45@60"
+   ],
+   [
+    "use.href",
+    298,
+    "10@60"
+   ],
+   [
+    "use.href",
+    306,
+    "10@60"
+   ],
+   [
+    "use.href",
+    342,
+    "12@60"
+   ],
+   [
+    "g.transform",
+    186,
+    "7@60"
+   ],
+   [
+    "use.href",
+    373,
+    "13@60"
+   ],
+   [
+    "use.href",
+    373,
+    "13@60"
+   ],
+   [
+    "use.href",
+    305,
+    "10@60"
+   ],
+   [
+    "use.href",
+    507,
+    "18@60"
+   ],
+   [
+    "use.href",
+    167,
+    "4@60"
+   ],
+   [
+    "use.href",
+    315,
+    "10@60"
+   ],
+   [
+    "use.href",
+    311,
+    "11@60"
+   ],
+   [
+    "sea-spl1.visibility",
+    132,
+    "3@12"
+   ],
+   [
+    "sea-spl1.transform",
+    274,
+    "1@60,8@12"
+   ],
+   [
+    "use.href",
+    573,
+    "20@60"
+   ],
+   [
+    "egg-bottle.display",
+    207,
+    "9@60"
+   ],
+   [
+    "use.href",
+    598,
+    "22@60"
+   ],
+   [
+    "use.href",
+    615,
+    "21@60"
+   ],
+   [
+    "use.href",
+    191,
+    "4@60"
+   ],
+   [
+    "use.href",
+    489,
+    "16@60"
+   ],
+   [
+    "use.href",
+    351,
+    "12@60"
+   ],
+   [
+    "land-sl-roadside-14.display",
+    245,
+    "12@60"
+   ],
+   [
+    "use.href",
+    191,
+    "5@60"
+   ],
+   [
+    "sea-gA.transform",
+    3763,
+    "266@60"
+   ],
+   [
+    "sea-gB.transform",
+    3687,
+    "261@60"
+   ],
+   [
+    "use.href",
+    148,
+    "3@60"
+   ],
+   [
+    "g.display",
+    141,
+    "4@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "g.display",
+    141,
+    "4@60"
+   ],
+   [
+    "use.href",
+    376,
+    "14@60"
+   ],
+   [
+    "land-sl-roadside-12.display",
+    323,
+    "18@60"
+   ],
+   [
+    "g.transform",
+    186,
+    "7@60"
+   ],
+   [
+    "land-sl-road-2.display",
+    181,
+    "7@60"
+   ],
+   [
+    "g.transform",
+    184,
+    "7@60"
+   ],
+   [
+    "use.href",
+    148,
+    "3@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "use.href",
+    187,
+    "5@60"
+   ],
+   [
+    "egg-puddle.transform",
+    571,
+    "27@60"
+   ],
+   [
+    "sea-o-near.visibility",
+    133,
+    "3@60"
+   ],
+   [
+    "use.href",
+    294,
+    "10@60"
+   ],
+   [
+    "use.href",
+    148,
+    "3@60"
+   ],
+   [
+    "use.href",
+    253,
+    "7@60"
+   ],
+   [
+    "use.href",
+    232,
+    "7@60"
+   ],
+   [
+    "use.transform",
+    445,
+    "26@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "land-sl-fg-4.display",
+    337,
+    "19@60"
+   ],
+   [
+    "use.href",
+    194,
+    "5@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "use.href",
+    160,
+    "3@60"
+   ],
+   [
+    "use.href",
+    160,
+    "3@60"
+   ],
+   [
+    "use.href",
+    157,
+    "3@60"
+   ],
+   [
+    "use.href",
+    273,
+    "9@60"
+   ],
+   [
+    "land-sl-road-3.display",
+    233,
+    "11@60"
+   ],
+   [
+    "land-sl-road-4.display",
+    181,
+    "7@60"
+   ],
+   [
+    "egg-bottleGlint.visibility",
+    161,
+    "5@60"
+   ],
+   [
+    "egg-bottleGlint.transform",
+    484,
+    "1@60,25@60"
+   ],
+   [
+    "land-sl-shore-2.display",
+    219,
+    "10@60"
+   ],
+   [
+    "use.href",
+    253,
+    "8@60"
+   ],
+   [
+    "sea-o-sloop.visibility",
+    133,
+    "3@60"
+   ],
+   [
+    "sea-o-trawler.visibility",
+    133,
+    "3@60"
+   ],
+   [
+    "sea-o-pots.visibility",
+    162,
+    "5@60"
+   ],
+   [
+    "g.display",
+    141,
+    "4@60"
+   ],
+   [
+    "land-sl-shore-0.display",
+    167,
+    "6@60"
+   ],
+   [
+    "use.href",
+    253,
+    "8@60"
+   ],
+   [
+    "land-sl-shore-4.display",
+    193,
+    "8@60"
+   ],
+   [
+    "land-sl-shore-5.display",
+    219,
+    "10@60"
+   ],
+   [
+    "g.transform",
+    188,
+    "7@60"
+   ],
+   [
+    "land-sp-rod.transform",
+    291,
+    "12@60"
+   ],
+   [
+    "land-sp-catch.visibility",
+    132,
+    "3@60"
+   ],
+   [
+    "egg-bench.display",
+    167,
+    "6@60"
+   ],
+   [
+    "egg-bench.transform",
+    387,
+    "17@60"
+   ],
+   [
+    "land-sl-shore-31.display",
+    193,
+    "8@60"
+   ],
+   [
+    "land-sp-catchfish.transform",
+    631,
+    "6@60,31@60"
+   ],
+   [
+    "sea-o-steamer.visibility",
+    118,
+    "2@60"
+   ],
+   [
+    "sea-o-steamer.transform",
+    1160,
+    "39@60,11@60,1@60"
+   ],
+   [
+    "land-sl-shore-3.display",
+    167,
+    "6@60"
+   ],
+   [
+    "sea-o-sealhead.visibility",
+    118,
+    "2@60"
+   ],
+   [
+    "sea-o-sealhead.transform",
+    300,
+    "12@60"
+   ],
+   [
+    "sea-smoke0.transform",
+    936,
+    "29@60,21@60"
+   ],
+   [
+    "sea-smoke0.opacity",
+    371,
+    "26@60"
+   ],
+   [
+    "sea-smoke1.transform",
+    1052,
+    "32@60,26@60"
+   ],
+   [
+    "sea-smoke2.transform",
+    966,
+    "29@60,23@60"
+   ],
+   [
+    "sea-smoke3.transform",
+    946,
+    "28@60,23@60"
+   ],
+   [
+    "sea-smoke4.transform",
+    946,
+    "29@60,22@60"
+   ],
+   [
+    "sea-smoke4.opacity",
+    350,
+    "25@60"
+   ],
+   [
+    "sea-smoke3.opacity",
+    286,
+    "19@60"
+   ],
+   [
+    "g.display",
+    141,
+    "4@60"
+   ],
+   [
+    "sea-smoke2.opacity",
+    298,
+    "20@60"
+   ],
+   [
+    "g.transform",
+    188,
+    "7@60"
+   ],
+   [
+    "land-sp-boat0.transform",
+    350,
+    "6@60,7@60"
+   ],
+   [
+    "land-sp-boat1.transform",
+    356,
+    "7@60,6@60"
+   ],
+   [
+    "land-sp-boat2.transform",
+    334,
+    "6@60,5@60"
+   ],
+   [
+    "land-sp-boat3.transform",
+    375,
+    "7@60,7@60"
+   ],
+   [
+    "land-sp-hook0.transform",
+    270,
+    "1@60,8@60"
+   ],
+   [
+    "land-sp-hook1.transform",
+    268,
+    "1@60,8@60"
+   ],
+   [
+    "sea-smoke1.opacity",
+    357,
+    "26@60"
+   ],
+   [
+    "dir-splash.transform",
+    287,
+    "1@60,7@60"
+   ],
+   [
+    "dir-splash.opacity",
+    180,
+    "9@60"
+   ],
+   [
+    "sea-o-yawl.visibility",
+    118,
+    "2@60"
+   ],
+   [
+    "sea-o-bell.visibility",
+    133,
+    "3@60"
+   ],
+   [
+    "sea-o-dolphin.visibility",
+    133,
+    "3@60"
+   ],
+   [
+    "use.href",
+    148,
+    "3@60"
+   ],
+   [
+    "use.href",
+    148,
+    "3@60"
+   ],
+   [
+    "use.href",
+    152,
+    "3@60"
+   ],
+   [
+    "use.href",
+    148,
+    "3@60"
+   ],
+   [
+    "use.href",
+    148,
+    "3@60"
+   ],
+   [
+    "g.display",
+    129,
+    "3@60"
+   ],
+   [
+    "g.transform",
+    170,
+    "6@60"
+   ],
+   [
+    "land-sp-wheel.transform",
+    129,
+    "4@60"
+   ],
+   [
+    "land-sp-gond0.transform",
+    348,
+    "7@60,6@60"
+   ],
+   [
+    "land-sp-gond1.transform",
+    350,
+    "7@60,6@60"
+   ],
+   [
+    "land-sp-gond2.transform",
+    359,
+    "7@60,7@60"
+   ],
+   [
+    "land-sp-gond3.transform",
+    346,
+    "7@60,6@60"
+   ],
+   [
+    "land-sp-gond4.transform",
+    356,
+    "7@60,7@60"
+   ],
+   [
+    "land-sp-gond5.transform",
+    358,
+    "7@60,7@60"
+   ],
+   [
+    "land-sp-gond6.transform",
+    346,
+    "7@60,6@60"
+   ],
+   [
+    "land-sp-gond7.transform",
+    355,
+    "7@60,7@60"
+   ],
+   [
+    "land-sp-gond8.transform",
+    350,
+    "7@60,6@60"
+   ],
+   [
+    "land-sp-gond9.transform",
+    343,
+    "7@60,6@60"
+   ],
+   [
+    "land-sp-gond10.transform",
+    358,
+    "7@60,7@60"
+   ],
+   [
+    "land-sp-gond11.transform",
+    348,
+    "7@60,6@60"
+   ],
+   [
+    "land-sp-horsesA.transform",
+    231,
+    "11@60"
+   ],
+   [
+    "land-sp-horsesB.transform",
+    230,
+    "11@60"
+   ],
+   [
+    "use.href",
+    128,
+    "2@60"
+   ],
+   [
+    "egg-chorus.display",
+    127,
+    "3@53"
+   ],
+   [
+    "egg-g0.transform",
+    1247,
+    "55@53,1@53"
+   ],
+   [
+    "egg-g0Wing.transform",
+    872,
+    "52@53"
+   ],
+   [
+    "egg-g0WingF.transform",
+    872,
+    "52@53"
+   ],
+   [
+    "egg-g0Jaw.visibility",
+    161,
+    "5@53"
+   ],
+   [
+    "egg-g0Kaw.visibility",
+    161,
+    "5@53"
+   ],
+   [
+    "egg-g1.transform",
+    1273,
+    "56@53,1@53"
+   ],
+   [
+    "egg-g1Wing.transform",
+    978,
+    "59@53"
+   ],
+   [
+    "egg-g1WingF.transform",
+    978,
+    "59@53"
+   ],
+   [
+    "egg-g1Jaw.visibility",
+    161,
+    "5@53"
+   ],
+   [
+    "egg-g1Kaw.visibility",
+    161,
+    "5@53"
+   ],
+   [
+    "egg-g2.transform",
+    1277,
+    "56@53,1@53"
+   ],
+   [
+    "egg-g2Wing.transform",
+    970,
+    "57@53"
+   ],
+   [
+    "egg-g2WingF.transform",
+    970,
+    "57@53"
+   ],
+   [
+    "egg-g2Jaw.visibility",
+    161,
+    "5@53"
+   ],
+   [
+    "egg-g2Kaw.visibility",
+    161,
+    "5@53"
+   ],
+   [
+    "egg-g3.transform",
+    1278,
+    "56@53,1@53"
+   ],
+   [
+    "egg-g3Wing.transform",
+    1040,
+    "61@53"
+   ],
+   [
+    "egg-g3WingF.transform",
+    1040,
+    "61@53"
+   ],
+   [
+    "egg-g3Jaw.visibility",
+    132,
+    "3@53"
+   ],
+   [
+    "egg-g3Kaw.visibility",
+    132,
+    "3@53"
+   ],
+   [
+    "egg-g4.transform",
+    1311,
+    "57@53,1@53"
+   ],
+   [
+    "egg-g4Wing.transform",
+    1106,
+    "65@53"
+   ],
+   [
+    "egg-g4WingF.transform",
+    1106,
+    "65@53"
+   ],
+   [
+    "egg-g4Jaw.visibility",
+    132,
+    "3@53"
+   ],
+   [
+    "egg-g4Kaw.visibility",
+    132,
+    "3@53"
+   ],
+   [
+    "egg-chNotes.transform",
+    495,
+    "12@53,8@53"
+   ],
+   [
+    "egg-chNotes.opacity",
+    421,
+    "28@53"
+   ],
+   [
+    "egg-sunFace.display",
+    127,
+    "3@41"
+   ],
+   [
+    "egg-sunFace.opacity",
+    282,
+    "16@41"
+   ],
+   [
+    "egg-sunFaceOpen.visibility",
+    162,
+    "5@41"
+   ],
+   [
+    "egg-sunFaceShut.visibility",
+    161,
+    "5@41"
+   ],
+   [
+    "egg-sunFaceSpark.visibility",
+    132,
+    "3@41"
+   ],
+   [
+    "egg-sunFaceSpark.transform",
+    537,
+    "1@41,7@41,15@41"
+   ]
+  ],
+  "blended": 132,
+  "errOver": [
+   "fx-beeTrail.d 1.55×",
+   "pb-neckFlow2.d 2.86×",
+   "pb-neckCrease.d 2.91×",
+   "pb-snPath.d 7×",
+   "pb-snStripe.d 6.33×",
+   "pb-snFringe.d 21.76×",
+   "pb-sfFill.d 5.78×",
+   "pb-sfStripe.d 5.11×",
+   "pb-sfFringe.d 17.69×",
+   "pb-shPath.d 4.11×",
+   "pb-shStripe.d 4.11×",
+   "pb-shFringe.d 7.22×",
+   "pl-Near-prop.d 1.81×",
+   "pl-Near-clipP.d 1.81×",
+   "pl-Near-keyThin.d 1.67×",
+   "pl-Far-prop.d 1.87×",
+   "pl-Far-clipP.d 1.87×"
+  ],
+  "deadVarAnims": 346,
+  "presence": 7,
+  "dots": {
+   "paths": 116,
+   "savedBytes": 137292
+  },
+  "pathBytes": {
+   "before": 4087006,
+   "after": 2418601
+  },
+  "prunedHidden": 1279,
+  "culledOffscreen": 516,
+  "reducedMotion": {
+   "frozen": 675,
+   "notFreezable": 0
+  },
+  "bytes": 3065961
+ }
+}

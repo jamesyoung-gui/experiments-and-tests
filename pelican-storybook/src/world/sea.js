@@ -205,14 +205,16 @@ export function build(ctx) {
   const boats = buildBoats(rng, lampOn);
   defs += hills.defs + lh.defs + seaL.defs + boats.defs;
   // painterly filters (STYLE-B §2) for the far, translate-only sheets (hills panorama, the static sea wash)
-  defs += gwFilters('sea', { seed: 31, wob: 3, soft: 7, blur: 0.9, brushFreq: '0.003 0.12', brushK: 3.4 });
+  defs += gwFilters('sea', { seed: 31, wob: 3, soft: 7, blur: 0.9, brushFreq: '0.0055 0.045', brushOct: 4, brushK: 2.8 });   // broad broken flat-brush drags, not fine scanlines
   // aerial perspective: a warm haze glazed over everything far (sky, hills, cape, sea, boats), strongest at the
   // horizon; the shore, road and rider are in front of it, so the page recedes and the rider stays the focus
-  defs += h('linearGradient', { id: 'sea-aerialG', x1: 0, y1: -420, x2: 0, y2: 660, gradientUnits: 'userSpaceOnUse' },
-    h('stop', { offset: 0, 'stop-color': v('skyHaze'), 'stop-opacity': 0 }), h('stop', { offset: 0.5, 'stop-color': v('skyHaze'), 'stop-opacity': 0.06 }),
-    h('stop', { offset: 0.8, 'stop-color': v('skyHaze'), 'stop-opacity': 0.2 }), h('stop', { offset: 0.87, 'stop-color': v('skyHaze'), 'stop-opacity': 0.24 }),
+  // (integrator perf: the haze now lives INSIDE the static sea-wash strip, which sits right above the hills and the
+  // cape, instead of its own full-width composited sheet over the boats: one translucent full-screen layer less per
+  // frame. It starts at y 330, above the far ridges, where the old ramp was still at a few percent.)
+  defs += h('linearGradient', { id: 'sea-aerialG', x1: 0, y1: 330, x2: 0, y2: 660, gradientUnits: 'userSpaceOnUse' },
+    h('stop', { offset: 0, 'stop-color': v('skyHaze'), 'stop-opacity': 0 }), h('stop', { offset: 0.22, 'stop-color': v('skyHaze'), 'stop-opacity': 0.08 }),
+    h('stop', { offset: 0.44, 'stop-color': v('skyHaze'), 'stop-opacity': 0.2 }), h('stop', { offset: 0.53, 'stop-color': v('skyHaze'), 'stop-opacity': 0.24 }),
     h('stop', { offset: 1, 'stop-color': v('skyHaze'), 'stop-opacity': 0.1 }));
-  boats.markup += h('g', { 'data-ref': 'sea-aerial', ...DD('sea:T:aerial-haze'), class: 'gw-tex', 'pointer-events': 'none' }, F(rect(X0, -420, X1 - X0, 1080), 'url(#sea-aerialG)'));
   return {
     defs,
     layers: { 'L-hills-far': hills.markup, 'L-lighthouse': lh.markup, 'L-sea': seaL.markup, 'L-boats': boats.markup },
@@ -483,6 +485,8 @@ function buildSea(rng, lampOn) {
     F(rect(X0, HZ, X1 - X0, 200), '#FFF3E4', { style: 'opacity:calc(0.26 - 0.16 * var(--pb-n-night))', filter: 'url(#sea-gw-brush)' }),
     F(rect(X0, HZ, X1 - X0, 200), '#23204A', { opacity: 0.12, filter: 'url(#sea-gw-brush)', transform: `translate(${X1 + X0} 0) scale(-1 1)` }));
   // the static wash is its own composited sheet: the swaying glitter above it never forces it to repaint
+  // aerial perspective (gradient defined in build): a warm haze over the hills, the cape and the wash
+  wash += h('g', { 'data-ref': 'sea-aerial', ...DD('sea:T:aerial-haze'), class: 'gw-tex', 'pointer-events': 'none' }, F(rect(X0, 330, X1 - X0, 330), 'url(#sea-aerialG)'));
   m += h('g', { 'data-ref': 'sea-wash', transform: 'translate(0 0)' }, wash);
   // ---- wave bands (each scrolls at its own depth; generated periodic over its tile)
   const bandTile = (i, gen) => {
@@ -721,7 +725,7 @@ function buildHarbour(rng, lampOn) {
   g += h('g', WB, mill) + sails + h('g', WB, trees + houses + laundry + fm + church + clock);
   // quay wall: warm stones with ink joints, cream coping, bollards, and a cat on the wall
   let stones = '';
-  for (let r = 0; r < 3; r++) for (let x = -416 + (r % 2) * 4.5; x < 296; x += 9) stones += wrect(R, x, 504.6 + r * 3.5, 8.4, 3.1, 0.12);
+  for (let r = 0; r < 3; r++) for (let x = -416 + (r % 2) * 4.5; x < 296; x += 9) { const j = () => f((R() - 0.5) * 0.5); stones += `M${f(x)} ${f(504.6 + r * 3.5)}l8.4 ${j()}l${j()} 3.1l-8.4 ${j()}z`; }   // hand-cut quads (3 u stones: a wobbled outline is invisible at this depth)
   sil += rect(-420, 502, 720, 13);
   g += h('g', DD('sea:O:quay-wall'), F(rect(-420, 503, 720, 12), v('seaStone')), F(rect(-420, 501.6, 720, 2.6), v('seaCream')),
     F([60, 104, 150, 196, 280].map(x => rect(x, 499, 2.4, 3) + rect(x - 0.6, 498.4, 3.6, 1)).join(''), v('seaDark')));
@@ -1155,7 +1159,7 @@ export const detailItems = [
 // ---------------------------------------------------------------------------------------------- attach
 // composited strips (see core/sheets.js): far panorama, headland, the four rolling sea bands, harbour and rocks move by
 // a pure translate every frame; the runtime moves each one as its own compositor layer instead of repainting it
-export const isolate = ['[data-ref="sea-aerial"]'];
+export const isolate = [];
 export const sheets = ['hills', 'cape', 'wash', 'w0', 'w1', 'w2', 'w3', 'sunG', 'moonG', 'harbour', 'rocks'].map(k => `[data-ref="sea-${k}"]`);
 export function attach(svg, ctx) {
   const r = refs(svg, 'sea-');

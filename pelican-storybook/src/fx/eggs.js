@@ -34,6 +34,9 @@ import { TIMING } from '../rig/solve.js';
 import { LAT, ZH } from './egg-glyphs.js';
 
 export const id = 'eggs';
+// integrator perf: the page group (dog-ear corner that lifts every 12 s, page curl, The End iris) is its own small
+// composited sheet, so its animation never re-rasterises the gouache paper in the static page sheet below it
+export const isolate = ['#L-letterbox--eggs'];
 // the eggs' own gouache paints (golden hour), graded by the hour like every material
 export const materials = {
   eggGinger: '#EE9A48', eggGingerLo: '#C4652E', eggCream: '#FBEBD0', eggRose: '#F2938C', eggPink: '#F7BBAA',
@@ -1318,8 +1321,16 @@ export function connect({ bus, state, svg }) {
   const toVB = e => { const rc = svg.getBoundingClientRect(), [X0, Y0, X1, Y1] = A.box(); const s = rc.width / (X1 - X0 || 1); return [X0 + (e.clientX - rc.left) / s, Y0 + (e.clientY - rc.top) / s]; };
   const onCorner = e => { const [x, y] = toVB(e), [X1, Y1] = A.corner(); return x > X1 - 96 && y > Y1 - 96 && x < X1 + 30 && y < Y1 + 30 && (X1 - x) + (Y1 - y) < 130; };
   const isControl = el => el && el.closest && el.closest('button,a,input,select,textarea,label,[role="button"],[role="slider"],[role="switch"],[role="dialog"]');
+  // the UI card (and anything the pointer went down on inside it) never turns the page: on touch the card can
+  // re-layout between pointerdown and click (Controls expands it), so remember where the press began
+  const inCard = (x, y) => [...win.document.querySelectorAll('#ui-card')]
+    .some(el => { const b = el.getBoundingClientRect(); return b.width > 0 && x >= b.left - 6 && x <= b.right + 6 && y >= b.top - 6 && y <= b.bottom + 6; });
+  let downUI = false, downT = 0;
+  win.addEventListener('pointerdown', e => { downUI = !!(isControl(e.target) || (e.target.closest && e.target.closest('#ui')) || inCard(e.clientX, e.clientY)); downT = performance.now(); }, true);
   win.addEventListener('click', e => {
-    if (isControl(e.target) || !onCorner(e)) return;
+    if (isControl(e.target) || (e.target.closest && e.target.closest('#ui')) || inCard(e.clientX, e.clientY)) return;
+    if (downUI && performance.now() - downT < 1500) return;
+    if (!onCorner(e)) return;
     turnPage();
   });
   win.addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') return; const c = !isControl(e.target) && onCorner(e); if (c !== A.hot) { A.hot = c; svg.style.cursor = c ? 'pointer' : ''; } });

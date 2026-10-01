@@ -77,7 +77,7 @@ const BIKE_X0 = RIDER_X - 125 - 109, BIKE_X1 = RIDER_X + 173 + 109;   // tyre ou
 export function fitAspect(cam, aspect, insetVB = 0) {
   if (aspect >= 1.5) return cam;
   const k = Math.min(1, (1.5 - aspect) / 0.9);
-  const cx = (BIKE_X0 + BIKE_X1) / 2, span = (BIKE_X1 - BIKE_X0) * 1.06 + 2 * 22;
+  const cx = (BIKE_X0 + BIKE_X1) / 2, span = (BIKE_X1 - BIKE_X0) * 1.08 + 2 * 34;   // 4% + page rim (print.js ~26 u)
   const zFit = (VIEW.h * aspect) / span;                      // visible world width = 900·aspect / zoom
   const zoom = Math.min(cam.zoom, cam.zoom + (zFit - cam.zoom) * k);
   const fx = cam.fx + (cx - cam.fx) * k;

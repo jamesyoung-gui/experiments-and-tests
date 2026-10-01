@@ -4,7 +4,29 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const r = await build({ entryPoints: [path.join(ROOT, 'src/main.js')], bundle: true, format: 'iife', minify: true, write: false, target: 'es2020', legalComments: 'none' });
+// glyph pool: the three generated glyph tables (print, eggs, director lettering) repeat many outlines (digits, the
+// title letters, 鹈鹕湾 …). At bundle time every outline string is stored once in a shared pool and the tables index
+// into it (about 70 KB less; the generated sources stay untouched).
+const GLYPH_FILES = /[\\/](print-glyphs|egg-glyphs|director-glyphs)\.js$/;
+const GLYPH_RE = /"(M[^"]{30,})"/g;
+const pool = [], poolIx = new Map();
+for (const f of ['src/world/print-glyphs.js', 'src/fx/egg-glyphs.js', 'src/world/director-glyphs.js']) {
+  const src = path.join(ROOT, f); if (!fs.existsSync(src)) continue;
+  for (const m of fs.readFileSync(src, 'utf8').matchAll(GLYPH_RE)) if (!poolIx.has(m[1])) { poolIx.set(m[1], pool.length); pool.push(m[1]); }
+}
+const glyphPool = {
+  name: 'glyph-pool',
+  setup(b) {
+    b.onResolve({ filter: /^pb-glyph-pool$/ }, () => ({ path: 'pb-glyph-pool', namespace: 'pb' }));
+    b.onLoad({ filter: /.*/, namespace: 'pb' }, () => ({ contents: `export const __GP = ${JSON.stringify(pool)};`, loader: 'js' }));
+    b.onLoad({ filter: GLYPH_FILES }, a => {
+      const src = fs.readFileSync(a.path, 'utf8');
+      const out = src.replace(GLYPH_RE, (m, d) => (poolIx.has(d) ? `__GP[${poolIx.get(d)}]` : m));
+      return { contents: `import { __GP } from 'pb-glyph-pool';\n` + out, loader: 'js', resolveDir: path.dirname(a.path) };
+    });
+  },
+};
+const r = await build({ entryPoints: [path.join(ROOT, 'src/main.js')], bundle: true, format: 'iife', minify: true, write: false, target: 'es2020', legalComments: 'none', plugins: [glyphPool] });
 const js = r.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const css = fs.readFileSync(path.join(ROOT, 'src/page.css'), 'utf8');
 const dev = fs.readFileSync(path.join(ROOT, 'src/index.dev.html'), 'utf8');
@@ -24,10 +46,13 @@ const B = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/budgets.json'), 'utf
 const eggsMd = fs.readFileSync(path.join(ROOT, 'docs/EGGS.md'), 'utf8');
 const eggRows = eggsMd.split('\n').filter(l => /^\| \d+ \|/.test(l)).map(l => l.split('|').map(c => c.trim())).map(c => `| ${c[1]} | ${c[3]} | ${c[4]} |`);
 const keyRows = KEYMAP.map(k => `| \`${k.cap}\`${k.keys.length > 1 ? ' / ' + k.keys.slice(1).map(x => '`' + (x === 'ArrowUp' ? '↑' : x) + '`').join(' ') : ''} | ${STRINGS.zh[k.label] ?? k.act} | ${STRINGS.en[k.label] ?? k.act} |`);
+const perfFile = path.join(ROOT, 'shots/perf-latest.json');
+const PM = fs.existsSync(perfFile) ? JSON.parse(fs.readFileSync(perfFile, 'utf8')) : null;
+const PERF = PM ? `**${PM.fps} fps**, frame p95 ${PM.p95dtMs} ms, JS p95 ${PM.jsP95Ms} ms, ${PM.nodes} DOM nodes (${PM.target}, ${PM.when.slice(0, 16).replace('T', ' ')} UTC, 1-min load ${(+PM.load).toFixed(2)} on this 4-core box${PM.fps < B.perf.fpsMin ? '; **below the budget**' : ''})` : 'not measured yet';
 const readme = `# 鹈鹕湾 · Pelican Bay
 
-一只大白鹈鹕骑着自行车沿海滨路前行——一张会动的复古旅行海报（WPA / 装饰艺术丝网印刷风格，七色套印）。
-A great white pelican rides a bicycle along the coast road: an animated retro travel poster (WPA / art-deco screenprint, seven inks).
+一只大白鹈鹕骑着自行车沿海滨路前行——一本会动的温暖绘本（水粉风格，绘本版 · 风格 B）。
+A great white pelican rides a bicycle along the coast road: a warm storybook gouache picture book that comes alive (storybook edition, style B).
 
 - 打开 Open: \`dist/index.html\` (单文件，离线可用 · single file, works from file://)
 - 零 JS 动画 SVG · Zero-JS animated SVG: \`dist/pelican-bicycle.svg\`
@@ -63,9 +88,13 @@ ${keyRows.join('\n')}
 动作证据 Motion evidence: \`node tools/shoot.mjs --set strip\` 为每个事件渲染连续 30 帧 60 fps 胶片条（响铃、挥手、跳跃、吞鱼、滑行、踏频变化）。
 \`--set strip\` renders 30 consecutive 60 fps frames per event (bell, wave, hop, gulp, coast, cadence jump).
 
+实测 Measured (\`shots/perf-latest.json\`, written by \`shoot.mjs --perf\`): ${PERF}
+
 ## 构图 · Composition
 
-- 远景（wide）是海报本身；特写（close）比契约值放宽（zoom 1.32），冠羽上方至少留 6% 空间。 Wide is the poster itself. Close is looser than the contract value (zoom 1.32) and keeps at least 6% headroom above the crest.
+- 安静的一页 The calm page (STYLE-B §4): 天空玩具（热气球、飞艇、拖横幅的双翼机）每次只出现一个，开场 80 秒没有玩具；小昆虫（蝴蝶、苍蝇、蜻蜓、蒲公英、蜜蜂）每 20 秒轮换一只；远景和岸线罩一层当时天色的薄雾，越远越淡。 At most one sky toy (balloon, airship, the banner biplane) at a time, none in the first 80 s; one small critter at a time in 20 s turns; a static haze veil of the hour's low-sky paint over the far layers and, thinner, the shore, so the rider stays the focus. \`?busy\` shows everything at once, for comparison.
+
+- 远景（wide）就是这一页绘本；特写（close）比契约值放宽（zoom 1.32），冠羽上方至少留 6% 空间。 Wide is the picture-book page itself. Close is looser than the contract value (zoom 1.32) and keeps at least 6% headroom above the crest.
 - 跳跃时特写/电影镜头在下蹲帧（0.24 s 预备）就开始上抬，临界阻尼约 0.7 s 回落，所以到最高点时嘴和冠羽仍在画面内。 On a hop, the close and cinematic cameras start rising at the crouch (0.24 s anticipation) and settle back, critically damped, in about 0.7 s, so the bill and crest stay in frame at the apex.
 - 每帧提供 \`frame.headBox\`（viewBox 坐标的头部圆），天空道具应避开它。 Each frame exposes \`frame.headBox\` (a circle around the head, in viewBox units); sky props should keep out of it.
 
@@ -76,5 +105,7 @@ ${keyRows.join('\n')}
 ${eggRows.join('\n')}
 `;
 const making = path.join(ROOT, 'docs/MAKING.md');
-fs.writeFileSync(path.join(ROOT, 'README.md'), readme + (fs.existsSync(making) ? '\n' + fs.readFileSync(making, 'utf8') : ''));
+// docs/MAKING.md is the making-of log of the fork; its hand-typed perf bullet dates from edition C: the measured line wins
+const makingMd = fs.existsSync(making) ? fs.readFileSync(making, 'utf8').replace(/^- `--perf`:.*$/m, `- \`--perf\` (measured, see above): ${PERF}`) : '';
+fs.writeFileSync(path.join(ROOT, 'README.md'), readme + (makingMd ? '\n' + makingMd : ''));
 console.log('README.md generated');
