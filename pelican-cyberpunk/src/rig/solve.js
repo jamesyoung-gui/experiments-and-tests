@@ -317,6 +317,9 @@ export function solvePose(t, s = {}) {
   const distance = s.distance ?? 0;
   const events = s.events || [];
   const loopT = s.loopT;
+  // 24 s drift terms: k cycles per 24 s live; with a baked loop the nearest whole number of cycles per loopT, so every
+  // drift closes exactly at the bake seam (no seam cross-fade on the bars / head / feathers)
+  const W24 = k => loopT ? TAU * Math.max(1, Math.round(k * loopT / 24)) / loopT : TAU * k / 24;
   const coasting = !!s.coasting;
   const J = {};
   const omega = coasting ? 0 : (TAU * cadence) / 60;          // crank rad/s
@@ -439,7 +442,7 @@ export function solvePose(t, s = {}) {
     const [p1, u1] = gh(t), [p0, u0] = gh(t - 0.12);
     bl.lid = Math.max(bl.lid, smooth01((Math.max(Math.abs(p1 - p0), 16 * Math.abs(u1 - u0)) - 3.2) / 2.8));
   }
-  const breath = Math.sin((TAU * 7 * t) / 24);             // 17.5 breaths / min, loop-exact
+  const breath = Math.sin(W24(7) * t);             // 17.5 breaths / min, loop-exact
   const delight = gl.delight;
   const focus = sprint * (1 - delight);
   const content = clamp(1 - focus - surprise - delight, 0, 1);
@@ -482,8 +485,8 @@ export function solvePose(t, s = {}) {
   // steering: once-per-crank correction against the pedal torque + slow loop-exact drift; the far wing
   // takes over the steering during the wave (bigger, slower corrections)
   const steer = (0.35 * Math.sin(phi - 0.6) * pedalling
-    + 0.28 * Math.sin((TAU * 7 * t) / 24 + 1.1) + 0.16 * Math.sin((TAU * 17 * t) / 24 + 2.3)) * (0.5 + 0.5 * clamp(wind, 0, 1.2))
-    + wv.steer * (1.3 * Math.sin(TAU * 1.3 * wv.tau) + 0.5 * Math.sin(TAU * 2.9 * wv.tau + 1)) + steerEv + 0.6 * gRider * Math.sin((TAU * 42 * t) / 24);
+    + 0.28 * Math.sin(W24(7) * t + 1.1) + 0.16 * Math.sin(W24(17) * t + 2.3)) * (0.5 + 0.5 * clamp(wind, 0, 1.2))
+    + wv.steer * (1.3 * Math.sin(TAU * 1.3 * wv.tau) + 0.5 * Math.sin(TAU * 2.9 * wv.tau + 1)) + steerEv + 0.6 * gRider * Math.sin(W24(42) * t);
   const piv = [BIKE.steererTop[0], BIKE.steererTop[1]];
   const steerAt = P => add(piv, rot([P[0] - piv[0], P[1] - piv[1]], steer));
   const barsO = steerAt([0, 0]);
@@ -539,7 +542,7 @@ export function solvePose(t, s = {}) {
     J['wing' + side + 'Upper'] = { x: sh[0], y: sh[1], rot: k.a1 * R2D };
     J['wing' + side + 'Lower'] = { x: k.joint[0], y: k.joint[1], rot: k.a2 * R2D };
     J['wing' + side + 'Hand'] = { x: k.end[0], y: k.end[1], rot: handRot };
-    const flutter = wind * (0.8 * Math.sin(5 * psiD + (side === 'Near' ? 0 : 1.3)) + 0.5 * Math.sin(9 * psiD + 0.7)) + 3 * gust(t, 794, loopT) * Math.sin((TAU * 99 * t) / 24);
+    const flutter = wind * (0.8 * Math.sin(5 * psiD + (side === 'Near' ? 0 : 1.3)) + 0.5 * Math.sin(9 * psiD + 0.7)) + 3 * gust(t, 794, loopT) * Math.sin(W24(99) * t);
     wing[side] = {
       open, primLag: primLag + flutter, thumb: side === 'Near' ? flick : 0,
       grip: side === 'Near' ? clamp(1 - wv.u * 1.2, 0, 1) : 1, relax: coastW,
@@ -572,7 +575,7 @@ export function solvePose(t, s = {}) {
   const vFall = tt => vRider(tt);
   const fV = follow(vFall, t, TAU * 2.4, 0.3, 28, 0.7) + vFall(t);            // lagged world vertical velocity
   const crestFlat = -(3 + 5 * clamp(wind, 0, 1.6)) - 6 * gRider;              // wind presses the crest flat (monotonic in speed)
-  const crestFlut = wind * 1.2 * Math.sin(7 * psiD) + gRider * 4 * Math.sin((TAU * 126 * t) / 24);
+  const crestFlut = wind * 1.2 * Math.sin(7 * psiD) + gRider * 4 * Math.sin(W24(126) * t);
   const crestRoot = crestFlat - 0.8 * nodLag + evalPh(crestRootP, phi2) + 0.8 * fR1 - 1.1 * fY1 + 12 * surprise + 0.012 * fV + 5 * landKick + crestFlut;
   const crestBend = [
     evalPh(crestMidP, phi2) + 0.5 * (fR2 - fR1) + 0.008 * fV + 4 * landKickSlow + 1.4 * crestFlut + 3 * surprise,
@@ -603,7 +606,7 @@ export function solvePose(t, s = {}) {
   const tailP0 = child(bobP, w2, TAU * 3.2, 0.5, 1.6);
   const bodyDriveR = tt => { let r = 0; for (const e of events) { const tau = tt - e.t0; if (tau < 0) continue; if (e.type === 'hop') r += track(K.hopLean, tau); else if (e.type === 'gulp' && tau < 2.7) r += track(K.gLean, tau); else if (e.type === 'wave' && tau < 2.7) r += track(K.waveLean, tau); } return r; };
   const tailSpring = evalPh(tailP0, phi2) + 1.2 * follow(bodyDriveR, t, TAU * 2.6, 0.35, 10, 0.6) - 0.01 * fV + 7 * landKick
-    + wind * 0.8 * Math.sin(4 * psiD + 0.5) + gust(t, 600, loopT) * 3 * Math.sin((TAU * 90 * t) / 24);
+    + wind * 0.8 * Math.sin(4 * psiD + 0.5) + gust(t, 600, loopT) * 3 * Math.sin(W24(90) * t);
   const tailP = at(pelvis, SKEL.tail);
   J.tail = { x: tailP[0], y: tailP[1], rot: bodyRot + SKEL.tailRot + tailSpring };
 
@@ -638,7 +641,7 @@ export function solvePose(t, s = {}) {
       prevLag = i === 0 ? prevLag : child(prevLag, w2, TAU * 3.5, 0.45, 1.12);
       const baseA = lerp(droop - 7 * i, base + 2 * i, stream);
       const flut = (0.8 + 2.4 * f) * wind * Math.sin(3 * psiD - 0.9 * i + ph0) + (0.4 + 1.6 * f) * wind * Math.sin(8 * psiD - 1.4 * i + salt)
-        + gS * (6 + 10 * f) * Math.sin((TAU * 75 * t) / 24 - 1.1 * i + salt);
+        + gS * (6 + 10 * f) * Math.sin(W24(75) * t - 1.1 * i + salt);
       const lift = liftV * (0.35 + 0.65 * f) - 8 * landKickSlow * f + 6 * gS * f;
       a.push(baseA + evalPh(prevLag, phi2) * (0.4 + f) + flut + lift - 3 * coastW * f);
     }

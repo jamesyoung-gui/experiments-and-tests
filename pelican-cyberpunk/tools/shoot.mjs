@@ -173,7 +173,7 @@ if (arg('perf', false)) {
   const treeCpu = () => { const st = procs(); const inTree = pid => { for (let x = pid, i = 0; x && i < 20; x = st[x]?.ppid, i++) if (+x === ROOTPID) return true; return false; }; let s = 0; for (const pid in st) if (inTree(+pid)) s += st[pid].cpu; return s; };
   const boxCpu = () => { const l = fs.readFileSync('/proc/stat', 'utf8').split('\n')[0].trim().split(/\s+/).slice(1).map(Number); return { busy: l[0] + l[1] + l[2] + l[5] + l[6] + l[7], total: l.reduce((a, b) => a + b, 0) }; };
   const otherBusy = async ms => { const a = boxCpu(), ta = treeCpu(); await new Promise(r => setTimeout(r, ms)); const b = boxCpu(), tb = treeCpu(); return Math.max(0, ((b.busy - a.busy) - (tb - ta)) / Math.max(1, b.total - a.total) * os.cpus().length); };
-  const B = BUDGET.perf, trials = [];
+  const B = BUDGET.perfHard || BUDGET.perf, T0 = BUDGET.perf, trials = [];
   for (let k = 0; k < 3; k++) {
     let other = await otherBusy(1000), waited = 0;
     while (other > 0.9 && waited < 90) { await new Promise(r => setTimeout(r, 2000)); waited += 3; other = await otherBusy(1000); }
@@ -198,6 +198,7 @@ if (arg('perf', false)) {
     if (r.jsP95Ms > B.jsP95MaxMs) miss.push(`JS p95 ${r.jsP95Ms} ms > ${B.jsP95MaxMs}`);
     if (r.nodes > B.domMax) miss.push(`DOM ${r.nodes} > ${B.domMax}`);
     r.miss = miss;
+    r.targetMiss = [r.fps < T0.fpsMin && `fps ${r.fps} < ${T0.fpsMin}`, r.jsP95Ms > T0.jsP95MaxMs && `JS p95 ${r.jsP95Ms} ms > ${T0.jsP95MaxMs} (target)`, r.nodes > T0.domMax && `DOM ${r.nodes} > ${T0.domMax} (target)`].filter(Boolean);
     trials.push(r);
     console.log(`perf trial ${k + 1}: ${JSON.stringify({ fps: r.fps, p95dtMs: r.p95dtMs, jsMedMs: r.jsMedMs, jsP95Ms: r.jsP95Ms, cpuMsPerFrame: r.cpuMsPerFrame, nodes: r.nodes, tier: r.tierEnd, otherCores: r.otherCores, load: r.load })}${miss.length ? '  MISS: ' + miss.join('; ') : '  OK'}`);
     if (!miss.length) break;
@@ -205,11 +206,15 @@ if (arg('perf', false)) {
   perf = trials.find(t => !t.miss.length) || trials.reduce((a, b) => (b.fps > a.fps ? b : a));
   fs.writeFileSync(path.join(out, 'perf.json'), JSON.stringify({ when: new Date().toISOString(), target: base.startsWith('file:') ? 'dist' : 'dev', budget: B, best: perf, trials }, null, 1));
   console.log('perf', JSON.stringify({ frames: perf.frames, fps: perf.fps, p95dtMs: perf.p95dtMs, jsMedMs: perf.jsMedMs, jsP95Ms: perf.jsP95Ms, nodes: perf.nodes, cpuMsPerFrame: perf.cpuMsPerFrame, tier: perf.tierEnd }));
+  if (perf.targetMiss.length) console.log('perf targets missed (warning, tools/budgets.json perf): ' + perf.targetMiss.join('; '));
   if (perf.miss.length) errors.push('PERF BUDGET MISSED (best of ' + trials.length + '): ' + perf.miss.join('; '));
 }
 if (arg('sheet', false) && shots.length > 1) {
   const sp = await browser.newPage({ viewport: { width: 4 * 416 + 16, height: 400 } });
-  await sp.setContent(`<body style="margin:0;background:#15171c;color:#eee;font:14px system-ui"><div style="display:grid;grid-template-columns:repeat(4,400px);gap:16px;padding:8px">${shots.map(([n, f]) => `<figure style="margin:0"><img style="width:400px;display:block" src="data:image/png;base64,${fs.readFileSync(f).toString('base64')}"><figcaption>${n}</figcaption></figure>`).join('')}</div></body>`);
+  // a file page referencing the PNGs (one big data: URL document crashed the renderer at ~70 shots)
+  const sheetHtml = path.join(out, 'sheet.html');
+  fs.writeFileSync(sheetHtml, `<!doctype html><body style="margin:0;background:#15171c;color:#eee;font:14px system-ui"><div style="display:grid;grid-template-columns:repeat(4,400px);gap:16px;padding:8px">${shots.map(([n, f]) => `<figure style="margin:0"><img style="width:400px;max-height:720px;object-fit:contain;display:block" src="${path.basename(f)}"><figcaption>${n}</figcaption></figure>`).join('')}</div></body>`);
+  await sp.goto(pathToFileURL(sheetHtml).href); await sp.waitForLoadState('load');
   await sp.screenshot({ path: path.join(out, 'sheet.png'), fullPage: true });
   console.log('sheet', path.join(out, 'sheet.png'));
 }

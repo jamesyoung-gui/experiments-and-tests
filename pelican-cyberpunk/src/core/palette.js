@@ -36,7 +36,7 @@ export const NEON = {
 // ---- city moods: every environment token as hex ------------------------------------------------------------------
 // Sky tokens (sky.js): sky0 zenith · sky1 upper · sky1b middle · sky2 lower smog · sky3 hot horizon band · skyLine the
 // horizon glow line · skyZen fine strata lines · smog0 smog body · smog1 mid smog · smogLit bellies lit by the city ·
-// smogHi top edges · mega/megaHi/megaFar the arcology and distant megatowers · cityGlow the light dome · search the
+// smogHi top edges · mega/megaHi/megaFar the arcology and distant megatowers · megaDeep the shadow tower behind the head · cityGlow the light dome · search the
 // searchlight tint · haze the violet atmosphere · sun*/moon*/star.
 // World tokens (sea / land / fx): seaFar seaNear foam hillFar hillNear sand road roadLine grassFar grassNear foliage
 // trunk rim grade, plus edition-C sky names kept for compatibility (cloud*, sunRing, sunDog, milky …).
@@ -44,15 +44,15 @@ const MOOD = {
   golden: {
     sky0: '#07060F', sky1: '#130D2C', sky1b: '#28194C', sky2: '#633079', sky3: '#C63F72', skyLine: '#FF7A5E', skyZen: '#3A2663',
     smog0: '#1C1238', smog1: '#3A2360', smogLit: '#FF5E8E', smogHi: '#8C4BAA',
-    mega: '#191132', megaHi: '#3A2A66', megaFar: '#2C1D4E', cityGlow: '#FF4F7E', search: '#BFEFFF', haze: '#5B3F7A',
+    mega: '#191132', megaHi: '#3A2A66', megaFar: '#2C1D4E', megaDeep: '#0C0820', cityGlow: '#FF4F7E', search: '#BFEFFF', haze: '#5B3F7A',
     sunCore: '#FFF3D6', sunGlow: '#FF4F7E', sunHalo: '#FFB547', moon: '#F4ECFF', moonShade: '#B3A2D6', moonHalo1: '#8C4BAA', star: '#E9E6F2',
     seaFar: '#1C1434', seaNear: '#0B0918', foam: '#E9E6F2', hillFar: '#2A1C4A', hillNear: '#1C1434',
     sand: '#3A2A5C', road: '#15112A', roadLine: '#E9E6F2', grassFar: '#1A5A6A', grassNear: '#157A8A', foliage: '#1A6A7A', trunk: '#0B0918', rim: '#FF2E88', grade: '#F0E8FF',
   },
   dawn: {
-    sky0: '#161128', sky1: '#2E2142', sky1b: '#5A3656', sky2: '#A6545C', sky3: '#E8804E', skyLine: '#FFC27A', skyZen: '#4E3A5E',
-    smog0: '#3A2A48', smog1: '#6A4A62', smogLit: '#FF9A5A', smogHi: '#B07A8A',
-    mega: '#291D3B', megaHi: '#5E4260', megaFar: '#4A3452', cityGlow: '#FF8A4A', search: '#FFE2C0', haze: '#7A5068',
+    sky0: '#1E1430', sky1: '#3E2640', sky1b: '#8A4848', sky2: '#D06A3A', sky3: '#F49A48', skyLine: '#FFD08A', skyZen: '#6A4450',
+    smog0: '#4A3040', smog1: '#8A5048', smogLit: '#FFA050', smogHi: '#D08A68',
+    mega: '#2E1E34', megaHi: '#6A4656', megaFar: '#6A4450', megaDeep: '#24162A', cityGlow: '#FF9A40', search: '#FFE2C0', haze: '#B06A4E',
     sunCore: '#FFF0D2', sunGlow: '#FF8A4A', sunHalo: '#FFB547', moon: '#F4E6E0', moonShade: '#C6A6A8', moonHalo1: '#A06A70', star: '#F1E8E6',
     seaFar: '#3A2A48', seaNear: '#1A1230', foam: '#F1E8E6', hillFar: '#4A3452', hillNear: '#2A1E3C',
     sand: '#5A4262', road: '#221A34', roadLine: '#F1E8E6', grassFar: '#2A6A70', grassNear: '#2A8084', foliage: '#2A7078', trunk: '#1A1230', rim: '#FF8A4A', grade: '#FFE8DC',
@@ -60,15 +60,15 @@ const MOOD = {
   noon: {
     sky0: '#3C3854', sky1: '#524D6A', sky1b: '#69637E', sky2: '#827B92', sky3: '#9C94A6', skyLine: '#B8AEBA', skyZen: '#5E5874',
     smog0: '#4A4560', smog1: '#666080', smogLit: '#A290AA', smogHi: '#A8A2B8',
-    mega: '#39354F', megaHi: '#57516F', megaFar: '#5A5470', cityGlow: '#B08AA0', search: '#E0E0F0', haze: '#7A7490',
+    mega: '#39354F', megaHi: '#57516F', megaFar: '#5A5470', megaDeep: '#2C2840', cityGlow: '#B08AA0', search: '#E0E0F0', haze: '#7A7490',
     sunCore: '#F4F2FA', sunGlow: '#C8C0D4', sunHalo: '#B0A8BE', moon: '#E4E0EC', moonShade: '#B0A8BE', moonHalo1: '#8A8298', star: '#EDEBF3',
     seaFar: '#4A4560', seaNear: '#262238', foam: '#EDEBF3', hillFar: '#5A5470', hillNear: '#39354F',
     sand: '#6A6480', road: '#2A2640', roadLine: '#EDEBF3', grassFar: '#3A7A84', grassNear: '#3A8A92', foliage: '#3A7C86', trunk: '#1E1B30', rim: '#D84A8A', grade: '#E8E6F0',
   },
   sunset: {
-    sky0: '#0A0616', sky1: '#1C0A2E', sky1b: '#3A0F4C', sky2: '#761A66', sky3: '#CC2A7A', skyLine: '#FF3E8E', skyZen: '#3A1250',
-    smog0: '#1E0A2E', smog1: '#44145A', smogLit: '#FF2E88', smogHi: '#A83AA0',
-    mega: '#160A27', megaHi: '#3E1650', megaFar: '#2C0E40', cityGlow: '#FF2E88', search: '#FFB9DE', haze: '#6A2070',
+    sky0: '#14051F', sky1: '#33093C', sky1b: '#64105C', sky2: '#A41C74', sky3: '#E8307E', skyLine: '#FF6AA8', skyZen: '#5C1666',
+    smog0: '#36093E', smog1: '#6E1662', smogLit: '#FF3E96', smogHi: '#C844AC',
+    mega: '#1A0724', megaHi: '#4E1658', megaFar: '#4A1252', megaDeep: '#0E0418', cityGlow: '#FF2E88', search: '#FFB9DE', haze: '#8E1E7A',
     sunCore: '#FFE0EE', sunGlow: '#FF2E88', sunHalo: '#FF6A9C', moon: '#FFE6F4', moonShade: '#C090C8', moonHalo1: '#A03A9A', star: '#EDE2F2',
     seaFar: '#1E0A2E', seaNear: '#0E0719', foam: '#EDE2F2', hillFar: '#2C0E40', hillNear: '#1E0A2E',
     sand: '#3E1A56', road: '#160A26', roadLine: '#EDE2F2', grassFar: '#145868', grassNear: '#10788C', foliage: '#146A7C', trunk: '#0E0719', rim: '#FF2E88', grade: '#FFE0F0',
@@ -76,15 +76,15 @@ const MOOD = {
   dusk: {
     sky0: '#07060F', sky1: '#0E0B22', sky1b: '#1C153E', sky2: '#38215E', sky3: '#732C76', skyLine: '#B03A80', skyZen: '#2A1E4A',
     smog0: '#150F2A', smog1: '#2A1C48', smogLit: '#C83A88', smogHi: '#5E3E8E',
-    mega: '#100B21', megaHi: '#2A1E4A', megaFar: '#1E1636', cityGlow: '#C0307A', search: '#C8F4FF', haze: '#3E2A62',
+    mega: '#100B21', megaHi: '#2A1E4A', megaFar: '#1E1636', megaDeep: '#07050F', cityGlow: '#C0307A', search: '#C8F4FF', haze: '#3E2A62',
     sunCore: '#FFE8F0', sunGlow: '#C0307A', sunHalo: '#8C3A8A', moon: '#EEEAFF', moonShade: '#A89CD0', moonHalo1: '#5E3E8E', star: '#E6E4F2',
     seaFar: '#150F2A', seaNear: '#0A0816', foam: '#E6E4F2', hillFar: '#1E1636', hillNear: '#150F2A',
     sand: '#2A1E4A', road: '#100C20', roadLine: '#E6E4F2', grassFar: '#12505E', grassNear: '#10687A', foliage: '#125C6C', trunk: '#0A0816', rim: '#19E6FF', grade: '#E0DCF4',
   },
   night: {
-    sky0: '#05040C', sky1: '#0A0819', sky1b: '#141029', sky2: '#251A44', sky3: '#472A64', skyLine: '#7A3A8A', skyZen: '#1E1638',
-    smog0: '#100C22', smog1: '#1E1638', smogLit: '#9A3A8E', smogHi: '#3E2E6A',
-    mega: '#0C0A1C', megaHi: '#221A42', megaFar: '#17122E', cityGlow: '#8A2E7A', search: '#D8FBFF', haze: '#2E2250',
+    sky0: '#020206', sky1: '#04030C', sky1b: '#070615', sky2: '#0F0B22', sky3: '#22153C', skyLine: '#4E2468', skyZen: '#110D24',
+    smog0: '#0A0818', smog1: '#130F2C', smogLit: '#7A2A78', smogHi: '#2A1E4C',
+    mega: '#09071A', megaHi: '#1E1840', megaFar: '#120E28', megaDeep: '#040309', cityGlow: '#6A2268', search: '#D8FBFF', haze: '#221A40',
     sunCore: '#FFE8F0', sunGlow: '#8A2E7A', sunHalo: '#5E2E6A', moon: '#F0EEFF', moonShade: '#9C94C4', moonHalo1: '#3E2E6A', star: '#E4E2F0',
     seaFar: '#100C22', seaNear: '#07060F', foam: '#E4E2F0', hillFar: '#17122E', hillNear: '#100C22',
     sand: '#221A42', road: '#0C0A1A', roadLine: '#E4E2F0', grassFar: '#0E4654', grassNear: '#0E6070', foliage: '#0E5262', trunk: '#07060F', rim: '#19E6FF', grade: '#D8D8F0',
@@ -93,14 +93,15 @@ const MOOD = {
 // numeric mood values (interpolated like the colours)
 //   night: how night-like the mood is (lamps, windows) · starAlpha: stars through the smog · lampOn: street practicals
 //   rimAlpha: neon rim-light strength · shadowAlpha: contact shadow · neon: sign brightness (emissive, dimmer at noon)
-//   search: searchlight strength · smog: smog density
+//   search: searchlight strength · smog: smog density · winx: the deep-night window fill (sky) · dawn: the orange smog
+//   sea of the dawn mood · acid: the magenta acid-rain haze and streaks of the acid night
 const NUM = {
-  golden: { night: 0.72, starAlpha: 0.32, lampOn: 1, rimAlpha: 1, shadowAlpha: 0.3, neon: 1, search: 0.75, smog: 0.62 },
-  dawn:   { night: 0.35, starAlpha: 0, lampOn: 0.6, rimAlpha: 0.7, shadowAlpha: 0.35, neon: 0.8, search: 0.3, smog: 0.85 },
-  noon:   { night: 0.08, starAlpha: 0, lampOn: 0.3, rimAlpha: 0.45, shadowAlpha: 0.26, neon: 0.55, search: 0, smog: 1 },
-  sunset: { night: 0.9, starAlpha: 0.12, lampOn: 1, rimAlpha: 1, shadowAlpha: 0.25, neon: 1, search: 0.9, smog: 0.75 },
-  dusk:   { night: 0.96, starAlpha: 0.6, lampOn: 1, rimAlpha: 0.9, shadowAlpha: 0.2, neon: 1, search: 1, smog: 0.5 },
-  night:  { night: 1, starAlpha: 1, lampOn: 1, rimAlpha: 0.9, shadowAlpha: 0.2, neon: 1, search: 1, smog: 0.4 },
+  golden: { night: 0.72, starAlpha: 0.32, lampOn: 1, rimAlpha: 1, shadowAlpha: 0.3, neon: 1, search: 0.75, smog: 0.62, winx: 0, dawn: 0, acid: 0 },
+  dawn:   { night: 0.35, starAlpha: 0, lampOn: 0.6, rimAlpha: 0.7, shadowAlpha: 0.35, neon: 0.8, search: 0.3, smog: 0.85, winx: 0, dawn: 1, acid: 0 },
+  noon:   { night: 0.08, starAlpha: 0, lampOn: 0.3, rimAlpha: 0.45, shadowAlpha: 0.26, neon: 0.55, search: 0, smog: 1, winx: 0, dawn: 0, acid: 0 },
+  sunset: { night: 0.9, starAlpha: 0.12, lampOn: 1, rimAlpha: 1, shadowAlpha: 0.25, neon: 1, search: 0.9, smog: 0.75, winx: 0.35, dawn: 0, acid: 1 },
+  dusk:   { night: 0.96, starAlpha: 0.6, lampOn: 1, rimAlpha: 0.9, shadowAlpha: 0.2, neon: 1, search: 1, smog: 0.5, winx: 0.6, dawn: 0, acid: 0 },
+  night:  { night: 1, starAlpha: 1, lampOn: 1, rimAlpha: 0.9, shadowAlpha: 0.2, neon: 1, search: 1, smog: 0.4, winx: 1, dawn: 0, acid: 0 },
 };
 // edition-C token names still read by some modules: aliased to their closest cyberpunk role
 const ALIAS = {

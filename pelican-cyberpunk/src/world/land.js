@@ -324,18 +324,18 @@ const RID = o => { const n = o && o['data-detail'] && o['data-detail'].split(':'
 // Stream tables per layer and stretch: [kind, weight]; '' = gap. 'W' marks wide props (take a whole 3-slot block).
 const TABLE = {
   roadside: {
-    village: [['v-stall', 0.5, 'W'], ['v-stop', 0.5, 'W'], ['v-bench', 1.6], ['locker', 1], ['vending', 1.4], ['capsule', 1.1], ['umbrella', 1.3], ['barrier', 1], ['cart', 1.2], ['pylon', 1.5], ['vent', 0.7], ['clinic', 0.6], ['', 0.6]],
+    village: [['shops', 3.2, 'W'], ['v-stall', 0.5, 'W'], ['v-stop', 0.5, 'W'], ['v-bench', 1.6], ['locker', 1], ['vending', 1.4], ['capsule', 1.1], ['umbrella', 1.3], ['barrier', 1], ['cart', 1.2], ['pylon', 1.5], ['vent', 0.7], ['clinic', 0.6], ['', 0.6]],
     pier: [['bench', 1.3], ['umbrella', 1], ['barrier', 1], ['pylon', 1], ['cart', 0.8], ['vending', 0.6], ['bollards', 1], ['dronepad', 0.8], ['', 0.9]],
-    harbour: [['bollards', 1.8], ['tanks', 1.6], ['dronepad', 0.9], ['crates', 1.4], ['v-stall', 0.7, 'W'], ['locker', 0.5], ['cabinet', 0.6], ['umbrella', 0.6], ['', 0.68]],
-    funfair: [['cart', 0.7], ['pylon', 1.8], ['locker', 0.6], ['bench', 0.8], ['v-bench', 1], ['vending', 1.2], ['capsule', 0.9], ['umbrella', 1.1], ['clinic', 0.4], ['', 0.68]],
+    harbour: [['shops', 1.4, 'W'], ['bollards', 1.8], ['tanks', 1.6], ['dronepad', 0.9], ['crates', 1.4], ['v-stall', 0.7, 'W'], ['locker', 0.5], ['cabinet', 0.6], ['umbrella', 0.6], ['', 0.68]],
+    funfair: [['shops', 3, 'W'], ['cart', 0.7], ['pylon', 1.8], ['locker', 0.6], ['bench', 0.8], ['v-bench', 1], ['vending', 1.2], ['capsule', 0.9], ['umbrella', 1.1], ['clinic', 0.4], ['', 0.68]],
     railway: [['signal', 0.6], ['cabinet', 1.3], ['barrier', 1], ['growcol', 0.5], ['bench', 0.4], ['umbrella', 0.4], ['', 0.9]],
-    lighthouse: [['cabinet', 1.8], ['barrier', 1], ['umbrella', 0.8], ['bench', 0.6], ['vent', 0.6], ['', 0.9]],
+    lighthouse: [['shops', 1.6, 'W'], ['cabinet', 1.8], ['barrier', 1], ['umbrella', 0.8], ['bench', 0.6], ['vent', 0.6], ['', 0.9]],
     cliffs: [['cabinet', 2.2], ['barrier', 1.4], ['vent', 0.9], ['', 0.9]],
     dunes: [['cabinet', 1.2], ['crates', 1.2], ['barrier', 1.6], ['pylon', 0.8], ['vent', 0.5], ['umbrella', 0.6], ['tanks', 0.5], ['', 0.79]],
     bridge: [['bollards', 0.6], ['barrier', 0.6], ['umbrella', 0.5], ['bench', 0.4], ['', 1.35]],
-    fort: [['pylon', 1.2], ['bench', 1], ['umbrella', 1.2], ['vending', 0.8], ['cart', 0.8], ['clinic', 0.5], ['', 0.68]],
+    fort: [['shops', 2.2, 'W'], ['pylon', 1.2], ['bench', 1], ['umbrella', 1.2], ['vending', 0.8], ['cart', 0.8], ['clinic', 0.5], ['', 0.68]],
     pines: [['hydro', 2.4], ['growcol', 2.2], ['pylon', 0.5], ['vending', 0.4], ['bench', 0.6], ['cabinet', 0.5], ['umbrella', 0.5], ['', 0.45]],
-    return: [['pylon', 1.4], ['v-bench', 1.4], ['vending', 1.4], ['capsule', 1], ['locker', 0.8], ['cart', 1], ['barrier', 0.8], ['v-stop', 0.6, 'W'], ['umbrella', 1], ['', 0.68]],
+    return: [['shops', 3.2, 'W'], ['pylon', 1.4], ['v-bench', 1.4], ['vending', 1.4], ['capsule', 1], ['locker', 0.8], ['cart', 1], ['barrier', 0.8], ['v-stop', 0.6, 'W'], ['umbrella', 1], ['', 0.68]],
   },
   shore: {
     village: [['kiosk', 3], ['umbrella', 2.4], ['stools', 1.6], ['crates', 0.7], ['canisters', 0.6], ['cone', 0.6], ['booth', 0.5], ['junk', 0.8], ['sign', 0.4], ['moped', 0.8], ['', 0.45]],
@@ -491,6 +491,119 @@ function journeyArt(ctx) {
     S('M-44 -48h32M-44 -44h32M-44 -40h32M4 -34h28M4 -30h28', DK, 1) + S('M-28 -20v14M20 -18v12', DK, 1.6) + F(rect(-40, -30, 20, 12), v('landPlastic'), { opacity: 0.7 }) +
     F(txt('高压', -38, -21, 8), NE.white) + F(circ(-14, -54, 1.6) + circ(-10, -54, 1.6) + circ(28, -38, 1.6), NE.acid) + F(circ(32, -38, 1.6), NE.red) +
     S('M-36 -62C-36 -120 -60 -170 -40 -260M-24 -62C-22 -140 10 -190 8 -270M20 -44C24 -110 60 -150 50 -260', DK, 2.4) + S('M-36 -62C-36 -120 -60 -170 -40 -260', NE.mag, 0.5, { opacity: 0.5 }));
+  // ---------------------------------------------------------------- street-level shopfront row (wide, ground y = 0 = 752)
+  // the megacity canyon at road level (STYLE-X §5): lit stall interiors with silhouetted patrons, a 24H konbini,
+  // a vending wall and a cyber-clinic window. Each is a ~500 u frontage under a sign band; the roadside slot mirror
+  // puts their light on the wet road. Interiors are kept mid-bright so the rider's dark spokes still read over them.
+  {
+    const RS = ctx.rng('land-shops');
+    const lg = (id, stops) => h('linearGradient', { id, x1: 0, y1: 0, x2: 0, y2: 1 }, ...stops.map(([o, c, a]) => h('stop', { offset: o, style: `stop-color:${c};stop-opacity:${a}` })));
+    defs += lg('land-shopWarm', [[0, NE.amberK, 0.8], [0.45, NE.amber, 0.62], [1, '#6A2410', 0.8]]) +
+      lg('land-shopCool', [[0, NE.cyanK, 0.62], [0.5, NE.cyan, 0.3], [1, '#14304E', 0.8]]) +
+      lg('land-shopClin', [[0, NE.cyanK, 0.6], [0.6, NE.cyan, 0.32], [1, '#0A3040', 0.75]]);
+    const sitter = (x, coat, glow, s = 1.75) => at(x, -30, G({ transform: `scale(${s})` }, person(coat, glow, true)));
+    const stander = (x, coat, glow, s = 1.9, fl = 1) => at(x, 0, G({ transform: `scale(${f(s * fl)} ${s})` }, person(coat, glow, false)));
+    // the frontage + a dim first floor above it (small lit windows, AC units, a drip pipe and a sagging cable)
+    const facade = (w0, w1) => {
+      let g = F(rect(w0, -206, w1 - w0, 206), W_) + F(rect(w0, -206, w1 - w0, 3), WH) + F(rect(w0, -166, w1 - w0, 3), WH) + S(`M${w0 + 2} -4H${w1 - 2}`, CO, 3) + F(rect(w0, -6, w1 - w0, 6), DK);
+      let win = '', lit = '', ac = '';
+      for (let x = w0 + 14; x < w1 - 30; x += 44) { win += rect(x, -198, 26, 22); if (RS() < 0.55) lit += rect(x + 2, -196, 22, 18); if (RS() < 0.4) ac += rect(x + 28, -186, 12, 10); }
+      g += F(win, DK) + F(lit, RS() < 0.5 ? NE.amber : NE.violet, { opacity: 0.32 }) + F(ac, ME) + S(win, ME, 0.8);
+      g += S(`M${w1 - 10} -206V-166`, ME, 2.4) + S(sag(w0, -200, w1, -204, 6), DK, 1.2);
+      return g;
+    };
+    // ---- 0: 鱼丸·拉面 noodle bar: noren, menu cards, a chef at the pots, five patrons on stools
+    {
+      let g = facade(-252, 252);
+      g += F(rect(-244, -158, 488, 30), NE.void) + G(NEONV, tube(rect(-242, -156, 484, 26), C1, C1K, 1.1) +
+        ntext(txt('鱼丸·拉面', -232, -134, 19), C1, C1K, 19) + F(txt('FISHBALL NOODLE', 236, -138, 9, { anchor: 'end', mono: true }), C3K) +
+        F(txt('24H', 236, -147.5, 6, { anchor: 'end', mono: true }), NE.acidK));
+      g += F(rect(-238, -120, 476, 90), 'url(#land-shopWarm)');
+      // back wall: shelves of bowls, a menu strip of cards
+      let cards = '', glyph = '';
+      ['鱼', '丸', '面', '汤', '茶', '酒'].forEach((ch, i) => { const x = -110 + i * 34; cards += rect(x, -116, 28, 22); glyph += txt(ch, x + 14, -99, 15, { anchor: 'middle' }); });
+      g += F(cards, NE.white, { opacity: 0.85 }) + F(glyph, '#3A1206');
+      let shelf = ''; for (let i = 0; i < 5; i++) { const x = 104 + i * 24; shelf += ell(x + 10, -104, 8, 2.4) + `M${x + 2} -104q8 9 16 0z`; }
+      g += F(shelf, '#5A2010', { opacity: 0.7 }) + S('M100 -100H232', '#5A2010', 1.4, { opacity: 0.7 });
+      // chef behind the counter: hat, apron, ladle over two steaming pots
+      g += at(150, -40, G({ transform: 'scale(2.1)' }, S('M-2 0l0.6 -12M2 0l-0.4 -12', DK, 1.9) + F('M-4.6 -11q-0.8 -12 4.6 -13q5.4 1 4.6 13z', NE.void) + F(circ(0, -28, 3.6), NE.void) +
+        F('M-4 -31q4 -9 8 0z', NE.white) + S('M5 -18l7 -4', NE.void, 1.6)));
+      g += F(rect(166, -60, 26, 18) + rect(196, -56, 22, 14), ME) + F(ell(179, -60, 13, 2.6) + ell(207, -56, 11, 2.2), MEH);
+      g += S('M172 -64q-4 -8 1 -14q4 -6 0 -12M182 -64q4 -8 -1 -15q-3 -6 1 -11M204 -60q-4 -7 1 -12', NE.white, 1.2, { opacity: 0.45 });
+      // counter (dark slab with a lit edge) and five patrons on stools, backs to the street
+      g += F(rect(-238, -40, 476, 9), ME) + S('M-238 -40.5H238', NE.amberK, 1.1, { opacity: 0.9 }) + F(rect(-238, -31, 476, 25), DK);
+      let pnl = ''; for (let x = -230; x < 236; x += 30) pnl += `M${x} -29v21`; g += S(pnl, ME, 0.8);
+      let bowls = ''; for (const x of [-196, -132, -64, 6, 74]) bowls += `M${x - 9} -41q9 8 18 0z`; g += F(bowls, NE.white, { opacity: 0.9 });
+      let stools = ''; for (const x of [-198, -134, -66, 4, 72]) stools += `M${x - 9} -30h18M${x - 4} -30l-3 24M${x + 4} -30l3 24`; g += S(stools, ME, 2.2);
+      g += sitter(-198, NE.void, NE.cyan) + sitter(-134, NE.void, NE.mag) + sitter(-66, NE.void, NE.amber, 1.65) + sitter(4, NE.void, NE.cyan, 1.85) + sitter(72, NE.void, NE.acid);
+      g += S('M-192 -48q-3 -7 1 -12M-60 -50q3 -7 -1 -13M80 -48q-3 -7 1 -12', NE.white, 0.9, { opacity: 0.5 });
+      // noren curtain with the shop mark, red lanterns on the awning rail
+      let nor = ''; for (let i = 0; i < 6; i++) { const x = -236 + i * 20; nor += rect(x, -126, 18, 26); }
+      g += F(nor, '#2A0A18') + F(txt('面', -205, -105, 16, { anchor: 'middle' }) + txt('汤', -165, -105, 16, { anchor: 'middle' }), C1K, { opacity: 0.85 });
+      g += S('M-244 -125H244', ME, 2);
+      let lan = '', lanK = ''; for (const x of [-30, 40, 110, 200]) { lan += ell(x, -112, 6, 8); lanK += `M${x - 6} -112h12`; }
+      g += S('M-30 -125v5M40 -125v5M110 -125v5M200 -125v5', DK, 1) + F(lan, NE.red) + S(lanK, '#7A0A18', 1) + F(lan, 'url(#land-gR)', NOHIT);
+      // side door + menu board on the pavement
+      g += F(rect(-252, -164, 14, 164), WH, { opacity: 0.6 }) + F(rrect(-226, -26, 24, 26, 2), NE.void) + F(txt('拉面', -214, -13, 9, { anchor: 'middle' }), NE.amberK) + S('M-224 -6h20', NE.amber, 0.8);
+      sym('shop0', GY.roadside, g);
+    }
+    // ---- 1: 24H konbini: tri-stripe fascia, product shelves, a fridge wall, the clerk, a browsing customer
+    {
+      let g = facade(-252, 252);
+      g += F(rect(-244, -158, 488, 30), NE.void) + F(rect(-244, -158, 488, 30), NE.cyanK, { opacity: 0.55 }) + F(rect(-244, -136, 488, 3), NE.acid) + F(rect(-244, -133, 488, 3), C2) + F(rect(-244, -130, 488, 3), C1);
+      g += F(txt('24H', -232, -139, 19, { mono: true }), '#0A2A3A') + F(txt('MART', -170, -140, 13, { mono: true }), C1) + F(txt('市', 228, -139, 18, { anchor: 'end' }), C1) +
+        F(txt('NEO·MART  · 自动售货 ·  充电', 196, -145, 6.4, { anchor: 'end' }), '#0A2A3A');
+      g += F(rect(-238, -124, 476, 118), 'url(#land-shopCool)');
+      // shelves (seeded products) on the left two thirds
+      let prod = ['', '', '', ''], shelfL = '';
+      const pc = [NE.mag, NE.amber, NE.acid, NE.cyan];
+      for (let r = 0; r < 4; r++) { const y = -116 + r * 26; shelfL += `M-232 ${y + 20}H70`; for (let x = -230; x < 66;) { const w = 4 + RS() * 7, hh = 8 + RS() * 9; prod[Math.floor(RS() * 4)] += rect(x, y + 20 - hh, w, hh); x += w + 1.4; } }
+      g += prod.map((d, i) => F(d, pc[i], { opacity: 0.7 })).join('') + S(shelfL, ME, 2) + S(shelfL, NE.white, 0.6, { opacity: 0.8, transform: 'translate(0 -1.4)' });
+      // fridge wall on the right: glass doors glowing cyan, bottles
+      let fr = '', bot = ''; for (let i = 0; i < 5; i++) { const x = 86 + i * 30; fr += rect(x, -120, 27, 108); for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) bot += rect(x + 3 + k * 6, -112 + r * 26, 4, 14); }
+      g += F(fr, NE.cyan, { opacity: 0.16 }) + F(bot, NE.cyanK, { opacity: 0.32 }) + S(fr, MEH, 1.2) + S('M110 -70v14M140 -70v14M170 -70v14M200 -70v14M230 -70v14', NE.white, 1.4);
+      // clerk at the till, a customer with a basket, posters on the glass
+      g += F(rect(-120, -46, 70, 40), ME) + F(rect(-112, -60, 20, 14), NE.void) + F(rect(-110, -58, 16, 9), NE.acid, { opacity: 0.6 });
+      g += at(-78, -46, G({ transform: 'scale(1.9)' }, F('M-4.6 -1q-0.8 -12 4.6 -13q5.4 1 4.6 13z', '#123048') + F(circ(0, -18, 3.6), '#123048') + S('M1 -18.4h3', NE.acid, 1.1)));
+      g += stander(40, '#123048', NE.mag, 2) + S('M48 -32h12v8h-12z', NE.mag, 1.2);
+      g += F(rect(-200, -118, 34, 44), NE.amber, { opacity: 0.6 }) + F(txt('SALE', -183, -96, 9, { anchor: 'middle', mono: true }), NE.void) + F(txt('奶茶', -183, -82, 9, { anchor: 'middle' }), NE.void) +
+        F(rect(-158, -118, 28, 28), C1, { opacity: 0.55 }) + F(circ(-144, -104, 7), NE.white, { opacity: 0.7 });
+      // window mullions, glass glare, the sliding door, an umbrella stand and a bin out front
+      g += S('M-238 -124V-6M-80 -124V-6M80 -124V-6M238 -124V-6M-238 -124H238', MEH, 2.4) + S('M-230 -10L-170 -120M-210 -10L-150 -120M20 -10L60 -80', NE.white, 1.2, { opacity: 0.18 });
+      g += F(rect(-20, -124, 4, 118), ME) + F(rrect(-12, -78, 26, 10, 2), NE.void) + F(txt('OPEN', 1, -70.5, 6.2, { anchor: 'middle', mono: true }), NE.acid);
+      g += F(rect(244, -30, 16, 30), DK) + S('M248 -30l-6 -24M252 -30l2 -26M256 -30l8 -22', ME, 1.4) + F(circ(242, -55, 2) + circ(254, -57, 2), C2);
+      sym('shop1', GY.roadside, g);
+    }
+    // ---- 2: a vending wall (four machines + a capsule machine) beside the 义体诊所 cyber-clinic window
+    {
+      let g = facade(-252, 252);
+      g += F(rect(-244, -158, 230, 26), NE.void) + G(NEONV, tube(rect(-243, -157, 228, 24), C2, C2K, 1) + ntext(txt('自动售货', -232, -138, 15), C2, C2K, 15) + F(txt('VENDING', -26, -141, 7, { anchor: 'end', mono: true }), NE.amberK));
+      const vc = [NE.mag, NE.cyan, NE.acid, NE.amber];
+      for (let i = 0; i < 4; i++) {
+        const x = -244 + i * 50, col = vc[i];
+        g += F(rect(x, -126, 46, 120), ME) + F(rect(x + 3, -122, 40, 74), NE.white, { opacity: 0.8 }) + F(rect(x + 3, -122, 40, 10), col);
+        let cans = ['', '', '']; for (let r = 0; r < 3; r++) for (let k = 0; k < 5; k++) cans[(r + k + i) % 3] += rrect(x + 5 + k * 7.6, -108 + r * 20, 5.4, 12, 1.4);
+        g += cans.map((d, j) => F(d, [col, '#2A2A60', NE.red][j], { opacity: 0.85 })).join('') + S(`M${x + 4} -95H${x + 42}M${x + 4} -75H${x + 42}M${x + 4} -55H${x + 42}`, ME, 0.8);
+        g += F(rect(x + 7, -42, 24, 10), NE.void) + F(rect(x + 34, -44, 6, 14), DK) + F(rect(x + 35, -42, 4, 3), NE.acid) + F(rect(x + 3, -122, 4, 74), NE.white, { opacity: 0.5 });
+      }
+      // capsule (gacha) machine
+      g += F(rect(-40, -96, 30, 90), ME) + F(circ(-25, -78, 13), NE.white, { opacity: 0.35 }) + F(circ(-30, -82, 3.4) + circ(-21, -74, 3.4), C1) + F(circ(-26, -72, 3.4) + circ(-19, -84, 3.4), NE.acid) +
+        F(circ(-25, -50, 5), MEH) + F(txt('扭蛋', -25, -26, 9, { anchor: 'middle' }), C1K);
+      // the clinic: a cool window with blinds, the reclining chair, a surgeon arm, a holo limb, a green cross
+      g += F(rect(-4, -158, 248, 26), NE.void) + G(NEONV, tube(rect(-3, -157, 246, 24), NE.green, NE.greenK, 1) + ntext(txt('义体诊所', 8, -138, 15), NE.green, NE.greenK, 15) +
+        F(txt('CYBER CLINIC', 236, -141, 7, { anchor: 'end', mono: true }), NE.cyanK));
+      g += F(rect(2, -124, 236, 100), 'url(#land-shopClin)');
+      let bl = ''; for (let y = -120; y < -82; y += 4.5) bl += `M4 ${y}H236`; g += S(bl, NE.cyanK, 0.7, { opacity: 0.35 });
+      g += F('M40 -46l60 -6l24 -22l8 4l-22 24l-6 10h-64z', '#0E2A3A') + S('M70 -36v12M110 -40v16', '#0E2A3A', 3);
+      g += F(`M80 -60q-6 -14 2 -18q10 -2 12 8q8 -2 16 4z`, '#0E2A3A');
+      g += S('M170 -124v22l-26 18l-14 12', MEH, 3) + S('M130 -72l-6 4M130 -72l2 -7', NE.cyanK, 1.4) + F(circ(170, -102, 4) + circ(144, -84, 3.4), MEH);
+      g += S('M196 -100q14 -6 18 8l-4 30q-2 8 -8 6l-4 -18q-6 -10 -2 -26z', NE.cyan, 1.2, { opacity: 0.85 }) + S('M200 -88h10M199 -76h9', NE.cyan, 0.7, { opacity: 0.7 });
+      g += F('M218 -118h6v6h6v6h-6v6h-6v-6h-6v-6h6z', NE.green) + F(circ(221, -109, 10), NE.green, { opacity: 0.12 });
+      g += S('M2 -124V-24M238 -124V-24M2 -124H238M2 -24H238', MEH, 2.4) + F(rect(2, -24, 236, 18), DK);
+      g += stander(150, NE.void, NE.cyan, 2.1, -1) + S('M136 -66q14 -14 28 0z', NE.mag, 1.4) + F('M136 -66q14 -14 28 0z', NE.mag, { opacity: 0.35 }) + S('M150 -66v26', ME, 0.9);
+      sym('shop2', GY.roadside, g);
+    }
+  }
   // ---------------------------------------------------------------- shore symbols (ground y = 0 = 696)
   {
     let junk = ''; const R = R0;
@@ -1063,8 +1176,16 @@ export function build(ctx) {
     put(DD('umbrella-stall-cyan'), umb(326, 694, 0.9, NE.cyan, NE.cyanK, 8));
     {
       const x = 300, y = 694;
-      put(DD('card-players'), F(rect(x + 14, y - 16, 26, 2.4), MHF) + S(`M${x + 18} ${y - 14}l-3 14M${x + 36} ${y - 14}l3 14`, MF, 1) + at(x + 6, y, person(WHF, NE.mag, true)) + at(x + 48, y, G({ transform: 'scale(-1 1)' }, person(CHF, NE.cyan, true))) +
-        F(rect(x + 20, y - 17.4, 3, 1.4) + rect(x + 28, y - 17.4, 3, 1.4), NE.white) + S(`M${x + 27} ${y - 16}v-18l8 -2`, MF, 0.8) + F(circ(x + 35, y - 36, 1.8), NE.amberK) + F(circ(x + 30, y - 22, 14), 'url(#land-gA)', NOHIT));
+      // (fix) a readable card game: a lit folding table under an amber work lamp, fanned hands, cards and chips on the felt
+      const fan = (cx, cy, dir) => [-24, -8, 8].map(a => `<path d="${rect(-1.6, -4.6, 3.2, 4.6)}" transform="translate(${f(cx)} ${f(cy)}) rotate(${a * dir})" fill="${NE.white}" stroke="${NE.void}" stroke-width="0.3"/>`).join('');
+      put(DD('card-players'), G({ transform: `translate(${x + 27} ${y}) scale(1.4) translate(${-x - 27} ${-y})` },
+        F(`M${x + 27} ${y - 33}L${x + 6} ${y - 15}H${x + 48}Z`, NE.amber, { opacity: 0.16, ...NOHIT }) + F(circ(x + 27, y - 17, 18), 'url(#land-gA)', NOHIT) +
+        F(rect(x + 11, y - 17, 32, 2.6), NE.amberK, { opacity: 0.9 }) + F(rect(x + 11, y - 14.4, 32, 1.4), '#5A2A10') + S(`M${x + 15} ${y - 14}l-3 14M${x + 39} ${y - 14}l3 14`, MF, 1) +
+        at(x + 6, y, person(WHF, NE.mag, true)) + at(x + 48, y, G({ transform: 'scale(-1 1)' }, person(CHF, NE.cyan, true))) +
+        fan(x + 11, y - 18, 1) + fan(x + 43, y - 18, -1) +
+        F(rect(x + 21, y - 18.4, 3.4, 1.6) + rect(x + 25.6, y - 18.6, 3.4, 1.6) + rect(x + 30.2, y - 18.4, 3.4, 1.6), NE.white) + F(circ(x + 22.7, y - 17.6, 0.5) + circ(x + 31.9, y - 17.6, 0.5), NE.red) +
+        F(ell(x + 36, y - 17.8, 1.6, 0.7) + ell(x + 36, y - 18.6, 1.6, 0.7), NE.acid) + F(ell(x + 17, y - 17.8, 1.6, 0.7), NE.mag) +
+        S(`M${x + 44} ${y - 14}V${y - 36}L${x + 29} ${y - 36}`, MF, 0.9) + F(`M${x + 24} ${y - 33}l5 -5l5 5z`, MHF) + F(ell(x + 29, y - 33, 3.6, 1), NE.amberK)));
     }
     put(DD('net-billboard'), S('M72 590v-10M160 590v-10M72 580L160 540M160 580L72 540', MF, 1.2) + F(rect(64, 520, 104, 34), NE.void) + G(NEONV, tube(rect(65, 521, 102, 32), NE.cyan, null, 0.8) +
       ntext(txt('网吧', 70, 544, 18), NE.cyan, NE.cyanK, 18) + F(txt('NET CAFE', 162, 534, 6.4, { anchor: 'end', mono: true }), NE.magK) + F(txt('24H', 162, 546, 8, { anchor: 'end', mono: true }), NE.acidK)) + F(circ(116, 516, 1.6), NE.red));
@@ -1505,6 +1626,7 @@ const KINDS = {
     pylon: { p: [['y-palm0'], ['y-palm1'], ['y-palm2']], sc: [0.85, 1.12] }, growcol: { p: [['y-cypress']], sc: [0.7, 1.15] }, hydro: { p: [['y-pine']], sc: [0.8, 1.15] },
     bollards: { p: [['y-bollards']], flip: 1 }, tanks: { p: [['y-pots']] }, dronepad: { p: [['y-anchor']] }, crates: { p: [['y-crates']] },
     signal: { p: [['y-crossbuck']] }, cabinet: { p: [['y-outcrop']], sc: [0.8, 1.2] },
+    shops: { seq: 1, p: [['y-shop0'], ['y-shop1'], ['y-shop2']], sw: ['', 'MC', 'CA', 'MA'] },
   },
   shore: {
     kiosk: { p: [0, 1, 2, 3].map(k => ['y-hut' + k]), sw: ['', '', 'MC', 'MA', 'MV', 'MG'] }, umbrella: { p: [0, 1].map(k => ['y-par' + k]), flip: 1, sc: [0.85, 1.1] },
@@ -1592,7 +1714,7 @@ export function attach(svg, ctx) {
     const Dp = (A - RIDER_X) / d;
     if (excluded(L, Dp)) return null;
     const K = KINDS[L][kind]; if (!K) return null;
-    const vi = Math.floor(hash(j, s0 + 5) * K.p.length), box = K.box[vi];
+    const vi = K.seq ? ((blk % K.p.length) + K.p.length) % K.p.length : Math.floor(hash(j, s0 + 5) * K.p.length), box = K.box[vi];   // seq: neighbours never repeat
     const cx = (box[0] + box[1]) / 2;
     const fl = K.flip && hash(j, s0 + 6) < 0.5 ? -1 : 1, sc = K.sc ? lerp(K.sc[0], K.sc[1], hash(j, s0 + 7)) : 1;
     const sw = K.sw ? SWAP[K.sw[Math.floor(hash(j, s0 + 8) * K.sw.length)]] || '' : '';

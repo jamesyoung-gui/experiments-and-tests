@@ -653,7 +653,9 @@ export function createUI(host, bus, init) {
   let helpOpener = null;
   function openHelp() {
     if (dlg.open) return;
-    helpOpener = doc.activeElement;
+    // whatever opened it (button, '?' key, the panel): a keyboard open leaves focus on <body>, so fall back to the help button
+    const ae = doc.activeElement;
+    helpOpener = ae && ae !== doc.body && ae !== doc.documentElement && !dlg.contains(ae) ? ae : (B.help && B.help.offsetParent !== null ? B.help : (B.toggle || B.help));
     try { dlg.showModal(); } catch { dlg.setAttribute('open', ''); }
     dlg.querySelector('[data-close]').focus();
   }

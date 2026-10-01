@@ -328,7 +328,7 @@ export const CSS = String.raw`
   .ui-quick .ui-btn .ico{width:16px; height:16px}
   #ui .ui-quick .ui-btn .en{letter-spacing:0; font-size:.56rem}
   .ui-field{margin-bottom:2px}
-  .ui-ticks{margin-top:-8px}
+  .ui-ticks{margin-top:-8px; height:18px; margin-bottom:10px}   /* fixed row: the preset labels never sit on the next row's buttons */
   .ui-grip{display:block; width:44px; height:4px; margin:0 auto 6px; background:var(--ui-cyan); box-shadow:0 0 8px var(--ui-glowC); position:relative; cursor:grab; touch-action:none}
   .ui-grip::before{content:""; position:absolute; inset:-14px -30px}
   .ui-head{display:none}
@@ -348,6 +348,7 @@ export const CSS = String.raw`
 @media (max-width:600px) and (pointer:coarse), (pointer:coarse){
   .ui-btn, .ui-tabs .ui-btn{min-height:44px; min-width:44px}
   .ui-range{height:44px}
+  .ui-ticks{height:18px; margin-bottom:10px; flex:none}
   .ui-range::-webkit-slider-thumb{width:18px; height:30px; margin-top:-13px}
 }
 /* landscape phones (844×390 …): a narrow side column, so the rider keeps the middle of the screen */

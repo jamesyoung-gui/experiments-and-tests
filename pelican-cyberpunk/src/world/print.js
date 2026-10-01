@@ -480,7 +480,8 @@ export function build(ctx) {
     [['TL', 1, 1], ['TR', -1, 1], ['BL', 1, -1], ['BR', -1, -1]].map(([kk, sx, sy]) => tag('target-reticle', { 'data-ref': 'print-rt' + kk }, rc(sx, sy))),
     tag('target-label', txt('COURIER 鹈鹕 #0719 · LOCK · 30 MIN'), h('g', { 'data-ref': 'print-rtlab' },
       P('M0 0L22 -22H32', { fill: 'none', stroke: C.acid, 'stroke-width': 1 }), P(circ(0, 0, 2.6), { fill: 'none', stroke: C.acid, 'stroke-width': 1 }),
-      P(rectD(30, -37, tlab.w + 8, 26), { fill: C.void, 'fill-opacity': 0.55 }),
+      // (fix) a solid void plate with an acid hairline: the tag stays legible over a blimp or a sky billboard
+      P(rectD(30, -37, tlab.w + 8, 26), { fill: C.void, 'fill-opacity': 0.94 }), P(rectD(30.5, -36.5, tlab.w + 7, 25), { fill: 'none', stroke: C.acid, 'stroke-width': 0.6, 'stroke-opacity': 0.6 }),
       P(tlab.d, { fill: C.acid }), P(lock.d, { fill: C.acid, 'fill-opacity': 0.7 }))));
 
   // ================================================================ GLITCH + BOOT SCAN

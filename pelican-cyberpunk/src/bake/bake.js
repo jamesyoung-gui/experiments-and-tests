@@ -27,10 +27,11 @@
 export const BAKE_DEFAULTS = {
   period: 4,           // seconds in the master loop (whole crank turns at `cadence`); 24 = the rig's full story loop
   start: 250,          // live sim time that maps to baked t = 0: lap 2 km 0 (village, town, lighthouse, banner in full)
-  // the world (sky, sea, shore, roadside, road, foreground) is recorded as ONE long own-loop band, so the background
+  // the world (sky, sea, shore, roadside, road, foreground) is recorded as ONE long own-loop band (60 s = 15 rider
+  // loops, an integer multiple so the band and the rider re-align exactly once a minute), so the background
   // runs a real journey (village → pier → harbour → funfair → railway) instead of repeating with the 4 s rider loop.
   // Set pieces that the land module mounts / unmounts on the way are baked as presence (display) animations.
-  band: { P: 48, fps: 24, layers: ['L-hills-far', 'L-lighthouse', 'L-sea', 'L-boats', 'L-shore', 'L-roadside', 'L-road', 'L-foreground'] },
+  band: { P: 60, fps: 20, layers: ['L-hills-far', 'L-lighthouse', 'L-sea', 'L-boats', 'L-shore', 'L-roadside', 'L-road', 'L-foreground'] },
   // easter-egg cameos on long prime periods (the combined cycle is 4·48·41·53·67 s): [egg id, subtree, period, at]
   cameos: [['sunwink', '[data-ref="egg-sunFace"]', 41, 9], ['chorus', '[data-ref="egg-chorus"]', 53, 31], ['flight', '[data-ref="egg-flight"]', 67, 18]],
   reducedMotion: true, // prefers-reduced-motion: every animated attribute is frozen at its t0 value by CSS (!important)
@@ -40,10 +41,10 @@ export const BAKE_DEFAULTS = {
   toggles: { skeleton: false },
   probe: { horizon: 480, step: 0.25 },   // long horizon to find the wrap width of slow, non-closing layers
   tol: { len: 0.12, ang: 0.08, scale: 0.0015, d: 0.45, opacity: 0.008, dash: 0.05, num: 0.05 },          // rider (u, °)
-  tolWorld: { len: 0.3, ang: 0.3, scale: 0.004, d: 0.35, opacity: 0.012, dash: 0.1, num: 0.1 },       // everything else
+  tolWorld: { len: 0.45, ang: 0.45, scale: 0.008, d: 0.35, opacity: 0.016, dash: 0.1, num: 0.1 },     // everything else (size budget: ≤ half a pixel at the wide camera)
   blend: 1,            // seconds of seam cross-fade for channels that don't close within the loop
   freeze: ['[data-ref^="wx-rip"]', '[data-ref="wx-spray"]'],
-  dGap: 4,             // path-data keyframes at most every 4th sample (15 Hz); SMIL interpolates in between
+  dGap: 6,             // path-data keyframes at most every 6th sample (10 Hz: the jacket / scarf / neck motion is a 1 Hz crank cycle); SMIL interpolates in between (size budget)
   strip: true,         // drop data-* attributes, comments and ids nothing references
   width: 1600, height: 900,
   title: 'Neon Pelican · 霓虹鹈鹕 — 骑自行车送外卖的赛博鹈鹕 · A cyberpunk pelican riding a bicycle',
@@ -965,7 +966,7 @@ function emit(target, u, anims, cfg, stats, cssRules) {
       if (isXf) el.setAttribute('type', a.type);
       el.setAttribute('values', a.values.join(';'));
       // (integration, size) half a sample period of precision keeps every keyTime strictly increasing
-      if (a.keyTimes && a.values.length > 1) el.setAttribute('keyTimes', ktStr(a.keyTimes, Math.min(6, Math.ceil(Math.log10(a.dur * cfg.fps * 2)))));
+      if (a.keyTimes && a.values.length > 1) el.setAttribute('keyTimes', ktStr(a.keyTimes, Math.min(6, Math.ceil(Math.log10(a.dur * cfg.fps * (a.dur <= 8 ? 20 : 2)))))   /* rider loop: 0.1-sample time resolution (3 decimals put the fast far shank 0.6 u off) */);
       if (a.calcMode) el.setAttribute('calcMode', a.calcMode);
       el.setAttribute('dur', durStr(a.dur));
       el.setAttribute('repeatCount', 'indefinite');
@@ -1095,6 +1096,29 @@ function* finish(svg, clone, cfg, stats, cssRules, origOf) {   // generator: yie
     pruned += el.querySelectorAll('*').length + 1; el.remove();
   }
   stats.prunedHidden = pruned;
+  // gatekeeper: drop <defs> entries nothing references any more (streamed prop variants such as the land shopfronts,
+  // whose pooled <use> slots are hidden in the baked loop). Iterates: removing one may orphan the gradients it used.
+  let prunedDefs = 0;
+  for (let pass = 0; pass < 4; pass++) {
+    const live = new Set(['scene-title', 'scene-desc']);
+    for (const m of cssText.matchAll(/#([\w-]+)/g)) live.add(m[1]);
+    for (const m of [...clone.querySelectorAll('style')].map(x => x.textContent).join('\n').matchAll(/#([\w-]+)/g)) live.add(m[1]);
+    for (const el of clone.querySelectorAll('*')) for (const a of el.attributes) {
+      const v = a.value; if (!v || v.indexOf('#') < 0) continue;
+      for (const m of v.matchAll(/url\(\s*['"]?#([^'")\s]+)/g)) live.add(m[1]);
+      if (a.localName === 'href' && v.startsWith('#')) live.add(v.slice(1));
+      if (a.name === 'values') for (const x of v.split(';')) if (x.trim().startsWith('#')) live.add(x.trim().slice(1));
+    }
+    let n = 0;
+    for (const d of clone.querySelectorAll('defs')) for (const el of [...d.children]) {
+      if (!el.id || el.localName === 'style') continue;
+      const ids = [el, ...el.querySelectorAll('[id]')].map(e => e.id).filter(Boolean);
+      if (ids.some(i => live.has(i))) continue;
+      n += el.querySelectorAll('*').length + 1; el.remove();
+    }
+    prunedDefs += n; if (!n) break;
+  }
+  stats.prunedDefs = prunedDefs;
   // cull far-layer pieces that are off-screen on the same side at both ends of the loop (linear drift ⇒ never visible)
   const farRects = stats.__farRects; delete stats.__farRects;
   let culled = 0;
@@ -1160,16 +1184,47 @@ function* finish(svg, clone, cfg, stats, cssRules, origOf) {   // generator: yie
   const title = clone.querySelector('title'), desc = clone.querySelector('desc');
   if (title) title.textContent = cfg.title;
   const bandP = stats.band ? stats.band.P : null;
-  if (desc) desc.textContent = cfg.desc || `一只大白鹈鹕在黄金时刻沿鹈鹕湾的海滨公路骑车。零 JavaScript 的 SVG：骑手 ${stats.period} 秒无缝循环（60 rpm 下 ${Math.round(stats.period * cfg.cadence / 60)} 圈曲柄）${bandP ? `，海岸风景是 ${bandP} 秒的旅程（渔村、长堤、渔港、游乐栈桥、海滨铁路），还有几个彩蛋按各自的周期出现` : ''}，由实时骨架逐帧烘焙为 SMIL。 `
-    + `A great white pelican rides a bicycle along the seaside road at Pelican Bay. Zero-JavaScript SVG: the rider is a seamless ${stats.period} s SMIL loop (${Math.round(stats.period * cfg.cadence / 60)} crank turns at ${cfg.cadence} rpm)${bandP ? `; the coast is a ${bandP} s journey (village, long pier, fishing harbour, pleasure pier, coast railway) and a few easter eggs drop in on their own long cycles` : ''}; baked frame by frame from the live rig.`;
+  if (desc) desc.textContent = cfg.desc || `一只赛博朋克大白鹈鹕外卖员骑着发光的单车，穿过雨夜霓虹港城鹈鹕湾。零 JavaScript 的 SVG：骑手 ${stats.period} 秒无缝循环（60 rpm 下 ${Math.round(stats.period * cfg.cadence / 60)} 圈曲柄）${bandP ? `，城市背景是一段 ${bandP} 秒的旅程（霓虹街区依次掠过），还有几个彩蛋按各自的周期出现` : ''}，由实时骨架逐帧烘焙为 SMIL。 `
+    + `A cyberpunk great white pelican courier rides a glowing bicycle through the rain-slick neon harbour city of Pelican Bay. Zero-JavaScript SVG: the rider is a seamless ${stats.period} s SMIL loop (${Math.round(stats.period * cfg.cadence / 60)} crank turns at ${cfg.cadence} rpm)${bandP ? `; the city is a ${bandP} s journey of its own (the neon districts scroll past, set pieces come and go) and a few easter eggs drop in on their own long cycles` : ''}; baked frame by frame from the live rig.`;
+  // dead CSS: rules whose selectors match nothing in the baked file (the easter eggs' state classes — .egg-gold,
+  // .egg-wire … — are toggled by JS on the live page and can never be set in a zero-JS file)
+  let cssPruned = 0;
+  for (const st of clone.querySelectorAll('style')) {
+    const txt = st.textContent;
+    if (!/\.egg-|\.pb-/.test(txt)) continue;
+    const out = []; let i = 0, depth = 0, start = 0;
+    for (; i < txt.length; i++) { const c = txt[i]; if (c === '{') depth++; else if (c === '}') { depth--; if (depth === 0) { out.push(txt.slice(start, i + 1)); start = i + 1; } } }
+    if (start < txt.length) out.push(txt.slice(start));
+    const keep = out.filter(rule => {
+      const m = /^\s*([^@{][^{]*)\{/.exec(rule); if (!m) return true;
+      const sels = m[1].split(',').map(x => x.trim()).filter(Boolean);
+      if (!sels.every(x => /\.(egg|pb)-/.test(x))) return true;
+      return sels.some(x => { try { return clone.matches(x) || !!clone.querySelector(x); } catch (e) { return true; } });
+    });
+    cssPruned += txt.length - keep.join('').length;
+    st.textContent = keep.join('');
+  }
+  stats.cssPruned = cssPruned;
   if (cssRules.length) {
     const st = clone.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'style');
     st.textContent = cssRules.join('\n');
     (clone.querySelector('defs') || clone).appendChild(st);
   }
-  let out = new XMLSerializer().serializeToString(clone);
+  // serialised child by child (yields between them: one 3 MB serializeToString is a ~1 s task); the namespace
+  // declarations the serializer repeats on each child root are redundant with the <svg>'s and are dropped
+  const ser = new XMLSerializer(), shell = ser.serializeToString(clone.cloneNode(false));
+  const openTag = shell.endsWith('/>') ? shell.slice(0, -2) + '>' : shell.slice(0, shell.lastIndexOf('</'));
+  const parts = [openTag];
+  for (const ch of [...clone.childNodes]) {
+    let x = ser.serializeToString(ch);
+    if (ch.nodeType === 1) x = x.replace(/^(<[^\s>]+)((?:\s[^>]*?)?)(\/?>)/, (m, t, at, end) => t + at.replace(/\s+xmlns(?::xlink)?="[^"]*"/g, '') + end);
+    parts.push(x);
+    yield { phase: 'serialise', frac: 0.995 };
+  }
+  parts.push(`</${clone.tagName}>`);
+  let out = parts.join('');
   if (out.includes('var(')) out = resolve(out);
   out = out.replace(/>\s*\n\s*</g, '><');
-  const head = `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Pelican Bay · 鹈鹕湾 — zero-JS baked loop: ${stats.period}s @ ${cfg.cadence} rpm${bandP ? `, world band ${bandP}s` : ''}, ${stats.anims} animations, ${stats.keyframes} keyframes. Generated by src/bake/bake.js -->\n`;
+  const head = `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Neon Pelican · 霓虹鹈鹕 (Pelican Bay, cyberpunk edition) — zero-JS baked loop: ${stats.period}s @ ${cfg.cadence} rpm${bandP ? `, world band ${bandP}s` : ''}, ${stats.anims} animations, ${stats.keyframes} keyframes. Generated by src/bake/bake.js -->\n`;
   return head + out;
 }

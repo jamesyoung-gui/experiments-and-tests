@@ -224,7 +224,7 @@ export function build(ctx) {
   // pelican asterism (Pelecanus isn't an IAU constellation, but IC 5070, the Pelican Nebula, is real)
   const ST = [[0, 0], [22, -10], [40, -6], [96, 10], [60, 16], [34, 26], [8, 32], [-26, 40], [-60, 34], [-84, 18], [-46, 64], [-10, 66]];
   const LN = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 0], [6, 7], [7, 8], [8, 9], [7, 10], [10, 11], [11, 6]];
-  const SX = -560, SY = -40;
+  const SX = 300, SY = 30;   // right of the head box, under the mission HUD
   let sd = '', sl = '', sg = '';
   ST.forEach(([x, y], i) => { const r = i === 0 || i === 3 ? 2.4 : 1.3 + hh(i, 60) * 0.9, X = SX + x, Y = SY + y; sd += circ(X, Y, r); if (i === 0 || i === 3 || i === 7) sg += `M${f(X - r * 3.4)} ${f(Y)}H${f(X + r * 3.4)}M${f(X)} ${f(Y - r * 3.4)}V${f(Y + r * 3.4)}`; });
   for (const [a, b] of LN) sl += `M${f(SX + ST[a][0])} ${f(SY + ST[a][1])}L${f(SX + ST[b][0])} ${f(SY + ST[b][1])}`;
@@ -232,7 +232,9 @@ export function build(ctx) {
   const aster = G(DD('sky:O:wx-asterism'), S(sl, C.cyC, 0.8, { opacity: 0.4, 'stroke-dasharray': '2 3' }), S(sg, v('star'), 0.8, { opacity: 0.8 }), F(sd, v('star')),
     S(brk(SX - 12, SY - 12, 1, 1) + brk(SX + 12, SY - 12, -1, 1) + brk(SX - 12, SY + 12, 1, -1) + brk(SX + 12, SY + 12, -1, -1), C.ac, 1, { opacity: 0.8 }),
     F(lab.d, C.cyC, { opacity: 0.75 }), S(`M${f(SX - 84)} ${f(SY + 92)}h${f(lab.w)}`, C.cy, 0.8, { opacity: 0.5 }));
-  const clear = G({ ...REF('clear') }, G({ 'data-ref': 'wx-clearMove', transform: `translate(${AX} ${AY})` }, aster, aurora, proj, ad));
+  const clear = G({ ...REF('clear') }, G({ 'data-ref': 'wx-clearMove', transform: `translate(${AX} ${AY})` }, aster, aurora,
+    // (fix) the ad sits in the upper-left third, clear of the rider's head box (x 680-1000, y 200-380) and the title
+    G({ transform: 'translate(-385 30) scale(0.78)' }, proj, ad)));
 
   // ================================================================ L-atmo: far rain, rain sheets, smog banks, the searchlight in smog, flash
   // far streaks on the near tile's period (408 × 384, see `ra`), so they wrap with the wx-rainA translate

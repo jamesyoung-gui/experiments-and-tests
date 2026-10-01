@@ -105,7 +105,7 @@ console.log(`${'ALL'.padEnd(18)} ${String(baseline.all).padStart(5)} ${String(to
 if (bad.length) console.log('malformed data-detail keys (need <layer>:<O|T>:<name>):', bad.slice(0, 20).join(', '));
 if (has('verbose')) for (const l of LAYERS) console.log(l, 'rejected:', counts[l].rejected.map(k => `${k} (${found.get(k).why || '?'})`).join(', '));
 { const why = {}; for (const [, v] of found) if (!v.ok) why[v.why || '?'] = (why[v.why || '?'] || 0) + 1; console.log('rejections by reason (an item may be counted in either view):', JSON.stringify(why)); }
-const out = arg('json');
+const out = arg('json') || 'shots/verify/detail-inventory.json';
 if (out) { fs.mkdirSync(path.dirname(path.resolve(ROOT, out)), { recursive: true }); fs.writeFileSync(path.resolve(ROOT, out), JSON.stringify({ baseline, counts, total, ratio: total / baseline.all, fails, items: Object.fromEntries(found) }, null, 1)); }
 if (errors.length) console.error('page errors:', errors.join('\n'));
 console.log(fails.length ? 'G-DETAIL: FAIL — ' + fails.join('; ') : 'G-DETAIL: PASS');

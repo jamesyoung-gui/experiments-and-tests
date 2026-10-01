@@ -375,8 +375,8 @@ export function build() {
 
   // ============================================================ WHEELS
   const spokeD = side => LACING.filter(s => s.side === side).map(s => seg(...spokeEnds(s))).join('');
-  defs += h('g', { id: 'bike-spk-near', fill: 'none', 'stroke-linecap': 'round' }, h('path', { d: spokeD('near'), stroke: X.ink, 'stroke-width': 1.4 }), h('path', { d: spokeD('near'), stroke: X.steelHi, 'stroke-width': 0.62 }));
-  defs += h('path', { id: 'bike-spk-far', d: spokeD('far'), stroke: X.farSteel, 'stroke-width': 0.85, fill: 'none', 'stroke-linecap': 'round' });
+  defs += h('g', { id: 'bike-spk-near', fill: 'none', 'stroke-linecap': 'round' }, h('path', { d: spokeD('near'), stroke: X.ink, 'stroke-width': 1.7 }), h('path', { d: spokeD('near'), stroke: X.steelHi, 'stroke-width': 0.72 }));
+  defs += h('path', { id: 'bike-spk-far', d: spokeD('far'), stroke: X.farSteel, 'stroke-width': 0.6, opacity: 0.72, fill: 'none', 'stroke-linecap': 'round' });   // far flange: darker + thinner, so the 3-cross reads
   // tyre sidewall lettering: two arcs 180° apart, reading clockwise, "up" = outward
   const tyreText = (() => {
     const size = 4.6, rb = 93.1, d = [];
@@ -1099,7 +1099,9 @@ export function attach(svg) {
         set(r[`${w}-tread`], 'opacity', (1 - blur).toFixed(2));
         set(r[`${w}-treadblur`], 'opacity', blur.toFixed(2));
       }
-      set(r.swooshR, 'opacity', (0.95 * blur).toFixed(2)); set(r.swooshF, 'opacity', (0.95 * blur).toFixed(2));
+      // trails stay faint at cruise (the lacing must read at 60 rpm) and only bloom on a sprint
+      const trailA = (blur * (0.28 + 0.67 * sstep(2050, 3000, fr.speed ?? 0))).toFixed(2);
+      set(r.swooshR, 'opacity', trailA); set(r.swooshF, 'opacity', trailA);
       set(r.roller, 'opacity', (1 - blur).toFixed(2));
       // bell striker + dome shiver
       const bell = p.bell || {};

@@ -147,4 +147,5 @@ if (arg('sheet', false)) {
 await browser.close(); srv.close();
 errors.forEach(e => console.error(e)); fails.forEach(e => console.error('FAIL ' + e));
 console.log(`eggs: ${list.length} eggs, ${shots.length} shots -> ${path.relative(ROOT, out)}, ${errors.length} console errors, ${fails.length} failures`);
+fs.writeFileSync(path.join(out, 'check-eggs.json'), JSON.stringify({ when: new Date().toISOString(), eggs: list.length, shots: shots.length, errors: errors.length, fails }, null, 1));
 process.exit(errors.length || fails.length ? 1 : 0);

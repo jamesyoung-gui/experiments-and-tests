@@ -53,6 +53,12 @@ export function bloomFilter(id, s = 3, gain = 1.35, region = null) {
     + `<feComponentTransfer in="b2" result="b2g"><feFuncA type="linear" slope="${n2(gain)}"/></feComponentTransfer>`
     + '<feMerge><feMergeNode in="b2g"/><feMergeNode in="b1"/></feMerge></filter>';
 }
+// soft bloom with the sharp source merged on top (for bakedFilter tiles: the blur runs once, into the pattern raster)
+export function softBloom(id, s = 2.2) {
+  return `<filter id="${id}" x="-40%" y="-40%" width="180%" height="180%">`
+    + `<feGaussianBlur in="SourceGraphic" stdDeviation="${n2(s)}" result="b"/>`
+    + '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+}
 // bright-pass bloom (a real "bloom pass" for a whole static sheet): only pixels brighter than `thr` glow. The pass
 // keys alpha on luminance (feColorMatrix), keeps the source alpha (feComposite in), blurs twice and merges; draw the
 // element using it BEHIND the sharp art (<use href="#static-copy" filter="url(#…)"/>). Static / far sheets only.

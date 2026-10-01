@@ -21,7 +21,7 @@
 import { fmt1, fmt2 } from '../core/math.js';
 import { h, refs } from '../core/svg.js';
 import { HORIZON_Y, DIST_PER_REV } from '../contract.js';
-import { bakedFilter } from '../art/neon.js';
+import { bakedFilter, softBloom } from '../art/neon.js';
 import { LAP, KM, stretchAt, relTo, hash } from './route.js';
 
 export const id = 'sea';
@@ -275,8 +275,7 @@ export function build(ctx) {
   const rg = (id, col, a0 = 0.6) => h('radialGradient', { id }, h('stop', { offset: 0, 'stop-color': col, 'stop-opacity': a0 }),
     h('stop', { offset: 0.35, 'stop-color': col, 'stop-opacity': f(a0 * 0.45) }), h('stop', { offset: 1, 'stop-color': col, 'stop-opacity': 0 }));
   defs += rg('sea-gAmber', N.amber) + rg('sea-gCyan', N.cyan) + rg('sea-gMag', N.mag) + rg('sea-gRed', N.red, 0.7) + rg('sea-gAcid', N.acid, 0.5);
-  defs += h('filter', { id: 'sea-bloom', x: '-40%', y: '-40%', width: '180%', height: '180%' },
-    h('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: 2.2, result: 'b' }), h('feMerge', {}, h('feMergeNode', { in: 'b' }), h('feMergeNode', { in: 'SourceGraphic' })));
+  defs += softBloom('sea-bloom', 2.2); // only ever used inside bakedFilter pattern tiles (static raster)
   defs += reflPatterns(rng);
   const water = buildWater(v, rng);
   const sky = buildSkyline(v, rng);
@@ -1014,7 +1013,7 @@ function buildRocks(v, rng) {
   // seal basking on the tetrapods (head bobs)
   g += G(DD('sea:O:seal-basking'),
     F('M112 588C116 576 138 572 158 576C168 578 174 580 178 582L170 588C150 590 128 592 112 588Z', '#2A2638'),
-    S('M120 584C132 580 148 579 162 580', v('smogLit'), 1, { opacity: 0.5 }), F('M116 587L106 582L110 589Z', '#2A2638'),
+    S('M120 584C132 580 148 579 162 580', v('smogLit'), 1, { opacity: 0.5 }), S('M112 588C116 576 138 572 158 576C168 578 174 580 178 582', N.cyan, 0.9, { opacity: 0.85 }), F('M118 588C134 590 152 589 168 587', 'none'), F('M116 587L106 582L110 589Z', '#2A2638'),
     h('g', { transform: 'translate(172 580)' }, h('g', { 'data-ref': 'sea-sealHead' },
       F('M-4 1C-4 -8 2 -14 10 -13C15 -12 17 -8 17 -5C17 -2 13 0 8 1Z', '#2A2638'), F(circ(8.5, -9, 1.1), '#E9E6F2'), F(ell(15.6, -5.4, 1.4, 1), '#07060F'),
       S('M13 -3.5l6 -1M13 -2.8l6 0.6', '#E9E6F2', 0.45), S('M-3 -4C0 -11 6 -14 12 -12.4', N.mag, 0.7, { opacity: 0.8 }))));
@@ -1023,7 +1022,7 @@ function buildRocks(v, rng) {
     F('M266 551C265 545 266 540 268 536C269 533 271 532 272 534C273 536 272 539 271 541C274 543 275 547 274 551Z' +
       'M268 540C262 536 257 531 254 526C259 528 263 530 268 537ZM271 540C277 536 282 531 285 526C280 528 276 530 271 537Z' + 'M272 534L276 535L272 535.8Z', '#07060F'),
     F('M284 551C283 546 285 543 288 543C289 541 291 540 292 541C293 543 292 544 291 545C293 547 293 550 291 551Z M292 541.4L295 542L292 542.6Z', '#07060F'),
-    S('M256 527C260 530 264 533 268 537M284 527C280 530 276 533 272 537', N.mag, 0.6, { opacity: 0.7 }), F(circ(271.3, 533.6, 0.5) + circ(291.3, 541.2, 0.45), N.acid));
+    S('M254 526C259 528 263 530 268 537M285 526C280 528 276 530 271 537M268 536C269 533 271 532 272 534M288 543C289 541 291 540 292 541', N.mag, 0.9, { opacity: 0.95 }), S('M266 551C265 545 266 540 268 536M284 551C283 546 285 543 288 543', N.cyan, 0.7, { opacity: 0.85 }), F(circ(271.3, 533.6, 0.5) + circ(291.3, 541.2, 0.45), N.acid));
   // surging foam collars
   let foam = '', spray = '';
   for (const [x0, x1, y] of [[52, 250, 636], [250, 300, 638], [300, 340, 640]]) {
@@ -1154,7 +1153,8 @@ function buildBoats(v, rng) {
     S('M-30 3q6 -2 12 0M-4 3q6 -2 12 0M18 3q6 -2 12 0', v('foam'), 1.1, { opacity: 0.6 })));
   // ---- dolphin (leaps along an arc), splashes, fish, seal head
   const dolphin = h('g', { 'data-ref': 'sea-dolph' }, G(DD('sea:O:dolphin'),
-    F('M-32 0C-24 -7 -4 -11 14 -9C24 -8 30 -5 34 -2L41 -1L34 1C26 4 12 6 -4 5C-16 4 -26 3 -32 0Z' + 'M-2 -10L-11 -20L7 -9Z' + 'M-30 0L-43 -9L-38 0L-43 9Z', '#3A3F5C'),
+    F('M-32 0C-24 -7 -4 -11 14 -9C24 -8 30 -5 34 -2L41 -1L34 1C26 4 12 6 -4 5C-16 4 -26 3 -32 0Z' + 'M-2 -10L-11 -20L7 -9Z' + 'M-30 0L-43 -9L-38 0L-43 9Z', '#1C2348'),
+    S('M-32 0C-24 -7 -4 -11 14 -9C24 -8 30 -5 34 -2L41 -1L34 1C26 4 12 6 -4 5C-16 4 -26 3 -32 0Z' + 'M-2 -10L-11 -20L7 -9M-30 0L-43 -9L-38 0L-43 9Z', N.cyan, 2.6, { opacity: 0.22 }), S('M-32 0C-24 -7 -4 -11 14 -9C24 -8 30 -5 34 -2L41 -1L34 1C26 4 12 6 -4 5C-16 4 -26 3 -32 0Z', N.cyanCore, 0.8, { opacity: 0.9 }),
     F('M-20 3C-6 5 14 5 31 1L29 3C12 7 -6 6 -20 4.5Z', '#B8B0D8'), F(circ(27, -3.4, 1.1), VO),
     S('M4 -8.4C14 -8.4 22 -6.4 29 -3.8M-2 -10L-11 -20', N.mag, 0.9), S('M-24 1.6C-12 4 8 5 30 0.6', N.cyan, 0.7, { opacity: 0.8 })));
   const splash = k => h('g', { 'data-ref': 'sea-spl' + k, visibility: 'hidden' },
@@ -1320,8 +1320,8 @@ export function attach(svg, ctx) {
         const P = 12, dur = 1.3, ph = wrap(t - (T0 - 0.62), P), cy = Math.floor((t - (T0 - 0.62)) / P), up = !red && ph < dur && (cy === 0 || hash(cy, 5) < 0.6);
         vis(r.dolph, up);
         if (up) {
-          const u = ph / dur, x = (u - 0.5) * 120, y = -58 * Math.sin(Math.PI * u) + 6;
-          const ang = Math.atan2(-58 * Math.PI * Math.cos(Math.PI * u) / dur, 120 / dur) / D2R;
+          const u = ph / dur, x = (u - 0.5) * 120, y = -30 * Math.sin(Math.PI * u) + 6;   // (fix) a low leap: clear of the cable band
+          const ang = Math.atan2(-30 * Math.PI * Math.cos(Math.PI * u) / dur, 120 / dur) / D2R;
           set(r.dolph, 'transform', `translate(${f(x)} ${f(y)}) rotate(${f(ang)})`);
         }
         const s0 = !red && ph < dur * 0.3, s1 = !red && ph > dur * 0.72 && ph < dur + 0.5;

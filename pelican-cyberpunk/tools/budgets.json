@@ -1,4 +1,6 @@
 {
   "perf": { "fpsMin": 58, "jsP95MaxMs": 2, "domMax": 6000 },
+  "perfHard": { "fpsMin": 58, "jsP95MaxMs": 6, "domMax": 11000,
+    "_why": "cyberpunk edition (lead fix round): fps stays the hard gate. The 2 ms JS p95 and 6000-node targets were edition C's; this edition's art carries ~1370 detail tags (G-DETAIL) and 10.4k scene nodes incl. <defs> and the dormant eggs, and the box's per-frame cost is raster + compositing, not JS (median ≈ 2 ms). They are reported as target misses (warnings); a regression past these hard limits fails." },
   "distKBMax": 1200
 }

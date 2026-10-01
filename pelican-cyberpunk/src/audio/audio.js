@@ -188,11 +188,14 @@ export function createAudio(bus, opts = {}) {
   function build() {
     const out = G(1.0);                                                      // trim after the limiter
     const lim = ac.createDynamicsCompressor();
-    lim.threshold.value = -3; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.09;
+    lim.threshold.value = -4.5; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.09;
+    // safety ceiling after the limiter: a soft clip that tops out at -3 dBFS (the compressor's attack lets the odd
+    // transient through; this keeps every peak at or below the documented ceiling)
+    const ceil = ac.createWaveShaper(); { const n = 2048, c = new Float32Array(n), K = 0.7079, k0 = 0.56; for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1, a = Math.abs(x); c[i] = Math.sign(x) * (a <= k0 ? a : k0 + (K - k0) * Math.tanh((a - k0) / (K - k0))); } ceil.curve = c; ceil.oversample = '2x'; }
     const comp = ac.createDynamicsCompressor();
     comp.threshold.value = -20; comp.knee.value = 10; comp.ratio.value = 3; comp.attack.value = 0.006; comp.release.value = 0.25;
     const master = G(0), hpf = F('highpass', 36, 0.6);
-    wire(master, hpf, comp, lim, out, ac.destination);
+    wire(master, hpf, comp, lim, ceil, out, ac.destination);
     const B = n => { const g = G(solo && !solo.has(n) ? 0 : 1); g.connect(master); return g; };
     const amb = B('amb'), mech = B('mech'), fx = B('fx'), far = B('far'), voice = B('voice'), music = B('music');
     const verb = ac.createConvolver(); verb.normalize = false; verb.buffer = plate(2.8, 0.7);
@@ -587,6 +590,7 @@ export function createAudio(bus, opts = {}) {
     return 'drive';
   }
   function tempoTarget() {
+    if (coasting) return mus.bpm1;      // a coast holds the pre-coast rung (the coast already strips the drums)
     let raw = 64 + 0.6 * cadence;
     const m = moodOf();
     if (m === 'dark' || m === 'rain') raw *= 0.94;
@@ -630,6 +634,8 @@ export function createAudio(bus, opts = {}) {
     // the pace: a sprint opens the hats up, a coast strips the drums
     if (cadence > 86 && !coasting && A.hat === 'off') A.hat = '16';
     if (coasting) { A.kick = []; A.snare = []; A.bass = 'hold'; A.leadMute = true; A.fill = false; A.riser = false; A.roll = false; }
+    // (loudness) the darksynth mood runs hot: trim it ~1.5 dB and ease the bass overdrive (RMS target -24…-14 dBFS)
+    if (A.mode === 'dark') { for (const k in A.levels) A.levels[k] *= 0.84; A.levels.lead *= 0.72; A.levels.arp *= 0.85; A.drive = Math.min(A.drive, 0.6); }   // the square lead is the hot part
     return A;
   }
   function barInfo(bar, A) {
@@ -708,7 +714,7 @@ export function createAudio(bus, opts = {}) {
   function kick(at, vel) {
     const o = O('sine', 150), g = G(0), c = O('triangle', 1800), cg = G(0); wire(o, g, M.P.kick); wire(c, cg, M.P.kick);
     o.frequency.setValueAtTime(160, at); o.frequency.exponentialRampToValueAtTime(46, at + 0.09);
-    const e = envAD(g.gain, at, vel, 0.002, 0.34); envAD(cg.gain, at, vel * 0.25, 0.0005, 0.008);
+    const e = envAD(g.gain, at, vel, 0.002, 0.34); envAD(cg.gain, at, vel * 0.25, 0.0015, 0.008);
     o.start(at); o.stop(e); c.start(at); c.stop(at + 0.02); reap(o, [o, g, c, cg]);
     // sidechain pump on the pad + arp
     const p = M.pump.gain; p.setTargetAtTime(0.35, at, 0.004); p.setTargetAtTime(1, at + 0.05, 0.09);
@@ -718,7 +724,7 @@ export function createAudio(bus, opts = {}) {
     const o = O('triangle', 190), og = G(0); o.frequency.setValueAtTime(210, at); o.frequency.exponentialRampToValueAtTime(165, at + 0.06); wire(o, og, bus);
     const e1 = envAD(og.gain, at, 0.5, 0.001, 0.09);
     const s = bufSrc(N.whiteB), bp = F('bandpass', 2100, 0.6), sg = G(0); wire(s, bp, sg, bus);
-    const e2 = envAD(sg.gain, at, 0.7, 0.001, 0.13);
+    const e2 = envAD(sg.gain, at, 0.7, 0.0025, 0.13);
     const tl = bufSrc(N.pinkB), tlp = F('lowpass', 6500, 0.5), thp = F('highpass', 500, 0.5), tg = G(0); wire(tl, thp, tlp, tg, bus);
     const hold = gated ? 0.21 : 0.06;
     tg.gain.setValueAtTime(0, at + 0.004); tg.gain.linearRampToValueAtTime(0.5, at + 0.015); tg.gain.linearRampToValueAtTime(0.36, at + hold); tg.gain.linearRampToValueAtTime(0, at + hold + 0.014);
@@ -727,14 +733,15 @@ export function createAudio(bus, opts = {}) {
   }
   function clap(at, vel) {
     const s = bufSrc(N.whiteB), bp = F('bandpass', 1500, 1.1), g = G(0), pn = Pan(0.05); wire(s, bp, g, pn, M.P.snare); send(pn, 0.2, 'music');
-    let t = at; for (let i = 0; i < 3; i++) { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel, t + 0.001); g.gain.linearRampToValueAtTime(vel * 0.2, t + 0.009); t += 0.011; }
+    let t = at; for (let i = 0; i < 3; i++) { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel, t + 0.002); g.gain.linearRampToValueAtTime(vel * 0.2, t + 0.009); t += 0.011; }
     g.gain.linearRampToValueAtTime(vel * 0.6, t + 0.002); g.gain.exponentialRampToValueAtTime(vel * 0.001, t + 0.16); g.gain.linearRampToValueAtTime(0, t + 0.17);
     s.start(at, R() * 4); s.stop(t + 0.2); reap(s, [s, bp, g, pn]);
   }
   function hat(at, vel, open) {
-    const s = bufSrc(N.whiteB), hp = F('highpass', 7600, 0.7), pk = F('peaking', 10500, 1.5), g = G(0), pn = Pan(0.22); pk.gain.value = 5;
-    wire(s, hp, pk, g, pn, M.P.hat);
-    const e = envAD(g.gain, at, vel, 0.001, open ? 0.13 : 0.035); s.start(at, R() * 5); s.stop(e); reap(s, [s, hp, pk, g, pn]);
+    const s = bufSrc(N.whiteB), hp = F('highpass', 7600, 0.7), pk = F('peaking', 10500, 1.5), lp = F('lowpass', 14500, 0.7), g = G(0), pn = Pan(0.22); pk.gain.value = 3;
+    vel *= 0.72;   // (no clicks) the bright noise hits stay under a 0.3 sample-to-sample step
+    wire(s, hp, pk, lp, g, pn, M.P.hat);
+    const e = envAD(g.gain, at, vel, 0.002, open ? 0.13 : 0.035); s.start(at, R() * 5); s.stop(e); reap(s, [s, hp, pk, lp, g, pn]);
   }
   function crash(at, vel) {
     const s = bufSrc(N.whiteB), hp = F('highpass', 4200, 0.6), g = G(0), pn = Pan(-0.15); wire(s, hp, g, pn, M.P.hat); send(pn, 0.3, 'music');
@@ -881,7 +888,7 @@ export function createAudio(bus, opts = {}) {
       if (mus.step === 0) {          // bar line: one rung of tempo per bar, as an accelerando across the bar
         mus.bpm0 = mus.bpm1; mus.bpm1 = tempoTarget();
         const L = AUDIO.tempi, i0 = L.indexOf(mus.bpm0), i1 = L.indexOf(mus.bpm1);
-        if (i0 >= 0 && i1 >= 0 && Math.abs(i1 - i0) > 1) mus.bpm1 = L[i0 + Math.sign(i1 - i0)];
+        if (i0 >= 0 && i1 >= 0 && Math.abs(i1 - i0) > 2) mus.bpm1 = L[i0 + 2 * Math.sign(i1 - i0)];   // up to two rungs a bar: a sprint is an accelerando within ~2 bars
         if (mus.bpm1 !== mus.bpm0) logCue('tempo', mus.nextT, { bpm: mus.bpm1 });
         try { barStart(mus.bar, mus.nextT, 60 / mus.bpm0); } catch (err) { console.warn('[audio] music', err); }
       }
@@ -1035,7 +1042,7 @@ export function createAudio(bus, opts = {}) {
     const wet = Math.max(wx.wet || 0, rainK * 0.8);
     glide(N.windG.gain, (0.04 + 0.45 * s * s) * gust * calm, t, 0.8);
     glide(N.windBp.frequency, 280 + 600 * s + 120 * (gust - 1), t, 0.9);
-    glide(N.roadG.gain, 0.34 * s * (1 + 0.3 * wet), t, 0.2); glide(N.roadLp.frequency, 240 + 480 * s + 600 * wet, t, 0.3);
+    glide(N.roadG.gain, 0.4 * s * (1 + 0.3 * wet), t, 0.2); glide(N.roadLp.frequency, 240 + 480 * s + 600 * wet, t, 0.3);
     glide(N.gritG.gain, 0.02 * s * (1 + 2.2 * wet), t, 0.2);
     glide(N.chG.gain, pedal ? 0.1 * (0.45 + s) : 0, t, 0.05);
     glide(N.humG.gain, pedal ? 0.07 * (0.3 + s) : 0, t, 0.05);
@@ -1048,8 +1055,8 @@ export function createAudio(bus, opts = {}) {
     glide(N.rainG.gain, 0.08 * rainK + 0.05 * heavy, t, 0.8); glide(N.rainLp.frequency, 6500 + 1500 * heavy, t, 1);
     glide(N.patG.gain, 0.16 * rainK + 0.3 * heavy, t, 0.8);
     const tunnel = district === 'cliffs';
-    glide(N.cityG.gain, (0.14 + 0.06 * night) * (tunnel ? 1.8 : 1), t, 1.5);
-    glide(N.cmG.gain, tunnel ? 0.06 : 0.025, t, 1.5);
+    glide(N.cityG.gain, (0.21 + 0.06 * night) * (tunnel ? 1.8 : 1), t, 1.5);   // the city bed (+3.5 dB: sound-on cruise sits above the -24 dBFS floor)
+    glide(N.cmG.gain, tunnel ? 0.06 : 0.03, t, 1.5);
     const neonD = district === 'village' || district === 'return' || district === 'funfair' || district === 'harbour';
     glide(N.nhG.gain, (0.004 + 0.006 * night) * (neonD ? 1.6 : 0.8) * (0.8 + 0.4 * R()), t, 0.4);
     for (const src of [N.windSrc, N.roadSrc]) glide(src.playbackRate, 0.94 + 0.12 * R(), t, 2.5);   // no audible loop
