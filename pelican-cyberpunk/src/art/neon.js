@@ -6,6 +6,7 @@
 //   bloomFilter             real bloom for STATIC / FAR content only (a sheet that only translates rasterises it once):
 //                           two Gaussian blurs of the source merged under it (a tight halo + a wide soft one).
 //   streakFilter            anisotropic blur for wet-road reflections (soft sideways, long vertically), static sheets only.
+//   bakedFilter             draws a filtered group as a pattern tile, so the filter runs in raster, not per frame.
 //   flicker                 deterministic neon buzz: returns an opacity for time t (drop-outs at low rate, opacity only).
 //   rimPair                 dual-colour rim light: a cyan edge on the back/top side, a magenta edge on the front/bottom.
 //
@@ -75,6 +76,21 @@ export function streakFilter(id, sx = 1.2, sy = 7, region = null, gain = 1) {
   const g = gain !== 1 ? `<feComponentTransfer><feFuncR type="linear" slope="${n2(gain)}"/><feFuncG type="linear" slope="${n2(gain)}"/><feFuncB type="linear" slope="${n2(gain)}"/></feComponentTransfer>` : '';
   return `<filter id="${id}" ${reg} color-interpolation-filters="sRGB">`
     + `<feGaussianBlur in="SourceGraphic" stdDeviation="${n2(sx)} ${n2(sy)}"/>${g}</filter>`;
+}
+
+// Baked filter (integration, perf): an SVG filter on a group inside a composited sheet becomes a compositor render
+// surface whose blur the (single-threaded, software) display compositor re-runs EVERY frame, even when the sheet only
+// translates. Drawing the filtered group as the tile of a <pattern> instead moves the filter into raster: the pattern
+// picture is rasterised with its blur once per tile and then only composited. Returns { def, el }: put `def` in defs and
+// draw `el` (a rect filled with the pattern, exactly one pattern tile) where the filtered group was. The pattern uses
+// user space, so it follows the element (and every <use> of it); keep [x, y, w, h] around everything the blur touches.
+export function bakedFilter(id, [x, y, w, h], filterId, content, el = {}) {
+  const box = `x="${n2(x)}" y="${n2(y)}" width="${n2(w)}" height="${n2(h)}"`;
+  return {
+    // pattern content is laid out from the tile's corner: shift it back so it keeps its user coordinates
+    def: `<pattern id="${id}" patternUnits="userSpaceOnUse" ${box}><g transform="translate(${n2(-x)} ${n2(-y)})"><g filter="url(#${filterId})">${content}</g></g></pattern>`,
+    el: `<rect ${box} fill="url(#${id})"${attrs(el)}/>`,
+  };
 }
 
 // ---- deterministic flicker (no Math.random): integer hash -> [0,1)

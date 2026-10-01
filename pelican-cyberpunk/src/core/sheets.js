@@ -150,7 +150,7 @@ export function createSheets(wrapper, svg, opts) {
       if (kind === 'affine') {
         cur = cutBefore(cur, el, tag);
         const sh = { el, part: cur, attr: null, live: false, css: '', key: '' };
-        hoistA(sh); rotors.push(sh);
+        hoistA(sh); rotors.push(sh); nSet.call(cur, 'data-move', '');
         const nx = nextAfter(cur, el);
         if (nx) cur = cutBefore(cur, nx, 'rest');
         continue;
@@ -163,7 +163,7 @@ export function createSheets(wrapper, svg, opts) {
         let bad = false;
         for (let p = el.parentNode; p && p !== layer; p = p.parentNode) if (p.hasAttribute('transform')) bad = true;
         const sh = { el, part: cur, depth: layer ? +layer.getAttribute('data-depth') || 0 : 0, x: 0, y: 0, attr: null, on: false, live: false, css: '' };
-        if (bad) console.warn('[sheets] transformed ancestor, not hoisted:', tag); else { hoist(sh); sheets.push(sh); }
+        if (bad) console.warn('[sheets] transformed ancestor, not hoisted:', tag); else { hoist(sh); sheets.push(sh); nSet.call(cur, 'data-move', ''); }
       }
       const nx = nextAfter(cur, el);
       if (nx) cur = cutBefore(cur, nx, (layer && (origOf.get(layer) || layer).id) || 'rest');

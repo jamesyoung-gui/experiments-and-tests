@@ -21,6 +21,7 @@
 import { fmt1, fmt2 } from '../core/math.js';
 import { h, refs } from '../core/svg.js';
 import { HORIZON_Y, DIST_PER_REV } from '../contract.js';
+import { bakedFilter } from '../art/neon.js';
 import { LAP, KM, stretchAt, relTo, hash } from './route.js';
 
 export const id = 'sea';
@@ -580,7 +581,7 @@ function buildSkyline(v, rng) {
     put(m, 'spR:violet', d); put(m, 'spL:violet', lat);
   }
   // ---- two static holograms over the hero skyline: the only bloom filter of this module (static far sheet)
-  let holo = '', koiClip = '', pelClip = '';
+  let holo = '', koiClip = '', pelClip = '', holoDefs = '';
   {
     // a giant koi over the right of the hero skyline
     const cx = 1452, cy = 350;
@@ -592,9 +593,13 @@ function buildSkyline(v, rng) {
       F(rect(cx - 16, 404, 32, 69), v('hillNear')), F(rect(cx - 18, 402, 36, 3), v('mega')),
       S(`M${cx - 12} 410V470M${cx - 8} 410V470M${cx - 4} 410V470M${cx} 410V470M${cx + 4} 410V470M${cx + 8} 410V470M${cx + 12} 410V470`, N.amber, 1.4, { 'stroke-dasharray': '2.2 1.5 2.2 5.2', 'stroke-linecap': 'butt', ...LITV }),
       F(`M${cx - 6} 402L${cx - 34} ${cy + 8}L${cx + 26} ${cy + 8}L${cx + 6} 402Z`, 'url(#sea-projG)'), F(rect(cx - 7, 398, 14, 4), v('mega')), F(rect(cx - 5, 397, 10, 1.4), N.cyan));
-    holo += G({ ...DD('sea:O:holo-koi'), filter: 'url(#sea-bloom)', ...NEONV },
-      F(koi, N.cyan, { opacity: 0.2 }), S(koi, N.cyan, 1.1), S(scales, N.cyanCore, 0.7, { opacity: 0.8 }), F(circ(cx + 18, cy - 3, 1.5), N.cyanCore),
-      G({ ...DD('sea:T:holo-scanlines'), 'clip-path': 'url(#sea-koiClip)' }, S(scan, N.cyanCore, 0.5, { opacity: 0.55 })));
+    // (integration, perf) the bloom is baked into a pattern tile: a live filter here was a compositor render surface
+    // re-blurred every frame. The scanlines stay live on top (they carry their own detail tag).
+    const bk = bakedFilter('sea-koiPat', [cx - 64, cy - 36, 104, 64], 'sea-bloom',
+      F(koi, N.cyan, { opacity: 0.2 }) + S(koi, N.cyan, 1.1) + S(scales, N.cyanCore, 0.7, { opacity: 0.8 }) + F(circ(cx + 18, cy - 3, 1.5), N.cyanCore), { style: 'fill-opacity:var(--pb-n-neon)' });
+    holoDefs += bk.def;
+    holo += G(DD('sea:O:holo-koi'), bk.el,
+      G({ ...DD('sea:T:holo-scanlines'), 'clip-path': 'url(#sea-koiClip)' }, S(scan, N.cyanCore, 0.5, { style: 'stroke-opacity:calc(0.55 * var(--pb-n-neon))' })));
     reflect(cx, 'cyan', 96, 3.4, true, true); reflect(cx - 16, 'cyan', 60, 1.4, false); reflect(cx + 14, 'cyan', 60, 1.4, false);
     koiClip = h('clipPath', { id: 'sea-koiClip' }, F(koi, '#000'));
   }
@@ -604,16 +609,18 @@ function buildSkyline(v, rng) {
     const head = `M${cx - 14} ${cy + 22}C${cx - 18} ${cy + 4} ${cx - 12} ${cy - 12} ${cx} ${cy - 13}C${cx + 9} ${cy - 13} ${cx + 13} ${cy - 7} ${cx + 14} ${cy - 3}L${cx + 52} ${cy + 6}L${cx + 50} ${cy + 9}C${cx + 38} ${cy + 18} ${cx + 22} ${cy + 20} ${cx + 12} ${cy + 12}C${cx + 8} ${cy + 16} ${cx + 4} ${cy + 22} ${cx + 2} ${cy + 30}Z`;
     const detail = `M${cx + 14} ${cy - 3}C${cx + 26} ${cy + 1} ${cx + 38} ${cy + 3} ${cx + 50} ${cy + 7}M${cx + 12} ${cy + 3}C${cx + 22} ${cy + 12} ${cx + 36} ${cy + 12} ${cx + 48} ${cy + 9}M${cx - 7} ${cy - 12}l-8 -9l6 1l-2 -7l6 6`;
     let scan = ''; for (let y = cy - 22; y < cy + 30; y += 2.2) scan += `M${cx - 22} ${f1(y)}H${cx + 54}`;
-    holo += G({ ...DD('sea:O:holo-pelican-ad'), filter: 'url(#sea-bloom)', ...NEONV },
-      F(head, N.mag, { opacity: 0.18 }), S(head, N.mag, 1.1), S(detail, N.magCore, 0.8, { opacity: 0.85 }), F(circ(cx + 3, cy - 4, 1.8), N.magCore),
-      G({ 'clip-path': 'url(#sea-pelClip)' }, S(scan, N.magCore, 0.5, { opacity: 0.45 })),
-      F(txt('鹈鹕航运', cx + 18, cy + 44, 9, { anchor: 'middle' }), N.mag), F(txt('PELICAN LINES', cx + 18, cy + 53, 5, { anchor: 'middle', track: 0.6 }), N.magCore));
+    const bp = bakedFilter('sea-pelPat', [cx - 32, cy - 32, 98, 96], 'sea-bloom',
+      F(head, N.mag, { opacity: 0.18 }) + S(head, N.mag, 1.1) + S(detail, N.magCore, 0.8, { opacity: 0.85 }) + F(circ(cx + 3, cy - 4, 1.8), N.magCore)
+      + G({ 'clip-path': 'url(#sea-pelClip)' }, S(scan, N.magCore, 0.5, { opacity: 0.45 }))
+      + F(txt('鹈鹕航运', cx + 18, cy + 44, 9, { anchor: 'middle' }), N.mag) + F(txt('PELICAN LINES', cx + 18, cy + 53, 5, { anchor: 'middle', track: 0.6 }), N.magCore), { style: 'fill-opacity:var(--pb-n-neon)' });
+    holoDefs += bp.def;
+    holo += G(DD('sea:O:holo-pelican-ad'), bp.el);
     holo += G({}, F(`M${cx - 2} 470L${cx - 3} 360H${cx + 3}L${cx + 2} 470Z`, v('hillNear')), F(`M${cx - 2} 360L${cx - 20} ${cy + 30}L${cx + 30} ${cy + 30}L${cx + 2} 360Z`, 'url(#sea-projGm)'), F(circ(cx, 359, 2), N.mag));
     reflect(cx + 18, 'mag', 80, 3.2, true, true);
     pelClip = h('clipPath', { id: 'sea-pelClip' }, F(head, '#000'));
   }
   const lgv = (id, col, a0, a1) => h('linearGradient', { id, x1: 0, y1: 1, x2: 0, y2: 0 }, h('stop', { offset: 0, 'stop-color': col, 'stop-opacity': a0 }), h('stop', { offset: 1, 'stop-color': col, 'stop-opacity': a1 }));
-  let defs = koiClip + pelClip + lgv('sea-projG', N.cyan, 0.34, 0) + lgv('sea-projGm', N.mag, 0.3, 0.02) +
+  let defs = holoDefs + koiClip + pelClip + lgv('sea-projG', N.cyan, 0.34, 0) + lgv('sea-projGm', N.mag, 0.3, 0.02) +
     h('linearGradient', { id: 'sea-hazeG', x1: 0, y1: 0, x2: 0, y2: 1 }, h('stop', { offset: 0, 'stop-color': v('haze'), 'stop-opacity': 0 }), h('stop', { offset: 0.7, 'stop-color': v('haze'), 'stop-opacity': 0.42 }), h('stop', { offset: 1, 'stop-color': v('cityGlow'), 'stop-opacity': 0.45 }));
   // ---- assemble the tile: per bucket A · (hero A towers) · haze · B · (hero B towers + holograms) · specials · C
   let tile = '';

@@ -6,6 +6,9 @@ html, body { margin: 0; height: 100%; background: var(--page-bg); overflow: hidd
    moving strips get a CSS translate. The wrapper clips (the sheets overflow so a translated strip keeps its content). */
 #scene { position: absolute; inset: 0; overflow: hidden; cursor: default; }
 #scene > svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; overflow: visible; will-change: transform; pointer-events: none; }
+/* static sheets (no CSS move): clip to the screen box, so their composited layer is exactly the viewport (no raster of
+   off-screen art, and the 256 px tile grid starts at the screen corner, which tile-aware layouts rely on) */
+#scene > svg.pb-sheet:not([data-move]) { overflow: hidden; }
 #scene > svg > * { pointer-events: visiblePainted; }
 #scene [id^="j-"] { cursor: pointer; }
 /* Integrator: an element hidden via the visibility presentation attribute paints nothing, so drop it from the render tree too

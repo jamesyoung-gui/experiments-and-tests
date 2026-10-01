@@ -23,7 +23,7 @@ import { fmt1, fmt2 } from '../core/math.js';
 import { GROUND_Y, TILE, DIST_PER_REV, RIDER_X } from '../contract.js';
 import { h, refs, mount } from '../core/svg.js';
 import { LAP, KM, STRETCHES, SIGNS, KM_STONES, stretchAt, relTo, hash } from './route.js';
-import { streakFilter, flattenOpacity } from '../art/neon.js';
+import { streakFilter, flattenOpacity, bakedFilter } from '../art/neon.js';
 
 export const id = 'land';
 // extra base colours (graded by the city mood like the core materials; '-far' variants sink into the smog)
@@ -252,7 +252,16 @@ const SPEC = [18, 432];                              // clear specimen span left
 // longer copy smears the streamed props), clipped to the asphalt band under the translucent road surface
 const REFL = (() => { const k = 0.34, k2 = 0.5; return { k, xf: `matrix(1 0 0 ${-k} 0 ${f(BASE * (1 + k))})`, xf2: `matrix(1 0 0 ${-k2} 0 ${f(BASE * (1 + k2) + 3)})`, aTile: 0.9, aStream: 0.55, y0: 772, y1: 874 }; })();
 const roadBase = W => F(rect(800 - W / 2 - 3, BASE, W + 6, 152), 'var(--pb-road)');
-const reflWrap = (m, W, extra = '') => G({ ...NOHIT, 'clip-path': 'url(#land-reflclip)' }, G({ filter: 'url(#land-streak)', opacity: REFL.aTile }, G({ transform: REFL.xf }, m), extra));
+// (integration, perf) the streak blur is baked into a pattern tile (bakedFilter): as a live filter it was a compositor
+// render surface re-blurred every frame. The pattern spans the tile plus a 400 u margin each side, the reflection band
+// plus the blur's reach; `REFL_DEFS` collects the pattern defs (added to the module defs in build).
+let REFL_DEFS = '', REFL_N = 0;
+const reflWrap = (m, W, extra = '') => {
+  const b = bakedFilter('land-reflpat' + REFL_N++, [800 - W / 2 - 400, REFL.y0 - 20, W + 800, REFL.y1 - REFL.y0 + 40], 'land-streak', G({ transform: REFL.xf }, m) + extra, { opacity: REFL.aTile });
+  REFL_DEFS += b.def;
+  // the rect itself is the asphalt band (no clip-path: a path clip made the compositor mask it every frame)
+  return b.el.replace(/ y="[^"]*" width="([^"]*)" height="[^"]*"/, ` y="${REFL.y0}" width="$1" height="${REFL.y1 - REFL.y0}" pointer-events="none" style="pointer-events:none !important"`);
+};
 // long neon streaks under the tallest sources (their mirror image falls below the asphalt band): lamp bars in every
 // tile, the three sign pylons in the hero tile. Blurred with the mirror (same filter).
 const lampStreaks = () => LAMP_X.map(x => F(rect(x + 30, REFL.y0, 40, 96), 'url(#land-refA)') + F(rect(x + 42, REFL.y0, 16, 100), 'url(#land-refA)')).join('');
@@ -873,6 +882,7 @@ export function build(ctx) {
   const WF = Fv('landWall'), WHF = Fv('landWallHi'), CF = Fv('landConc'), CHF = Fv('landConcHi'), MF = Fv('landMetal'), MHF = Fv('landMetalHi'), DF = Fv('landDark');
   const W_ = v('landWall'), WH = v('landWallHi'), CO = v('landConc'), COH = v('landConcHi'), ME = v('landMetal'), MEH = v('landMetalHi'), DK = v('landDark');
   let defs = '';
+  REFL_DEFS = ''; REFL_N = 0;
   // lighting pass: the asphalt band the pavement reflection is clipped to, and its streak blur (static tiles only)
   defs += h('clipPath', { id: 'land-reflclip', clipPathUnits: 'userSpaceOnUse' }, h('path', { d: rect(-30000, REFL.y0, 60000, REFL.y1 - REFL.y0) }));
   // the same asphalt band expressed in the local space of a mirrored copy (y_local = (BASE·(1+k) − Y) / k)
@@ -1479,7 +1489,7 @@ export function build(ctx) {
     'L-foreground': tile('fg', fg),
   };
   defs += G({ id: 'land-y-none' });
-  return { defs, layers };
+  return { defs: defs + REFL_DEFS, layers };
 }
 
 // ---------------------------------------------------------------------------------------------- stream kinds
@@ -1596,7 +1606,7 @@ export function attach(svg, ctx) {
   const hosts = [...Object.keys(DEP).flatMap(L => [r['pool-' + L], r['sphost-' + L]]), r.fixed];
   let hostMode = null;
   const DGW = 14.6;   // digit advance at size 21
-  let bakeMode = null;
+  let bakeMode = null, calmQ = -1;
   const legacy = on => {   // bake: the classic seamless loop (the hero tile + two copies), no stream / set pieces
     for (const k of ['shore', 'roadside', 'road']) for (let c = 0; c < 3; c++) { const u = r[`b${k}${c}`]; if (u) { u.setAttribute('href', on ? '#land-tile-' + k : '#land-base-' + k); u.__lv = undefined; } }
     for (const L of Object.keys(pools)) for (const s of pools[L]) { disp(s.el, false); s.j = null; }
@@ -1700,10 +1710,13 @@ export function attach(svg, ctx) {
           disp(sp.el, on);
           if (!on) continue;
           set(sp.el, 'transform', `translate(${f(sx + off[sp.layer])} 0)`);
-          this.animSP(sp.key, sx, t, red, fr);
+          if (!(fr.dt > 0) || Math.floor(t * 30) !== calmQ) this.animSP(sp.key, sx, t, red, fr);
         }
       }
-      if (!red) {
+      // perf: the calm prop motion (and the set-piece idles below) advances at 30 Hz in live play: each write repaints
+      // a patch of a big tile sheet; renderAt (dt 0) is always exact
+      const q30 = Math.floor(t * 30), calm = !(fr.dt > 0) || q30 !== calmQ; calmQ = q30;
+      if (!red && calm) {
         // calm motion only: laundry sways, the booth beacon turns, the parcel drone hovers, the crab-bot scuttles,
         // the robot cat's tail flicks (and looks up at the bell), lanterns sway, steam rises
         for (let i = 0; i < 3; i++) setA('towel' + i, `skewX(${f(Math.sin(t * (1.3 + i * 0.25) + i * 1.7) * 5 - 2)})`);

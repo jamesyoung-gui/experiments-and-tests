@@ -54,7 +54,9 @@ const LANES = [
 const LANE_V = [-15, 21];                               // screen px/s — calm
 // smog strips: [period, parallax, drift px/s]; two periods and speeds so the smog pattern never lines up the same way twice
 const SMOG = [[3400, 0.03, 3], [4300, 0.022, 5]];
-const BEAMS = [[176, -17, 13, 0.11, 0.3], [470, 15, 11, 0.09, 2.1], [1206, -26, 12, 0.13, 4.0], [1430, 21, 10, 0.1, 5.5]]; // x, base°, amp°, rad/s, phase
+// x, base°, amp°, rad/s, phase. Integration (perf): two searchlights, crossing over the arcology (each beam is a
+// sweeping translucent fan on its own composited sheet; four of them cost ~0.4 screen of compositing every frame)
+const BEAMS = [[470, 15, 11, 0.09, 2.1], [1206, -26, 12, 0.13, 4.0]];
 
 export const detailItems = [
   ['sky:O:smog-gradient', 'O', 'layered smog gradient: void zenith → violet → hot magenta/coral horizon (per city mood)'],
@@ -444,14 +446,17 @@ export function build(ctx) {
         trail += `M${f(bx)} ${f(cy)}h${f(-dir * (10 + k * 18) * s)}`;
         if (k > 0.86) glowM += `M${f(bx)} ${f(cy + 1.8 * s)}H${f(fx)}`; else if (k > 0.72) glowC += `M${f(bx)} ${f(cy + 1.8 * s)}H${f(fx)}`;
       }
-      strips[L.g] += h('g', { ...DD('sky:O:traffic-lanes'), opacity: L.a },
-        h('path', { ...DD('sky:T:traffic-trails'), d: trail, stroke: NEON.red, 'stroke-width': 1.1 * s, opacity: 0.35, 'stroke-linecap': 'round' }),
-        h('path', { d: halo, fill: NEON.white, opacity: 0.14 }),
-        h('path', { d: head, fill: NEON.white }),
-        h('path', { d: tail, fill: NEON.red }),
-        glowM ? h('path', { ...DD('sky:O:traffic-underglow'), d: glowM, stroke: NEON.mag, 'stroke-width': 1.2 * s, 'stroke-linecap': 'round' }) : '',
-        glowC ? h('path', { ...DD('sky:O:traffic-underglow'), d: glowC, stroke: NEON.cyan, 'stroke-width': 1.2 * s, 'stroke-linecap': 'round' }) : '',
-        convoy ? h('path', { ...DD('sky:O:cargo-convoy'), d: convoy, fill: NEON.acid }) : '');
+      // (perf: the lane alpha sits on each paint, not on the group: a group opacity over a strip-wide lane made the
+      // compositor give every lane a layer of its own)
+      const a = L.a, fo = k => ({ 'fill-opacity': f(k * a) }), so = k => ({ 'stroke-opacity': f(k * a) });
+      strips[L.g] += h('g', { ...DD('sky:O:traffic-lanes') },
+        h('path', { ...DD('sky:T:traffic-trails'), d: trail, stroke: NEON.red, 'stroke-width': 1.1 * s, ...so(0.35), fill: 'none', 'stroke-linecap': 'round' }),
+        h('path', { d: halo, fill: NEON.white, ...fo(0.14) }),
+        h('path', { d: head, fill: NEON.white, ...fo(1) }),
+        h('path', { d: tail, fill: NEON.red, ...fo(1) }),
+        glowM ? h('path', { ...DD('sky:O:traffic-underglow'), d: glowM, stroke: NEON.mag, 'stroke-width': 1.2 * s, ...so(1), fill: 'none', 'stroke-linecap': 'round' }) : '',
+        glowC ? h('path', { ...DD('sky:O:traffic-underglow'), d: glowC, stroke: NEON.cyan, 'stroke-width': 1.2 * s, ...so(1), fill: 'none', 'stroke-linecap': 'round' }) : '',
+        convoy ? h('path', { ...DD('sky:O:cargo-convoy'), d: convoy, fill: NEON.acid, ...fo(1) }) : '');
     });
     strips.forEach((m, g) => { clouds += h('g', { 'data-ref': 'sky-lane' + g, transform: 'translate(0 0)' }, m); });
   }
@@ -569,6 +574,7 @@ export function build(ctx) {
   }
 
   defs += h('clipPath', { id: 'sky-hzClip', clipPathUnits: 'userSpaceOnUse' }, h('rect', { x: X0 - 600, y: -1400, width: W + 1200, height: 1400 + HZ + 16 }));
+  defs += h('clipPath', { id: 'sky-hzClip0', clipPathUnits: 'userSpaceOnUse' }, h('rect', { x: X0 - 600, y: -1400, width: W + 1200, height: 1400 + HZ }));
   return {
     defs,
     layers: {
@@ -576,8 +582,10 @@ export function build(ctx) {
       // searchlight sweep, the star twinkle and the warning-light blink); L-stars / L-sunmoon only carry two tiny strips
       // (clipped just below the horizon: the opaque harbour water, drawn by sea at the end of L-sky, covers the rest,
       // so the sheet keeps no tiles of hidden art below the waterline)
-      'L-sky': h('g', { 'clip-path': 'url(#sky-hzClip)' }, sky + starsL + sunmoon + beamsM),
-      'L-stars': satL,
+      'L-sky': h('g', { 'clip-path': 'url(#sky-hzClip)' }, sky + starsL + sunmoon),
+      // the searchlights (an isolated sheet) come right after the sky + the water sea draws at the end of L-sky (same
+      // camera transform: L-stars has depth 0 too), so sky and water share one sheet; their feet stop at the horizon
+      'L-stars': h('g', { 'clip-path': 'url(#sky-hzClip0)' }, beamsM) + satL,
       'L-sunmoon': capsule,
       'L-clouds': clouds,
     },
@@ -592,7 +600,7 @@ export const sheets = [
   '[data-ref="sky-smog0"]', '[data-ref="sky-smog1"]', '[data-ref="sky-lane0"]', '[data-ref="sky-lane1"]',
   '[data-ref="sky-ship"]', '[data-ref="sky-car"]', '[data-ref="sky-cop"]', '[data-ref="sky-sat"]', '[data-ref="sky-cap"]',
 ];
-export const isolate = ['[data-ref="sky-flash"]'];
+export const isolate = ['[data-ref="sky-beams"]', '[data-ref="sky-flash"]'];
 export function attach(svg, ctx) {
   const r = refs(svg, 'sky-');
   const st = {};

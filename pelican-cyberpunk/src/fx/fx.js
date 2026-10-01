@@ -168,7 +168,9 @@ export const detailItems = [
 ].map(([key, kind, what]) => ({ id: key.split(':')[2], layer: 'fx', kind, what, key }))
   .concat(light.detailItems.map(d => ({ ...d, id: d.id.split(':')[2], key: d.id })));
 // lighting pass (light.js): the haze-pool strip is a composited sheet that only translates
-export const sheets = light.sheets;
+// the wet-road rider reflection repaints on its own small sheet (it updates at 30 Hz; the big road pools under it stay put)
+export const isolate = ['[data-ref="fx-refl"]'];
+export const sheets = [...light.sheets, ...Array.from({ length: 7 }, (_, i) => `[data-ref="fx-gfar${i}"]`)];
 
 // ------------------------------------------------------------------------------------------------ build
 export function build(ctx) {
@@ -272,9 +274,12 @@ export function build(ctx) {
   const Rd = rng('fx-drones');
   const FAR = [];
   for (let i = 0; i < 7; i++) FAR.push({ x0: Rd() * 2800, y: 110 + i * 34 + Rd() * 20, s: 0.36 + Rd() * 0.16, vx: [210, -60, 320, 150, -120, 260, 90][i], ph: Rd() * 10, box: i % 3 === 1 });
-  L.far += h('g', {}, FAR.map((g, i) => h('g', { 'data-ref': 'fx-gfar' + i, ...DD(g.box ? 'fx:O:drone-far-parcel' : 'fx:O:drone-far'), transform: `translate(${f(g.x0)} ${f(g.y)}) scale(${f(g.s)})` },
-    h('use', { href: g.box ? '#fx-fdb' : '#fx-fd' }),
-    h('g', { 'data-ref': 'fx-gfs' + i, ...DD('fx:O:drone-far-strobe') }, glow(0, -8.5, 12, 'W'), h('path', { d: circ(0, -8.5, 2.2), fill: '#FFFFFF' })))));
+  // each far drone is a composited strip (core/sheets.js): the outer group only translates (a compositor move); its
+  // fixed bank angle and scale sit on the inner group
+  L.far += h('g', {}, FAR.map((g, i) => h('g', { 'data-ref': 'fx-gfar' + i, ...DD(g.box ? 'fx:O:drone-far-parcel' : 'fx:O:drone-far'), transform: `translate(${f(g.x0)} ${f(g.y)})` },
+    h('g', { transform: `rotate(${f1(clamp(g.vx / 60, -4, 5))}) scale(${f(g.s)})` },
+      h('use', { href: g.box ? '#fx-fdb' : '#fx-fd' }),
+      h('g', { 'data-ref': 'fx-gfs' + i, ...DD('fx:O:drone-far-strobe') }, glow(0, -8.5, 12, 'W'), h('path', { d: circ(0, -8.5, 2.2), fill: '#FFFFFF' }))))));
   // escort drones (L-fx-back)
   const escKeys = ['fx:O:drone-camera', 'fx:O:drone-cargo', 'fx:O:drone-racer', 'fx:O:drone-patrol'];
   let esc = '';
@@ -629,7 +634,7 @@ export function attach(svg, ctx) {
         set(r.rfPipe, 'transform', `translate(${f1(b.x)} ${f1(b.y)}) rotate(${f1(b.rot || 0)})`);
       }
       set(r.smear, 'opacity', f((0.45 + 0.55 * wet) * (1 - 0.6 * Math.min(1, lift))));
-      if (!reduced && r.smear) { const o = f1(wrap(t * 9, 40)); for (const p of r.smear.children) set(p, 'stroke-dashoffset', o); }
+      if (!reduced && r.smear) { const o = f1(wrap(Math.floor(t * 12) / 12 * 9, 40)); for (const p of r.smear.children) set(p, 'stroke-dashoffset', o); }
       }
       set(r.rip, 'transform', `translate(${f1(reduced ? 0 : 6 * Math.sin(t * 0.9))} 0)`);
       set(r.rip, 'opacity', f(0.2 + 0.25 * wet + (reduced ? 0 : 0.12 * Math.sin(t * 2.3))));
@@ -658,7 +663,7 @@ export function attach(svg, ctx) {
         if (!dronesOn) { vis(el, false); continue; }
         vis(el, true);
         const x = wrap(g.x0 + g.vx * t - 0.15 * D, 2800) - 600, y = g.y + 5 * Math.sin(0.7 * t + g.ph);
-        set(el, 'transform', `translate(${f1(x)} ${f1(y)}) rotate(${f1(clamp(g.vx / 60, -4, 5))}) scale(${f(g.s)})`);
+        set(el, 'transform', `translate(${f1(x)} ${f1(y)})`);
         const ph = wrap(t * 0.8 + g.ph, 1);
         set(r['gfs' + i], 'opacity', ph < 0.08 || (ph > 0.16 && ph < 0.22) ? 1 : 0);
       }
