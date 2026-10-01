@@ -49,6 +49,9 @@ export const TIMING = {
   coast: { level: 0.5 },
 };
 
+// mech suit-up pose accent window (s since the egg's t0) and the head lift (deg, bill up)
+export const MECH_POSE = { up: [3.12, 4.3], lift: 7 };
+
 // ------------------------------------------------------------------------------------------------
 // Event bookkeeping: overlapping re-triggers of the long events are ignored (pure, no pops).
 function accepted(events, type, gap, t, horizon) {
@@ -552,14 +555,18 @@ export function solvePose(t, s = {}) {
 
   // ---------------- 5. head, face slots ----------------
   const headBob = child(phasor(0.25 * bobA, th0), w2, TAU * 1.8, 0.6);          // stabilised head: 25% of the bob, lagged
-  const headP = add(FIT.head, [hd.dx + 10 * cadN - 4 * coastW, hd.dy + evalPh(headBob, phi2) + 7 * cadN - 0.6 * breath]);
+  // mech suit-up hero beat (eggs.js, s.mech = its t0): head up + a proud bill snap, pure bumps of (t − t0)
+  const mk = s.mech === undefined ? -1 : t - s.mech;
+  const mkUp = mk > MECH_POSE.up[0] && mk < MECH_POSE.up[1] ? Math.sin(Math.PI * (mk - MECH_POSE.up[0]) / (MECH_POSE.up[1] - MECH_POSE.up[0])) ** 2 : 0;
+  const mkSnap = mk > 3.16 && mk < 3.56 ? (mk < 3.34 ? 8 * smoothstep(3.16, 3.3, mk) : mk < 3.4 ? 8 * (1 - smoothstep(3.34, 3.39, mk)) : 1.6 * Math.sin(Math.PI * (mk - 3.4) / 0.16)) : 0;
+  const headP = add(FIT.head, [hd.dx + 10 * cadN - 4 * coastW, hd.dy + evalPh(headBob, phi2) + 7 * cadN - 0.6 * breath - 6 * mkUp]);
   // half-time nod to the beat: the head dips 25° of crank after the near leg's push (once per crank turn, so it
   // reads as nodding along to the cadence-locked track); the crest and pouch lag it. Fades while sprinting,
   // looking at something, airborne or coasting.
   const nodA = 1.8 * pedalling * (1 - 0.6 * sprint) * (1 - lookW) * (1 - airborne) * (1 - 0.5 * (enc0 ? enc0.w : 0));
   const nodTh = 25 * D2R, nod = nodA * (0.85 * Math.cos(phi - nodTh) + 0.15 * Math.cos(2 * (phi - nodTh)));
   const nodLag = nodA * Math.cos(phi - nodTh - 0.55);
-  const headR = hd.r + nod - 0.5 * rock + 2 * cadN - 2 * coastW + 2 * delight * Math.sin(TAU * 0.9 * (gl.tau - 1.7)) * (gl.tau > 1.7 ? 1 : 0);
+  const headR = hd.r - MECH_POSE.lift * mkUp + nod - 0.5 * rock + 2 * cadN - 2 * coastW + 2 * delight * Math.sin(TAU * 0.9 * (gl.tau - 1.7)) * (gl.tau > 1.7 ? 1 : 0);
   const head = { p: headP, r: headR };
   J.head = { x: headP[0], y: headP[1], rot: headR };
   const eyeP = at(head, SKEL.eye);
@@ -587,7 +594,7 @@ export function solvePose(t, s = {}) {
   // bill: the gulp opens mostly the LOWER jaw; gular flutter at noon; coasting pouch stretch
   const noon = s.tod !== undefined ? smoothstep(0.38, 0.45, s.tod) * (1 - smoothstep(0.55, 0.62, s.tod)) : 0;
   const flutterG = noon * pedalling * 0.028 * Math.sin(TAU * 5 * t);
-  const billOpen = gl.open + 10 * pStretch + 2 * noon + 3 * surprise * airborne;
+  const billOpen = gl.open + 10 * pStretch + 2 * noon + 3 * surprise * airborne + Math.max(0, mkSnap);
   const bu = at(head, SKEL.billUpper), blp = at(head, SKEL.billLower);
   J.billUpper = { x: bu[0], y: bu[1], rot: headR + SKEL.billRot - billOpen * 0.22 };
   const lowerR = headR + SKEL.billRot + billOpen;

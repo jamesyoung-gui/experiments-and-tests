@@ -249,7 +249,7 @@ function render(dt) {
   // coast / pedal markers for the rig (user, director or eggs may flip state.coasting); live play only, so renderAt stays pure
   if (dt > 0 && state.coasting !== lastCoast) state.events.push({ type: state.coasting ? 'coast' : 'pedal', t0: state.t });
   lastCoast = state.coasting;
-  const pose = solvePose(state.t, { crank: state.crank, distance: state.distance, cadence: state.cadence, speed: state.speed, coasting: state.coasting, events: state.events, tod: state.tod, loopT: state.loopT });
+  const pose = solvePose(state.t, { crank: state.crank, distance: state.distance, cadence: state.cadence, speed: state.speed, coasting: state.coasting, events: state.events, tod: state.tod, loopT: state.loopT, mech: state.mechT0 });
   // portrait / narrow screens: fit the rider bbox (wheel to wheel + margin) above the bottom sheet
   const cam = fitAspect(camera.update(dt, state.t, reduced, state.events), innerWidth / Math.max(1, innerHeight), insetVB);
   curCam = cam;

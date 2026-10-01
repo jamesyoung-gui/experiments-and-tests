@@ -143,24 +143,24 @@ const glowDisc = (cx, cy, r, grad, op = 1, extra = {}) => h('circle', { cx: f(cx
 // ---------------------------------------------------------------- neck deformer (pure; also used by the baker)
 // Cubic Bézier centreline (rig-spec §2); width w0 -> w1. Optional bulge {at: 0..1, amp} for the gulp.
 function neckSamples(n, N, bulge) {
-  const B = (t, a, b, c, d) => (1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b + 3 * (1 - t) * t * t * c + t ** 3 * d;
-  const Bd = (t, a, b, c, d) => 3 * (1 - t) ** 2 * (b - a) + 6 * (1 - t) * t * (c - b) + 3 * t * t * (d - c);
   const C = [], T = [], W = [];
-  for (let i = 0; i < N; i++) {
-    const t = i / (N - 1);
-    const c0 = [B(t, n.p0[0], n.p1[0], n.p2[0], n.p3[0]), B(t, n.p0[1], n.p1[1], n.p2[1], n.p3[1])];
-    const tn = norm([Bd(t, n.p0[0], n.p1[0], n.p2[0], n.p3[0]), Bd(t, n.p0[1], n.p1[1], n.p2[1], n.p3[1])]);
-    // heavy pelican neck: a gentle S on top of the rig curve (forward crop bulge low, back-swept upper neck),
-    // a thick column that flares into the chest at the base (≈2× the throat) and stays full under the head
-    const sOff = 4.2 * Math.exp(-(((t - 0.3) / 0.17) ** 2)) - 4.6 * Math.exp(-(((t - 0.72) / 0.13) ** 2));
-    C.push(add(c0, mul(perp(tn), sOff)));
-    T.push(tn);
-    let w = n.w1 * 0.67 + ((n.w0 - n.w1) / 2 + 9.5) * (1 - t) ** 2.4 + 1.8 * Math.sin(Math.PI * t) ** 2 + 2.6 * Math.exp(-(((t - 0.3) / 0.16) ** 2));
-    const bg = bulge || (n.bulgeA > 0 ? { at: n.bulgeT, amp: (n.bulgeW ?? 13 * n.bulgeA) / 2 } : null);
-    if (bg && bg.amp > 0) w += bg.amp * Math.exp(-(((t - bg.at) / 0.1) ** 2));
-    W.push(w);
-  }
+  for (let i = 0; i < N; i++) { const q = neckAt(n, i / (N - 1), bulge); C.push(q.c); T.push(q.tn); W.push(q.w); }
   return { C, T, W };
+}
+// one sample of the neck deformer at t (0 = base, 1 = head): centre c, unit tangent tn, half width w (exported: the
+// eggs' mech suit telescopes its collars along exactly this curve)
+export function neckAt(n, t, bulge) {
+  const B = (a, b, c, d) => (1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b + 3 * (1 - t) * t * t * c + t ** 3 * d;
+  const Bd = (a, b, c, d) => 3 * (1 - t) ** 2 * (b - a) + 6 * (1 - t) * t * (c - b) + 3 * t * t * (d - c);
+  const c0 = [B(n.p0[0], n.p1[0], n.p2[0], n.p3[0]), B(n.p0[1], n.p1[1], n.p2[1], n.p3[1])];
+  const tn = norm([Bd(n.p0[0], n.p1[0], n.p2[0], n.p3[0]), Bd(n.p0[1], n.p1[1], n.p2[1], n.p3[1])]);
+  // heavy pelican neck: a gentle S on top of the rig curve (forward crop bulge low, back-swept upper neck),
+  // a thick column that flares into the chest at the base (≈2× the throat) and stays full under the head
+  const sOff = 4.2 * Math.exp(-(((t - 0.3) / 0.17) ** 2)) - 4.6 * Math.exp(-(((t - 0.72) / 0.13) ** 2));
+  let w = n.w1 * 0.67 + ((n.w0 - n.w1) / 2 + 9.5) * (1 - t) ** 2.4 + 1.8 * Math.sin(Math.PI * t) ** 2 + 2.6 * Math.exp(-(((t - 0.3) / 0.16) ** 2));
+  const bg = bulge || (n.bulgeA > 0 ? { at: n.bulgeT, amp: (n.bulgeW ?? 13 * n.bulgeA) / 2 } : null);
+  if (bg && bg.amp > 0) w += bg.amp * Math.exp(-(((t - bg.at) / 0.1) ** 2));
+  return { c: add(c0, mul(perp(tn), sOff)), tn, w };
 }
 const openCubic = P => {
   let d = '';
