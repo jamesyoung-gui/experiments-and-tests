@@ -59,6 +59,10 @@ stage.innerHTML = '';
 const svg = stage.appendChild(document.createElement('div'));
 svg.id = 'scene';
 svg.setAttribute('role', 'img'); svg.setAttribute('aria-labelledby', 'scene-title scene-desc');
+// judging foils (page.css): ?notext hides the HUD frame, the UI card and the comic lettering; ?silhouette shows the
+// rider alone in solid ink on white (thumbnail / silhouette readability tests, tools/shoot.mjs --set thumb)
+if (params.has('notext')) { svg.classList.add('pb-notext'); document.documentElement.classList.add('pb-notext'); }
+if (params.has('silhouette')) svg.classList.add('pb-silhouette');
 mount(svg, markup);
 const svgRoot = svg.querySelector('svg#scene');
 const dups = checkIds(svg);
@@ -416,7 +420,7 @@ window.__pb = {
   sim(sec, fps = 30) { const dt = 1 / fps; state.playing = true; for (let i = 0, n = Math.round(sec * fps); i < n; i++) { step(dt); render(dt); } state.playing = false; return keeper.log.slice(); },
   keeper: () => ({ log: keeper.log.slice(), n: keeper.n }),
   quality: () => ({ quality, locked: qLocked, log: Q.log.slice() }),
-  glitchAt: D => glitchU(D),
+  glitchAt: D => glitchU(D), glitchStartT: GLITCH.at / DIST_PER_REV, TIMING,
   exporting: () => (exportJob ? { pct: exportJob.pct } : null),
   perf: () => fpsAcc, modPerf: () => modPerf,
   bakeSVG: opts => sheets.whole(s => bakeSVG(s, { cadence: 60, tod: state.tod, pose: solvePose, state, ...opts })),

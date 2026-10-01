@@ -36,6 +36,11 @@ when the code completes: the `A` in the Konami code and in HACK toggles the auto
 the camera, the `M` in GIMINI toggles sound. (The `H` in HACK really does make the pelican hop: it jumps into the
 hack.)
 
+Only the viewer discovers eggs. The bell, hop and gulp detectors ignore every rig beat with `auto: true` (the
+director's encounter beats and the beat keeper's fillers), and the rider's own reaction beat after a find (a bell or a
+wave) is flagged so it cannot chain into another egg. Left alone the ride unlocks nothing except the odometer eggs
+(`km` after about four minutes, `fortytwo`), which are rewards for watching.
+
 ## Performance notes
 - No SVG filter anywhere in the eggs: glows are stacked strokes and static gradients; flicker is opacity/visibility.
 - HACK flips one class on `#scene` going in and one going out (a single repaint of the static sheets each time,
@@ -55,4 +60,5 @@ hack.)
 - `node tools/check-eggs.mjs --sheet` triggers each egg, shoots it into `shots/eggs/egg-*.png` (plus `eggs-sheet.png`),
   then drives the live detectors (Konami, GIMINI, BIRD, HACK, 888, clicks on the sun / moon / bottle / a meteor, bell
   spam, a bell at the NO PELICANS sign, a gulp at night) and checks that no side effect is left (day cycle, sound,
-  camera, wireframe class, jittered sheets) and that there are no console errors.
+  camera, wireframe class, jittered sheets) and that there are no console errors. Last, it fast-forwards 60 s of idle
+  live play at night (`__pb.sim`) plus an injected auto gulp and auto bell spam, and fails if any egg is found.

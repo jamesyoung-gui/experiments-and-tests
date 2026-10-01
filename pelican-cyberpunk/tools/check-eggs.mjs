@@ -112,6 +112,32 @@ if (/egg-hack|egg-wire/.test(after.cls) || after.tr) fails.push('HACK left the c
 await snap(live, 'live-counter');
 await live.close();
 
+// ---------------------------------------------------------------- 3. idle: the director never finds an egg for you
+// 60 s of live play at night with no input (fast-forwarded through the real live path): the director's and the beat
+// keeper's auto beats (bell, hop, gulp ... with auto: true) must not unlock anything, and an injected auto gulp at night
+// must not call the UFO. Only viewer input (ui:*) discovers eggs.
+{
+  const idle = await browser.newPage({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 });
+  idle.on('pageerror', e => errors.push('pageerror: ' + e.message));
+  idle.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+  await idle.goto(`${base}?tod=0.93`);
+  await idle.waitForFunction(() => window.__pb && window.__pb.ready && window.__pb.eggs, null, { timeout: 15000 });
+  const r = await idle.evaluate(() => {
+    const pb = window.__pb, got = [];
+    pb.bus.on('egg:found', e => { if (e && e.id) got.push(e.id); });
+    pb.state.playing = false;
+    const log = pb.sim(30);
+    pb.bus.emit('rig:event', { type: 'gulp', t0: pb.state.t, auto: true });
+    for (let i = 0; i < 8; i++) pb.bus.emit('rig:event', { type: 'bell', t0: pb.state.t + i * 0.2, auto: true });
+    log.push(...pb.sim(30));
+    return { got, beats: pb.keeper().log.length, auto: pb.keeper().log.filter(b => b.src !== 'user').length, t: pb.state.t, night: pb.state.tod };
+  });
+  if (r.got.length) fails.push(`idle: ${r.got.length} egg(s) found with no input in 60 s: ${r.got.join(', ')}`);
+  if (r.auto < 3) fails.push(`idle: only ${r.auto} auto beats in 60 s, the idle test proves nothing`);
+  console.log(`idle 60 s: ${r.auto} auto beats, ${r.got.length} eggs found`);
+  await idle.close();
+}
+
 if (arg('sheet', false)) {
   const sp = await browser.newPage({ viewport: { width: 4 * 416 + 16, height: 400 } });
   const cells = shots.map(([n, f]) => `<figure><img src="data:image/png;base64,${fs.readFileSync(f).toString('base64')}"><figcaption>${n}</figcaption></figure>`).join('');

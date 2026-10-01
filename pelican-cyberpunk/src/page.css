@@ -46,3 +46,12 @@ html, body { margin: 0; height: 100%; background: var(--page-bg); overflow: hidd
 #ui [data-act="dlSvg"][aria-busy="true"]::before {
   content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: calc(var(--pb-progress, 0) * 100%); background: #19E6FF; pointer-events: none;
 }
+
+/* Judging foils (main.js): ?notext = no HUD frame, no UI card; ?silhouette = the rider alone, solid ink on white */
+#scene.pb-notext #print-root, html.pb-notext #ui { display: none !important; }
+#scene.pb-silhouette { background: #FFFFFF; }
+#scene.pb-silhouette > svg:not([data-sheet^="j-"]):not([data-sheet="L-rider"]):not([data-sheet="defs"]):not([data-sheet="rest"]) { visibility: hidden; }
+#scene.pb-silhouette > svg, #scene.pb-silhouette > svg *:not([data-slot]):not([data-slot] *) { visibility: hidden !important; }
+#scene.pb-silhouette [data-slot], #scene.pb-silhouette [data-slot] * { visibility: visible !important; }
+#scene.pb-silhouette [data-slot] :is(path, rect, circle, ellipse, polygon, polyline, line, use) { fill: #0B0B10 !important; stroke: #0B0B10 !important; fill-opacity: 1 !important; stroke-opacity: 1 !important; opacity: 1 !important; filter: none !important; }
+#scene.pb-silhouette [data-slot] :is([fill^="url(#pb-rg"], [fill^="url(#bike-rg"], [fill^="url(#bike-spill"], [stroke^="url(#pb-gSpill"], [data-ref*="glow" i], [data-ref*="spill" i], [data-ref*="halo" i], [data-ref*="beam" i], [data-ref*="trail" i], [data-ref*="lamp" i], [data-ref*="light" i], [data-ref*="haze" i], [data-detail*="glow" i], [data-detail*="trail" i], [data-detail*="haze" i]) { visibility: hidden !important; }

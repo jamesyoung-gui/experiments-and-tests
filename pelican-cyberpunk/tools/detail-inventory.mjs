@@ -35,24 +35,43 @@ for (const [name, o] of views) {
   const res = await page.evaluate(() => {
     const out = [];
     const els = [...document.querySelectorAll('#scene [data-detail]')];
+    const wk = new Map();
+    const weak = e => {
+      if (wk.has(e)) return wk.get(e);
+      let a = 1; for (let q = e; q && q.tagName !== 'svg'; q = q.parentElement) a *= +getComputedStyle(q).opacity;
+      const cs = getComputedStyle(e), fo = cs.fill === 'none' ? 0 : +cs.fillOpacity, so = cs.stroke === 'none' ? 0 : +cs.strokeOpacity * Math.min(1, (parseFloat(cs.strokeWidth) || 0) / 2);
+      const w = a * Math.max(fo, so) < 0.35; wk.set(e, w); return w;
+    };
     for (const el of els) {
       const key = el.getAttribute('data-detail');
       const r = el.getBoundingClientRect();
       const x0 = Math.max(0, r.left), y0 = Math.max(0, r.top), x1 = Math.min(innerWidth, r.right), y1 = Math.min(innerHeight, r.bottom);
       if (x1 <= x0 || y1 <= y0) continue;
-      let own = 0, other = 0;
+      let own = 0, other = 0, overlay = 0;
       const n = 9;
       for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
         const px = x0 + (x1 - x0) * (i + 0.5) / n, py = y0 + (y1 - y0) * (j + 0.5) / n;
-        const hit = document.elementFromPoint(px, py);
-        if (!hit) continue;
-        if (el === hit || el.contains(hit)) own++;
-        else if (hit.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING) other++; // el precedes hit => hit is drawn above el
+        // top-down stack at this point: see-through overlays (rain streaks, haze, glows, light washes: effective alpha
+        // < 0.35) do not occlude; an untagged overlay of the same part (a rim light, an LED stroke, a glint drawn over
+        // the base geometry, in the same rider slot or the same data-ref group) is still this item's own look
+        const top = document.elementFromPoint(px, py);
+        if (!top) continue;
+        if (el === top || el.contains(top)) { own++; continue; }   // fast path: the item itself is on top
+        for (const hit of document.elementsFromPoint(px, py)) {
+          if (hit.tagName === 'svg' || hit.tagName === 'HTML' || hit.tagName === 'BODY' || hit.id === 'scene' || hit.id === 'stage') continue;
+          if (el === hit || el.contains(hit)) { own++; break; }
+          const ht = hit.closest('[data-detail]'), slot = el.closest('[data-slot]'), grp = el.closest('[data-ref]');
+          const sameGroup = (slot && slot === hit.closest('[data-slot]')) || (grp && grp === hit.closest('[data-ref]'));
+          if (sameGroup && (!ht || ht.contains(el))) { own++; overlay++; break; }
+          if (weak(hit)) continue;
+          if (hit.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING) other++; // el precedes hit => hit is drawn above el
+          break;
+        }
       }
       // pixel-area estimate: bbox area × own-hit fraction of all samples
       const area = (x1 - x0) * (y1 - y0) * (own / (n * n));
       const style = getComputedStyle(el);
-      out.push({ key, own, other, area, hidden: style.visibility === 'hidden' || style.display === 'none' });
+      out.push({ key, own, other, overlay, area, hidden: style.visibility === 'hidden' || style.display === 'none' });
     }
     return out;
   });
@@ -60,6 +79,7 @@ for (const [name, o] of views) {
     const ok = !r.hidden && r.own >= 1 && r.area >= 2 && r.own / Math.max(1, r.own + r.other) >= 0.5;
     const cur = found.get(r.key) || { views: [], ok: false };
     if (ok) { cur.ok = true; cur.views.push(name); }
+    else if (!cur.ok) cur.why = r.hidden ? 'hidden' : r.own < 1 ? 'no own hit' : r.area < 2 ? '<2px²' : 'occluded';
     found.set(r.key, cur);
   }
 }
@@ -83,7 +103,8 @@ console.log('layer              draft  now   ×');
 for (const l of LAYERS) console.log(`${l.padEnd(18)} ${String(baseline[l].total).padStart(5)} ${String(counts[l].total).padStart(4)}  ${(counts[l].total / baseline[l].total).toFixed(2)}${counts[l].rejected.length ? `   (${counts[l].rejected.length} rejected: hidden/occluded/<2px²)` : ''}`);
 console.log(`${'ALL'.padEnd(18)} ${String(baseline.all).padStart(5)} ${String(total).padStart(4)}  ${(total / baseline.all).toFixed(2)}  (gate ≥ 1.00 × edition C)`);
 if (bad.length) console.log('malformed data-detail keys (need <layer>:<O|T>:<name>):', bad.slice(0, 20).join(', '));
-if (has('verbose')) for (const l of LAYERS) console.log(l, 'rejected:', counts[l].rejected.join(', '));
+if (has('verbose')) for (const l of LAYERS) console.log(l, 'rejected:', counts[l].rejected.map(k => `${k} (${found.get(k).why || '?'})`).join(', '));
+{ const why = {}; for (const [, v] of found) if (!v.ok) why[v.why || '?'] = (why[v.why || '?'] || 0) + 1; console.log('rejections by reason (an item may be counted in either view):', JSON.stringify(why)); }
 const out = arg('json');
 if (out) { fs.mkdirSync(path.dirname(path.resolve(ROOT, out)), { recursive: true }); fs.writeFileSync(path.resolve(ROOT, out), JSON.stringify({ baseline, counts, total, ratio: total / baseline.all, fails, items: Object.fromEntries(found) }, null, 1)); }
 if (errors.length) console.error('page errors:', errors.join('\n'));

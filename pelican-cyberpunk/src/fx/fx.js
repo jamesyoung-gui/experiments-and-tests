@@ -100,8 +100,10 @@ const ESC = [
 ];
 const PSLOTS = ['tail', 'wingFarUpper', 'thighFar', 'shankFar', 'body', 'head', 'pouch', 'billLower', 'billUpper', 'thighNear', 'shankNear', 'footNear', 'wingNearUpper', 'wingNearLower'];
 const REFL_K = 0.82;
+const DMS = font => (font === 'Z' ? 14 : 12.5);   // danmaku glyph size (thin HUD type)
+const DM_LANES = [186, 212];                     // danmaku baselines (world y): sky lanes above the rider's head
 // live-stream comments (danmaku) scrolling right to left: [text, font, colour]
-const DM = [['666', 'M', '#FFFFFF'], ['鹈鹕好帅！', 'Z', 'magC'], ['GG', 'M', '#FFFFFF'], ['外卖到了吗？', 'Z', '#FFFFFF'], ['冲鸭！', 'Z', 'cyC'], ['+1 FISH', 'M', 'acidC']];   // wet-asphalt reflection squash (perspective foreshortening of the mirror image)
+const DM = [['666', 'M', 'cy'], ['鹈鹕好帅！', 'Z', 'mag'], ['GG', 'M', 'acid'], ['外卖到了吗？', 'Z', 'cy'], ['冲鸭！', 'Z', 'mag'], ['+1 FISH', 'M', 'acid']];   // wet-asphalt reflection squash (perspective foreshortening of the mirror image)
 
 // ------------------------------------------------------------------------------------------------ detail inventory
 export const detailItems = [
@@ -141,6 +143,7 @@ export const detailItems = [
   ['fx:O:spray-mist', 'O', 'soft spray mist rolling off the rear tyre'],
   ['fx:O:spray-bow', 'O', 'bow-wave droplets thrown ahead of the front tyre'],
   ['fx:O:land-splash', 'O', 'landing splash crowns from both tyres'],
+  ['fx:O:air-gap', 'O', 'airborne cue in a hop: HUD clearance brackets under each tyre, dashed altitude stalk to a road reticle, hover-pulse rings dropping to the road, drips shed by the wet tyres, AIR ▲ tag'],
   ['fx:O:land-shock-ring', 'O', 'HUD shock rings with tick marks at both contacts on landing'],
   ['fx:O:sparks', 'O', 'amber / magenta sparks scraped off the rims on landing'],
   ['fx:O:rain-splash-rider', 'O', 'rain splash crowns bursting on the head, bill, jacket shoulders and delivery box (in the rain)'],
@@ -387,10 +390,20 @@ export function build(ctx) {
     mono('DROP-OFF', 5, -20, -22, C.acid),
     h('path', { 'data-ref': 'fx-wpT', d: '', fill: C.acidC })));
   // danmaku: the camera drone live-streams the courier, and the viewers' comments scroll across behind the rider
-  L.back += h('g', {}, DM.map(([str, font, col], i) => h('path', {
-    'data-ref': 'fx-dm' + i, ...DD('fx:O:danmaku'), display: 'none', d: tpath(font === 'Z' ? GZ : GM, str, font === 'Z' ? 16 : 15).d,
-    fill: C[col] || col, stroke: C.void, 'stroke-width': 2.8, 'paint-order': 'stroke', 'stroke-linejoin': 'round',
-  })));
+  // HUD treatment (STYLE-X neon language): thin core-tinted glyphs over two stacked strokes (the glow, as geometry, no
+  // filter), a slanted ▸ chip with a viewer tag, and a dashed tail; lanes sit in the sky above the rider's head
+  L.back += h('g', {}, DM.map(([str, font, col], i) => {
+    const tp = tpath(font === 'Z' ? GZ : GM, str, DMS(font)), base = C[col], core = C[col + 'C'];
+    return h('g', { 'data-ref': 'fx-dm' + i, ...DD('fx:O:danmaku'), display: 'none' },
+      h('path', { d: 'M-30 -14H-7L-10 4H-33Z', fill: C.void, opacity: 0.72 }),
+      h('path', { d: 'M-30 -14H-7L-10 4H-33Z', fill: 'none', stroke: base, 'stroke-width': 0.8, 'stroke-linejoin': 'round' }),
+      h('path', { d: 'M-24 -9.5L-15 -5L-24 -0.5Z', fill: core }),
+      h('path', { d: 'M-33 7H-12', stroke: base, 'stroke-width': 0.6, opacity: 0.7 }),
+      h('path', { d: tp.d, fill: 'none', stroke: base, 'stroke-width': 4.2, 'stroke-linejoin': 'round', opacity: 0.16 }),
+      h('path', { d: tp.d, fill: 'none', stroke: base, 'stroke-width': 1.7, 'stroke-linejoin': 'round', opacity: 0.55 }),
+      h('path', { d: tp.d, fill: core }),
+      h('path', { d: `M${f(tp.w + 6)} -5H${f(tp.w + 46)}`, stroke: base, 'stroke-width': 0.8, 'stroke-dasharray': '10 4 4 4 2 5', opacity: 0.55 }));
+  }));
 
   // ============================================== light trails (> 86 rpm) + the data-stream (L-fx-back, world)
   L.back += h('g', { 'data-ref': 'fx-slG', display: 'none', ...DD('fx:O:light-trails') }, TRAILS.map(([, , c], i) => h('g', { 'data-ref': 'fx-sl' + i, display: 'none' },
@@ -421,6 +434,27 @@ export function build(ctx) {
     h('ellipse', { rx: 26, ry: 3.8, fill: 'none', stroke: C.mag, 'stroke-width': 0.9, 'stroke-dasharray': '4 3' }),
     h('path', { d: ticks, stroke: C.acid, 'stroke-width': 1, fill: 'none' }));
   L.front += h('g', { 'data-ref': 'fx-impG', display: 'none', ...DD('fx:O:land-shock-ring') }, shock('fx-impR'), shock('fx-impF'));
+  // airborne cue (bunny hop): under each tyre a HUD clearance gauge (corner brackets hugging the tread, a dashed
+  // altitude stalk to a road reticle), hover-pulse rings dropping from the tread to the road, and water drips shed by
+  // the wet tyre as it leaves the film; the front gauge carries an AIR ▲ tag
+  const airG = (w, tag) => h('g', { 'data-ref': 'fx-air' + w, display: 'none' },
+    h('path', { 'data-ref': 'fx-airS' + w, d: 'M0 0V0', stroke: C.cyC, 'stroke-width': 1, 'stroke-dasharray': '3 3', fill: 'none' }),
+    h('g', { 'data-ref': 'fx-airGnd' + w },
+      h('ellipse', { rx: 34, ry: 5, fill: 'none', stroke: C.cy, 'stroke-width': 4, opacity: 0.18 }),
+      h('ellipse', { rx: 34, ry: 5, fill: 'none', stroke: C.cyC, 'stroke-width': 0.9, 'stroke-dasharray': '6 3' }),
+      h('path', { d: 'M-44 0H-36M36 0H44M0 -8V-3', stroke: C.acidC, 'stroke-width': 1.1, fill: 'none' })),
+    [0, 1, 2].map(k => h('g', { 'data-ref': `fx-airR${w}${k}` },
+      h('ellipse', { rx: 34, ry: 4.8, fill: 'none', stroke: k === 1 ? C.mag : C.cy, 'stroke-width': 4.5, opacity: 0.2 }),
+      h('ellipse', { rx: 34, ry: 4.8, fill: 'none', stroke: k === 1 ? C.magC : C.cyC, 'stroke-width': 1.2 }))),
+    [0, 1, 2, 3].map(k => h('path', { 'data-ref': `fx-airD${w}${k}`, d: 'M0 -3.2C1.6 -0.6 2 0.6 2 1.3C2 2.5 1.1 3.2 0 3.2C-1.1 3.2 -2 2.5 -2 1.3C-2 0.6 -1.6 -0.6 0 -3.2Z', fill: k % 2 ? C.cyC : '#E9E6F2' })),
+    h('path', { d: 'M-38 -10V1H-27M38 -10V1H27', stroke: C.cy, 'stroke-width': 4, fill: 'none', opacity: 0.2, 'stroke-linecap': 'round' }),
+    h('path', { d: 'M-38 -10V1H-27M38 -10V1H27', stroke: C.cyC, 'stroke-width': 1.3, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }),
+    tag ? h('g', { transform: 'translate(48 16)' },
+      h('path', { d: 'M-2 -11H42L38 4H-6Z', fill: C.void, opacity: 0.75 }),
+      h('path', { d: 'M-2 -11H42L38 4H-6Z', fill: 'none', stroke: C.acid, 'stroke-width': 0.8 }),
+      h('path', { d: 'M2 0L6 -7L10 0Z', fill: C.acidC }),
+      mono('AIR', 8.5, 13, 0, C.acidC)) : '');
+  L.front += h('g', { ...DD('fx:O:air-gap') }, airG('R', false), airG('F', true));
   // rain splashing on the rider
   const crown = h('path', { d: 'M-5 0Q-4.6 -3.4 -3.2 -6M0 0V-7.4M5 0Q4.6 -3.4 3.2 -6M-8 0.5Q-7 -1.5 -6.4 -2.4M8 0.5Q7 -1.5 6.4 -2.4', fill: 'none', stroke: C.cyC, 'stroke-width': 0.9, 'stroke-linecap': 'round' }) +
     h('path', { d: circ(-3.6, -8.2, 0.9) + circ(0, -9.8, 1) + circ(3.6, -8.2, 0.9), fill: '#FFFFFF' });
@@ -580,7 +614,7 @@ export function attach(svg, ctx) {
   const NSP = 18, NMIST = 6, NBOW = 8, NBURST = 10, NSPK = 8, NRS = 6;
   const pool = (p, n) => Array.from({ length: n }, (_, i) => r[p + i]);
   const sp_ = pool('sp', NSP), mist = pool('mist', NMIST), bow = pool('bow', NBOW), bps = pool('bp', NBURST), spk = pool('spk', NSPK), rs = pool('rs', NRS), px = pool('px', 12);
-  const DMW = DM.map(([str, font]) => tpath(font === 'Z' ? GZ : GM, str, font === 'Z' ? 16 : 15).w);
+  const DMW = DM.map(([str, font]) => tpath(font === 'Z' ? GZ : GM, str, DMS(font)).w);
   let wpTxt = '';
   const latest = (evs, type, t, win) => { let best = null; for (const e of evs || []) if (e.type === type) { const tau = t - e.t0; if (tau >= 0 && tau < win && (!best || e.t0 > best.t0)) best = e; } return best ? t - best.t0 : -1; };
   const ballistic = (el, x, y, vx, vy, lenK) => {
@@ -720,7 +754,7 @@ export function attach(svg, ctx) {
           if (a) {
             // anti-occlusion danmaku (弹幕防挡): comments fade where they pass behind the pelican's head
             const x = 1660 - SPD * a[1], mid = x + DMW[i] / 2;
-            set(el, 'transform', `translate(${f1(x)} ${a[0] % 2 ? 318 : 346})`);
+            set(el, 'transform', `translate(${f1(x)} ${DM_LANES[wrap(a[0], 2)]})`);
             set(el, 'opacity', f(0.12 + 0.88 * sstep(120, 300, Math.abs(mid - head[0] - 40))));
           }
         }
@@ -793,6 +827,28 @@ export function attach(svg, ctx) {
         set(r.impR, 'transform', `translate(${RIDER_X + RC[0]} ${GROUND_Y + 1}) scale(${f(s)})`);
         set(r.impF, 'transform', `translate(${RIDER_X + FC[0]} ${GROUND_Y + 1}) scale(${f(s)})`);
         set(r.impG, 'opacity', f(1 - u * u));
+      }
+
+      // ================= airborne cue: clearance gauges under the tyres (rear by the body lift, front by the pitch too)
+      for (const [w, cx, cy] of [['R', RC[0], RC[1]], ['F', FC[0], 0]]) {
+        const p = W(cx, cy), gap = GROUND_Y - p[1], on = gap > 3 && !nofx, el = r['air' + w];
+        vis(el, on);
+        if (!on) continue;
+        set(el, 'transform', `translate(${f1(p[0])} ${f1(p[1])})`);
+        set(el, 'opacity', f(sstep(3, 16, gap)));
+        set(r['airS' + w], 'd', `M0 3V${f1(gap)}`);
+        set(r['airGnd' + w], 'transform', `translate(${f1(RIDER_X + cx - p[0])} ${f1(gap + 1)}) scale(${f(1 - 0.35 * clamp(gap / 60, 0, 1))})`);
+        for (let k = 0; k < 3; k++) {
+          const u = reduced ? 0.25 + k * 0.25 : wrap(t * 2.2 + k / 3, 1);
+          set(r[`airR${w}${k}`], 'transform', `translate(0 ${f1(4 + (gap - 4) * u)}) scale(${f(0.7 + 0.45 * u)})`);
+          set(r[`airR${w}${k}`], 'opacity', f((1 - u) * (0.35 + 0.65 * sstep(0, 0.15, u))));
+        }
+        for (let k = 0; k < 4; k++) {
+          const age = wrap(t + k * 0.09 + (w === 'F' ? 0.05 : 0), 0.36), dy = 3 + 0.5 * 1800 * age * age, d = r[`airD${w}${k}`];
+          const dOn = !reduced && dy < gap && wet > 0.3;
+          vis(d, dOn);
+          if (dOn) set(d, 'transform', `translate(${f1((k - 1.5) * 9 - 0.12 * sp * age)} ${f1(dy)}) scale(1 ${f(1 + Math.min(1.2, age * 5))})`);
+        }
       }
 
       // ================= rain splashing on the rider

@@ -1140,7 +1140,10 @@ export function connect({ bus, state, svg }) {
   // the rider reacts to a discovery (live play only; screenshot mode stays deterministic)
   const REACT = { km: ['ui:bell', 250], fortytwo: ['ui:wave', 400], bottle: ['ui:wave', 900], wish: ['ui:bell', 300], sunwink: ['ui:wave', 300], welcome: ['ui:wave', 700], gold: ['ui:wave', 500] };
   const live = !new URLSearchParams(win.location.search).has('freeze');
-  A.onFound(id => { emitFound(id); const rc = live && REACT[id]; if (rc) win.setTimeout(() => bus.emit(rc[0], {}), rc[1]); });
+  // the reaction beat is the rider's, not the viewer's: flag it so it cannot cascade into another egg (km -> bell -> cat)
+  let reacting = false;
+  const react = type => { reacting = true; try { bus.emit(type, {}); } finally { reacting = false; } };
+  A.onFound(id => { emitFound(id); const rc = live && REACT[id]; if (rc) win.setTimeout(() => react(rc[0]), rc[1]); });
   if (A.found.size) queueMicrotask(() => bus.emit('egg:found', { id: null, count: A.found.size, total: EGGS.length }));
   // clue tier: after a minute of riding, show the empty tally so players know there is something to find
   else if (live) win.setTimeout(() => { if (!A.found.size) bus.emit('egg:found', { id: null, count: 0, total: EGGS.length }); }, 60000);
@@ -1189,6 +1192,8 @@ export function connect({ bus, state, svg }) {
   // bus: bell (cat, chorus, sign), hop (puddle), gulp (UFO at night)
   const bells = [];
   bus.on('rig:event', ev => {
+    // only the viewer unlocks eggs: beats fired by the director or the beat keeper (auto: true) never count
+    if (!ev || ev.auto || reacting) return;
     const t = ev.t0;
     if (ev.type === 'bell') {
       bells.push(t); while (bells.length && t - bells[0] > 3.5) bells.shift();

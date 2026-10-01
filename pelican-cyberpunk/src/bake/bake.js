@@ -22,7 +22,7 @@
 // (slow far layers), data-bake-fps="F" sets its sample rate; data-bake-static freezes a subtree at the t0 frame.
 //
 // bakeSVG runs synchronously (in-page Download button, tools/bake.mjs). bakeSVGAsync yields to the event loop every
-// ~30 ms and reports progress, for UIs that must not block. Both produce byte-identical output.
+// ~120 ms and reports progress, for UIs that must not block. Both produce byte-identical output.
 
 export const BAKE_DEFAULTS = {
   period: 4,           // seconds in the master loop (whole crank turns at `cadence`); 24 = the rig's full story loop
@@ -72,8 +72,10 @@ export function bakeSVG(svg, opts = {}) {
 export async function bakeSVGAsync(svg, opts = {}, onProgress, shouldAbort) {
   const it = bakeGen(svg, opts);
   let r = it.next(), last = now();
+  // slices of ~120 ms: well under the 200 ms long-task bar, and few enough that the browser's repaint of the scrubbing
+  // scene between slices does not dominate the export time
   while (!r.done) {
-    if (now() - last > 30) {
+    if (now() - last > (opts.slice || 120)) {
       if (onProgress && r.value) onProgress(r.value);
       await new Promise(res => setTimeout(res, 0)); last = now();
       if (shouldAbort && shouldAbort()) { it.return(); const e = new Error('bake cancelled'); e.name = 'AbortError'; throw e; }
@@ -173,7 +175,9 @@ function* bakeGen(svg, opts) {
 
     // ---- 3. expand + parse; find non-closing, never-wrapping channels that need a long-horizon probe
     const units = [];
+    let ex = 0;
     for (const g of groups) for (const tr of g.tracks) {
+      if (++ex % 20 === 0) yield { phase: 'parse', done: ex, frac: 0.85 };
       // a cameo's attributes are first written when it starts: before that (hidden) they hold their first value
       if (g.cameo && tr.init == null && tr.changes.length) tr.init = tr.changes[0][1];
       const vals = expand(tr, g.n + g.M + 1);
@@ -213,7 +217,7 @@ function* bakeGen(svg, opts) {
       const target = indexOf.has(u.el) ? cloneEls[indexOf.get(u.el)] : liveToSnap.get(u.el);
       if (!target || !anims.length) continue;
       emit(target, u, anims, cfg, stats, cssRules);
-      if (++k % 40 === 0) yield { phase: 'emit', done: k, of: live.length, frac: 0.9 + 0.1 * k / live.length };
+      ++k; yield { phase: 'emit', done: k, of: live.length, frac: 0.9 + 0.1 * k / live.length };
     }
     // presence: nodes mounted / unmounted while recording (set pieces) get a wrapper <g> with a discrete display loop
     const cloneOf = el => (indexOf.has(el) ? cloneEls[indexOf.get(el)] : liveToSnap.get(el));
@@ -245,7 +249,7 @@ function* bakeGen(svg, opts) {
 
     // ---- 5. finish the document: resolve inks, strip, title/desc, serialise
     const origOf = new Map(cloneEls.map((e, i) => [e, origEls[i]]));
-    const out = finish(svg, clone, cfg, stats, cssRules, origOf);
+    const out = yield* finish(svg, clone, cfg, stats, cssRules, origOf);
     stats.bytes = out.length;
     stats.ms.total = Math.round(now() - t0);
     lastBakeStats = stats;
@@ -320,7 +324,7 @@ function* recordPass(svg, render, start, n, step, stats, only, rc = {}) {
       tr.changes.push([i, r.attributeNamespace ? el.getAttributeNS(r.attributeNamespace, r.attributeName) : el.getAttribute(r.attributeName)]);
     }
     for (const hk of hooks) if (hk.i === i) hk.fn();
-    if (i % 30 === 0) yield { phase: 'record', done: i, of: n };
+    yield { phase: 'record', done: i, of: n };   // every sample: bakeSVGAsync only pauses when 30 ms have passed
   }
   } finally { mo.disconnect(); }   // also on cancel (generator.return() from bakeSVGAsync)
   if (child && !rc.liveToSnap && !rc.probe) stats.warnings.push(`${child} childList mutations while recording (not baked)`);
@@ -1033,7 +1037,8 @@ function dotsToStrokes(clone, origOf, stats) {
   }
   stats.dots = { paths: n, savedBytes: saved };
 }
-function finish(svg, clone, cfg, stats, cssRules, origOf) {
+function* finish(svg, clone, cfg, stats, cssRules, origOf) {   // generator: yields so bakeSVGAsync can breathe
+  let __fi = 0;
   // 1. inks: every var(--x) resolved from the live root (palette) / computed style
   const vars = {};
   const cs = getComputedStyle(svg);
@@ -1049,6 +1054,7 @@ function finish(svg, clone, cfg, stats, cssRules, origOf) {
   const styleText = [...clone.querySelectorAll('style')].map(s => s.textContent).join('\n');
   for (const m of styleText.matchAll(/#([\w-]+)/g)) refd.add(m[1]);
   for (const el of all) {
+      if ((__fi = (__fi || 0) + 1) % 300 === 0) yield { phase: 'finish', frac: 0.98 };   // fin1
     for (const a of [...el.attributes]) {
       let v = a.value;
       if (v.includes('var(')) { v = resolve(v); el.setAttribute(a.name, v); }
@@ -1064,6 +1070,7 @@ function finish(svg, clone, cfg, stats, cssRules, origOf) {
   try { const r = svg.getScreenCTM(); rootScale = Math.sqrt(Math.abs(r.a * r.d - r.b * r.c)) || 1; } catch (e) { /* 1 */ }
   if (cfg.dots !== false) dotsToStrokes(clone, origOf, stats);
   for (const p of clone.querySelectorAll('path[d]')) {
+    if ((__fi = (__fi || 0) + 1) % 150 === 0) yield { phase: 'finish', frac: 0.99 };
     const o = origOf.get(p), d0 = p.getAttribute('d');
     let dec = 2;
     try { const m = o && o.getScreenCTM && o.getScreenCTM(); if (m) { const sc = Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)) / rootScale; dec = sc <= 1.05 ? 1 : sc <= 10.5 ? 2 : 3; } } catch (e) { /* keep 2 */ }
@@ -1140,6 +1147,7 @@ function finish(svg, clone, cfg, stats, cssRules, origOf) {
   }
   if (cfg.strip) {
     for (const el of all) {
+      if ((__fi = (__fi || 0) + 1) % 300 === 0) yield { phase: 'finish', frac: 0.98 };   // fin2
       for (const a of [...el.attributes]) if (a.name.startsWith('data-') || /^on/i.test(a.name)) el.removeAttribute(a.name);
       if (el.id && !refd.has(el.id) && !/^(j-|L-|rider$|scene$)/.test(el.id)) el.removeAttribute('id');
     }
