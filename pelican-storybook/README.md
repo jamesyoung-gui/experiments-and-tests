@@ -51,7 +51,7 @@ A great white pelican rides a bicycle along the coast road: a warm storybook gou
 动作证据 Motion evidence: `node tools/shoot.mjs --set strip` 为每个事件渲染连续 30 帧 60 fps 胶片条（响铃、挥手、跳跃、吞鱼、滑行、踏频变化）。
 `--set strip` renders 30 consecutive 60 fps frames per event (bell, wave, hop, gulp, coast, cadence jump).
 
-实测 Measured (`shots/perf-latest.json`, written by `shoot.mjs --perf`): **40.1 fps**, frame p95 50 ms, JS p95 3.9 ms, 9199 DOM nodes (dist, 2026-09-30 19:49 UTC, 1-min load 5.84 on this 4-core box; **below the budget**)
+实测 Measured (`shots/perf-latest.json`, written by `shoot.mjs --perf`): **32.6 fps**, frame p95 50 ms, JS p95 9.7 ms, 9182 DOM nodes (dev, 2026-09-30 20:06 UTC, 1-min load 3.68 on this 4-core box; **below the budget**)
 
 ## 构图 · Composition
 
@@ -106,7 +106,7 @@ The toolchain is Node 22, esbuild, and Playwright with headless Chromium (softwa
 - `check-eggs`: 13/13 eggs trigger, with 0 console errors.
 - `bake` + `check-baked`: pass (0 hard, 2 soft).
 - `shoot --dist`: 43 shots, 0 console errors.
-- `--perf` (measured, see above): **40.1 fps**, frame p95 50 ms, JS p95 3.9 ms, 9199 DOM nodes (dist, 2026-09-30 19:49 UTC, 1-min load 5.84 on this 4-core box; **below the budget**)
+- `--perf` (measured, see above): **32.6 fps**, frame p95 50 ms, JS p95 9.7 ms, 9182 DOM nodes (dev, 2026-09-30 20:06 UTC, 1-min load 3.68 on this 4-core box; **below the budget**)
 
 **Known gaps (honest list):**
 - JS p95 is above budget.
