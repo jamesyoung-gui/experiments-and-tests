@@ -285,7 +285,9 @@ export function build(ctx) {
   defs += water.defs + sky.defs + lh.defs + seaL.defs + boats.defs;
   return {
     defs,
-    layers: { 'L-hills-far': water.markup + sky.markup, 'L-lighthouse': lh.markup, 'L-sea': seaL.markup, 'L-boats': boats.markup },
+    // the opaque water base goes to the end of L-sky (same camera transform: depths 0 and 0.05 share the zoom clamp,
+    // and the water is x-invariant), so it shares the sky's sheet instead of adding a full-width layer of its own
+    layers: { 'L-sky': water.markup, 'L-hills-far': sky.markup, 'L-lighthouse': lh.markup, 'L-sea': seaL.markup, 'L-boats': boats.markup },
   };
 }
 

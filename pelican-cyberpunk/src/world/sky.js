@@ -9,7 +9,7 @@
 // Performance (STYLE-X §2): the only filter (bloom) sits on the static arcology neon inside the L-sunmoon sheet. Every
 // moving part is a pure translate on its own composited strip (`sheets`) or a small isolated sheet (`isolate`); glows
 // are stacked strokes and gradients. Per frame we only write a handful of transforms / opacities.
-import { fmt1, fmt2 } from '../core/math.js';
+import { fmt1, fmt2, clamp } from '../core/math.js';
 import { h, refs } from '../core/svg.js';
 import { hash } from './route.js';
 import { DIST_PER_REV as DIST_PER_REV_ } from '../contract.js';
@@ -568,12 +568,15 @@ export function build(ctx) {
         h('path', { d: br, fill: 'none', stroke: '#FFFFFF', 'stroke-width': 0.9, 'stroke-linejoin': 'round' }))));
   }
 
+  defs += h('clipPath', { id: 'sky-hzClip', clipPathUnits: 'userSpaceOnUse' }, h('rect', { x: X0 - 600, y: -1400, width: W + 1200, height: 1400 + HZ + 16 }));
   return {
     defs,
     layers: {
       // everything static and far lives on the opaque L-sky sheet (one composited layer, repainted only by the slow
       // searchlight sweep, the star twinkle and the warning-light blink); L-stars / L-sunmoon only carry two tiny strips
-      'L-sky': sky + starsL + sunmoon + beamsM,
+      // (clipped just below the horizon: the opaque harbour water, drawn by sea at the end of L-sky, covers the rest,
+      // so the sheet keeps no tiles of hidden art below the waterline)
+      'L-sky': h('g', { 'clip-path': 'url(#sky-hzClip)' }, sky + starsL + sunmoon + beamsM),
       'L-stars': satL,
       'L-sunmoon': capsule,
       'L-clouds': clouds,
@@ -589,7 +592,7 @@ export const sheets = [
   '[data-ref="sky-smog0"]', '[data-ref="sky-smog1"]', '[data-ref="sky-lane0"]', '[data-ref="sky-lane1"]',
   '[data-ref="sky-ship"]', '[data-ref="sky-car"]', '[data-ref="sky-cop"]', '[data-ref="sky-sat"]', '[data-ref="sky-cap"]',
 ];
-export const isolate = ['[data-ref="sky-beams"]', '[data-ref="sky-flash"]'];
+export const isolate = ['[data-ref="sky-flash"]'];
 export function attach(svg, ctx) {
   const r = refs(svg, 'sky-');
   const st = {};
@@ -677,7 +680,9 @@ export function attach(svg, ctx) {
       }
       // storm: the smog deck follows the overcast; lightning only in the heavy rain / storms
       const cl = Math.max(wx.cloud || 0, (wx.rain || 0) * 1.1);
-      const deck = Math.round(Math.min(1, cl) * 20) / 20 * 0.8;
+      // (perf: the deck is a full-width sheet, so it stays out until the overcast really builds: none in the gusty
+      // spells at cloud 0.3, rolling in ahead of the downpour)
+      const deck = Math.round(clamp((cl - 0.4) / 0.6, 0, 1) * 20) / 20 * 0.8;
       set(r.storm, 'opacity', deck.toFixed(2), 'deck'); vis(r.storm, deck > 0.01, 'deckV');
       let fl = 0, bi = -1;
       if (cl > 0.55) {

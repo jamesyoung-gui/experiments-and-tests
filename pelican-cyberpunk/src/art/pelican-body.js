@@ -1028,7 +1028,7 @@ export function attach(svg) {
   for (const el of svg.querySelectorAll('[data-du]')) (DU[el.getAttribute('data-du')] ||= []).push(el);
   const set = (el, k, val) => { if (!el) return; let m = st.get(el); if (!m) st.set(el, m = {}); if (m[k] !== val) { m[k] = val; if (k === 'd') { el.setAttribute('d', val); const mm = el.id && DU[el.id]; if (mm) for (const e of mm) e.setAttribute('d', val); } else if (k === 'op') el.style.opacity = val; else if (k === 'show') el.style.display = val ? '' : 'none'; else el.setAttribute(k, val); } };
   const DIG = GLYPH.DIG;
-  let lastNeck = '';
+  let lastNeck = '', scarfQ = -1;
   return {
     update(fr) {
       const pose = fr.pose, t = fr.t, n = pose.neck, J = pose.joints || {};
@@ -1053,15 +1053,19 @@ export function attach(svg) {
       // ---- seat contact anchor on the exact belly ellipse
       const lo = bellyLowLocal(bj.rot || 0, bsx, bsy);
       set(r.seat, 'transform', `translate(${f(lo[0] / bsx)} ${f(lo[1] / bsy)})`);
-      // ---- scarf
+      // ---- scarf (perf: in live play the ribbon geometry and its LED chase advance at 20 Hz; the body slot itself
+      // moves at full rate on the compositor, so the scarf rides along rigidly in between; renderAt is always exact)
+      const scQ = Math.floor(t * 20);
+      const scarfDue = !(fr.dt > 0) || scQ !== scarfQ; scarfQ = scQ;
       const spd = clamp((fr.speed ?? 1885) / 1885, 0, 1.8);
       const sc = pose.scarf;
       let cL = WRAP_DEFAULT, dAng = 0;
       if (sc && Number.isFinite(sc.x)) { cL = toBody([sc.x, sc.y]); dAng = (sc.neckAng ?? NU_ANG) - (bj.rot || 0) - NU_ANG; }
       const xfS = scarfXf(cL, dAng);
-      set(r.scarfA, 'transform', xfS); set(r.scarfB, 'transform', xfS); set(r.scarfC, 'transform', xfS);
+      if (scarfDue) { set(r.scarfA, 'transform', xfS); set(r.scarfB, 'transform', xfS); set(r.scarfC, 'transform', xfS); }
       const place = q => add(cL, rot(q, dAng));
       let nearCL, farCL, hangCL;
+      if (scarfDue) {
       if (sc && sc.tails && sc.tails[0] && sc.tails[0].a) {
         // rig tails: rider-space segment angles (deg) -> body-local chains, resampled smooth
         const chain = (p0, angs, len, k, dA = 0, dL = 1) => { const Pp = [p0]; let p = p0; angs.forEach((a, i) => { const aa = (a + dA * (i + 1) / angs.length - (bj.rot || 0)) * D2R; p = add(p, [Math.cos(aa) * len * dL, Math.sin(aa) * len * dL]); Pp.push(p); }); return resample(Pp, k); };
@@ -1095,6 +1099,7 @@ export function attach(svg) {
         const dn = ledDots(near.c, 13, run % 26); set(r.snDotA, 'd', dn[0]); set(r.snDotB, 'd', dn[1]);
         set(r.sfDotA, 'd', ledDots(far.c, 12, (run * 0.8 + 5) % 24)[0]);
         set(r.shDotA, 'd', ledDots(hang.c, 14, (run * 0.4) % 28)[0]);
+      }
       }
       // ---- slow emissive pulses (opacity only, quantised so most frames write nothing)
       const q = x => (Math.round(x * 20) / 20).toFixed(2);

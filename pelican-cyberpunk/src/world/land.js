@@ -1520,7 +1520,9 @@ const spAt = sp => SP_AT[SPK[sp.key] || sp.key];
 // scroll with their layer (translate −(D·d mod 16384)) and their props sit in layer coordinates, so a prop is only
 // rewritten when it is re-seated (and every ~8 s when the offset wraps), not every frame.
 export const sheets = ['shore', 'roadside', 'road'].flatMap(k => [0, 1, 2].map(c => `[data-ref="land-b${k}${c}"]`).concat(`[data-ref="land-full${k}"]`))
-  .concat('[data-ref="land-t-fg"]', ...['shore', 'roadside', 'road', 'fg'].flatMap(k => [`[data-ref="land-sphost-${k}"]`, `[data-ref="land-pool-${k}"]`]), '[data-ref="land-fixed"]');
+  .concat('[data-ref="land-t-fg"]', ...['shore', 'roadside', 'road', 'fg'].flatMap(k => [`[data-ref="land-sphost-${k}"]`, `[data-ref="land-pool-${k}"]`]), '[data-ref="land-fixed"]')
+  // the four lamp light pools on the wet road slide every frame: composited strips, so L-road never repaints for them
+  .concat([0, 1, 2, 3].map(i => `[data-ref="land-pool${i}"]`));
 const HOST_WRAP = 16384;   // host scroll offset wraps here (layer units): bounded coordinates, a rare full re-seat
 export function attach(svg, ctx) {
   const r = refs(svg, 'land-');

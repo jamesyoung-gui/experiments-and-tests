@@ -385,7 +385,9 @@ export function attach(svg, ctx) {
 
       // ---- sky: overcast, rain shafts, clear moment
       showA(r.over, sstep(0.35, 1, w.cloud || 0) * 0.32);
-      if (showA(r.shafts, clamp(lite * 1.1 + heavy * 0.7 + 0.25 * sstep(0.2, 0.8, w.cloud || 0), 0, 1) * (1 - clearK)))
+      // rain shafts hang from the storm deck: they come with the building overcast and the downpour, not the drizzle
+      // (a full-width composited strip: off most of the ride)
+      if (showA(r.shafts, clamp(heavy * 0.7 + 0.45 * sstep(0.4, 1, w.cloud || 0), 0, 1) * (1 - clearK)))
         set(r.shaftMove, 'transform', `translate(${f(-wrap(D * 0.03 + (red ? 0 : t * 6), SHAFT_W))} 0)`);
       if (showA(r.clear, clearK)) {
         let best = null;

@@ -584,6 +584,7 @@ export function attach(svg, ctx) {
   };
 
   const LA = light.attach(svg, ctx);
+  let lastQ30 = -1;
   return {
     update(fr) {
       LA.update(fr);
@@ -612,6 +613,10 @@ export function attach(svg, ctx) {
         set(el, 'opacity', f(1 - 0.7 * Math.min(1, hh)));
       };
       cShadow(r.cR, RC[0], lift); cShadow(r.cF, FC[0], hF);
+      // perf: in live play the wet-road reflection, its smears / wakes and the LiDAR advance at 30 Hz (every other
+      // frame): they are translucent, ripple-broken light, and each update repaints the big shadow / back sheets
+      const q30 = Math.floor(t * 30), half = !(fr.dt > 0) || q30 !== lastQ30; lastQ30 = q30;
+      if (half) {
       set(r.wake, 'opacity', f(wet * (1 - Math.min(1, Math.max(lift, hF)))));
       if (r.wake) for (const p of r.wake.children) set(p, 'stroke-dashoffset', f1(wrap(D * 0.35, 32)));
       set(r.refl, 'transform', `translate(0 ${GROUND_Y}) scale(1 ${-REFL_K}) translate(0 ${-GROUND_Y}) ${riderXf}`);
@@ -625,12 +630,13 @@ export function attach(svg, ctx) {
       }
       set(r.smear, 'opacity', f((0.45 + 0.55 * wet) * (1 - 0.6 * Math.min(1, lift))));
       if (!reduced && r.smear) { const o = f1(wrap(t * 9, 40)); for (const p of r.smear.children) set(p, 'stroke-dashoffset', o); }
+      }
       set(r.rip, 'transform', `translate(${f1(reduced ? 0 : 6 * Math.sin(t * 0.9))} 0)`);
       set(r.rip, 'opacity', f(0.2 + 0.25 * wet + (reduced ? 0 : 0.12 * Math.sin(t * 2.3))));
 
       // ================= laser headlight, LiDAR, moths
       vis(r.beam, lampOn > 0.01); vis(r.flare, lampOn > 0.01);
-      if (lampOn > 0.01) {
+      if (lampOn > 0.01 && half) {
         set(r.flareStar, 'transform', `rotate(${reduced ? 0 : f1(t * 12 % 90)}) scale(${f(0.85 + 0.15 * Math.sin(t * 3.1))})`);
         set(r.lidar, 'stroke-dashoffset', f1(reduced ? 0 : wrap(-t * 420, 55)));
         const u = wrap(t / 1.7, 1);

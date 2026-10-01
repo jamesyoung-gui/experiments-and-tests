@@ -69,9 +69,14 @@ mount(svg.querySelector('#L-letterbox'), h('g', { id: 'lead-letterbox' },
 // (module export `isolate`); the rider is cut into groups of slots (first slot of each group below: far wing · far leg ·
 // wheels · static frame/fork/bars · drivetrain · neck/tail/body · near leg · head · near wing), so a moving group
 // repaints only its own art. ?nosheets keeps the single <svg>.
-const RIDER_SHEETS = ['pedalFar', 'wheelRear', 'frame', 'cog', 'neck', 'pedalNear', 'pouch', 'wingNearUpper'];
+// Rigid rider slots listed in RIDER_AFFINE (?affine=wheelRear,wheelFront; off by default: on the software compositor a
+// rotated / scaled layer costs more draw time than the raster it saves) each get a sheet of their own whose slot transform is applied as a CSS
+// matrix (core/sheets.js affine hoisting): the wheels spin, the bars steer and the body / wings / head move without
+// repainting or re-rasterising their art. ?noaffine keeps them painted (A/B).
+const RIDER_AFFINE = params.has('noaffine') ? [] : (params.get('affine') ?? 'wheelRear,wheelFront').split(',').filter(Boolean);
+const RIDER_SHEETS = ['pedalFar', 'wheelRear', 'frame', 'bars', 'cog', 'neck', 'pedalNear', 'pouch', 'wingNearUpper'].filter(x => !RIDER_AFFINE.includes(x));
 const sheets = createSheets(svg, svgRoot, { layers: LAYERS.map(l => l[0]), sheets: mods.flatMap(m => m.sheets || []), scale: (d, cam) => layerZoom(cam, d), cuts: RIDER_SHEETS.map(x => '#j-' + x),
-  isolate: mods.flatMap(m => m.isolate || []) });
+  isolate: mods.flatMap(m => m.isolate || []), affine: RIDER_AFFINE.map(x => '#j-' + x) });
 addEventListener('resize', () => sheets.resize());
 
 const layerEls = LAYERS.map(([id, depth]) => [svg.querySelector('#' + id), depth]);

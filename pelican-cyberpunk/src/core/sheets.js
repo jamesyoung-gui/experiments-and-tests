@@ -25,7 +25,8 @@ export function createSheets(wrapper, svg, opts) {
   const nSet = P.setAttribute, nGet = P.getAttribute, nRem = P.removeAttribute;
   const rootAttrs = { id: svg.getAttribute('id'), role: svg.getAttribute('role') };
   let parts = [svg], origOf = new Map(), clonesOf = new Map(), homeOf = new Map(), sheets = [], mo = null, isSplit = false;
-  let s = 1, dpr = 1, lastCam = null, handle = null;
+  let s = 1, dpr = 1, ox = 0, oy = 0, lastCam = null, handle = null, rotors = [];
+  const scratch = doc.createElementNS(NS, 'g');
 
   const newPart = tag => {
     const p = doc.createElementNS(NS, 'svg');
@@ -94,6 +95,46 @@ export function createSheets(wrapper, svg, opts) {
     sh.on = false; sh.part.style.transform = ''; sh.css = '';
   }
 
+  // ---- affine hoisting (rider slots, opts.affine): the slot sits alone on its own sheet; its transform attribute
+  // (any translate / rotate / scale) is kept in JS and applied as the CSS matrix of that <svg>, conjugated by the
+  // slot's parent CTM (camera + rider transforms of the clone chain): screen = P·T·P⁻¹ · P·p = P·T·p. A moving slot
+  // then costs a compositor move instead of a repaint + raster of its art every frame.
+  function hoistA(sh) {
+    const el = sh.el;
+    if (!el.__pbRotor) {
+      el.setAttribute = function (k, v) { const h = this.__pbRotor; if (k === 'transform' && h.live) { if (h.attr !== String(v)) { h.attr = String(v); h.dirty = true; } return; } return nSet.call(this, k, v); };
+      el.getAttribute = function (k) { const h = this.__pbRotor; return k === 'transform' && h.live ? h.attr : nGet.call(this, k); };
+      el.removeAttribute = function (k) { const h = this.__pbRotor; if (k === 'transform' && h.live) { h.attr = null; h.dirty = true; return; } return nRem.call(this, k); };
+    }
+    el.__pbRotor = sh;
+    sh.attr = nGet.call(el, 'transform'); sh.live = true; sh.dirty = true; sh.css = '';
+    if (sh.attr !== null) nRem.call(el, 'transform');
+    sh.part.style.transformOrigin = '0 0';
+  }
+  function unhoistA(sh) {
+    if (!sh.live) return;
+    sh.live = false;
+    if (sh.attr === null) nRem.call(sh.el, 'transform'); else nSet.call(sh.el, 'transform', sh.attr);
+    sh.part.style.transform = ''; sh.part.style.transformOrigin = ''; sh.css = '';
+  }
+  function updateA() {
+    for (const sh of rotors) {
+      // parent CTM from the clone chain's transform attributes (no forced layout): viewBox -> px (slice fit) · ancestors
+      let chain = '';
+      for (let n = sh.el.parentNode; n && n !== sh.part; n = n.parentNode) { const t = nGet.call(n, 'transform'); if (t) chain = t + ' ' + chain; }
+      const key = sh.attr + '|' + chain + '|' + s + ',' + ox + ',' + oy;
+      if (key === sh.key) continue;
+      sh.key = key;
+      nSet.call(scratch, 'transform', `translate(${ox} ${oy}) scale(${s}) ${chain}`);
+      const P = scratch.transform.baseVal.consolidate().matrix;
+      let T = null;
+      if (sh.attr) { nSet.call(scratch, 'transform', sh.attr); const c = scratch.transform.baseVal.consolidate(); T = c && c.matrix; }
+      const M = T ? P.multiply(T).multiply(P.inverse()) : null;
+      const css = M ? `matrix(${M.a},${M.b},${M.c},${M.d},${M.e},${M.f})` : '';
+      if (css !== sh.css) { sh.css = css; sh.part.style.transform = css; }
+    }
+  }
+
   function split() {
     if (isSplit) return;
     const cuts = [];
@@ -101,10 +142,19 @@ export function createSheets(wrapper, svg, opts) {
     for (const sel of opts.sheets) for (const el of svg.querySelectorAll(sel)) cuts.push([el, 'sheet', el.getAttribute('data-ref') || sel]);
     for (const sel of opts.cuts || []) for (const el of svg.querySelectorAll(sel)) cuts.push([el, 'layer', el.id || el.getAttribute('data-ref') || sel]);
     for (const sel of opts.isolate || []) for (const el of svg.querySelectorAll(sel)) cuts.push([el, 'isolate', el.getAttribute('data-ref') || el.id || sel]);
+    for (const sel of opts.affine || []) for (const el of svg.querySelectorAll(sel)) cuts.push([el, 'affine', el.id || sel]);
     cuts.sort((a, b) => (a[0].compareDocumentPosition(b[0]) & 4 ? -1 : 1));
     let cur = svg;
     for (const [el, kind, tag] of cuts) {
       if (kind === 'layer') { cur = cutBefore(cur, el, tag); continue; }
+      if (kind === 'affine') {
+        cur = cutBefore(cur, el, tag);
+        const sh = { el, part: cur, attr: null, live: false, css: '', key: '' };
+        hoistA(sh); rotors.push(sh);
+        const nx = nextAfter(cur, el);
+        if (nx) cur = cutBefore(cur, nx, 'rest');
+        continue;
+      }
       // a strip may sit inside another strip's subtree only if nothing moves in between: skip nested ones
       if (sheets.some(sh => sh.el.contains(el))) continue;
       cur = cutBefore(cur, el, tag);
@@ -159,6 +209,8 @@ export function createSheets(wrapper, svg, opts) {
     if (!isSplit) return;
     mo.takeRecords(); mo.disconnect(); mo = null;
     for (const sh of sheets) unhoist(sh);
+    for (const sh of rotors) unhoistA(sh);
+    rotors = [];
     const merge = (parent, box) => { for (const n of [...box.childNodes]) { const o = origOf.get(n); if (o) merge(o, n); else (homeOf.get(n) || parent).appendChild(n); } };
     for (const p of parts.slice(1)) { merge(svg, p); p.remove(); }
     parts = [svg]; origOf = new Map(); clonesOf = new Map(); homeOf = new Map(); sheets = [];
@@ -173,12 +225,14 @@ export function createSheets(wrapper, svg, opts) {
   function resize() {
     const w = wrapper.clientWidth || 1600, h = wrapper.clientHeight || 900;
     s = Math.max(w / 1600, h / 900); dpr = doc.defaultView.devicePixelRatio || 1; lastCam = null;
+    ox = (w - 1600 * s) / 2; oy = (h - 900 * s) / 2;
   }
   // after the modules' update: write each strip's translate as a CSS transform. On screen a layer maps world p to
   // C + z·R(roll)·(p − T), so a translate (x, y) inside it moves the pixels by z·R·(x, y) (viewBox units) × s px.
   // Rounded to device pixels: a composited layer at a fractional offset would be resampled (soft edges).
   function update(cam) {
     if (!isSplit) return;
+    updateA();
     const camChanged = !lastCam || lastCam.zoom !== cam.zoom || lastCam.roll !== cam.roll;
     lastCam = { zoom: cam.zoom, roll: cam.roll };
     const r = ((cam.roll || 0) * Math.PI) / 180, c = Math.cos(r), sn = Math.sin(r);
