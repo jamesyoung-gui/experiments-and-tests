@@ -1097,6 +1097,44 @@ export function createAudio(bus, opts = {}) {
     else if (wantOn) { ac.resume().then(() => { lastLive = performance.now(); applyMaster(); }).catch(() => {}); }
   }
 
+  // ---- mech suit (egg #1, fx/mech.js): servo whirs + latch clicks per plate group, a rising power-up whine, a bass
+  // "thoom" when the suit locks, HUD bleeps. Scheduled once at the egg's start from its X-sheet times (MK / STG).
+  function servo(at, dur, f0, f1, amp, pan = 0.1) {
+    const o = O('sawtooth', f0), bp = F('bandpass', f0 * 3, 3), g = G(0), pn = Pan(pan);
+    o.frequency.setValueAtTime(f0, at); o.frequency.exponentialRampToValueAtTime(f1, at + dur);
+    bp.frequency.setValueAtTime(f0 * 3, at); bp.frequency.exponentialRampToValueAtTime(f1 * 3, at + dur);
+    wire(o, bp, g, pn, N.fx); send(pn, 0.1);
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(amp, at + 0.02); g.gain.setValueAtTime(amp, at + dur * 0.8); g.gain.linearRampToValueAtTime(0, at + dur);
+    o.start(at); o.stop(at + dur + 0.02); reap(o, [o, bp, g, pn]);
+  }
+  function latch(at, amp = 0.4, rate = 1) {
+    const sb = bufSrc(N.clicks[Math.floor(R() * 3)], false, rate), bp = F('bandpass', 2600 * rate, 2.5), g = G(amp), pn = Pan(0.1);
+    wire(sb, bp, g, pn, N.fx); sb.start(at); reap(sb, [sb, bp, g, pn]);
+  }
+  function thoom(at) {
+    const o = O('sine', 70), g = G(0); o.frequency.setValueAtTime(70, at); o.frequency.exponentialRampToValueAtTime(34, at + 0.6);
+    wire(o, g, N.fx); const e = envAD(g.gain, at, 0.7, 0.006, 0.7); o.start(at); o.stop(e); reap(o, [o, g]);
+    ramp(N.duck.gain, 0.5, at, 0.02); ramp(N.duck.gain, 1, at + 0.5, 0.8);
+  }
+  function mechSeq(at, on) {
+    if (!on) { [0, 0.25, 0.5, 0.75, 1.0].forEach((d, i) => { servo(at + d, 0.22, 380 - 40 * i, 160, 0.03); latch(at + d + 0.2, 0.3, 0.8); }); hudSeq(at, [88, 81, 76, 69], 0.035, 0.08); return; }
+    hudSeq(at, [81, 88, 81, 88], 0.035, 0.07);                                  // arming: lock-on bleeps
+    whoosh(at + 0.05, 0.4, 600, 2400, 0.03, 0);                                 // the scan ring
+    [0.4, 0.6, 0.82, 1.02, 1.24, 1.44, 1.66, 1.92].forEach((d, i) => {         // one plate group per stage
+      servo(at + d, 0.28, 140 + 30 * i, 420 + 40 * i, 0.028, -0.2 + 0.05 * i);
+      latch(at + d + 0.3, 0.42); latch(at + d + 0.36, 0.26, 1.3);
+    });
+    latch(at + 2.54, 0.6, 0.7);                                                // the visor slams down
+    const o = O('sawtooth', 110), lp = F('lowpass', 900, 4), g = G(0);         // rising power-up whine
+    o.frequency.setValueAtTime(110, at + 2.5); o.frequency.exponentialRampToValueAtTime(880, at + 3.15);
+    lp.frequency.setValueAtTime(600, at + 2.5); lp.frequency.exponentialRampToValueAtTime(4200, at + 3.15);
+    wire(o, lp, g, N.fx); g.gain.setValueAtTime(0, at + 2.5); g.gain.linearRampToValueAtTime(0.045, at + 3.1); g.gain.linearRampToValueAtTime(0, at + 3.25);
+    o.start(at + 2.5); o.stop(at + 3.3); reap(o, [o, lp, g]);
+    thoom(at + 3.2);                                                            // the lock: bass thoom
+    hudSeq(at + 3.3, [76, 83, 88, 95], 0.04, 0.06, 'chip');                     // MECH ONLINE bleep
+    logCue('mech', at);
+  }
+
   // ------------------------------------------------------------------ bus
   bus.on('rig:event', e => { if (ac) ingest(e); });
   bus.on('ui:play', ({ on } = {}) => { if (!ac) return; if (on === false) { paused = true; applyMaster(); } else if (on === true) { paused = false; lastLive = performance.now(); applyMaster(); } });
@@ -1109,6 +1147,7 @@ export function createAudio(bus, opts = {}) {
   // HUD feedback for the visor controls (never before the user has opted in to sound)
   bus.on('ui:camera', () => { if (live()) hudSeq(now() + 0.01, [88], 0.03, 0.035); });
   bus.on('ui:tod', ({ tod: td } = {}) => { if (live() && td !== undefined) hudSeq(now() + 0.01, [79, 86], 0.025, 0.04, 'sine'); });
+  bus.on('egg:mech', ({ on, stop } = {}) => { if (!stop && live()) mechSeq(now() + 0.02, on); });
   bus.on('egg:found', ({ id } = {}) => {
     if (!id || !live()) return;
     const at = now() + 0.02; hudSeq(at, [69, 76, 81, 88, 93, 100], 0.045, 0.055, 'chip', 0.1);

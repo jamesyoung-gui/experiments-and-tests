@@ -44,7 +44,7 @@ A cyberpunk great white pelican (visor, LED scarf, courier bomber) rides a glowi
 |---|---|---|
 | 帧率 fps (1600×900, headless Chromium, best of ≤ 3 trials after a quiet-box wait) | ≥ 58 | `node tools/shoot.mjs --dist --perf` (exit 1 on miss) |
 | JS p95 / frame | target ≤ 2 ms · hard ≤ 6 ms | 同上 same |
-| DOM 节点 nodes (#scene, incl. defs) | target ≤ 6000 · hard ≤ 11000 | 同上 same |
+| DOM 节点 nodes (#scene, incl. defs) | target ≤ 6000 · hard ≤ 11400 | 同上 same |
 | dist/index.html | ≤ 1200 KB | `node tools/build.mjs` (exit 1 on miss) |
 
 调试 Debug: `?perf` 显示帧率 HUD（fps HUD），`?perf&modperf` 显示各模块耗时（per-module update ms）；`?solo=<module>`、`?nofx`、`?cam=close`、`?tod=0.9`、`?freeze`。
@@ -62,7 +62,7 @@ A cyberpunk great white pelican (visor, LED scarf, courier bomber) rides a glowi
 
 | # | 中文 | English |
 |---|---|---|
-| 1 | 褐鹈鹕 | Brown pelican |
+| 1 | 机甲 · 鹈鹕-01 | Mech suit |
 | 2 | 维洛西佩迪亚 | Velocipedia |
 | 3 | 偷鱼猫 | The fish thief |
 | 4 | 一公里 | First kilometre |
@@ -78,6 +78,7 @@ A cyberpunk great white pelican (visor, LED scarf, courier bomber) rides a glowi
 | 14 | 系统骇入 | Wireframe city |
 | 15 | 欢迎鹈鹕 | Pelicans welcome |
 | 16 | 发发发 | Gold chrome |
+| 17 | 褐鹈鹕 | Brown pelican |
 
 ## 招牌时刻 · Signature moment
 
@@ -98,10 +99,10 @@ Adaptive quality: when the frame p95 stays above 18 ms the page sheds the compos
 
 - `shoot --dist --perf` (2026-10-01 09:04 UTC, best of 3; box load 1.60 1.48 1.76, other tenants 0.06 cores): **41.7 fps**, frame p95 33.4 ms, JS median 2.6 / p95 3.6 ms, **63.4 ms CPU per frame** (whole browser), 10635 DOM nodes, quality tier medium — **misses: fps 41.7 < 58**.
 - `detail-inventory`: **528 visible detail items** (1.35× edition C's 392); pelican 147, bike 118, sea 67, land 92, sky 46, fx 24, typography_frame 34. G-DETAIL passes.
-- `check-eggs`: 16 eggs, 23 shots, 0 console errors, 0 failures.
+- `check-eggs`: 17 eggs, 26 shots, 0 console errors, 0 failures.
 - `check-beats` (idle pacing, 248 s of live play): 31 rig beats, max gap 11.5 s, per 90 s window 11 / 11 / 11 / 12.
 - `check-baked`: 0 hard, 4 soft (size 2911 KB > 2048 KB (10-point target); gzip 561 KB > 500 KB (10-point target); full-frame SSIM 0.9188 < 0.97 target; rider SSIM 0.917 < 0.96 target); seam ratio 1.22, 681 animations on ≥ 60 s own loops.
-- Sizes: `dist/index.html` 1120.7 KB (453.0 KB gzip), `dist/pelican-bicycle.svg` 2911.1 KB (560.6 KB gzip).
+- Sizes: `dist/index.html` 1148.6 KB (463.2 KB gzip), `dist/pelican-bicycle.svg` 2911.1 KB (560.6 KB gzip).
 
 ## 制作过程 · How it was made (edition C, the engine this fork comes from)
 

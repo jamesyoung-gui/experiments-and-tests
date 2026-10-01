@@ -6,8 +6,8 @@
 // and nothing is created or destroyed at run time: all art is built once and shown / hidden / moved by transform.
 // Performance (STYLE-X §2): no filters anywhere in this module — every glow is stacked strokes or a static gradient.
 //
-//   brown      ↑↑↓↓←→←→BA  the rider becomes Simon Willison's stricter benchmark: a California brown pelican in
-//                          breeding plumage (colour override on the rider's slots; the code again turns it back)
+//   mech       ↑↑↓↓←→←→BA  the pelican suits up in an original cyber mech armour that grows out of it plate by plate
+//                          while it rides (fx/mech.js); the code again (or Esc) rewinds the suit off
 //   velo       type GIMINI  a Gimini "Velocipedia" chain bolted to the front hub: the drivetrain jams, the chain SNAPs
 //   cat        ring the bell while the ginger street cat's bench is on screen: it leaps up and steals a glowing fish
 //   km         every whole kilometre on the odometer: a hologram billboard pops up in a shower of data bits
@@ -22,19 +22,22 @@
 //   flight     type BIRD: a V of great white pelicans flies over the bay
 //   hack       type HACK: the whole city glitches into its wireframe for 3 s; only the pelican stays solid (it's real)
 //   welcome    ring the bell next to the 禁止鹈鹕 NO PELICANS sign: it flickers to 欢迎鹈鹕 PELICANS WELCOME
-//   gold       type 888 (发发发): a golden chrome suit (恭喜发财); 888 again takes it off. Combines with brown.
+//   gold       type 888 (发发发): a golden chrome suit (恭喜发财); 888 again takes it off. Combines with brown + mech.
+//   brown      type BROWN: the rider becomes Simon Willison's stricter benchmark, a California brown pelican in
+//              breeding plumage (colour override on the rider's slots; BROWN again turns it back)
 import { fmt1, fmt2 } from '../core/math.js';
 import { GROUND_Y, RIDER_X, BIKE } from '../contract.js';
 import { h, refs } from '../core/svg.js';
 import { TIMING } from '../rig/solve.js';
 import { LAT, MONO, ZH } from './egg-glyphs.js';
+import { buildMech, attachMech, mechProgress, MECH_CSS, MK } from './mech.js';
 
 export const id = 'eggs';
 export const materials = {};
 
 // ------------------------------------------------------------------------------------------------ list (bilingual)
 export const EGGS = [
-  ['brown', '褐鹈鹕', 'Brown pelican', '↑↑↓↓←→←→BA'],
+  ['mech', '机甲', 'Mech suit', '↑↑↓↓←→←→BA'],
   ['velo', '维洛西佩迪亚', 'Velocipedia', 'type GIMINI'],
   ['cat', '偷鱼猫', 'The fish thief', 'ring near the cat'],
   ['km', '一公里', 'First kilometre', 'ride 1 km'],
@@ -50,8 +53,9 @@ export const EGGS = [
   ['hack', '系统骇入', 'Wireframe city', 'type HACK'],
   ['welcome', '欢迎鹈鹕', 'Pelicans welcome', 'ring at the NO PELICANS sign'],
   ['gold', '发发发', 'Gold chrome', 'type 888'],
+  ['brown', '褐鹈鹕', 'Brown pelican', 'type BROWN'],
 ].map(([k, zh, en, how]) => ({ id: k, zh, en, how }));
-const DUR = { brown: 6, velo: 3.4, cat: 2.6, km: 3.4, fortytwo: 4, sunwink: 2.4, moonwink: 2.4, ufo: 6.8, chorus: 3.6, splash: 1.5, bottle: 7, wish: 2.4, flight: 9, hack: 3.6, welcome: 2.6, gold: 6 };
+const DUR = { mech: 6.6, brown: 6, velo: 3.4, cat: 2.6, km: 3.4, fortytwo: 4, sunwink: 2.4, moonwink: 2.4, ufo: 6.8, chorus: 3.6, splash: 1.5, bottle: 7, wish: 2.4, flight: 9, hack: 3.6, welcome: 2.6, gold: 6 };
 
 // the two eggs whose props are part of the street at all times (the clue tier): counted as street detail
 export const detailItems = [
@@ -335,7 +339,9 @@ export function build(ctx) {
     + wf(':is([data-sheet^="sea-"],[data-sheet="L-hills-far"],[data-sheet="L-sea"],[data-sheet="L-boats"],[data-sheet="L-gulls-far"])', NX.cy, 0.42)
     + wf(':is([data-sheet$="-fg"],[data-sheet="L-foreground"],[data-sheet="land-sphost-fg"])', NX.mag, 0.7)
     + wf(':is([data-sheet$="road"],[data-sheet="L-road"],[data-sheet="L-shadow"],[data-sheet="L-fx-back"])', NX.acid, 0.55);
-  defs += `<style>${css}</style>`;
+  defs += `<style>${css}${MECH_CSS}</style>`;
+  const MECH = buildMech();
+  defs += MECH.defs;
   defs += h('symbol', { id: 'egg-catsit', overflow: 'visible' }, catSit('egg-cs'));
   defs += h('linearGradient', { id: 'egg-scanG', x1: 0, y1: 0, x2: 0, y2: 1 }, h('stop', { offset: 0, 'stop-color': NX.acid, 'stop-opacity': 0 }), h('stop', { offset: 1, 'stop-color': NX.acid, 'stop-opacity': 0.28 }));
   defs += h('linearGradient', { id: 'egg-holoG', x1: 0, y1: 0, x2: 0, y2: 1 }, h('stop', { offset: 0, 'stop-color': NX.cy, 'stop-opacity': 0.26 }), h('stop', { offset: 1, 'stop-color': NX.cy, 'stop-opacity': 0.08 }));
@@ -356,7 +362,7 @@ export function build(ctx) {
       h('path', { d: rect(-w / 2 + 10, -hh / 2 + 8, w - 20, 20), fill: acc, opacity: 0.9 }),
       mono(sys, 10, -w / 2 + 40, -hh / 2 + 22, NX.void),
       eggIcon(-w / 2 + 24, -hh / 2 + 18, 0.62, NX.void, NX.void),
-      mono('EGG ' + String(EGGS.findIndex(e => e.id === { capBrown: 'brown', capVelo: 'velo', capGold: 'gold' }[ref]) + 1).padStart(2, '0') + '/' + EGGS.length, 10, w / 2 - 18, -hh / 2 + 22, NX.void, 'end'),
+      mono('EGG ' + String(EGGS.findIndex(e => e.id === { capBrown: 'brown', capVelo: 'velo', capGold: 'gold', capMech: 'mech' }[ref]) + 1).padStart(2, '0') + '/' + EGGS.length, 10, w / 2 - 18, -hh / 2 + 22, NX.void, 'end'),
       glow(big, 26, 0, 12, bigC, bigCore),
       mono(l3, 10.5, 0, 38, NX.plume, 'middle', { opacity: 0.85 }),
       h('path', { d: `M${-w / 2 + 14} ${hh / 2 - 8}h60M${w / 2 - 74} ${hh / 2 - 8}h60`, stroke: acc, 'stroke-width': 2 }),
@@ -364,6 +370,7 @@ export function build(ctx) {
   };
   L.front += card('capBrown', 'SKIN PATCH // SIMON WILLISON BENCHMARK', '褐鹈鹕 · 繁殖羽', 'CALIFORNIA BROWN PELICAN · BREEDING PLUMAGE', NX.amber, NX.amber, NX.amberC);
   L.front += card('capVelo', 'ERR 0x6E // CHAIN_LOOP · VELOCIPEDIA', '链条接错啦！', 'AFTER GIANLUCA GIMINI · BIKES DRAWN FROM MEMORY', NX.mag, NX.mag, NX.magC);
+  L.front += card('capMech', 'MECH PROTOCOL 鹈鹕-01 // ALL PLATES LOCKED', '机甲上线 · MECH ONLINE', 'ARMOR 100% · REACTOR STABLE · THRUSTERS IDLE', NX.cy, NX.cy, NX.cyC);
   L.front += card('capGold', 'FIRMWARE 8.8.8 // 发发发', '恭喜发财 · 金色铬甲', 'GOLD CHROME EDITION · PROSPERITY PATCH INSTALLED', NX.amber, NX.amber, '#FFF3C4');
 
   // ---- sun + moon faces (L-sunmoon, depth 0; placed on the discs every frame while shown)
@@ -573,7 +580,15 @@ export function build(ctx) {
   for (let i = 0; i < 8; i++) links += h('path', { 'data-ref': 'egg-lk' + i, d: 'M-5 -2.5H5A2.5 2.5 0 0 1 5 2.5H-5A2.5 2.5 0 0 1 -5 -2.5Z', fill: NX.chrome, stroke: NX.ink, 'stroke-width': 1.2 });
   let sparks = '';
   for (let i = 0; i < 9; i++) { const a = (-150 + i * 26) * D2R, r0 = 16 + 4 * hash(i, 3), r1 = r0 + 10 + 14 * hash(i, 4); sparks += `M${f(hub[0] + Math.cos(a) * r0)} ${f(hub[1] + Math.sin(a) * r0)}L${f(hub[0] + Math.cos(a) * r1)} ${f(hub[1] + Math.sin(a) * r1)}`; }
-  L.front += h('g', { 'data-ref': 'egg-riderF' },
+  // mech suit (egg #1): rider-space HUD (lock-on reticle, protocol line, scan ring, joint sparks, hero rays)
+  const protoD = text('MECH PROTOCOL 鹈鹕-01 · ENGAGE', 13, 0, 0, { align: 'start', track: 0, font: 'mono' });
+  defs += h('clipPath', { id: 'egg-mkTypeClip' }, h('path', { 'data-ref': 'egg-mkType', d: rect(-6, -18, 1, 26) }));
+  L.back = h('g', { 'data-ref': 'egg-riderB' }, MECH.back);
+  L.front += h('g', { 'data-ref': 'egg-riderF' }, MECH.fx,
+    h('g', { 'data-ref': 'egg-mkProto', display: 'none', transform: 'translate(-236 -632)' },
+      h('path', { d: rect(-6, -18, protoD.w + 12, 26), fill: NX.void, 'fill-opacity': 0.72 }),
+      h('path', { d: rect(-6, -18, 4, 26), fill: NX.acid }),
+      h('g', { 'clip-path': 'url(#egg-mkTypeClip)' }, h('path', { d: protoD.d, fill: 'none', stroke: NX.cy, 'stroke-width': 3, opacity: 0.35 }), h('path', { d: protoD.d, fill: NX.cyC }))),
     h('g', { 'data-ref': 'egg-velo', visibility: 'hidden' },
       h('g', { 'data-ref': 'egg-veloChain' },
         h('path', { d: circ(hub[0], hub[1], 11) + cog, fill: NX.chrome, stroke: NX.ink, 'stroke-width': 1.2 }),
@@ -656,7 +671,9 @@ export function build(ctx) {
 
   return {
     defs,
+    overlay: MECH.overlay,
     layers: {
+      'L-fx-back': L.back,
       'L-gulls-far': L.gulls, 'L-stars': L.stars, 'L-clouds': L.clouds, 'L-sea': L.sea,
       'L-roadside': L.roadside, 'L-road': L.road, 'L-fx-front': L.front,
     },
@@ -683,7 +700,8 @@ export function shootAt(t) {
   const x0 = 560 + hash(q, 79) * 900, y0 = 60 + hash(q, 80) * 140;
   return { k, u, x: x0 - SHOOT.v * u, y: y0 + SHOOT.v * 0.32 * u, o: sstep(0, 0.15, u) * (1 - sstep(0.8, SHOOT.dur, u)) };
 }
-const KM_UNITS = 1000 / (0.34 / BIKE.R);            // odometer: wheel R = 100 units ≈ 0.34 m (as ui.js)
+const KM_UNITS = 1000 / (0.34 / BIKE.R);
+const STG0 = 0.32;                                   // the rewind is over once the suit is back to its seeds            // odometer: wheel R = 100 units ≈ 0.34 m (as ui.js)
 
 // ------------------------------------------------------------------------------------------------ attach
 let inst = null;
@@ -708,13 +726,27 @@ export function attach(svg, ctx) {
   };
   const start = (k, p = {}) => { E[k] = { t0: lastFrame ? lastFrame.t : 0, ...p }; markFound(k); };
   const tau = (k, t) => (E[k] ? t - E[k].t0 : -1);
-  let brown = false, gold = false;
+  let brown = false, gold = false, mech = false, onMech = () => {};
+  const mk = attachMech(r, set, reduced);
+  const riderEl = svg.querySelector('#rider');
+  let pulsed = false;
   let hackSheets = null;         // sheets jittered during the HACK glitch (queried when it starts)
   const hackTr = new Map();
 
   // live detectors -------------------------------------------------------------
   const api = {
-    start, E, found, welcomed, get brown() { return brown; }, get gold() { return gold; },
+    start, E, found, welcomed, get brown() { return brown; }, get gold() { return gold; }, get mech() { return mech; },
+    // the suit: on = assemble from now; off = rewind from wherever the assembly is (instant when stop = true)
+    setMech(on, stop = false) {
+      if (on === mech && !stop) return;
+      mech = on;
+      const now = lastFrame ? lastFrame.t : 0, pr = mechProgress(E.mech, now);
+      if (on && pr && pr.rev && pr.a > 0) { E.mech = { t0: now - pr.a }; markFound('mech'); }   // re-armed mid-rewind: grow back from here
+      else if (on) start('mech');
+      else if (E.mech) { if (stop) delete E.mech; else E.mech.off = lastFrame ? lastFrame.t : 0; }
+      onMech(on, stop, E.mech ? E.mech.t0 : undefined);
+    },
+    onMech(fn) { onMech = fn; },
     setBrown(on) { brown = on; klass('egg-brown', on); if (on) start('brown'); },
     setGold(on) { gold = on; klass('egg-gold', on); if (on) start('gold'); },
     frame: () => lastFrame,
@@ -759,7 +791,24 @@ export function attach(svg, ctx) {
         if (Math.abs(px - (RIDER_X + 24)) < 270) start('splash', { d0: D, x0: px });
         api.hopT0 = undefined;
       }
-      set(r.riderF, 'transform', riderXf(fr));
+      // ---- mech suit (egg #1): progress is a pure function of (t − t0) and of the rewind start
+      const ms = mechProgress(E.mech, t);
+      if (ms && ms.rev && ms.a < STG0) { delete E.mech; }
+      mk.update(fr, E.mech ? ms : null);
+      // hero beat: a short push-in pulse of the whole rider (scaled about the road contact, so the tyres stay down)
+      const pu = ms && !ms.rev && !reduced ? sstep(MK.power, MK.power + 0.16, ms.a) * (1 - sstep(MK.power + 0.3, MK.hero + 0.1, ms.a)) : 0;
+      const [rcx, rcy] = BIKE.rearContact;
+      const base = `translate(${RIDER_X} ${(GROUND_Y + fr.pose.riderY).toFixed(2)}) rotate(${fr.pose.bikePitch.toFixed(3)} ${rcx} ${rcy})`;
+      const pulse = pu > 0.001 ? ` translate(24 0) scale(${(1 + 0.045 * pu).toFixed(4)}) translate(-24 0)` : '';
+      if (riderEl && (pulse || pulsed)) set(riderEl, 'transform', base + pulse);
+      pulsed = !!pulse;
+      set(r.riderF, 'transform', riderXf(fr) + pulse);
+      if (E.mech) set(r.riderB, 'transform', riderXf(fr) + pulse);   // (dormant: no write, so the back fx sheet never repaints for it)
+      {
+        const a = ms ? ms.a : -1, on = !!ms && !ms.rev && a >= 0.08 && a < 1.25;
+        set(r.mkProto, 'display', on ? 'inline' : 'none');
+        if (on) { set(r.mkType, 'd', rect(-6, -18, 12 + 330 * clamp((a - 0.08) / 0.3, 0, 1), 26)); set(r.mkProto, 'opacity', f2(1 - sstep(1.0, 1.25, a))); }
+      }
 
       // ---- HUD cards (upper left): brown / velo / gold
       const capAnim = (el, k, x, y) => {
@@ -771,9 +820,20 @@ export function attach(svg, ctx) {
         set(r[el.getAttribute('data-ref').slice(4) + 'In'], 'transform', `scale(${f2(Math.max(0.01, s))} ${f2(Math.max(0.01, Math.min(1, s * 1.4)))})`);
       };
       capAnim(r.capBrown, 'brown', 350, 190);
+      {   // MECH ONLINE card: in at the hero beat (3.2 s), out ~3 s later
+        const u = ms && !ms.rev ? ms.a - MK.power : -1, on = u >= 0 && u < 3.2, el = r.capMech;
+        vis(el, on);
+        if (on) {
+          const sc = reduced ? 1 : easeOutBack(clamp(u / 0.35, 0, 1)), o = 1 - sstep(2.8, 3.2, u);
+          const [ax, ay, as] = anchor(470, 350, 190), [wx, wy, iz] = scr(fr, ax, ay);
+          set(el, 'transform', `translate(${f(wx + glitchX(u, 5) * iz)} ${f(wy)}) scale(${f2(iz * as)})`); set(el, 'opacity', f2(o));
+          set(r.capMechIn, 'transform', `scale(${f2(Math.max(0.01, sc))} ${f2(Math.max(0.01, Math.min(1, sc * 1.4)))})`);
+        }
+      }
       capAnim(r.capVelo, 'velo', 350, 190);
       const ub = tau('brown', t);
-      capAnim(r.capGold, 'gold', 350, ub >= 0 && ub < DUR.brown ? 316 : 190);
+      const um = ms && !ms.rev ? ms.a - MK.power : -1;
+      capAnim(r.capGold, 'gold', 350, (ub >= 0 && ub < DUR.brown) || (um >= 0 && um < 3.2) ? 316 : 190);
       vis(r.goldGlint, gold && !reduced);
       if (gold && !reduced) for (let i = 0; i < 5; i++) {
         const p = wrap(t * 0.7 + i * 0.37, 1.6), s = p < 0.5 ? Math.sin(Math.PI * p / 0.5) : 0;
@@ -1143,6 +1203,11 @@ export function connect({ bus, state, svg }) {
   // the reaction beat is the rider's, not the viewer's: flag it so it cannot cascade into another egg (km -> bell -> cat)
   let reacting = false;
   const react = type => { reacting = true; try { bus.emit(type, {}); } finally { reacting = false; } };
+  // the suit: the rig's hero-beat pose accent keys off state.mechT0; audio gets egg:mech (servos, whine, thoom, bleeps)
+  A.onMech((on, stop, t0) => {
+    if (on) state.mechT0 = t0; else if (stop) delete state.mechT0;
+    bus.emit('egg:mech', { on, stop });
+  });
   A.onFound(id => { emitFound(id); const rc = live && REACT[id]; if (rc) win.setTimeout(() => react(rc[0]), rc[1]); });
   if (A.found.size) queueMicrotask(() => bus.emit('egg:found', { id: null, count: A.found.size, total: EGGS.length }));
   // clue tier: after a minute of riding, show the empty tally so players know there is something to find
@@ -1167,8 +1232,9 @@ export function connect({ bus, state, svg }) {
     if (seq.length === KONAMI.length && seq.every((x, i) => x === KONAMI[i])) {
       seq = [];
       restore({ auto: autoBeforeA ?? undefined });
-      A.setBrown(!A.brown);
+      A.setMech(!A.mech);
     }
+    if (e.key === 'Escape' && A.mech && !(tg && tg.closest && tg.closest('dialog,[role="dialog"]')) && !svg.ownerDocument.querySelector('dialog[open]')) A.setMech(false);
     if (k.length === 1) {
       typed = (typed + k).slice(-8);
       if (typed.endsWith('gimini')) {
@@ -1180,6 +1246,7 @@ export function connect({ bus, state, svg }) {
       if (typed.endsWith('bird')) { typed = ''; A.start('flight'); }
       if (typed.endsWith('hack')) { typed = ''; restore(hackBefore); A.start('hack'); }
       if (typed.endsWith('888')) { typed = ''; A.setGold(!A.gold); }
+      if (typed.endsWith('brown')) { typed = ''; A.setBrown(!A.brown); }   // (the 'w' on the way waves: harmless, like HACK's hop)
     }
   });
   function velo() {
@@ -1246,6 +1313,7 @@ export function connect({ bus, state, svg }) {
 
   // ---- test API
   const trig = {
+    mech: () => A.setMech(true),
     brown: () => A.setBrown(true),
     velo: () => velo(),
     cat: () => { const b = A.bench; A.catTake(b ? b.k : -2); A.start('cat', { x0: b ? b.x : 1150 }); },
@@ -1267,8 +1335,10 @@ export function connect({ bus, state, svg }) {
     list: EGGS.map(e => ({ ...e })),
     trigger(id) { if (!trig[id]) throw new Error('unknown egg ' + id); trig[id](); return [...A.found]; },
     found: () => [...A.found],
-    stopAll() { for (const k in A.E) delete A.E[k]; if (A.brown) A.setBrown(false); if (A.gold) A.setGold(false); },   // end running eggs (keeps found)
-    reset() { A.found.clear(); A.welcomed.clear(); try { localStorage.removeItem('pb-eggs'); } catch (e) { /* ignore */ } for (const k in A.E) delete A.E[k]; if (A.brown) A.setBrown(false); if (A.gold) A.setGold(false); },
+    stopAll() { if (A.mech) A.setMech(false, true); for (const k in A.E) delete A.E[k]; if (A.brown) A.setBrown(false); if (A.gold) A.setGold(false); },   // end running eggs (keeps found)
+    reset() { A.found.clear(); A.welcomed.clear(); try { localStorage.removeItem('pb-eggs'); } catch (e) { /* ignore */ } if (A.mech) A.setMech(false, true); for (const k in A.E) delete A.E[k]; if (A.brown) A.setBrown(false); if (A.gold) A.setGold(false); },
+    setMech: (on, stop) => A.setMech(on, stop),
+    mech: () => A.mech,
     setBrown: on => A.setBrown(on),
     setGold: on => A.setGold(on),
     signAt, benchAt, shootAt,

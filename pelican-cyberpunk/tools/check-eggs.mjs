@@ -35,6 +35,7 @@ async function snap(page, name, clip) {
 // ---------------------------------------------------------------- 1. deterministic triggers
 const HOP_LAND = 0.62;   // refined from the page below
 const plan = {
+  mech:     { T: 3.2, tod: 0.7, at: [1.2, 2.45, 3.6], cam: 'close' },
   brown:    { T: 3.2, tod: 0.7, at: [1.2], cam: 'wide' },
   velo:     { T: 5, tod: 0.7, at: [1.0, 2.45], cam: 'close' },
   cat:      { T: 8.55, tod: 0.7, at: [0.3, 0.7, 1.15], cam: 'wide' },
@@ -79,6 +80,14 @@ const hidden0 = await live.evaluate(() => document.querySelector('.ui-eggs').hid
 if (!hidden0) fails.push('egg counter visible before any egg was found');
 await render(live, 4, { tod: 0.7, cam: 'wide' });
 for (const k of ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']) await live.keyboard.press(k);
+const mechOn = await live.evaluate(() => window.__pb.eggs.mech());
+await live.keyboard.press('Escape');
+const mechOff = await live.evaluate(() => window.__pb.eggs.mech());
+if (!mechOn || mechOff) fails.push(`Konami should arm the mech suit and Esc rewind it (on ${mechOn}, after Esc ${mechOff})`);
+// no plate may stay shown once the rewind has run out
+const mechLeft = await live.evaluate(() => { window.__pb.renderAt(6, { tod: 0.7, cam: 'wide' }); const n = [...document.querySelectorAll('[data-ref^="egg-mkJ"]')].filter(e => e.getAttribute('display') !== 'none').length; window.__pb.renderAt(4, { tod: 0.7, cam: 'wide' }); return n; });
+if (mechLeft) fails.push(`mech suit left ${mechLeft} slot groups shown after the rewind`);
+await live.keyboard.type('brown');
 await live.keyboard.type('gimini');
 await live.keyboard.type('bird');
 const cam0 = await live.evaluate(() => window.__pb.state.cam);
@@ -103,7 +112,7 @@ if (tSign < 0) fails.push('NO PELICANS sign never on screen in 90 s'); else {
 }
 await render(live, 4.5, { tod: 0.93, cam: 'wide' });
 const liveFound = await live.evaluate(() => window.__pb.eggs.found());
-for (const id of ['brown', 'velo', 'flight', 'sunwink', 'bottle', 'moonwink', 'chorus', 'ufo', 'hack', 'gold', 'welcome', 'wish']) if (!liveFound.includes(id)) fails.push(`live detector did not find "${id}"`);
+for (const id of ['mech', 'brown', 'velo', 'flight', 'sunwink', 'bottle', 'moonwink', 'chorus', 'ufo', 'hack', 'gold', 'welcome', 'wish']) if (!liveFound.includes(id)) fails.push(`live detector did not find "${id}"`);
 const st = await live.evaluate(() => ({ auto: window.__pb.state.todAuto, sound: window.__pb.state.toggles.sound, cam: window.__pb.state.cam }));
 if (st.auto || st.sound || st.cam !== cam0) fails.push('Konami / GIMINI / HACK left a side effect: ' + JSON.stringify(st) + ' (camera was ' + cam0 + ')');
 // HACK must hand the city back: no wireframe class and no jittered sheet once it has run out
