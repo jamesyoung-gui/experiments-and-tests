@@ -413,9 +413,11 @@ export function attach(svg, ctx) {
       showA(r.flash, fl * 0.3 * heavy);
 
       // ---- rain: pooled streak tiles on composited sheets (a translate per frame)
-      const kA = red ? 0 : t * 1250, kB = red ? 0 : t * 1900, dS = red ? 0 : D * 0.1;
-      if (showA(r.rainL, clamp(R / 0.34, 0, 1) * RK)) set(r.rainA, 'transform', `translate(${f(-wrap(kA * 0.11 + dS, 408))} ${f(wrap(kA, 384))})`);
-      if (showA(r.rainH, heavy * RK)) set(r.rainB, 'transform', `translate(${f(-wrap(kB * 0.26 + dS, 440))} ${f(wrap(kB, 450))})`);
+      // fall speeds and slants chosen so both tiles wrap a whole number of times in 4 s at 60 rpm (the baked loop):
+      // rain A 13 × 384 down, 3 × 408 across; rain B 17 × 450 down, 6 × 440 across
+      const kA = red ? 0 : t * 1248, kB = red ? 0 : t * 1912.5, dS = red ? 0 : D * 0.1;
+      if (showA(r.rainL, clamp(R / 0.34, 0, 1) * RK)) set(r.rainA, 'transform', `translate(${f(-wrap(kA * 0.09415 + dS, 408))} ${f(wrap(kA, 384))})`);
+      if (showA(r.rainH, heavy * RK)) set(r.rainB, 'transform', `translate(${f(-wrap(kB * 0.24654 + dS, 440))} ${f(wrap(kB, 450))})`);
       if (showA(r.farRain, clamp(R * 1.8, 0, 1) * 0.85 * RK)) { const k = red ? 0 : t * 700; set(r.farRainMove, 'transform', `translate(${f(-wrap(k * 0.2 + (red ? 0 : D * 0.02), 160))} ${f(wrap(k, 256))})`); }
       if (showA(r.gusts, heavy * 0.9 * RK)) set(r.gustMove, 'transform', `translate(${f(-wrap(red ? 900 : t * 240 + D * 0.2, GUST_W))} 0)`);
       showA(r.spray, heavy * 0.9);

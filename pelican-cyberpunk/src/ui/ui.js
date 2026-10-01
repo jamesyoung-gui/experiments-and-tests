@@ -73,7 +73,7 @@ export const STRINGS = {
     helpTitle: 'Keyboard shortcuts', helpTry: 'Press any shortcut and its key lights up on the keyboard.', helpEnable: 'Single-key shortcuts',
     helpClose: 'Close', helpTouch: 'Touch gestures',
     gTap: 'Tap the pelican: feed it a fish', gSheet: 'Swipe up or tap the panel: open the controls', gSlide: 'Drag the sliders: cadence and time of day',
-    reduced: 'Reduced motion on: the poster holds still, press Play to ride', reducedToast: 'Reduced motion on',
+    reduced: 'Reduced motion on: the city holds still, press Play to ride', reducedToast: 'Reduced motion on',
     region: 'Pelican Bay control panel', odo: 'Ride telemetry', telemetry: 'Telemetry',
     kbBell: 'Ring', kbWave: 'Wave', kbHop: 'Hop', kbFeed: 'Feed', kbCam: 'Camera', kbTod: 'Time', kbAuto: 'Auto day',
     kbSlower: 'Slower', kbFaster: 'Faster', kbCoast: 'Coast', kbSound: 'Sound', kbMusic: 'Music', kbPause: 'Pause', kbHelp: 'Help', kbLang: 'Language',

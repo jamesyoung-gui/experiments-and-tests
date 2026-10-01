@@ -34,7 +34,7 @@ export function buildSceneMarkup(modules, ctx) {
     return h('g', { id: lid, 'data-depth': depth ?? 'fixed' }, kids);
   });
   const markup = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="scene" viewBox="0 0 ${VIEW.w} ${VIEW.h}" preserveAspectRatio="xMidYMid slice" role="img" aria-labelledby="scene-title scene-desc">`
-    + `<title id="scene-title">Pelican Bay · 鹈鹕湾</title><desc id="scene-desc">A great white pelican rides a bicycle along a seaside road at Pelican Bay.</desc>`
+    + `<title id="scene-title">Neon Pelican · 霓虹鹈鹕</title><desc id="scene-desc">A cyberpunk great white pelican in a visor and an LED scarf rides a glowing bicycle through a rain-slick neon harbour city at night, delivering fish for Pelican Express.</desc>`
     + `<defs>${defs.join('')}</defs>${layers.join('')}</svg>`;
   return { markup, problems };
 }

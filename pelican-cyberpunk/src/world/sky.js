@@ -62,6 +62,9 @@ export const detailItems = [
   ['sky:O:smog-gradient', 'O', 'layered smog gradient: void zenith → violet → hot magenta/coral horizon (per city mood)'],
   ['sky:T:smog-strata', 'T', 'fine horizontal strata of lighter smog across the gradient'],
   ['sky:O:city-light-dome', 'O', 'the city light dome glowing on the horizon, hot spots under the towers'],
+  ['sky:O:lane-gate', 'O', 'a holographic toll gate on a traffic lane: an upright neon ring the flying cars thread through'],
+  ['sky:O:drone-show', 'O', 'a drone light show drawing a pelican head in the open sky beside the arcology crown'],
+  ['sky:O:lantern-drones', 'O', 'festival lantern drones: amber paper-look LED lanterns hanging under tiny quad drones'],
   ['sky:O:lane-beacons', 'O', 'floating skyway beacons (chevrons + SKYWAY 3 / 7 plates) marking the traffic lanes'],
   ['sky:O:stars', 'O', 'rare stars through the smog (only a few, dim at dusk, full at deep night)'],
   ['sky:O:star-glints', 'O', 'four-point glints on the brightest stars'],
@@ -146,6 +149,7 @@ export function build(ctx) {
   // ======================== L-sky: the smog gradient, strata, the city light dome, skyway beacons
   const Y = y => f((y + 420) / 900);
   const skyFill = lg('sky-grad', 0, -420, 0, 480, [[0, v('sky0')], [Y(-10), v('sky0')], [Y(110), v('sky1')], [Y(240), v('sky1b')], [Y(355), v('sky2')], [Y(432), v('sky3')], [Y(470), v('skyLine')], [1, v('skyLine')]]);
+  let openSky = '';   // (integration) small lights in the open sky, drawn over the moon halo
   let sky = h('rect', { ...DD('sky:O:smog-gradient'), x: X0, y: -420, width: W, height: 900, fill: skyFill });
   {
     // strata: broken hairlines of lighter smog, denser toward the horizon
@@ -174,7 +178,7 @@ export function build(ctx) {
         core += circ(x, L.y - 7, 0.9 * L.s);
       }
       if (li === 1 || li === 3) {
-        const px = li === 1 ? 1500 : 250;
+        const px = li === 1 ? 1062 : 250;   // (integration) SKYWAY 3 left of the HUD mission panel, in open sky
         plate += h('g', { transform: `translate(${px} ${L.y - 22})`, ...(li === 1 ? DD('sky:O:lane-beacons') : {}) },
           h('path', { d: rrect(-2, -9, tw(li === 1 ? 'sky3' : 'sky7', 8) + 4, 12, 2), fill: v('mega'), stroke: NEON.cyan, 'stroke-width': 0.8, opacity: 0.9 }),
           T(li === 1 ? 'sky3' : 'sky7', 0, 0, 8, { fill: NEON.cyanCore }),
@@ -183,20 +187,44 @@ export function build(ctx) {
     });
     sky += h('g', { style: NEONV }, h('path', { d: chev, fill: 'none', stroke: NEON.cyan, 'stroke-width': 1, opacity: 0.5, 'stroke-linejoin': 'round' }),
       h('path', { d: core, fill: NEON.cyanCore, opacity: 0.8 }), plate);
+    // (integration) a holographic toll gate on the third lane: an upright neon ring the flying cars thread through
+    openSky += h('g', { ...DD('sky:O:lane-gate'), transform: 'translate(424 169)', style: NEONV },
+      h('path', { d: 'M-9 0a9 21 0 1 0 18 0a9 21 0 1 0 -18 0Z', fill: NEON.cyan, 'fill-opacity': 0.08, stroke: NEON.cyan, 'stroke-width': 3.4, 'stroke-opacity': 0.25 }),
+      h('path', { d: 'M-9 0a9 21 0 1 0 18 0a9 21 0 1 0 -18 0Z', fill: 'none', stroke: NEON.cyan, 'stroke-width': 1.2 }),
+      h('path', { d: 'M-7 -14h14M-7 14h14', stroke: NEON.magenta, 'stroke-width': 1.4 }), h('path', { d: circ(0, -22, 1.4) + circ(0, 22, 1.4), fill: NEON.magentaCore }));
+  }
+  {
+    // (integration) a drone light show draws a pelican head in the open sky right of the arcology crown
+    const P = [[10, 30], [6, 20], [12, 10], [24, 4], [38, 6], [46, 14], [70, 16], [100, 19], [128, 22], [140, 24], [138, 29], [120, 30], [96, 36], [70, 40], [52, 38], [44, 32], [34, 40], [20, 40]];
+    const line = 'M' + P.map(p => p.join(' ')).join('L') + 'Z';
+    sky += h('g', { ...DD('sky:O:drone-show'), transform: 'translate(1006 122)', style: NEONV },
+      h('path', { d: line, fill: NEON.cyan, 'fill-opacity': 0.07, stroke: NEON.cyan, 'stroke-width': 0.6, 'stroke-opacity': 0.4 }),
+      h('path', { d: P.map(([x, y]) => circ(x, y, 1.4)).join(''), fill: NEON.cyanCore }),
+      h('path', { d: circ(32, 13, 1.8), fill: NEON.magenta }), h('path', { d: P.filter((_, i) => i % 3 === 0).map(([x, y]) => circ(x, y, 3.2)).join(''), fill: NEON.cyan, opacity: 0.25 }));
+    // festival lantern drones: amber lanterns hanging under tiny quad drones, drifting over the old town
+    const lant = (x, y, s) => h('g', { transform: `translate(${x} ${y}) scale(${s})` },
+      h('path', { d: circ(0, 8, 10), fill: NEON.amber, opacity: 0.22 }), h('path', { d: 'M-7 -1h14', stroke: '#1A1530', 'stroke-width': 1.6 }),
+      h('path', { d: circ(-7, -1.5, 1) + circ(7, -1.5, 1), fill: NEON.red }), h('path', { d: 'M0 0v3', stroke: '#1A1530', 'stroke-width': 0.6 }),
+      h('path', { d: 'M-3.5 3h7l1 4.5l-1 5.5h-7l-1 -5.5Z', fill: NEON.amber }), h('path', { d: 'M-2.5 6h5M-2.5 9h5', stroke: NEON.amberCore, 'stroke-width': 0.6 }),
+      h('path', { d: 'M0 13v3', stroke: NEON.amber, 'stroke-width': 0.8 }));
+    openSky += h('g', { ...DD('sky:O:lantern-drones'), style: NEONV }, lant(336, 182, 1.15), lant(548, 146, 1), lant(646, 176, 0.9));
   }
 
   // ======================== L-stars: rare stars, glints, twinkles, satellite train
   let starsL = '', satL = '';
   {
-    const R = rng(311); const mags = ['', '', ''], tw3 = ['', '', '']; let glint = '';
+    const R = rng(311); const mags = ['', '', ''], tw3 = ['', '', '']; let glint = '', patch = '';
+    const inPatch = (x, y) => x > 975 && x < 1160 && y > 22 && y < 84;   // open sky right of the arcology crown
     for (let i = 0; i < 70; i++) {
       const x = X0 + R() * W, y = -380 + Math.pow(R(), 1.3) * 640; const m = R() < 0.62 ? 0 : R() < 0.75 ? 1 : 2;
       const r = [0.7, 1.05, 1.5][m];
-      if (R() < 0.18) tw3[i % 3] += circ(x, y, r); else mags[m] += circ(x, y, r);
+      if (R() < 0.18) tw3[i % 3] += circ(x, y, r); else if (inPatch(x, y)) patch += circ(x, y, r); else mags[m] += circ(x, y, r);
       if (m === 2 && R() < 0.8) glint += `M${f(x - 5)} ${f(y)}h10M${f(x)} ${f(y - 5)}v10`;
     }
     starsL = h('g', { 'data-ref': 'sky-stars', style: 'fill-opacity:var(--pb-n-starAlpha);stroke-opacity:var(--pb-n-starAlpha)' },
-      h('path', { ...DD('sky:O:stars'), d: mags[0] + mags[1], fill: v('star'), opacity: 0.7 }),
+      // a few extra stars in that patch (it sits in the smog-thin zenith band of the hero frame)
+      h('path', { ...DD('sky:O:stars'), d: patch + [[992, 38, 1.1], [1018, 61, 0.8], [1047, 30, 1.4], [1083, 52, 0.9], [1121, 34, 1.2], [1146, 66, 0.8]].map(([x, y, r]) => circ(x, y, r)).join(''), fill: v('star'), opacity: 0.85 }),
+      h('path', { d: mags[0] + mags[1], fill: v('star'), opacity: 0.7 }),
       h('path', { d: mags[2], fill: v('star') }),
       h('path', { ...DD('sky:O:star-glints'), d: glint, stroke: v('star'), 'stroke-width': 0.7, opacity: 0.8 }),
       tw3.map((d, g) => h('path', { 'data-ref': 'sky-tw' + g, ...(g === 0 ? DD('sky:O:twinkle-stars') : {}), d, fill: NEON.cyanCore })));
@@ -234,9 +262,9 @@ export function build(ctx) {
       h('path', { d: rims, fill: 'none', stroke: '#FFFFFF', 'stroke-width': 0.7, opacity: 0.7 }),
       h('path', { d: 'M-30 0A30 30 0 0 0 18 24A34 34 0 0 1 -30 0Z', fill: v('moonShade'), opacity: 0.55 }),
       h('path', { ...DD('sky:O:moon-colony'), d: col, fill: NEON.amberCore }), h('path', { d: colC, fill: NEON.cyanCore }),
-      h('path', { ...DD('sky:T:moon-smog-streaks'), d: rect(-64, 6, 128, 2.2) + rect(-50, 14, 90, 1.4) + rect(-44, 22, 100, 1.2), fill: v('smog1'), opacity: 0.65 }),
+      h('path', { ...DD('sky:T:moon-smog-streaks'), d: rect(-64, 6, 128, 2.2) + rect(-50, 14, 90, 1.4) + rect(-44, 22, 100, 1.2), fill: v('smog1'), opacity: 0.65, style: 'pointer-events:none !important' }),
       h('g', { transform: 'rotate(-14)' },
-        h('path', { ...DD('sky:O:moon-orbital-ring'), d: 'M-48.6 2A48.6 9.6 0 0 0 48.6 2L47.4 2A47.4 8.4 0 0 1 -47.4 2Z', fill: NEON.cyan, opacity: 0.8 }),
+        h('path', { ...DD('sky:O:moon-orbital-ring'), d: 'M-48.6 2A48.6 9.6 0 0 0 48.6 2L47.4 2A47.4 8.4 0 0 1 -47.4 2Z', fill: NEON.cyan, opacity: 0.8, style: 'pointer-events:none !important' }),
         h('path', { d: 'M-48.4 2A48.4 9.4 0 0 1 -30 -6.2L-30 -5.4A47.6 8.6 0 0 0 -47.6 2ZM30 -6.2A48.4 9.4 0 0 1 48.4 2L47.6 2A47.6 8.6 0 0 0 30 -5.4Z', fill: NEON.cyan, opacity: 0.35 }),
         h('circle', { cx: 30, cy: 8.6, r: 1.4, fill: NEON.cyanCore }))));
   }
@@ -256,16 +284,21 @@ export function build(ctx) {
   }
   // ---- far megatowers
   {
-    const R = rng(331); let body = '', edge = '', mast = '', red = ''; const b = ['', '', '', ''];
+    const R = rng(331); let body = '', edge = '', mast = '', red = '', redTag = '', bodyT = ''; const b = ['', '', '', ''], bT = ['', '', '', ''];
     const TW = [[-330, -200, 150, 0], [-40, 70, 176, 1], [128, 176, 232, 2], [300, 338, 300, 0], [372, 470, 290, 1], [1236, 1310, 262, 2], [1330, 1368, 308, 0], [1484, 1590, 170, 1], [1690, 1790, 214, 2], [1840, 1960, 250, 0]];
     for (const [x0, x1, top, kind] of TW) {
       const w = x1 - x0, cx = (x0 + x1) / 2;
+      // (integration) the tower at x 128–176 rises clear of the skyline in the hero: it carries the item tags
+      const tag = x0 === 128, before = body;
       if (kind === 0) body += poly([[x0, 480], [x0, top + 20], [cx, top], [x1, top + 20], [x1, 480]]);
       else if (kind === 1) body += poly([[x0, 480], [x0, top + 44], [x0 + w * 0.12, top + 44], [x0 + w * 0.12, top + 18], [x0 + w * 0.3, top + 18], [x0 + w * 0.3, top], [x1 - w * 0.3, top], [x1 - w * 0.3, top + 18], [x1 - w * 0.12, top + 18], [x1 - w * 0.12, top + 44], [x1, top + 44], [x1, 480]]);
       else body += poly([[x0, 480], [x0 + 4, top + 10], [cx, top], [x1 - 4, top + 10], [x1, 480]]);
+      if (tag) { body = before; bodyT += poly([[x0, 300], [x0 + 4, top + 10], [cx, top], [x1 - 4, top + 10], [x1, 300]]); body += rect(x0, 299, w, 181); }
       edge += `M${f(x1 - 0.6)} ${f(top + 22)}V480`;
-      const mh = 30 + R() * 50; mast += rect(cx - 0.8, top - mh, 1.6, mh + 2); red += circ(cx, top - mh, 1.8) + circ(cx, top - mh * 0.45, 1.3);
-      windows(R, x0 + 4, x1 - 4, top + 30, 470, 6, 8, 0.1, b, 1.6, 2.2);
+      const mh = 30 + R() * 50; mast += rect(cx - 0.8, top - mh, 1.6, mh + 2);
+      if (x0 === 128) redTag += circ(cx, top - mh, 1.8) + circ(cx, top - mh * 0.45, 1.3); else red += circ(cx, top - mh, 1.8) + circ(cx, top - mh * 0.45, 1.3);
+      if (tag) { windows(R, x0 + 6, x1 - 6, top + 22, 300, 6, 8, 0.16, bT, 1.6, 2.2); windows(R, x0 + 4, x1 - 4, 300, 470, 6, 8, 0.1, b, 1.6, 2.2); }
+      else windows(R, x0 + 4, x1 - 4, top + 30, 470, 6, 8, 0.1, b, 1.6, 2.2);
     }
     // rooftop signs and a lit skybridge on the far towers (static, emissive)
     const vsign = (x, y, a, b2, lat, col, core) => h('g', {},
@@ -276,15 +309,18 @@ export function build(ctx) {
       h('g', { ...DD('sky:O:far-rooftop-signs') }, vsign(392, 312, 'jiu', 'ba', 'bar', NEON.mag, NEON.magCore)),
       vsign(1352, 318, 'la', 'mian', 'ramen', NEON.amber, NEON.amberCore),
       h('g', { transform: 'translate(1484 190)' }, h('path', { d: rrect(4, 0, tw('h24', 12) + 10, 16, 3), fill: '#0C0F1E', stroke: NEON.acid, 'stroke-width': 1 }), T('h24', 9, 13, 12, { fill: '#F1FFD0' })),
+      h('g', {},
+        h('path', { d: rect(470, 330, 132, 6), fill: v('megaHi') }), h('path', { d: 'M470 331.2h132', stroke: NEON.cyan, 'stroke-width': 1, opacity: 0.9 }),
+        h('path', { d: [476, 488, 500, 512, 524, 536, 548, 560, 572, 584].map(x => rect(x, 332.6, 6, 2.2)).join(''), fill: NEON.amberCore })),
       h('g', { ...DD('sky:O:far-skybridge') },
-        h('path', { d: rect(1310, 344, 20, 7) + rect(470, 330, 132, 6), fill: v('megaHi') }),
-        h('path', { d: 'M1310 345.2h20M470 331.2h132', stroke: NEON.cyan, 'stroke-width': 1, opacity: 0.9 }),
-        h('path', { d: [1313, 1318, 1323].map(x => rect(x, 347, 3, 2.4)).join('') + [476, 488, 500, 512, 524, 536, 548, 560, 572, 584].map(x => rect(x, 332.6, 6, 2.2)).join(''), fill: NEON.amberCore })));
-    sunmoon += h('g', { ...DD('sky:O:far-megatowers') },
-      h('path', { d: body + mast, fill: v('megaFar') }),
+        h('path', { d: rect(1310, 344, 20, 7), fill: v('megaHi') }), h('path', { d: 'M1310 345.2h20', stroke: NEON.cyan, 'stroke-width': 1, opacity: 0.9 }),
+        h('path', { d: [1313, 1318, 1323].map(x => rect(x, 347, 3, 2.4)).join(''), fill: NEON.amberCore })));
+    sunmoon += h('g', {},
+      h('path', { d: body + mast, fill: v('megaFar') }), h('path', { ...DD('sky:O:far-megatowers'), d: bodyT, fill: v('megaFar') }),
       h('path', { d: edge, stroke: v('smogLit'), 'stroke-width': 1, opacity: 0.35 }),
-      h('g', { ...DD('sky:T:far-tower-windows'), opacity: 0.38, style: NEONV }, b.map((d, i) => h('path', { d, fill: WIN[i] }))),
-      h('path', { 'data-ref': 'sky-farRed', ...DD('sky:O:far-tower-lights'), d: red, fill: NEON.red }), farSigns);
+      h('g', { opacity: 0.38, style: NEONV }, b.map((d, i) => h('path', { d, fill: WIN[i] }))),
+      h('g', { ...DD('sky:T:far-tower-windows'), opacity: 0.38, style: NEONV }, bT.map((d, i) => h('path', { d, fill: WIN[i] }))),
+      h('g', { 'data-ref': 'sky-farRed' }, h('path', { d: red, fill: NEON.red }), h('path', { ...DD('sky:O:far-tower-lights'), d: redTag, fill: NEON.red })), farSigns);
   }
   // ---- orbital lift (tether + anchor + marker lights; the capsule climbs on its own strip)
   {
@@ -328,10 +364,11 @@ export function build(ctx) {
     const halo = [[30, 58, 7], [52, 44, 5.5], [70, 30, 4]].map(([y, rx, ry]) => ell(y, rx, ry));
     const haloBand = [[30, 58, 7], [52, 44, 5.5], [70, 30, 4]].map(([y, rx, ry]) => ell(y, rx + 0.6, ry + 0.6) + ell(y, rx - 0.6, ry - 0.6));
     // antenna farm on the crown
-    let mast = '', dish = '', red = '';
-    for (const [x, hgt] of [[836, 40], [850, 62], [948, 54], [962, 34], [880, 26], [920, 30]]) { mast += rect(x - 0.7, 96 - hgt, 1.4, hgt); red += circ(x, 96 - hgt, 1.7); }
+    let mast = '', dish = '', red = '', mastR = '';
+    for (const [x, hgt] of [[836, 40], [850, 62], [948, 54], [962, 34], [880, 26], [920, 30]]) { if (x > 940) mastR += rect(x - 0.7, 96 - hgt, 1.4, hgt); else mast += rect(x - 0.7, 96 - hgt, 1.4, hgt); red += circ(x, 96 - hgt, 1.7); }
     red += circ(900, -40, 2.4) + circ(900, 20, 1.6);
-    dish = 'M830 128a9 9 0 0 0 16 -6zM837.4 125.5l-2 6h3zM970 128a9 9 0 0 1 -16 -6zM962.6 125.5l2 6h-3zM868 74h64';
+    dish = 'M830 128a9 9 0 0 0 16 -6zM837.4 125.5l-2 6h3zM868 74h64';
+    const dishR = 'M970 128a9 9 0 0 1 -16 -6zM962.6 125.5l2 6h-3z';
     // landing pad on the right shoulder of tier 2
     const pad = h('g', { ...DD('sky:O:arcology-landing-pad') },
       h('path', { d: poly([[1148, 318], [1236, 318], [1232, 326], [1148, 330]]) + poly([[1150, 330], [1200, 330], [1150, 356]]), fill: v('megaHi') }),
@@ -377,7 +414,8 @@ export function build(ctx) {
       h('g', { ...DD('sky:O:arcology-light-strips'), style: NEONV }, h('path', { d: vs[0] + vs[1] + vs[2], fill: '#FFFFFF', opacity: 0.55 })),
       h('g', { ...DD('sky:O:arcology-halo-rings'), style: NEONV }, h('path', { d: haloBand[0] + haloBand[2], fill: NEON.cyanCore, 'fill-rule': 'evenodd' }), h('path', { d: haloBand[1], fill: NEON.magCore, 'fill-rule': 'evenodd' })),
       h('g', { ...DD('sky:O:arcology-neon-rings'), style: NEONV }, h('path', { d: rings, stroke: NEON.magCore, 'stroke-width': 1 }), h('path', { d: ringsC, stroke: NEON.cyanCore, 'stroke-width': 1 })),
-      h('path', { ...DD('sky:O:arcology-antennas'), d: mast + dish, fill: v('megaHi'), stroke: v('megaHi'), 'stroke-width': 0.8 }),
+      h('path', { d: mast + dish, fill: v('megaHi'), stroke: v('megaHi'), 'stroke-width': 0.8 }),
+      h('path', { ...DD('sky:O:arcology-antennas'), d: mastR + dishR, fill: v('megaHi'), stroke: v('megaHi'), 'stroke-width': 0.8 }),
       pad, sign, logo, screen, label,
       h('path', { 'data-ref': 'sky-arcRed', ...DD('sky:O:arcology-warning-lights'), d: red, fill: NEON.red }),
       h('rect', { x: 560, y: 380, width: 680, height: 100, fill: lg('sky-veil', 0, 380, 0, 480, [[0, v('haze'), 0], [1, v('haze'), 0.55]]) }));
@@ -421,7 +459,7 @@ export function build(ctx) {
       if (!high) for (let k = 0; k < 3; k++) { const yy = y + th * (0.7 + k * 0.22), x0 = x + w * (0.1 + R() * 0.2), x1 = x + w * (0.7 + R() * 0.2); rib += rect(x0, yy, x1 - x0, 1 + R()); }
       const k = high || i % 3 === 2 ? 1 : 0, P = SMOG[k][0];
       const one = h('g', {},
-        h('path', { ...DD(high ? 'sky:O:smog-wisps' : 'sky:O:smog-banks'), d: top, fill: high ? gHigh : gBody }),
+        h('path', { ...DD(high ? 'sky:O:smog-wisps' : 'sky:O:smog-banks'), d: top, fill: high ? gHigh : gBody, style: 'pointer-events:none !important' }),
         high ? '' : h('path', { d: rib, fill: v('smogHi'), opacity: 0.35 }),
         high ? '' : h('path', { ...DD('sky:T:smog-lit-bellies'), d: belly, fill: 'none', stroke: v('smogLit'), 'stroke-width': 2.2, opacity: 0.45, 'stroke-linecap': 'round' }));
       // periodic copies: the strip translates by −(0…P), so every bank also sits at x + P (and at x − P if it pokes past X0 + P)
@@ -525,12 +563,13 @@ export function build(ctx) {
     const car = (dd, tint) => h('g', {},
       h('path', { ...(dd ? DD('sky:O:hover-car-beam') : {}), d: 'M46 1L230 -20L230 26Z', fill: beam }),
       h('path', { d: 'M-44 3L-230 -3L-230 9Z', fill: trail }),
-      h('path', { ...(dd ? DD('sky:O:hover-car-thrusters') : {}), d: circ(-24, 11, 7) + circ(26, 11, 7), fill: thr }),
       h('path', { ...(dd ? DD('sky:O:hover-car') : {}), d: carBody, fill: tint }),
       h('path', { d: 'M-18 -11C-12 -20 10 -20 18 -11Z', fill: '#7EEBFF', opacity: 0.75 }),
       h('path', { d: 'M-40 9H42', stroke: NEON.mag, 'stroke-width': 4, opacity: 0.25 }), h('path', { d: 'M-40 9H42', stroke: NEON.magCore, 'stroke-width': 1.2 }),
       h('path', { d: 'M-30 -2H36', stroke: v('megaHi'), 'stroke-width': 0.8 }),
-      h('circle', { cx: 45, cy: 1.5, r: 2.4, fill: '#FFFFFF' }), h('circle', { cx: -43, cy: 3, r: 2, fill: NEON.red }));
+      h('circle', { cx: 45, cy: 1.5, r: 2.4, fill: '#FFFFFF' }), h('circle', { cx: -43, cy: 3, r: 2, fill: NEON.red }),
+      // the lift thrusters glow through the chassis skirt (drawn over the hull's lower edge)
+      h('path', { ...(dd ? DD('sky:O:hover-car-thrusters') : {}), d: circ(-24, 11, 7) + circ(26, 11, 7), fill: thr }));
     clouds += h('g', { 'data-ref': 'sky-car', transform: 'translate(330 238)' }, h('g', { transform: 'scale(-0.8 0.8)' }, car(true, '#221A3C')));
     clouds += h('g', { 'data-ref': 'sky-cop', transform: 'translate(-600 150)', visibility: 'hidden' }, h('g', { transform: 'scale(0.62)' },
       car(false, '#1A1E30'),
@@ -582,7 +621,7 @@ export function build(ctx) {
       // searchlight sweep, the star twinkle and the warning-light blink); L-stars / L-sunmoon only carry two tiny strips
       // (clipped just below the horizon: the opaque harbour water, drawn by sea at the end of L-sky, covers the rest,
       // so the sheet keeps no tiles of hidden art below the waterline)
-      'L-sky': h('g', { 'clip-path': 'url(#sky-hzClip)' }, sky + starsL + sunmoon),
+      'L-sky': h('g', { 'clip-path': 'url(#sky-hzClip)' }, sky + starsL + sunmoon + openSky),
       // the searchlights (an isolated sheet) come right after the sky + the water sea draws at the end of L-sky (same
       // camera transform: L-stars has depth 0 too), so sky and water share one sheet; their feet stop at the horizon
       'L-stars': h('g', { 'clip-path': 'url(#sky-hzClip0)' }, beamsM) + satL,
@@ -633,8 +672,8 @@ export function attach(svg, ctx) {
         const k = Math.floor(t * 3);
         for (let g = 0; g < 3; g++) { const tt = (k - (((k - g) % 3) + 3) % 3) / 3;   // this group's last turn (deterministic)
           set(r['tw' + g], 'opacity', (reduced ? 0.8 : 0.25 + 0.75 * Math.round(4 * (0.5 + 0.5 * Math.sin(tt * (1.7 + g * 0.6) + g * 2.1)) ** 2) / 4).toFixed(2), 'tw' + g); }
-        const sx = wrap(300 + 700 + tm * 7, SAT_SPAN) - 700;
-        r.sat.setAttribute('transform', `translate(${f(sx)} ${f(60 + sx * 0.04)})`);
+        const sx = wrap(950 + 700 + tm * 7, SAT_SPAN) - 700;
+        r.sat.setAttribute('transform', `translate(${f(sx)} ${f(96 + (sx - 950) * 0.04)})`);
       }
       // warning lights: slow 1 Hz blink (two phases), opacity only
       const blink = Math.floor(t * 1.1) % 2;
@@ -663,7 +702,7 @@ export function attach(svg, ctx) {
       const SH0 = 1300 + 500 - 3.2 * 7 + D0 * 0.012, bu = SH0 + t * 7 - D * 0.012, bx = wrap(bu, SHIP_SPAN) - 500, bu0 = SH0 + 3.2 * 7 - D0 * 0.012;
       if (flyOn(r.ship, bu, bu0, SHIP_SPAN, 91, 0.55, 'shipV')) {
         const c = Math.floor(bu / SHIP_SPAN), dy = c === Math.floor(bu0 / SHIP_SPAN) ? 0 : (hash(c, 92) - 0.5) * 50;
-        r.ship.setAttribute('transform', `translate(${f(bx)} ${f(170 + dy + 3 * Math.sin((t - 3.2) * 0.35))})`);
+        r.ship.setAttribute('transform', `translate(${f(bx)} ${f(204 + dy + 3 * Math.sin((t - 3.2) * 0.35))})`);
         const pq = Math.floor(t * 15) / 15;
         set(r.prop0, 'transform', `translate(-62 30) scale(1 ${Math.cos(pq * 9).toFixed(2)}) translate(62 -30)`, 'p0');
         set(r.prop1, 'transform', `translate(38 30) scale(1 ${Math.cos(pq * 9 + 1).toFixed(2)}) translate(-38 -30)`, 'p1');

@@ -260,7 +260,7 @@ const reflWrap = (m, W, extra = '') => {
   const b = bakedFilter('land-reflpat' + REFL_N++, [800 - W / 2 - 400, REFL.y0 - 20, W + 800, REFL.y1 - REFL.y0 + 40], 'land-streak', G({ transform: REFL.xf }, m) + extra, { opacity: REFL.aTile });
   REFL_DEFS += b.def;
   // the rect itself is the asphalt band (no clip-path: a path clip made the compositor mask it every frame)
-  return b.el.replace(/ y="[^"]*" width="([^"]*)" height="[^"]*"/, ` y="${REFL.y0}" width="$1" height="${REFL.y1 - REFL.y0}" pointer-events="none" style="pointer-events:none !important"`);
+  return b.el.replace(/ y="[^"]*" width="([^"]*)" height="[^"]*"/, ` y="${REFL.y0}" width="$1" height="${REFL.y1 - REFL.y0}"`);
 };
 // long neon streaks under the tallest sources (their mirror image falls below the asphalt band): lamp bars in every
 // tile, the three sign pylons in the hero tile. Blurred with the mirror (same filter).

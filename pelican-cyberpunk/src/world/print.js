@@ -649,7 +649,9 @@ export function attach(svg, ctx) {
       if ((uiBox[0] + uiBox[2]) / 2 < (z[0] + z[2]) / 2) c[0] = Math.max(c[0], uiBox[2] + 8); else c[2] = Math.min(c[2], uiBox[0] - 8);
       return c;
     };
-    const cardP = place(['line', 'stack'], [top, left, right].map(clip), 1.0), cardB = place(['line'], [clip(bar)], 1.0);
+    // (integration) the intro card tops out at 0.8: at full size its 鹈鹕湾 tag sat on the arcology crown, the hero
+    // frame's landmark; at 0.8 the crown, its halo rings and the PELICORP logo stay in view
+    const cardP = place(['line', 'stack'], [top, left, right].map(clip), 0.8), cardB = place(['line'], [clip(bar)], 1.0);
     const logoP = place(['logo'], [Object.assign([xL + 16, yT + 14, Math.min(xR - 16, xL + 16 + 470), Math.min(rb[1] - 4, yT + 14 + 52)], { inset: 4 }),
       Object.assign([xL + 16, yT + 14, Math.min(rb[0] - 4, xL + 16 + 470), yT + 14 + 52], { inset: 4 })].map(clip), 0.44);
     const logoB = place(['logo'], [clip(bar)], 0.5);

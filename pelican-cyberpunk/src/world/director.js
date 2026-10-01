@@ -220,22 +220,22 @@ export function connect({ bus, state, off = false }) {
 
 // ------------------------------------------------------------------------------------------------ encounter art
 export const detailItems = [
-  { id: 'fx:O:dir-cyclist-boater', layer: 'fx', kind: 'O', what: 'oncoming cyclist in a boater and striped jersey on a vermilion roadster, waves back' },
-  { id: 'fx:O:dir-cyclist-beret', layer: 'fx', kind: 'O', what: 'second oncoming cyclist: beret, baguette in the basket, teal bike' },
-  { id: 'land:O:dir-cat-ginger', layer: 'land', kind: 'O', what: 'ginger crossing cat: sits, arches at the bell, leaps away with a 喵!' },
-  { id: 'land:O:dir-cat-tux', layer: 'land', kind: 'O', what: 'tuxedo crossing cat (second variant)' },
-  { id: 'fx:O:dir-gulls', layer: 'fx', kind: 'O', what: 'two thieving herring gulls swoop at the basket, flee when the pelican gulps first' },
-  { id: 'sea:O:dir-fish', layer: 'sea', kind: 'O', what: 'a mackerel leaps from the bay in an arc into the bill' },
+  { id: 'fx:O:dir-cyclist-courier', layer: 'fx', kind: 'O', what: 'oncoming courier in an LED-visor helmet on a magenta-lit e-bike with a 外卖 cube, waves back' },
+  { id: 'fx:O:dir-cyclist-hood', layer: 'fx', kind: 'O', what: 'second oncoming rider: hood under a clear LED umbrella hat, cyan cargo bike, glowing parcel crate' },
+  { id: 'land:O:dir-cat-led', layer: 'land', kind: 'O', what: 'street cat with LED eyes, an LED collar and an ear implant: sits, leaps away at the bell with a 喵! glitch plate' },
+  { id: 'land:O:dir-cat-robot', layer: 'land', kind: 'O', what: 'chrome robot cat with panel seams and acid optics (second variant)' },
+  { id: 'fx:O:dir-gulls', layer: 'fx', kind: 'O', what: 'two thieving harbour gulls (cyan rim light, red LED eyes) swoop at the box, flee when the pelican gulps first' },
+  { id: 'sea:O:dir-fish', layer: 'sea', kind: 'O', what: 'a bioluminescent mackerel leaps from the harbour in an arc into the bill' },
   { id: 'sea:O:dir-splash', layer: 'sea', kind: 'O', what: 'splash crown + ring where the fish left the water' },
   { id: 'land:O:dir-puddle', layer: 'land', kind: 'O', what: 'big rain puddle the pelican hops over' },
-  { id: 'land:O:dir-pothole', layer: 'land', kind: 'O', what: 'cliff-road pothole with cracks and a striped roadworks cone' },
-  { id: 'sky:O:dir-kites', layer: 'sky', kind: 'O', what: 'kite festival: diamond, box, carp streamer, delta, bird and a dragon kite with banner' },
-  { id: 'land:O:dir-keeper', layer: 'land', kind: 'O', what: 'lighthouse keeper in oilskins and sou’wester, lantern in hand, waving' },
-  { id: 'sky:O:dir-friend', layer: 'sky', kind: 'O', what: 'a pelican friend in a red scarf flies alongside (neck folded, as pelicans fly) and calls 嘎!' },
-  { id: 'sky:O:dir-fireworks', layer: 'sky', kind: 'O', what: 'night fireworks over the pleasure pier: chrysanthemum, ring, willow and palm bursts' },
-  { id: 'land:O:dir-signs', layer: 'land', kind: 'O', what: 'pacing signs: 下坡 DOWNHILL descent sign, 冲刺 SPRINT flat sign' },
-  { id: 'fx:O:dir-pops', layer: 'fx', kind: 'O', what: 'letterpress pop words: WHEEE!, RACE!, 喵!, 嘎!' },
-  { id: 'fx:O:dir-drops', layer: 'fx', kind: 'O', what: 'raindrops falling into the open pouch (the drinking gag)' },
+  { id: 'land:O:dir-pothole', layer: 'land', kind: 'O', what: 'pothole with amber-lit cracks and a roadworks cone with LED bands and a red beacon' },
+  { id: 'sky:O:dir-kites', layer: 'sky', kind: 'O', what: 'LED kite night: neon diamond, box, carp streamer, delta and bird kites on glowing lines, an LED dragon and a 霓虹风筝节 banner' },
+  { id: 'land:O:dir-keeper', layer: 'land', kind: 'O', what: 'data-spire technician in a hooded hazard raincoat with reflective bands, LED headlamp and visor, LED lantern, waves (HEY!)' },
+  { id: 'sky:O:dir-friend', layer: 'sky', kind: 'O', what: 'a pelican friend in an LED scarf and visor flies alongside (neck folded, as pelicans fly) and calls 嘎!' },
+  { id: 'sky:O:dir-fireworks', layer: 'sky', kind: 'O', what: 'neon fireworks over the pier: chrysanthemum, ring, willow and palm bursts with white-hot cores' },
+  { id: 'land:O:dir-signs', layer: 'land', kind: 'O', what: 'pacing holo boards: amber 下坡 DOWNHILL, cyan 冲刺 SPRINT' },
+  { id: 'fx:O:dir-pops', layer: 'fx', kind: 'O', what: 'glitch HUD pop words: WHEEE!, RACE!, 喵!, 嘎!, HEY! (chromatic split, corner brackets, SYS tag)' },
+  { id: 'fx:O:dir-drops', layer: 'fx', kind: 'O', what: 'glowing raindrops falling into the open pouch (the drinking gag)' },
 ];
 let I, V;
 const F = (d, fill, a = {}) => `<path d="${d}" fill="${fill}"${Object.entries(a).map(([k, v]) => ` ${k}="${v}"`).join('')}/>`;
@@ -245,121 +245,157 @@ const DD = k => ({ 'data-detail': k });
 const REF = (r, a = {}) => ({ 'data-ref': 'dir-' + r, ...a });
 const HID = { visibility: 'hidden' };
 
-function wheel(ref, r, tyre, rim) {
+// Cyberpunk encounter art (integration pass: edition C's boater cyclists, kites, keeper and letterpress pops redrawn
+// for the neon city). Every data-ref and local frame of edition C is kept, so update() below drives them unchanged.
+// Glow = stacked strokes (wide faint halo · tube · pale core), dark techwear bodies, no filters.
+let N;
+const glow = (d, col, core, w = 1.4, a = {}) => S(d, col, w * 3.2, { opacity: 0.16, ...a }) + S(d, col, w, a) + (core ? S(d, core, w * 0.4, a) : '');
+const DARK = '#15112A', DARK2 = '#241C3E', DARK3 = '#3A2F5C', CHROME = '#A9B2CF', CHROME_D = '#5E6688';
+function wheel(ref, r, col, core) {
   let sp = '';
-  for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; sp += `M0 0L${f(Math.cos(a) * (r - 4))} ${f(Math.sin(a) * (r - 4))}`; }
-  return G({}, S(circ(0, 0, r), tyre, 6), G(REF(ref), S(sp, rim, 0.9), S(`M0 0L${f(r - 5)} 0`, rim, 2.2)), S(circ(0, 0, r - 4.5), rim, 1.4), F(circ(0, 0, 3.5), rim));
+  for (let i = 0; i < 10; i++) { const a = i / 10 * TAU; sp += `M0 0L${f(Math.cos(a) * (r - 5))} ${f(Math.sin(a) * (r - 5))}`; }
+  return G({}, S(circ(0, 0, r), '#0B0915', 6.5), S(circ(0, 0, r + 2.6), col, 1, { opacity: 0.35 }),
+    G(REF(ref), S(sp, CHROME_D, 0.9), S(`M${f(r - 9)} 0L${f(r - 4.5)} 0`, N.am, 2.6), F(circ(r * 0.55, 0, 1.6), N.amC)),
+    glow(circ(0, 0, r - 4.5), col, core, 1.5), F(circ(0, 0, 3.6), CHROME), F(circ(0, 0, 1.4), col));
 }
-// oncoming cyclist (faces −x). Ground y 0. v0 boater/stripes/vermilion bike; v1 beret/teal bike/baguette.
+// oncoming rider (faces −x), ground y 0. v0 LED-helmet courier on a magenta e-bike with a cube pack;
+// v1 hooded rider under a clear LED umbrella hat on a cyan cargo bike with a glowing parcel crate.
 function cyclist(v) {
-  const frameInk = v ? I('T') : I('R'), shirt = v ? I('B') : I('P'), pants = v ? I('N') : I('B');
+  const col = v ? N.cy : N.mag, core = v ? N.cyC : N.magC, col2 = v ? N.mag : N.cy, suit = v ? DARK2 : DARK, trim = v ? N.ac : N.cy;
   const W = 44, xr = 62, xf = -66, yh = -W;
-  const frame = S(`M${xr} ${yh}L0 ${yh + 8}L-44 -108L${xf} ${yh}M0 ${yh + 8}L22 -104L${xr} ${yh}M22 -104L-44 -108M-44 -108l-6 -14`, frameInk, 4.4)
-    + S('M22 -104l3 -12M14 -118h20', I('N'), 3.4) + S('M-50 -122l-10 -3', I('N'), 3);
-  const basket = v ? F(rect(-92, -110, 26, 18), I('O'), { stroke: I('N'), 'stroke-width': 1 }) + S('M-90 -106l24 0M-90 -100l24 0M-86 -110v18M-78 -110v18M-70 -110v18', I('N'), 0.6)
-    + F('M-94 -112l30 -30l5 4l-30 30Z', I('K'), { stroke: I('N'), 'stroke-width': 0.8 }) + S('M-85 -121l4 3M-79 -127l4 3M-73 -133l4 3', I('O'), 1)
-    : F(rect(70, -84, 28, 6), I('N')) + F(rect(72, -98, 22, 14), I('O'), { stroke: I('N'), 'stroke-width': 0.8 });
-  const torso = F('M20 -112C24 -140 18 -164 8 -176C-4 -178 -12 -170 -12 -160C-10 -144 0 -126 8 -112Z', shirt, { stroke: I('N'), 'stroke-width': 1.4 })
-    + (v ? '' : S('M18 -128C12 -128 4 -126 -2 -122M16 -142C8 -142 -2 -140 -8 -136M12 -156C4 -156 -4 -154 -10 -150M8 -168C2 -170 -6 -168 -10 -164', I('R'), 3.4));
-  const head = F(circ(-6, -192, 13), I('K'), { stroke: I('N'), 'stroke-width': 1.2 }) + F(circ(-14, -193, 1.6), I('N')) + S('M-19 -187q3 2 6 0', I('N'), 1)
-    + (v ? F('M-20 -198C-18 -214 6 -214 8 -200C0 -204 -12 -204 -20 -198Z', I('N')) + S('M-2 -212l2 -5', I('N'), 1.6)
-      : F(ell(-6, -202, 19, 3.2), I('P'), { stroke: I('N'), 'stroke-width': 1 }) + F(rect(-17, -214, 22, 12), I('P'), { stroke: I('N'), 'stroke-width': 1 }) + F(rect(-17, -208, 22, 4), I('R')))
-    + (v ? '' : S('M4 -186c4 2 6 6 4 10', I('N'), 1.2));
-  const armNear = S('M-2 -164L-26 -140L-52 -124', shirt, 7) + F(circ(-53, -123, 4.2), I('K'));
-  const armWave = G(REF(`cyc${v}-arm`, { transform: 'translate(6 -166)' }), S('M0 0L18 -26L12 -54', shirt, 6.4), F(circ(12, -58, 5), I('K'), { stroke: I('N'), 'stroke-width': 0.8 }));
-  const legs = G({}, S('M0 0', pants, 9, REF(`cyc${v}-legF`)), S('M0 0', pants, 9, REF(`cyc${v}-legN`)));
-  const shoes = '';
-  return G({ ...REF(`cyc${v}`), ...HID, ...DD(v ? 'fx:O:dir-cyclist-beret' : 'fx:O:dir-cyclist-boater') },
-    F(ell(0, 2, 118, 6), I('N'), { opacity: 0.25 }),
-    G({ transform: `translate(${xr} ${yh})` }, wheel(`cyc${v}-wr`, W, I('N'), I('P'))),
-    G({ transform: `translate(${xf} ${yh})` }, wheel(`cyc${v}-wf`, W, I('N'), I('P'))),
-    legs, armWave, frame, basket, torso, head, armNear, shoes,
-    S(circ(0, yh + 8, 11), I('N'), 2.4), G(REF(`cyc${v}-crank`, { transform: `translate(0 ${yh + 8})` }), S('M0 -18L0 18', I('N'), 3)));
+  const tubes = `M${xr} ${yh}L0 ${yh + 8}L-44 -108L${xf} ${yh}M0 ${yh + 8}L22 -104L${xr} ${yh}M22 -104L-44 -108M-44 -108l-6 -14`;
+  const frame = S(tubes, '#0E0B1C', 5.2) + S(tubes, col, 1.2, { opacity: 0.85 }) + S(`M-40 ${yh + 2}L${xr - 6} ${yh + 2}`, col, 6, { opacity: 0.18 })
+    + S('M22 -104l3 -12M14 -118h20', '#0E0B1C', 3.4) + S('M14 -118h20', CHROME, 1) + S('M-50 -122l-10 -3', '#0E0B1C', 3) + F(circ(-61, -125.5, 2.4), N.cyC) + F(circ(-61, -125.5, 6), N.cy, { opacity: 0.2 });
+  const pack = v
+    ? F(rect(-94, -112, 28, 20), DARK3, { stroke: col, 'stroke-width': 1.1 }) + S('M-90 -106h20M-90 -100h20', col, 0.6, { opacity: 0.7 }) + F(rect(-86, -108, 8, 6), N.ac, { opacity: 0.85 }) + F(rect(-104, -118, 48, 32), col, { opacity: 0.08 })
+    : F(rect(70, -86, 30, 6), '#0E0B1C') + F(rect(71, -104, 26, 18), DARK3, { stroke: col, 'stroke-width': 1 }) + F(text('外卖', 9, 84, -91).d, N.magC) + F(rect(70, -105, 28, 2), N.mag);
+  const torso = F('M20 -112C24 -140 18 -164 8 -176C-4 -178 -12 -170 -12 -160C-10 -144 0 -126 8 -112Z', suit, { stroke: '#07060F', 'stroke-width': 1.4 })
+    + glow('M18 -128C12 -132 2 -134 -6 -132', trim, null, 1.6) + S('M10 -170C14 -152 18 -132 18 -114', col, 1, { opacity: 0.8 }) + F(rect(-2, -160, 9, 6), col, { opacity: 0.9 });
+  const head = v
+    ? F('M-22 -190C-22 -210 10 -212 10 -194C10 -184 4 -178 -6 -178C-16 -178 -22 -182 -22 -190Z', DARK3, { stroke: '#07060F', 'stroke-width': 1 }) + F('M-21 -194h20v6h-20Z', N.cy, { opacity: 0.85 }) + S('M-21 -191h20', N.cyC, 0.8)
+      + S('M-36 -206C-26 -224 14 -226 26 -206', N.cyC, 1.2, { opacity: 0.8 }) + F('M-36 -206C-26 -224 14 -226 26 -206Z', N.cy, { opacity: 0.12 }) + S('M-5 -219v12', CHROME, 1.2) + F(circ(-36, -206, 1.6) + circ(26, -206, 1.6) + circ(-5, -221, 1.6), N.mag)
+    : F(circ(-6, -192, 13), DARK3, { stroke: '#07060F', 'stroke-width': 1.2 }) + F('M-21 -196C-21 -214 9 -214 9 -196Z', DARK, { stroke: col, 'stroke-width': 1.2 }) + F('M-21 -196h16v7h-16Z', N.mag, { opacity: 0.9 }) + S('M-21 -192.5h16', N.magC, 0.8)
+      + S('M-14 -210C-8 -213 0 -213 6 -209', N.ac, 1.4) + F(circ(8, -200, 1.8), N.red);
+  const armNear = S('M-2 -164L-26 -140L-52 -124', suit, 7) + S('M-2 -164L-26 -140L-52 -124', trim, 0.9, { opacity: 0.7 }) + F(circ(-53, -123, 4.2), DARK3, { stroke: col, 'stroke-width': 0.8 });
+  const armWave = G(REF(`cyc${v}-arm`, { transform: 'translate(6 -166)' }), S('M0 0L18 -26L12 -54', suit, 6.4), S('M0 0L18 -26L12 -54', trim, 0.9, { opacity: 0.7 }), F(circ(12, -58, 5), DARK3, { stroke: col, 'stroke-width': 0.9 }), F(circ(12, -58, 1.6), core));
+  const legs = G({}, S('M0 0', '#1C1734', 9, REF(`cyc${v}-legF`)), S('M0 0', suit, 9, REF(`cyc${v}-legN`)));
+  return G({ ...REF(`cyc${v}`), ...HID, ...DD(v ? 'fx:O:dir-cyclist-hood' : 'fx:O:dir-cyclist-courier') },
+    F(ell(0, 2, 118, 6), col, { opacity: 0.16 }), F(ell(0, 2, 90, 3), '#07060F', { opacity: 0.4 }),
+    G({ transform: `translate(${xr} ${yh})` }, wheel(`cyc${v}-wr`, W, col, core)),
+    G({ transform: `translate(${xf} ${yh})` }, wheel(`cyc${v}-wf`, W, col2, v ? N.magC : N.cyC)),
+    legs, armWave, frame, pack, torso, head, armNear,
+    S(circ(0, yh + 8, 11), '#0E0B1C', 2.6), S(circ(0, yh + 8, 11), col, 0.9), G(REF(`cyc${v}-crank`, { transform: `translate(0 ${yh + 8})` }), S('M0 -18L0 18', CHROME_D, 3), F(circ(0, -18, 1.6) + circ(0, 18, 1.6), col)));
 }
-// crossing cat, sits facing +x (toward the rider... the camera), ground 0
+// a glitch HUD plate (same family as the fx pops): dark slanted panel, corner brackets, chromatic word
+function plate(word, size, col, core, w, hgt = 30) {
+  const t = text(word, size, 0, size * 0.36);
+  const x0 = -w / 2, y0 = -hgt / 2;
+  return F(poly([[x0 + 6, y0], [x0 + w, y0], [x0 + w - 6, y0 + hgt], [x0, y0 + hgt]]), '#0B0918', { opacity: 0.9 })
+    + S(poly([[x0 + 6, y0], [x0 + w, y0], [x0 + w - 6, y0 + hgt], [x0, y0 + hgt]]), col, 1.2)
+    + S(`M${f(x0 - 3)} ${f(y0 + 8)}V${f(y0 - 3)}H${f(x0 + 10)}M${f(x0 + w + 3)} ${f(y0 + hgt - 8)}V${f(y0 + hgt + 3)}H${f(x0 + w - 10)}`, core, 1.4)
+    + F(t.d, N.cy, { transform: 'translate(-1.6 0)', opacity: 0.8 }) + F(t.d, N.mag, { transform: 'translate(1.6 0)', opacity: 0.8 }) + F(t.d, core)
+    + S(`M${f(x0 + 4)} ${f(y0 + hgt * 0.62)}h${f(w * 0.3)}M${f(x0 + w * 0.55)} ${f(y0 + hgt * 0.3)}h${f(w * 0.36)}`, '#0B0918', 1.1);
+}
+// crossing cat (sits facing +x), ground 0. v0 a street cat with LED eyes, an LED collar and an ear implant;
+// v1 a chrome robot cat with panel seams and acid optics.
 function cat(v) {
-  const fur = v ? I('N') : I('O'), mark = v ? I('P') : I('R');
+  const fur = v ? CHROME : DARK3, edge = v ? CHROME_D : '#07060F', rim = v ? N.ac : N.cy, eyeC = v ? N.ac : N.cy;
   const sit = G(REF(`cat${v}-sit`),
-    F('M-14 0C-18 -14 -16 -30 -6 -38C2 -44 14 -40 16 -28C18 -16 16 -6 14 0Z', fur, { stroke: I('N'), 'stroke-width': 1.2 }),
-    F('M-2 -40C-6 -52 0 -60 8 -60C16 -60 22 -52 18 -42C14 -36 2 -34 -2 -40Z', fur, { stroke: I('N'), 'stroke-width': 1.2 }),
-    F('M0 -56l-2 -12l9 7ZM14 -57l4 -11l3 12Z', fur, { stroke: I('N'), 'stroke-width': 1 }),
-    v ? F('M4 -44C6 -38 12 -38 14 -44C12 -40 6 -40 4 -44ZM2 -26C0 -14 2 -6 4 0H12C12 -10 10 -22 8 -30Z', mark) : S('M-12 -20c5 1 8 -1 10 -4M-14 -12c5 1 9 -1 11 -4M4 -58l1 6M10 -58l0 6', mark, 1.6),
-    F(circ(5, -49, 1.7) + circ(14, -49, 1.7), I('T')), F(circ(5.4, -49, 0.7) + circ(14.4, -49, 0.7), I('N')),
-    S('M9 -45l0 2M6 -42q3 2 6 0M-2 -46l-8 -1M-2 -44l-8 2M20 -46l8 -1M20 -44l8 2', I('N'), 0.7),
-    S('M-14 -4C-28 -4 -32 -14 -26 -22', fur, 4.5));
+    F('M-14 0C-18 -14 -16 -30 -6 -38C2 -44 14 -40 16 -28C18 -16 16 -6 14 0Z', fur, { stroke: edge, 'stroke-width': 1.2 }),
+    S('M-14 0C-18 -14 -16 -30 -6 -38', rim, 1, { opacity: 0.85 }),
+    F('M-2 -40C-6 -52 0 -60 8 -60C16 -60 22 -52 18 -42C14 -36 2 -34 -2 -40Z', fur, { stroke: edge, 'stroke-width': 1.2 }),
+    F('M0 -56l-2 -12l9 7ZM14 -57l4 -11l3 12Z', fur, { stroke: edge, 'stroke-width': 1 }), S('M16 -66l2 -4', N.mag, 1.6), F(circ(18.4, -70.6, 1.4), N.magC),
+    v ? S('M-6 -30h18M-8 -18h22M2 -40v38M8 -58v14', CHROME_D, 0.8) : S('M-12 -20c5 1 8 -1 10 -4M-14 -12c5 1 9 -1 11 -4', DARK2, 1.6),
+    glow('M-1 -39.5C4 -36 12 -36 17 -40', N.mag, N.magC, 1.6), F(circ(8, -36.6, 1.6), N.am),
+    F(circ(5, -49, 1.9) + circ(14, -49, 1.9), eyeC), F(circ(5, -49, 4.4) + circ(14, -49, 4.4), eyeC, { opacity: 0.2 }), F(rect(4.6, -50.6, 0.9, 3.2) + rect(13.6, -50.6, 0.9, 3.2), '#07060F'),
+    S('M9 -45l0 2M6 -42q3 2 6 0', edge, 0.7), S('M-2 -46l-8 -1M-2 -44l-8 2M20 -46l8 -1M20 -44l8 2', rim, 0.6, { opacity: 0.8 }),
+    S('M-14 -4C-28 -4 -32 -14 -26 -22', fur, 4.5), S('M-26 -22l-1 -3', N.mag, 2.4));
   const leap = G({ ...REF(`cat${v}-leap`), ...HID },
-    F('M-30 -10C-24 -26 -2 -34 18 -28C28 -26 34 -20 34 -14C24 -12 10 -10 -4 -8C-14 -6 -24 -4 -30 -10Z', fur, { stroke: I('N'), 'stroke-width': 1.2 }),
-    F('M26 -22C28 -32 36 -36 42 -32C48 -28 46 -20 40 -18Z', fur, { stroke: I('N'), 'stroke-width': 1.2 }),
-    F('M30 -32l0 -9l7 6ZM40 -33l5 -8l1 10Z', fur),
-    F(circ(40, -27, 2.2), I('P')), F(circ(40.4, -27, 1), I('N')),
+    F('M-30 -10C-24 -26 -2 -34 18 -28C28 -26 34 -20 34 -14C24 -12 10 -10 -4 -8C-14 -6 -24 -4 -30 -10Z', fur, { stroke: edge, 'stroke-width': 1.2 }),
+    S('M-30 -10C-24 -26 -2 -34 18 -28', rim, 1, { opacity: 0.85 }),
+    F('M26 -22C28 -32 36 -36 42 -32C48 -28 46 -20 40 -18Z', fur, { stroke: edge, 'stroke-width': 1.2 }),
+    F('M30 -32l0 -9l7 6ZM40 -33l5 -8l1 10Z', fur), glow('M27 -21C31 -18 36 -17 40 -18', N.mag, N.magC, 1.4),
+    F(circ(40, -27, 2.2), eyeC), F(circ(40, -27, 5), eyeC, { opacity: 0.2 }),
     S('M-2 -8l-10 12M8 -10l6 13M-24 -8l-14 8M22 -16l14 10', fur, 4),
-    S('M-30 -12C-44 -18 -48 -30 -44 -40', fur, 4.5),
-    v ? '' : S('M-10 -26l-3 8M0 -30l-2 8M10 -30l-1 7', mark, 1.6));
-  const pop = G({ ...REF(`cat${v}-pop`), ...HID, transform: 'translate(34 -84)' },
-    F('M-30 0C-30 -16 30 -16 30 0C30 12 10 14 0 12L-8 22L-6 12C-20 12 -30 8 -30 0Z', I('P'), { stroke: I('N'), 'stroke-width': 1.4 }),
-    F(text('喵!', 20, 0, 7).d, I('R')));
-  return G({ ...REF(`cat${v}`), ...HID, ...DD(v ? 'land:O:dir-cat-tux' : 'land:O:dir-cat-ginger') }, F(ell(0, 1, 18, 3.5), I('N'), { opacity: 0.25 }), sit, G(REF(`cat${v}-air`), leap), pop);
+    S('M-30 -12C-44 -18 -48 -30 -44 -40', fur, 4.5), S('M-44 -40l0 -3', N.mag, 2.4),
+    S('M-60 -6h-26M-62 -16h-18M-58 -26h-12', rim, 1.1, { opacity: 0.6 }));
+  const pop = G({ ...REF(`cat${v}-pop`), ...HID, transform: 'translate(34 -84)' }, plate('喵!', 20, N.mag, N.magC, 62, 32));
+  return G({ ...REF(`cat${v}`), ...HID, ...DD(v ? 'land:O:dir-cat-robot' : 'land:O:dir-cat-led') }, F(ell(0, 1, 18, 3.5), '#07060F', { opacity: 0.35 }), F(ell(0, 1, 22, 4), rim, { opacity: 0.12 }), sit, G(REF(`cat${v}-air`), leap), pop);
 }
+// harbour gulls of the neon city: slate bodies, cyan rim light, red LED eye, magenta-lit wing tips
 function gull(i) {
   return G(REF(`gull${i}`),
-    G(REF(`gull${i}-wf`), F('M-4 -2C-14 -18 -30 -28 -46 -26C-34 -20 -22 -10 -10 2Z', I('B'), { stroke: I('N'), 'stroke-width': 0.8 })),
-    F('M-26 2C-18 -8 6 -10 18 -4C24 -2 26 2 22 4C10 10 -14 10 -26 2Z', I('P'), { stroke: I('N'), 'stroke-width': 1 }),
-    F('M-26 2l-12 -4l2 8Z', I('P'), { stroke: I('N'), 'stroke-width': 0.8 }), F('M-38 -2l4 3l-2 3Z', I('N')),
-    F(circ(18, -4, 6.5), I('P'), { stroke: I('N'), 'stroke-width': 0.9 }), F(circ(20, -5.5, 1.3), I('N')),
-    F('M23 -4l11 1l-2 3l-9 0Z', I('O'), { stroke: I('N'), 'stroke-width': 0.5 }), F(circ(30, -1.5, 1), I('R')),
-    G(REF(`gull${i}-wn`), F('M-2 -2C-12 -22 -24 -36 -44 -40C-30 -30 -20 -12 -12 4Z', I('P'), { stroke: I('N'), 'stroke-width': 1 }), F('M-44 -40C-38 -36 -34 -32 -32 -28L-26 -30C-30 -34 -36 -38 -44 -40Z', I('N'))));
+    G(REF(`gull${i}-wf`), F('M-4 -2C-14 -18 -30 -28 -46 -26C-34 -20 -22 -10 -10 2Z', '#2E2847', { stroke: '#07060F', 'stroke-width': 0.8 })),
+    F('M-26 2C-18 -8 6 -10 18 -4C24 -2 26 2 22 4C10 10 -14 10 -26 2Z', '#C9C4DE', { stroke: '#07060F', 'stroke-width': 1 }), S('M-24 0C-14 -8 6 -10 18 -4', N.cy, 1, { opacity: 0.9 }),
+    F('M-26 2l-12 -4l2 8Z', '#3A3456', { stroke: '#07060F', 'stroke-width': 0.8 }), F('M-38 -2l4 3l-2 3Z', N.mag),
+    F(circ(18, -4, 6.5), '#DCD8EE', { stroke: '#07060F', 'stroke-width': 0.9 }), F(circ(20, -5.5, 1.5), N.red), F(circ(20, -5.5, 3.6), N.red, { opacity: 0.25 }),
+    F('M23 -4l11 1l-2 3l-9 0Z', N.am, { stroke: '#07060F', 'stroke-width': 0.5 }), F(circ(30, -1.5, 1), N.red),
+    G(REF(`gull${i}-wn`), F('M-2 -2C-12 -22 -24 -36 -44 -40C-30 -30 -20 -12 -12 4Z', '#4A4268', { stroke: '#07060F', 'stroke-width': 1 }), S('M-2 -2C-12 -22 -24 -36 -44 -40', N.cy, 0.9, { opacity: 0.85 }),
+      F('M-44 -40C-38 -36 -34 -32 -32 -28L-26 -30C-30 -34 -36 -38 -44 -40Z', '#0E0B1C'), S('M-44 -40C-38 -36 -34 -32 -32 -28', N.mag, 1.2)));
 }
+// a bioluminescent harbour mackerel (neon outline, magenta tiger stripes)
 function fishShape() {
-  return F('M-22 0C-12 -9 8 -10 18 -3C22 0 22 2 18 4C8 10 -12 9 -22 0Z', I('B'), { stroke: I('N'), 'stroke-width': 1 })
-    + F('M-18 1C-8 6 8 7 18 3C10 4 -6 4 -18 1Z', I('P')) + S('M-12 -4l4 -3M-6 -6l4 -3M0 -7l4 -3M6 -6l4 -3', I('N'), 1.2)
-    + F('M-22 0l-10 -8l2 8l-2 8Z', I('B'), { stroke: I('N'), 'stroke-width': 0.8 }) + F(circ(13, -1.5, 1.8), I('P')) + F(circ(13.3, -1.5, 0.8), I('N'));
+  const body = 'M-22 0C-12 -9 8 -10 18 -3C22 0 22 2 18 4C8 10 -12 9 -22 0Z';
+  return F(body, '#1E2A4A', { stroke: '#07060F', 'stroke-width': 1 }) + glow(body, N.cy, N.cyC, 0.9)
+    + F('M-18 1C-8 6 8 7 18 3C10 4 -6 4 -18 1Z', N.cyC, { opacity: 0.55 }) + S('M-12 -4l4 -3M-6 -6l4 -3M0 -7l4 -3M6 -6l4 -3', N.mag, 1.2)
+    + F('M-22 0l-10 -8l2 8l-2 8Z', '#1E2A4A', { stroke: N.cy, 'stroke-width': 0.9 }) + F(circ(13, -1.5, 1.8), N.ac) + F(circ(13.3, -1.5, 0.8), '#07060F');
 }
+// LED kite night: five neon-outlined kites on glowing lines and a segmented LED dragon with a festival banner
 function kites() {
+  const k = (d, col, core, fill = DARK2) => F(d, fill, { opacity: 0.85 }) + glow(d, col, core, 1.3);
   const K = [
-    // [x, y, markup, stringTo]
-    [150, 170, F('M0 -34L22 0L0 40L-22 0Z', I('R'), { stroke: I('N'), 'stroke-width': 1.4 }) + F('M0 -34L22 0L0 0Z', I('P')) + F('M0 40L-22 0L0 0Z', I('P')) + S('M0 -34V40M-22 0H22', I('N'), 1) + S('M0 40q10 16 -2 30q-12 14 2 30', I('N'), 1) + F('M-6 58l6 4l-6 4ZM6 80l-6 4l6 4Z', I('O'))],
-    [420, 120, F(rect(-16, -30, 32, 20) + rect(-16, 8, 32, 20), I('T'), { stroke: I('N'), 'stroke-width': 1.3 }) + S('M-16 -10V8M16 -10V8M-16 -30L16 28M16 -30L-16 28', I('N'), 1.2) + F(rect(-16, -24, 32, 6) + rect(-16, 14, 32, 6), I('P'))],
-    [700, 90, F('M-40 0C-30 -16 10 -18 34 -8L44 -14L40 0L44 14L34 8C10 18 -30 16 -40 0Z', I('O'), { stroke: I('N'), 'stroke-width': 1.3 }) + S('M-14 -12q4 12 0 24M2 -14q4 14 0 28M18 -12q4 12 0 24', I('R'), 2) + F(circ(-28, -2, 5), I('P')) + F(circ(-28, -2, 2.3), I('N')) + F('M-40 0C-44 -6 -44 6 -40 0Z', I('R'))],
-    [980, 150, F('M0 -26L36 20L0 12L-36 20Z', I('B'), { stroke: I('N'), 'stroke-width': 1.3 }) + F('M0 -26L0 12L-36 20Z', I('O')) + S('M0 12q-4 20 6 36', I('R'), 2.4)],
-    [1260, 110, F('M-44 -2C-26 -18 -10 -6 0 -2C10 -6 26 -18 44 -2C28 -6 12 2 6 6L0 18L-6 6C-12 2 -28 -6 -44 -2Z', I('P'), { stroke: I('N'), 'stroke-width': 1.3 }) + F('M-44 -2C-38 -6 -32 -8 -26 -8L-30 -4Z M44 -2C38 -6 32 -8 26 -8L30 -4Z', I('N')) + F('M-3 -6l3 -8l3 8Z', I('K'))],
+    [150, 170, k('M0 -34L22 0L0 40L-22 0Z', N.mag, N.magC) + S('M0 -34V40M-22 0H22', N.magC, 0.7, { opacity: 0.7 }) + S('M0 40q10 16 -2 30q-12 14 2 30', N.mag, 1) + F('M-6 58l6 4l-6 4ZM6 80l-6 4l6 4Z', N.ac)],
+    [420, 120, k(rect(-16, -30, 32, 20) + rect(-16, 8, 32, 20), N.cy, N.cyC) + S('M-16 -10V8M16 -10V8', N.cy, 1) + F(rect(-16, -24, 32, 3) + rect(-16, 14, 32, 3), N.cyC, { opacity: 0.8 })],
+    [700, 90, k('M-40 0C-30 -16 10 -18 34 -8L44 -14L40 0L44 14L34 8C10 18 -30 16 -40 0Z', N.am, N.amC) + S('M-14 -12q4 12 0 24M2 -14q4 14 0 28M18 -12q4 12 0 24', N.mag, 1.6) + F(circ(-28, -2, 5), N.amC) + F(circ(-28, -2, 2.3), '#07060F')],
+    [980, 150, k('M0 -26L36 20L0 12L-36 20Z', N.ac, N.acC) + S('M0 -26L0 12', N.acC, 0.8) + S('M0 12q-4 20 6 36', N.ac, 1.6)],
+    [1260, 110, k('M-44 -2C-26 -18 -10 -6 0 -2C10 -6 26 -18 44 -2C28 -6 12 2 6 6L0 18L-6 6C-12 2 -28 -6 -44 -2Z', N.vi, N.viC) + F(circ(-30, -6, 1.6) + circ(30, -6, 1.6) + circ(0, 10, 1.6), N.mag)],
   ];
-  // dragon kite: head + 9 segments (the segments sway in update)
   let segs = '';
-  for (let i = 0; i < 9; i++) segs += G(REF('kseg' + i), F(circ(0, 0, 11 - i * 0.6), i % 2 ? I('O') : I('R'), { stroke: I('N'), 'stroke-width': 1 }), S(`M0 ${-12 + i * 0.6}v-8M0 ${12 - i * 0.6}v8`, I('N'), 1.2));
+  for (let i = 0; i < 9; i++) { const c = i % 2 ? N.cy : N.mag, cc = i % 2 ? N.cyC : N.magC; segs += G(REF('kseg' + i), F(circ(0, 0, 11 - i * 0.6), DARK, { opacity: 0.9 }), glow(circ(0, 0, 11 - i * 0.6), c, cc, 1.2), S(`M0 ${-12 + i * 0.6}v-8M0 ${12 - i * 0.6}v8`, c, 1.1)); }
   const dragon = G({ transform: 'translate(560 250)' }, G(REF('kdragon'), segs,
-    G({}, F('M-18 -14C-6 -22 12 -16 16 -4C18 6 10 16 -4 16C-16 16 -22 4 -18 -14Z', I('R'), { stroke: I('N'), 'stroke-width': 1.3 }), F(circ(4, -4, 4), I('P')) + F(circ(5, -4, 1.8), I('N')), S('M-12 -16l-8 -12M-4 -18l-2 -14', I('O'), 2), S('M14 6q10 4 18 -2', I('O'), 1.6))),
-    G({ transform: 'translate(0 60)' }, S('M0 -44V0', I('N'), 0.8), F('M0 0h130l-10 12l10 12h-130Z', I('P'), { stroke: I('N'), 'stroke-width': 1.2 }), F(text('风筝节 KITES', 15, 62, 18.5).d, I('R'))));
+    G({}, F('M-18 -14C-6 -22 12 -16 16 -4C18 6 10 16 -4 16C-16 16 -22 4 -18 -14Z', DARK, { opacity: 0.92 }), glow('M-18 -14C-6 -22 12 -16 16 -4C18 6 10 16 -4 16C-16 16 -22 4 -18 -14Z', N.mag, N.magC, 1.4),
+      F(circ(4, -4, 3.4), N.ac), F(circ(4, -4, 7), N.ac, { opacity: 0.2 }), S('M-12 -16l-8 -12M-4 -18l-2 -14', N.am, 1.8), S('M14 6q10 4 18 -2', N.cy, 1.4))),
+    G({ transform: 'translate(0 60)' }, S('M0 -44V0', N.cy, 0.8, { opacity: 0.7 }), F('M0 0h176l-10 12l10 12h-176Z', '#0B0918', { opacity: 0.9 }), S('M0 0h176l-10 12l10 12h-176Z', N.mag, 1.2),
+      F(text('霓虹风筝节 NEON KITES', 12, 84, 17).d, N.magC)));
   let body = '', strings = '';
   K.forEach(([x, y, mk], i) => { body += G({ ...REF('kite' + i), transform: `translate(${x} ${y})` }, mk); strings += `M${x} ${y + 20}Q${x + 60} ${y + 260} ${x + 150} 560`; });
   strings += 'M560 262Q620 420 700 560';
-  return G({ ...REF('kites'), ...HID, ...DD('sky:O:dir-kites') }, S(strings, I('N'), 0.7, { opacity: 0.7 }), body, dragon);
+  return G({ ...REF('kites'), ...HID, ...DD('sky:O:dir-kites') }, S(strings, N.cy, 0.7, { opacity: 0.45 }), body, dragon);
 }
+// the data-spire technician: hooded hazard raincoat with reflective bands, LED headlamp, LED lantern, waves
 function keeper() {
   return G({ ...REF('keeper'), ...HID, ...DD('land:O:dir-keeper') },
-    F(ell(0, 2, 30, 5), I('N'), { opacity: 0.25 }),
-    S('M-8 -2L-8 -50M8 -2L8 -50', I('N'), 9), F('M-16 -2h14v-6h-12ZM4 -2h16v-6h-14Z', I('N')),
-    F('M-20 -50C-22 -80 -18 -106 0 -112C18 -106 22 -80 20 -50Z', I('O'), { stroke: I('N'), 'stroke-width': 1.5 }), S('M0 -110V-52M-6 -96h4M-6 -82h4M-6 -68h4', I('N'), 1.2),
-    F(circ(0, -126, 13), I('K'), { stroke: I('N'), 'stroke-width': 1.2 }), F('M-12 -122C-14 -108 -2 -104 0 -106C4 -104 14 -108 12 -122C6 -116 -6 -116 -12 -122Z', I('P'), { stroke: I('N'), 'stroke-width': 0.8 }),
-    F(circ(-5, -129, 1.4) + circ(5, -129, 1.4), I('N')), F('M-22 -132C-20 -148 20 -148 22 -132C28 -128 28 -124 22 -126C10 -130 -10 -130 -22 -126C-28 -124 -28 -128 -22 -132Z', I('O'), { stroke: I('N'), 'stroke-width': 1.2 }),
-    S('M-16 -98L-28 -70L-30 -52', I('O'), 7), G({ transform: 'translate(-30 -40)' },
-      F('M-6 -12h12v16h-12Z', I('N')), F(rect(-4.5, -9, 9, 11), I('K')), F('M-7 -12Q0 -20 7 -12Z', I('N')), S('M0 -20v-6', I('N'), 1.2),
-      F(circ(0, -3, 18), I('K'), { 'data-ref': 'dir-kLamp', opacity: 0.35 }), F(circ(0, -3, 11), I('O'), { opacity: 0.35 })),
-    G(REF('kArm', { transform: 'translate(15 -98)' }), S('M0 0L16 -24L14 -48', I('O'), 7), F(circ(14, -52, 5), I('K'), { stroke: I('N'), 'stroke-width': 0.8 })),
-    G({ ...REF('kPop'), transform: 'translate(40 -170)' }, F('M-38 0C-38 -18 38 -18 38 0C38 12 16 14 6 13L-6 24L-4 13C-26 13 -38 9 -38 0Z', I('P'), { stroke: I('N'), 'stroke-width': 1.4 }), F(text('AHOY!', 15, 0, 5).d, I('B'))));
+    F(ell(0, 2, 30, 5), '#07060F', { opacity: 0.35 }),
+    S('M-8 -2L-8 -50M8 -2L8 -50', DARK, 9), F('M-16 -2h14v-6h-12ZM4 -2h16v-6h-14Z', '#0B0918'), S('M-16 -5h12M4 -5h14', N.ac, 1.2),
+    F('M-20 -50C-22 -80 -18 -106 0 -112C18 -106 22 -80 20 -50Z', DARK3, { stroke: '#07060F', 'stroke-width': 1.5 }),
+    S('M-20 -62h40M-20 -84h40', N.ac, 2.4), S('M-20 -62h40M-20 -84h40', N.acC, 0.8), S('M0 -110V-52', N.am, 1.1, { opacity: 0.8 }),
+    F(circ(0, -126, 13), '#2A2240', { stroke: '#07060F', 'stroke-width': 1.2 }), F('M-11 -129h22v5h-22Z', N.cy, { opacity: 0.85 }), S('M-11 -126.5h22', N.cyC, 0.7),
+    F('M-22 -132C-20 -148 20 -148 22 -132C28 -128 28 -124 22 -126C10 -130 -10 -130 -22 -126C-28 -124 -28 -128 -22 -132Z', DARK3, { stroke: '#07060F', 'stroke-width': 1.2 }),
+    F(circ(0, -140, 2.2), N.cyC), F('M0 -140L60 -152L60 -128Z', N.cy, { opacity: 0.12 }),
+    S('M-16 -98L-28 -70L-30 -52', DARK3, 7), G({ transform: 'translate(-30 -40)' },
+      F('M-6 -12h12v16h-12Z', '#0B0918'), F(rect(-4.5, -9, 9, 11), N.am), F('M-7 -12Q0 -20 7 -12Z', '#0B0918'), S('M0 -20v-6', CHROME, 1.2),
+      F(circ(0, -3, 18), N.am, { 'data-ref': 'dir-kLamp', opacity: 0.35 }), F(circ(0, -3, 11), N.amC, { opacity: 0.35 })),
+    G(REF('kArm', { transform: 'translate(15 -98)' }), S('M0 0L16 -24L14 -48', DARK3, 7), S('M2 -6L16 -24', N.ac, 1.4), F(circ(14, -52, 5), '#2A2240', { stroke: N.cy, 'stroke-width': 0.8 })),
+    G({ ...REF('kPop'), transform: 'translate(40 -170)' }, plate('HEY!', 15, N.cy, N.cyC, 70, 28)));
 }
+// a pelican friend in an LED scarf and visor flies alongside (neck folded, as pelicans fly) and calls 嘎!
 function friend() {
+  const P = V('plume'), PS = V('plumeShade');
   return G({ ...REF('friend'), ...HID, ...DD('sky:O:dir-friend') },
-    G(REF('frWf'), F('M-10 -6C-20 -40 -40 -66 -70 -76C-52 -54 -40 -28 -30 0Z', I('B'), { stroke: I('N'), 'stroke-width': 1 }), F('M-70 -76C-60 -66 -54 -58 -50 -48L-44 -54C-50 -64 -58 -72 -70 -76Z', I('N'))),
-    F('M-46 4C-40 -10 -10 -16 18 -12C30 -10 36 -2 32 6C20 16 -24 18 -46 4Z', I('P'), { stroke: I('B'), 'stroke-width': 1.6 }),
-    F('M-46 4l-14 -4l2 8Z', I('P'), { stroke: I('B'), 'stroke-width': 1 }), S('M-40 12l-14 6M-34 14l-12 8', I('O'), 3),
-    F('M18 -12C26 -22 38 -22 42 -14C46 -8 40 0 32 0Z', I('P'), { stroke: I('B'), 'stroke-width': 1.4 }),
-    F('M40 -16L96 -6L94 -3L42 -8Z', I('K'), { stroke: I('N'), 'stroke-width': 0.8 }), F('M42 -9C60 -4 80 -2 94 -3C80 4 56 6 44 -2Z', I('O'), { stroke: I('N'), 'stroke-width': 0.8 }), F('M94 -6l4 2l-4 3Z', I('R')),
-    F(circ(36, -14, 2.2), I('N')), F('M14 -10C18 -2 22 2 30 2L28 8C18 6 12 0 10 -6Z', I('R')), S('M22 6l-8 14M26 6l-2 16', I('R'), 3),
-    G(REF('frWn'), F('M-6 -8C-10 -48 -24 -84 -54 -102C-40 -76 -34 -44 -30 -4Z', I('P'), { stroke: I('B'), 'stroke-width': 1.4 }), F('M-54 -102C-44 -92 -38 -82 -36 -70L-28 -76C-34 -88 -42 -98 -54 -102Z', I('N')), S('M-12 -30C-18 -32 -24 -30 -28 -26M-10 -46C-16 -48 -22 -46 -26 -42', I('B'), 1.1)),
-    G({ ...REF('frPop'), ...HID, transform: 'translate(70 -58)' }, F('M-26 0C-26 -16 26 -16 26 0C26 10 10 12 2 11L-6 22L-4 11C-18 11 -26 8 -26 0Z', I('P'), { stroke: I('N'), 'stroke-width': 1.4 }), F(text('嘎!', 18, 0, 6).d, I('R'))));
+    G(REF('frWf'), F('M-10 -6C-20 -40 -40 -66 -70 -76C-52 -54 -40 -28 -30 0Z', PS, { stroke: '#07060F', 'stroke-width': 1 }), F('M-70 -76C-60 -66 -54 -58 -50 -48L-44 -54C-50 -64 -58 -72 -70 -76Z', '#0E0B1C')),
+    F('M-46 4C-40 -10 -10 -16 18 -12C30 -10 36 -2 32 6C20 16 -24 18 -46 4Z', P, { stroke: '#07060F', 'stroke-width': 1.4 }), S('M-44 2C-36 -10 -10 -15 18 -12', N.cy, 1.1, { opacity: 0.85 }),
+    F('M-46 4l-14 -4l2 8Z', P, { stroke: '#07060F', 'stroke-width': 1 }), S('M-40 12l-14 6M-34 14l-12 8', V('foot'), 3),
+    F('M18 -12C26 -22 38 -22 42 -14C46 -8 40 0 32 0Z', P, { stroke: '#07060F', 'stroke-width': 1.4 }),
+    F('M40 -16L96 -6L94 -3L42 -8Z', V('billUpper'), { stroke: '#07060F', 'stroke-width': 0.8 }), F('M42 -9C60 -4 80 -2 94 -3C80 4 56 6 44 -2Z', V('pouch'), { stroke: '#07060F', 'stroke-width': 0.8 }), F('M94 -6l4 2l-4 3Z', CHROME),
+    F('M30 -19h12v5h-12Z', N.cy, { opacity: 0.8 }), S('M30 -16.5h12', N.cyC, 0.7), F(circ(36, -14, 1.8), '#07060F'),
+    F('M14 -10C18 -2 22 2 30 2L28 8C18 6 12 0 10 -6Z', N.mag), S('M22 6l-8 14M26 6l-2 16', N.mag, 3), F(circ(16, -3, 1.2) + circ(22, 2, 1.2) + circ(18, 14, 1.2), N.magC), S('M14 -10C18 -2 22 2 30 2', N.magC, 0.6),
+    G(REF('frWn'), F('M-6 -8C-10 -48 -24 -84 -54 -102C-40 -76 -34 -44 -30 -4Z', P, { stroke: '#07060F', 'stroke-width': 1.4 }), S('M-6 -8C-10 -48 -24 -84 -54 -102', N.cy, 1, { opacity: 0.85 }),
+      F('M-54 -102C-44 -92 -38 -82 -36 -70L-28 -76C-34 -88 -42 -98 -54 -102Z', '#0E0B1C'), S('M-54 -102C-44 -92 -38 -82 -36 -70', N.mag, 1.2), S('M-12 -30C-18 -32 -24 -30 -28 -26M-10 -46C-16 -48 -22 -46 -26 -42', PS, 1.1)),
+    G({ ...REF('frPop'), ...HID, transform: 'translate(70 -58)' }, plate('嘎!', 18, N.mag, N.magC, 56, 30)));
 }
+// neon fireworks over the pier: chrysanthemum, ring, willow and palm in magenta, acid, cyan and amber
 function burst(i) {
-  const inks = [['R', 'P'], ['O', 'K'], ['P', 'R'], ['K', 'O']][i];
+  const cols = [[N.mag, N.magC], [N.ac, N.acC], [N.cy, N.cyC], [N.am, N.amC]][i];
   let rays = '', tips = '';
   const n = [18, 14, 22, 12][i];
   for (let k = 0; k < n; k++) {
@@ -368,40 +404,50 @@ function burst(i) {
     else rays += `M${f(c * 16)} ${f(s * 16)}L${f(c * 64)} ${f(s * 64)}`;
     tips += circ(c * 74, s * 74 + (i === 2 ? 32 : 0), i === 1 ? 3.4 : 2.4);
   }
-  return G({ ...REF('fw' + i), ...HID }, S(rays, I(inks[0][0]), i === 3 ? 3.4 : 2.2), F(tips, I(inks[0][1])), i === 1 ? S(circ(0, 0, 40), I('P'), 1.6, { 'stroke-dasharray': '2 7' }) : '', F(circ(0, 0, 7), I('P')));
+  return G({ ...REF('fw' + i), ...HID }, S(rays, cols[0], (i === 3 ? 3.4 : 2.2) * 2.6, { opacity: 0.16 }), S(rays, cols[0], i === 3 ? 2.6 : 1.7), S(rays, cols[1], 0.6),
+    F(tips, cols[1]), i === 1 ? S(circ(0, 0, 40), N.acC, 1.4, { 'stroke-dasharray': '2 7' }) : '', F(circ(0, 0, 9), cols[0], { opacity: 0.4 }), F(circ(0, 0, 4.5), '#FFFFFF'));
 }
+// pacing signs: holographic road boards (amber 下坡 DOWNHILL, cyan 冲刺 SPRINT) on a dark pole
 function signPost(kind) {
-  const up = kind === 'down' ? '下坡 DOWNHILL' : '冲刺 SPRINT';
-  const icon = kind === 'down' ? F('M-56 -148l40 0l-40 -22Z', I('N')) : S('M-56 -160h26M-50 -152h22M-44 -144h18', I('N'), 3);
+  const down = kind === 'down', col = down ? N.am : N.cy, core = down ? N.amC : N.cyC, up = down ? '下坡 DOWNHILL' : '冲刺 SPRINT';
+  const icon = down ? glow('M-78 -162l9 7l9 -7M-78 -170l9 7l9 -7', col, core, 1.6) : glow('M-78 -164l8 8l-8 8M-67 -164l8 8l-8 8', col, core, 1.6);
+  const t = text(up, 13, 0, -149.5, { align: 'start' }), x0 = -54;
   return G({ ...REF('sign-' + kind), ...HID },
-    F(rect(-4, -130, 8, 130), I('N')), F(rect(-72, -178, 144, 48), kind === 'down' ? I('O') : I('T'), { stroke: I('N'), 'stroke-width': 2 }),
-    S(rect(-66, -172, 132, 36), I('P'), 1.4), icon, F(text(up, 15, 14, -148.5).d, I('P')), F(rect(-12, -134, 24, 6), I('N')));
+    F(rect(-4, -130, 8, 130), '#120E22'), S('M0 -128V-4', col, 0.8, { opacity: 0.6 }), F(rect(-88, -178, 176, 48), '#0B0918', { opacity: 0.92 }),
+    F(rect(-88, -178, 176, 48), col, { opacity: 0.08 }), glow(rect(-88, -178, 176, 48), col, core, 1.3),
+    S('M-92 -182h14M-92 -182v10M92 -126h-14M92 -126v-10', core, 1.4), icon, F(t.d, core, { transform: `translate(${f(x0 + (138 - t.w) / 2)} 0)` }), F(rect(-12, -134, 24, 6), '#120E22'), F(rect(-82, -136, 164, 1.4), col, { opacity: 0.6 }));
 }
-function popWord(ref, word, ink) {
-  let rays = '';
-  for (let i = 0; i < 16; i++) { const a = i / 16 * TAU, c = Math.cos(a), s = Math.sin(a); rays += poly([[c * 70 - s * 5, s * 34 + c * 3], [c * (i % 2 ? 96 : 110), s * (i % 2 ? 46 : 54)], [c * 70 + s * 5, s * 34 - c * 3]]); }
-  const t = text(word, 34, 0, 12);
-  return G({ ...REF(ref), ...HID }, F(rays, I('O')), F(ell(0, 0, 76, 36), I(ink), { stroke: I('N'), 'stroke-width': 2 }),
-    F(t.d, I('N'), { transform: 'translate(2.4 2.4)' }), F(t.d, I('P'), { stroke: I('N'), 'stroke-width': 1.2, 'paint-order': 'stroke' }));
+// pacing pop words as glitch HUD plates (WHEEE! on the descents, RACE! against the maglev)
+function popWord(ref, word, col) {
+  const core = col === N.mag ? N.magC : N.cyC;
+  let shards = '';
+  for (let i = 0; i < 10; i++) { const a = i / 10 * TAU + 0.3, c = Math.cos(a), s = Math.sin(a); shards += `M${f(c * 92)} ${f(s * 44)}l${f(c * (i % 2 ? 10 : 18))} ${f(s * (i % 2 ? 5 : 9))}`; }
+  return G({ ...REF(ref), ...HID }, S(shards, col, 2.2), S(shards, core, 0.7), plate(word, 34, col, core, 170, 52),
+    F(text('SYS:' + word.replace('!', '') + '.EXE', 7, -78, -32, { align: 'start' }).d, core, { opacity: 0.85 }));
 }
 
 export function build(ctx) {
   V = ctx.v; I = r => V('ink' + r);
+  N = { mag: V('magenta'), magC: V('magentaCore'), cy: V('cyan'), cyC: V('cyanCore'), ac: V('acid'), acC: V('acidCore'), am: V('amber'), amC: V('amberCore'),
+    red: V('red'), vi: V('violet'), viC: V('violetCore') };
   const back = G({ id: 'dir-back' }, cyclist(0), cyclist(1), cat(0), cat(1), keeper(), signPost('down'), signPost('flat'));
+  const drop = 'M0 -7C3 -2 4 1 4 3A4 4 0 0 1 -4 3C-4 1 -3 -2 0 -7Z';
   const front = G({ id: 'dir-front' },
     G({ ...REF('gulls'), ...HID, ...DD('fx:O:dir-gulls') }, gull(0), gull(1)),
     G({ ...REF('fish'), ...HID, ...DD('sea:O:dir-fish') }, G(REF('fishRot'), fishShape())),
-    G({ ...REF('drops'), ...HID, ...DD('fx:O:dir-drops') }, ...[0, 1, 2, 3, 4].map(i => F('M0 -7C3 -2 4 1 4 3A4 4 0 0 1 -4 3C-4 1 -3 -2 0 -7Z', I('P'), { stroke: I('B'), 'stroke-width': 1, 'data-ref': 'dir-drop' + i }))),
-    G({ ...DD('fx:O:dir-pops') }, popWord('popWheee', 'WHEEE!', 'R'), popWord('popRace', 'RACE!', 'T')));
+    G({ ...REF('drops'), ...HID, ...DD('fx:O:dir-drops') }, ...[0, 1, 2, 3, 4].map(i => G({ 'data-ref': 'dir-drop' + i }, F(circ(0, 1, 7), N.cy, { opacity: 0.18 }), F(drop, N.cyC, { stroke: N.cy, 'stroke-width': 1 })))),
+    G({ ...DD('fx:O:dir-pops') }, popWord('popWheee', 'WHEEE!', N.mag), popWord('popRace', 'RACE!', N.cy)));
   const road = G({ id: 'dir-road' },
-    G({ ...REF('puddle'), ...HID, ...DD('land:O:dir-puddle') }, F(ell(0, 0, 120, 13), I('B')), F(ell(-6, -2, 104, 9), V('sky1')), S('M-70 -3q20 -4 40 0M20 2q24 -4 44 0', I('P'), 1.6),
-      G(REF('pRip'), S(ell(-30, 0, 16, 3) + ell(40, 1, 12, 2.4), I('P'), 1))),
-    G({ ...REF('pothole'), ...HID, ...DD('land:O:dir-pothole') }, F('M-44 0C-40 -8 -10 -10 10 -8C34 -6 46 -2 40 4C30 10 -30 10 -44 0Z', I('N')), F('M-40 1C-30 -4 20 -6 36 -1C20 -3 -20 -2 -40 1Z', I('K')),
-      S('M40 0l16 -4l8 3M-44 0l-12 3l-8 -2M10 8l6 6', I('N'), 1.2),
-      G({ transform: 'translate(90 0)' }, F('M-12 0L-4 -40H4L12 0Z', I('O'), { stroke: I('N'), 'stroke-width': 1.2 }), F('M-8 -16h16l-2 -8h-12ZM-5 -30h10l-1 -5h-8Z', I('P')), F(rect(-16, -3, 32, 5), I('N')))));
+    G({ ...REF('puddle'), ...HID, ...DD('land:O:dir-puddle') }, F(ell(0, 0, 120, 13), '#0B0918'), F(ell(-6, -2, 104, 9), V('sky1')),
+      S('M-70 -3q20 -4 40 0', N.mag, 2.2, { opacity: 0.8 }), S('M20 2q24 -4 44 0', N.cy, 2, { opacity: 0.8 }), S('M-40 -1h30M44 -1h18', N.amC, 1, { opacity: 0.7 }),
+      G(REF('pRip'), S(ell(-30, 0, 16, 3) + ell(40, 1, 12, 2.4), N.cyC, 1, { opacity: 0.8 }))),
+    G({ ...REF('pothole'), ...HID, ...DD('land:O:dir-pothole') }, F('M-44 0C-40 -8 -10 -10 10 -8C34 -6 46 -2 40 4C30 10 -30 10 -44 0Z', '#07060F'), F('M-40 1C-30 -4 20 -6 36 -1C20 -3 -20 -2 -40 1Z', DARK2),
+      S('M40 0l16 -4l8 3M-44 0l-12 3l-8 -2M10 8l6 6', N.am, 1.1, { opacity: 0.8 }),
+      G({ transform: 'translate(90 0)' }, F('M-12 0L-4 -40H4L12 0Z', '#1C1630', { stroke: '#07060F', 'stroke-width': 1.2 }), glow('M-8 -16h16M-5 -30h10', N.am, N.amC, 2.4),
+        F(circ(0, -42, 2.4), N.red), F(circ(0, -42, 6), N.red, { opacity: 0.25 }), F(rect(-16, -3, 32, 5), '#0B0918'), S('M-16 -1h32', N.ac, 1))));
   const sky = G({ id: 'dir-sky' }, kites(), G({ ...REF('fws'), ...DD('sky:O:dir-fireworks') }, burst(0), burst(1), burst(2), burst(3)));
   const gullsFar = G({ id: 'dir-far' }, friend());
-  const boats = G({ id: 'dir-boats' }, G({ ...REF('splash'), ...HID, ...DD('sea:O:dir-splash') }, S(ell(0, 0, 26, 5), I('P'), 2), F('M-12 0l-6 -16l8 12ZM0 0l0 -22l4 20ZM12 0l8 -15l-5 14Z', I('P'))));
+  const boats = G({ id: 'dir-boats' }, G({ ...REF('splash'), ...HID, ...DD('sea:O:dir-splash') }, S(ell(0, 0, 26, 5), N.cy, 2), S(ell(0, 0, 26, 5), N.cyC, 0.6), F('M-12 0l-6 -16l8 12ZM0 0l0 -22l4 20ZM12 0l8 -15l-5 14Z', N.cyC)));
   return { layers: { 'L-fx-back': back, 'L-fx-front': front, 'L-road': road, 'L-clouds': sky, 'L-gulls-far': gullsFar, 'L-boats': boats } };
 }
 

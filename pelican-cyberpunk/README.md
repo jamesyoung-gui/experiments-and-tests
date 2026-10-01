@@ -1,7 +1,7 @@
-# 鹈鹕湾 · Pelican Bay
+# 霓虹鹈鹕 · Neon Pelican（鹈鹕湾 赛博朋克版 · Pelican Bay, cyberpunk edition）
 
-一只大白鹈鹕骑着自行车沿海滨路前行——一张会动的复古旅行海报（WPA / 装饰艺术丝网印刷风格，七色套印）。
-A great white pelican rides a bicycle along the coast road: an animated retro travel poster (WPA / art-deco screenprint, seven inks).
+一只赛博朋克大白鹈鹕（护目镜、LED 围巾、外卖夹克）骑着发光的城市单车，穿过雨夜霓虹港城送外卖。
+A cyberpunk great white pelican (visor, LED scarf, courier bomber) rides a glowing city fixie through a rain-slick neon harbour megacity, delivering fish.
 
 - 打开 Open: `dist/index.html` (单文件，离线可用 · single file, works from file://)
 - 零 JS 动画 SVG · Zero-JS animated SVG: `dist/pelican-bicycle.svg`
@@ -22,6 +22,7 @@ A great white pelican rides a bicycle along the coast road: an animated retro tr
 | `→` | 快一点 | Faster |
 | `S` | 滑行 | Coast |
 | `M` | 声音 | Sound |
+| `U` | 音乐 | Music |
 | `P` | 暂停 | Pause |
 | `L` | 语言 | Language |
 | `?` | 帮助 | Help |
@@ -52,7 +53,7 @@ A great white pelican rides a bicycle along the coast road: an animated retro tr
 
 ## 构图 · Composition
 
-- 远景（wide）是海报本身；特写（close）比契约值放宽（zoom 1.32），冠羽上方至少留 6% 空间。 Wide is the poster itself. Close is looser than the contract value (zoom 1.32) and keeps at least 6% headroom above the crest.
+- 远景（wide）是整幅城市画面；特写（close）比契约值放宽（zoom 1.32），冠羽上方至少留 6% 空间。 Wide is the full city frame. Close is looser than the contract value (zoom 1.32) and keeps at least 6% headroom above the crest.
 - 跳跃时特写/电影镜头在下蹲帧（0.24 s 预备）就开始上抬，临界阻尼约 0.7 s 回落，所以到最高点时嘴和冠羽仍在画面内。 On a hop, the close and cinematic cameras start rising at the crouch (0.24 s anticipation) and settle back, critically damped, in about 0.7 s, so the bill and crest stay in frame at the apex.
 - 每帧提供 `frame.headBox`（viewBox 坐标的头部圆），天空道具应避开它。 Each frame exposes `frame.headBox` (a circle around the head, in viewBox units); sky props should keep out of it.
 
@@ -73,6 +74,9 @@ A great white pelican rides a bicycle along the coast road: an animated retro tr
 | 11 | 漂流瓶 | Message in a bottle |
 | 12 | 流星许愿 | Wish upon a star |
 | 13 | 鹈鹕雁阵 | Pelican squadron |
+| 14 | 系统骇入 | Wireframe city |
+| 15 | 欢迎鹈鹕 | Pelicans welcome |
+| 16 | 发发发 | Gold chrome |
 
 ## 制作过程 · How it was made
 

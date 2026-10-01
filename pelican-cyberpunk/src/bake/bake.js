@@ -30,8 +30,8 @@ export const BAKE_DEFAULTS = {
   // the world (sky, sea, shore, roadside, road, foreground) is recorded as ONE long own-loop band, so the background
   // runs a real journey (village → pier → harbour → funfair → railway) instead of repeating with the 4 s rider loop.
   // Set pieces that the land module mounts / unmounts on the way are baked as presence (display) animations.
-  band: { P: 96, fps: 30, layers: ['L-hills-far', 'L-lighthouse', 'L-sea', 'L-boats', 'L-shore', 'L-roadside', 'L-road', 'L-foreground'] },
-  // easter-egg cameos on long prime periods (the combined cycle is 4·96·41·53·67 s): [egg id, subtree, period, at]
+  band: { P: 48, fps: 24, layers: ['L-hills-far', 'L-lighthouse', 'L-sea', 'L-boats', 'L-shore', 'L-roadside', 'L-road', 'L-foreground'] },
+  // easter-egg cameos on long prime periods (the combined cycle is 4·48·41·53·67 s): [egg id, subtree, period, at]
   cameos: [['sunwink', '[data-ref="egg-sunFace"]', 41, 9], ['chorus', '[data-ref="egg-chorus"]', 53, 31], ['flight', '[data-ref="egg-flight"]', 67, 18]],
   reducedMotion: true, // prefers-reduced-motion: every animated attribute is frozen at its t0 value by CSS (!important)
   fps: 60,             // samples per second for the master loop
@@ -42,10 +42,11 @@ export const BAKE_DEFAULTS = {
   tol: { len: 0.12, ang: 0.08, scale: 0.0015, d: 0.45, opacity: 0.008, dash: 0.05, num: 0.05 },          // rider (u, °)
   tolWorld: { len: 0.3, ang: 0.3, scale: 0.004, d: 0.35, opacity: 0.012, dash: 0.1, num: 0.1 },       // everything else
   blend: 1,            // seconds of seam cross-fade for channels that don't close within the loop
-  dGap: 3,             // path-data keyframes at most every 2nd sample (30 Hz); SMIL interpolates in between
+  freeze: ['[data-ref^="wx-rip"]', '[data-ref="wx-spray"]'],
+  dGap: 4,             // path-data keyframes at most every 4th sample (15 Hz); SMIL interpolates in between
   strip: true,         // drop data-* attributes, comments and ids nothing references
   width: 1600, height: 900,
-  title: 'Pelican Bay · 鹈鹕湾 — 骑自行车的鹈鹕 · A pelican riding a bicycle',
+  title: 'Neon Pelican · 霓虹鹈鹕 — 骑自行车送外卖的赛博鹈鹕 · A cyberpunk pelican riding a bicycle',
   desc: null,
 };
 
@@ -89,6 +90,17 @@ function* bakeGen(svg, opts) {
   const story = (cfg.story || []).map(e => ({ type: e.type, t0: cfg.start + e.t0 }));
   const render = t => pb.renderAt(t, { tod: cfg.tod, cam: cfg.cam, cadence: cfg.cadence, loopT: T, toggles: cfg.toggles, events: story.filter(e => e.t0 <= t + 1e-9) });
   const stats = { period: T, fps, start: cfg.start, samples: 0, tracks: 0, animated: 0, anims: 0, keyframes: 0, warnings: [], nonClosing: [], trends: [], subPeriods: {}, errMax: {}, bytesByGroup: {}, ms: {} };
+  // (integration, size) live modules mirror per-frame path data into plain <path> copies (data-du = source id: cheaper
+  // than <use> while playing). For the bake those copies become <use href="#source"> with the copy's own paint, so
+  // only the source's d is recorded once instead of once per glow layer; swapped back in finally.
+  const duSwap = [];
+  for (const el of svg.querySelectorAll('[data-du]')) {
+    const src = el.getAttribute('data-du'); if (!svg.querySelector('#' + src)) continue;
+    const u = el.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'use');
+    for (const a of el.attributes) if (a.name !== 'd' && a.name !== 'data-du') u.setAttribute(a.name, a.value);
+    u.setAttribute('href', '#' + src);
+    el.replaceWith(u); duSwap.push([u, el]);
+  }
   try {
     // ---- 1. base frame: the static fallback of the baked file is the t0 pose (a proper hero pose, not a collapsed rig)
     render(cfg.start); render(cfg.start);
@@ -97,6 +109,9 @@ function* bakeGen(svg, opts) {
     const mark = (el, P, f) => { if (!el || el.hasAttribute('data-bake-period')) return; el.setAttribute('data-bake-period', P); if (f) el.setAttribute('data-bake-fps', f); marked.push(el); };
     const cameos = [];
     if (pb.eggs && cfg.cameos) for (const [egg, sel, P, at] of cfg.cameos) { const el = svg.querySelector(sel); if (el && P > 0 && Math.abs(P - T) > 1e-6) { mark(el, P, Math.min(fps, 30)); cameos.push({ egg, P, at }); } }
+    // subtrees frozen at the t0 frame in the zero-JS file (size budget): the raindrop ripples in the road puddles (the
+    // puddles themselves still scroll with the road) cost ~250 KB of keyframes for a detail that reads still
+    for (const sel of cfg.freeze || []) for (const el of svg.querySelectorAll(sel)) if (!el.hasAttribute('data-bake-static')) { el.setAttribute('data-bake-static', ''); (cfg.__frozen ||= []).push(el); }
     const band = cfg.band && cfg.band.P > T ? cfg.band : null;
     if (band) for (const id of band.layers) { const L = svg.querySelector('#' + id); if (L) for (const c of L.children) mark(c, band.P, band.fps); }
     stats.__marked = marked;
@@ -217,6 +232,8 @@ function* bakeGen(svg, opts) {
     if (typeof window !== 'undefined') window.__pbBakeStats = stats;
     return out;
   } finally {
+    for (const [u, el] of duSwap) u.replaceWith(el);
+    for (const el of cfg.__frozen || []) el.removeAttribute('data-bake-static');
     for (const el of stats.__marked || []) { el.removeAttribute('data-bake-period'); el.removeAttribute('data-bake-fps'); }
     delete stats.__marked;
     if (pb.eggs && pb.eggs.stopAll) try { pb.eggs.stopAll(); } catch (e) { /* ignore */ }
@@ -922,7 +939,8 @@ function emit(target, u, anims, cfg, stats, cssRules) {
       el.setAttribute('attributeName', attr);
       if (isXf) el.setAttribute('type', a.type);
       el.setAttribute('values', a.values.join(';'));
-      if (a.keyTimes && a.values.length > 1) el.setAttribute('keyTimes', ktStr(a.keyTimes, Math.min(6, Math.ceil(Math.log10(a.dur * cfg.fps * 4)) + 1)));
+      // (integration, size) half a sample period of precision keeps every keyTime strictly increasing
+      if (a.keyTimes && a.values.length > 1) el.setAttribute('keyTimes', ktStr(a.keyTimes, Math.min(6, Math.ceil(Math.log10(a.dur * cfg.fps * 2)))));
       if (a.calcMode) el.setAttribute('calcMode', a.calcMode);
       el.setAttribute('dur', durStr(a.dur));
       el.setAttribute('repeatCount', 'indefinite');

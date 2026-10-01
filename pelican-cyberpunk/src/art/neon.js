@@ -89,7 +89,8 @@ export function bakedFilter(id, [x, y, w, h], filterId, content, el = {}) {
   return {
     // pattern content is laid out from the tile's corner: shift it back so it keeps its user coordinates
     def: `<pattern id="${id}" patternUnits="userSpaceOnUse" ${box}><g transform="translate(${n2(-x)} ${n2(-y)})"><g filter="url(#${filterId})">${content}</g></g></pattern>`,
-    el: `<rect ${box} fill="url(#${id})"${attrs(el)}/>`,
+    // the rect is only the pattern's frame, not the shape: it takes no pointer / hit-test events
+    el: `<rect ${box} fill="url(#${id})" pointer-events="none" style="pointer-events:none !important;${el.style || ''}"${attrs({ ...el, style: undefined })}/>`,
   };
 }
 

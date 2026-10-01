@@ -37,7 +37,7 @@ const state = {
   speed: 0, distance: 0, crank: 0, coasting: false,
   tod: params.has('tod') ? +params.get('tod') : TOD_DEFAULT, todAuto: params.has('autotod'), dayLength: 120,
   events: [], cam: params.get('cam') || 'wide',
-  toggles: { sound: false, speedlines: true, gulls: true, hud: !params.has('nohud'), skeleton: params.has('skeleton') },
+  toggles: { sound: false, music: false, speedlines: true, gulls: true, hud: !params.has('nohud'), skeleton: params.has('skeleton') },
 };
 state.cadence = state.cadenceTarget; state.speed = (state.cadence / 60) * DIST_PER_REV;
 
@@ -63,8 +63,8 @@ if (dups.length) console.error('[scene] duplicate ids: ' + [...new Set(dups)].jo
 
 // lead-owned layers: atmosphere + vignette + letterbox
 mount(svg.querySelector('#L-letterbox'), h('g', { id: 'lead-letterbox' },
-  h('rect', { id: 'lead-lb-top', x: -10, y: -10, width: 1620, height: 0, fill: v('inkP') }),
-  h('rect', { id: 'lead-lb-bot', x: -10, y: 900, width: 1620, height: 0, fill: v('inkP') })));
+  h('rect', { id: 'lead-lb-top', x: -10, y: -10, width: 1620, height: 0, fill: v('inkN') }),
+  h('rect', { id: 'lead-lb-bot', x: -10, y: 900, width: 1620, height: 0, fill: v('inkN') })));
 // split into one <svg> per layer, one per moving strip (module export `sheets`: hoisted translate) and one per busy prop
 // (module export `isolate`); the rider is cut into groups of slots (first slot of each group below: far wing · far leg ·
 // wheels · static frame/fork/bars · drivetrain · neck/tail/body · near leg · head · near wing), so a moving group
