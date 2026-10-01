@@ -66,12 +66,30 @@ export function bakeSVG(svg, opts = {}) {
   while (!r.done) r = it.next();
   return r.value;
 }
-export async function bakeSVGAsync(svg, opts = {}, onProgress) {
+// onProgress({ phase, done, of, frac }) — frac is the overall 0..1 progress (record passes 0–0.85 by planned
+// samples, the long-horizon probe 0.85–0.9, emission 0.9–1). shouldAbort() → true cancels: the generator is closed
+// (its finally restores the live DOM and state) and the promise rejects with an AbortError.
+export async function bakeSVGAsync(svg, opts = {}, onProgress, shouldAbort) {
   const it = bakeGen(svg, opts);
   let r = it.next(), last = now();
   while (!r.done) {
-    if (now() - last > 30) { if (onProgress && r.value) onProgress(r.value); await new Promise(res => setTimeout(res, 0)); last = now(); }
+    if (now() - last > 30) {
+      if (onProgress && r.value) onProgress(r.value);
+      await new Promise(res => setTimeout(res, 0)); last = now();
+      if (shouldAbort && shouldAbort()) { it.return(); const e = new Error('bake cancelled'); e.name = 'AbortError'; throw e; }
+    }
     r = it.next();
+  }
+  return r.value;
+}
+// re-yield a sub-generator's progress with an overall fraction
+function* scaled(gen, lo, hi, base = 0, total = 0) {
+  let r = gen.next();
+  while (!r.done) {
+    const v = r.value || {};
+    const f = total ? (base + (v.done || 0)) / total : (v.of ? (v.done || 0) / v.of : 0);
+    yield { ...v, frac: lo + (hi - lo) * Math.min(1, f) };
+    r = gen.next();
   }
   return r.value;
 }
@@ -132,20 +150,22 @@ function* bakeGen(svg, opts) {
     // own-period passes FIRST: the band pass starts from the base frame's DOM, so the set pieces mounted in the base
     // frame are the very nodes of the clone (their motion is recorded onto them, their unmounting becomes presence)
     const periods = [...new Set([...svg.querySelectorAll('[data-bake-period]')].map(e => +e.getAttribute('data-bake-period')).filter(p => p > 0 && Math.abs(p - T) > 1e-6))].sort((a, b) => b - a);
+    const passN = P => { const host = svg.querySelector(`[data-bake-period="${P}"]`); const f = +(host && host.getAttribute('data-bake-fps')) || Math.min(fps, Math.max(4, 1440 / P)); return Math.max(8, Math.round(P * f)); };
+    const M0 = Math.max(0, Math.min(Math.round(cfg.blend * fps), N >> 1));
+    const plan = { total: periods.reduce((a, P) => a + passN(P), 0) + N + M0, done: 0 };   // planned record samples (progress)
     for (const P of periods) {
-      const host = svg.querySelector(`[data-bake-period="${P}"]`);
-      const f = +(host && host.getAttribute('data-bake-fps')) || Math.min(fps, Math.max(4, 1440 / P));
-      const n = Math.max(8, Math.round(P * f)), step = P / n;
+      const n = passN(P), step = P / n;
       const hooks = cameos.filter(c => c.P === P).map(c => ({ i: Math.round(c.at / step), fn: () => { try { pb.eggs.trigger(c.egg); } catch (e) { stats.warnings.push('cameo ' + c.egg + ': ' + e.message); } } }));
-      const pass = yield* recordPass(svg, render, cfg.start, n, step, stats, null, { ...ctxR, hooks });
+      const pass = yield* scaled(recordPass(svg, render, cfg.start, n, step, stats, null, { ...ctxR, hooks }), 0, 0.85, plan.done, plan.total);
+      plan.done += n;
       if (hooks.length && pb.eggs.stopAll) pb.eggs.stopAll();
       const isBand = !!band && P === band.P;
       groups.push({ P, step, n, M: 0, cut: isBand, cameo: hooks.length > 0, tracks: [...pass.tracks.values()].filter(tr => tr.P === P), pres: presOf(pass, P, 0) });
     }
     // the master pass starts `blend` seconds early: a channel that doesn't close is cross-faded over the last `blend`
     // seconds into its own motion one loop earlier, so the seam is continuous in value AND velocity
-    const M = Math.max(0, Math.min(Math.round(cfg.blend * fps), N >> 1));
-    const main = yield* recordPass(svg, render, cfg.start - M / fps, N + M, 1 / fps, stats, null, ctxR);
+    const M = M0;
+    const main = yield* scaled(recordPass(svg, render, cfg.start - M / fps, N + M, 1 / fps, stats, null, ctxR), 0, 0.85, plan.done, plan.total);
     groups.unshift({ P: T, step: 1 / fps, n: N, M, tracks: [...main.tracks.values()].filter(tr => tr.P === T), pres: presOf(main, T, M) });
     stats.cameos = cameos.map(c => `${c.egg} every ${c.P}s (at ${c.at}s)`);
     stats.band = band ? { P: band.P, fps: band.fps, layers: band.layers.length } : null;
@@ -166,7 +186,7 @@ function* bakeGen(svg, opts) {
     for (const u of live) for (const c of u.chans || []) if (c.wrapKind === 'tile' && !c.closes && !c.W) needProbe.push([u, c]);
     if (needProbe.length) {
       const H = cfg.probe.horizon, step = cfg.probe.step, n = Math.round(H / step);
-      const probe = yield* recordPass(svg, render, cfg.start, n, step, stats, new Set(needProbe.map(([u]) => u.el)), { ownerP, known: indexOf, probe: true });
+      const probe = yield* scaled(recordPass(svg, render, cfg.start, n, step, stats, new Set(needProbe.map(([u]) => u.el)), { ownerP, known: indexOf, probe: true }), 0.85, 0.9);
       for (const [u, c] of needProbe) {
         const tr = findTrack(probe.tracks, u.el, u.attr);
         if (!tr) continue;
@@ -193,7 +213,7 @@ function* bakeGen(svg, opts) {
       const target = indexOf.has(u.el) ? cloneEls[indexOf.get(u.el)] : liveToSnap.get(u.el);
       if (!target || !anims.length) continue;
       emit(target, u, anims, cfg, stats, cssRules);
-      if (++k % 40 === 0) yield { phase: 'emit', done: k, of: live.length };
+      if (++k % 40 === 0) yield { phase: 'emit', done: k, of: live.length, frac: 0.9 + 0.1 * k / live.length };
     }
     // presence: nodes mounted / unmounted while recording (set pieces) get a wrapper <g> with a discrete display loop
     const cloneOf = el => (indexOf.has(el) ? cloneEls[indexOf.get(el)] : liveToSnap.get(el));
@@ -263,6 +283,7 @@ function* recordPass(svg, render, start, n, step, stats, only, rc = {}) {
   const hooks = rc.hooks || [];
   const ownerP = rc.ownerP || (() => 0);
   let child = 0;
+  try {
   for (let i = 1; i <= n; i++) {
     render(start + i * step);
     stats.samples++;
@@ -301,7 +322,7 @@ function* recordPass(svg, render, start, n, step, stats, only, rc = {}) {
     for (const hk of hooks) if (hk.i === i) hk.fn();
     if (i % 30 === 0) yield { phase: 'record', done: i, of: n };
   }
-  mo.disconnect();
+  } finally { mo.disconnect(); }   // also on cancel (generator.return() from bakeSVGAsync)
   if (child && !rc.liveToSnap && !rc.probe) stats.warnings.push(`${child} childList mutations while recording (not baked)`);
   if (child && rc.liveToSnap) (stats.childList ||= []).push(`${child} mutations → ${pres.size} presence nodes`);
   return { tracks, pres };

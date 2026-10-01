@@ -3,7 +3,7 @@
 // back into head space, so they sit OVER the eye and the eye reads through the translucent lens).
 // Style X (STYLE-X §3, "Neon Pelican"): still unmistakably a great white pelican (cool-white plumage, peach face skin,
 // yellow gular pouch, hooked nail, shaggy nape crest), styled cyber: a cyan visor with live HUD glyphs, a short
-// techwear bomber with magenta piping and 鹈鹕 / PELICAN patches, a chrome nail, a glowing circuit tattoo on the
+// cropped techwear courier vest + webbing harness with magenta piping and 鹈鹕 / PELICAN patches, a chrome nail, a glowing circuit tattoo on the
 // pouch, an earpiece antenna and an LED scarf on the rig's scarf pose.
 // Lighting: dual-colour neon rim (cyan from the back/left, magenta from the top/right) done ONLY with stacked strokes,
 // bbox gradients and clip paths. NO filters anywhere in this module (rider slots move every frame).
@@ -29,6 +29,7 @@ const HW = {
   jk: 'var(--pb-pbJacket,#1C1932)', jkHi: 'var(--pb-pbJacketHi,#35306A)', jkLo: 'var(--pb-pbJacketLo,#100E1F)', seam: 'var(--pb-pbSeam,#08070F)',
   chrome: 'var(--pb-pbChrome,#C9D1EE)', chromeHi: 'var(--pb-pbChromeHi,#FFFFFF)', chromeDk: 'var(--pb-pbChromeDk,#3A3F5C)', chromeMid: 'var(--pb-pbChromeMid,#7D84A8)',
   fab: 'var(--pb-pbScarf,#4A1A5E)', fabHi: 'var(--pb-pbScarfHi,#6E2A84)', fabLo: 'var(--pb-pbScarfLo,#2A0F38)', fabFar: 'var(--pb-pbScarfFar,#2A1238)',
+  orbit: 'var(--pb-pbOrbit,#F7987C)', iris: 'var(--pb-pbIrisDk,#2C170F)',
   lens: 'var(--pb-pbLens,#19E6FF)', lensDk: 'var(--pb-pbLensDk,#0B5C78)', patch: 'var(--pb-pbPatch,#0B0A16)',
 };
 
@@ -147,10 +148,14 @@ function neckSamples(n, N, bulge) {
   const C = [], T = [], W = [];
   for (let i = 0; i < N; i++) {
     const t = i / (N - 1);
-    C.push([B(t, n.p0[0], n.p1[0], n.p2[0], n.p3[0]), B(t, n.p0[1], n.p1[1], n.p2[1], n.p3[1])]);
-    T.push(norm([Bd(t, n.p0[0], n.p1[0], n.p2[0], n.p3[0]), Bd(t, n.p0[1], n.p1[1], n.p2[1], n.p3[1])]));
-    // slight throat fullness under the head + taper; bulge for the gulp
-    let w = (n.w0 + (n.w1 - n.w0) * t) / 2 + 1.6 * Math.sin(Math.PI * t) ** 2;
+    const c0 = [B(t, n.p0[0], n.p1[0], n.p2[0], n.p3[0]), B(t, n.p0[1], n.p1[1], n.p2[1], n.p3[1])];
+    const tn = norm([Bd(t, n.p0[0], n.p1[0], n.p2[0], n.p3[0]), Bd(t, n.p0[1], n.p1[1], n.p2[1], n.p3[1])]);
+    // heavy pelican neck: a gentle S on top of the rig curve (forward crop bulge low, back-swept upper neck),
+    // a thick column that flares into the chest at the base (≈2× the throat) and stays full under the head
+    const sOff = 4.2 * Math.exp(-(((t - 0.3) / 0.17) ** 2)) - 4.6 * Math.exp(-(((t - 0.72) / 0.13) ** 2));
+    C.push(add(c0, mul(perp(tn), sOff)));
+    T.push(tn);
+    let w = n.w1 * 0.67 + ((n.w0 - n.w1) / 2 + 9.5) * (1 - t) ** 2.4 + 1.8 * Math.sin(Math.PI * t) ** 2 + 2.6 * Math.exp(-(((t - 0.3) / 0.16) ** 2));
     const bg = bulge || (n.bulgeA > 0 ? { at: n.bulgeT, amp: (n.bulgeW ?? 13 * n.bulgeA) / 2 } : null);
     if (bg && bg.amp > 0) w += bg.amp * Math.exp(-(((t - bg.at) / 0.1) ** 2));
     W.push(w);
@@ -244,7 +249,7 @@ const NB = SKEL.neckBase, NU = norm([30, -58]), NN = perp(NU);   // NU along the
 // Scarf art lives in a canonical frame (origin = wrap centre on the neck axis, axes NN/NU at rest); update() places it
 // at the rig's knot (pose.scarf, rider space -> body-local) or at the default spot below.
 const WRAP_DEFAULT = add(NB, mul(NU, 18)), NU_ANG = Math.atan2(NU[1], NU[0]) / D2R;
-const W_ = (a, b) => add(mul(NN, a), mul(NU, b));  // across, along (canonical)
+const W_ = (a, b) => add(mul(NN, a * 1.2), mul(NU, b));  // across (×1.2: the heavy neck), along (canonical)
 const KNOT = W_(12, -3);
 const TAIL0 = { near: W_(-17, 1), far: W_(-13, 6) };
 const scarfXf = (c, dAng) => `translate(${f(c[0])} ${f(c[1])}) rotate(${f(dAng)})`;
@@ -272,7 +277,7 @@ export function build({ v }) {
     lg('pb-gJk', 0.35, 0, 0.55, 1, [[0, HW.jkHi], [0.42, HW.jk], [1, HW.jkLo]]),
     // chrome (nail, earpiece, zipper pull): a hard horizon line reflection
     lg('pb-gChrome', 0, 0, 0, 1, [[0, HW.chromeHi], [0.38, HW.chrome], [0.5, HW.chromeDk], [0.62, HW.chromeMid], [1, HW.chromeHi]]),
-    lg('pb-gLens', 0, 0, 1, 0.3, [[0, HW.lensDk, 0.45], [0.45, HW.lens, 0.26], [1, NE.cyCore, 0.42]]),
+    lg('pb-gLens', 0, 0, 1, 0, [[0, HW.lensDk, 0.5], [0.3, HW.lens, 0.2], [0.55, HW.lens, 0.16], [1, NE.cyCore, 0.5]]),
     lg('pb-gPouchSh', 0, 0, 0, 1, [[0.35, Od, 0], [1, Od, 0.5]]),
     lg('pb-gBillSh', 0, 0, 0, 1, [[0, NE.hot, 0.35], [0.3, NE.hot, 0], [0.8, Re, 0], [1, Re, 0.5]]),
     lg('pb-gFab', 0, 0, 0, 1, [[0, HW.fabHi], [0.55, HW.fab], [1, HW.fabLo]]),
@@ -380,7 +385,7 @@ export function build({ v }) {
         h('path', { 'data-du': 'pb-sfDA', d: '', stroke: NE.mag, 'stroke-width': 6, opacity: 0.3 }), h('path', { 'data-du': 'pb-sfDA', d: '', stroke: NE.magCore, 'stroke-width': 2.2 })),
       h('g', { fill: 'none', 'stroke-linecap': 'round', opacity: 0.6 }, h('path', { 'data-du': 'pb-sfFr', d: '', stroke: NE.mag, 'stroke-width': 3.2, opacity: 0.3 }), h('path', { 'data-du': 'pb-sfFr', d: '', stroke: NE.magCore, 'stroke-width': 0.9 })));
 
-    // ---------------- plumage under the jacket (only the belly band, the breast bib and the rump show)
+    // ---------------- plumage (the cropped vest covers only the shoulders: back, flank, rump, belly and breast show)
     let inner = '';
     const DOWN = norm(rot([0.35, 1], -18)), BACK = norm(rot([-1, 0], -18));
     const row = (g, e0, e1, n, depth, gTilt = 0) => {
@@ -399,6 +404,10 @@ export function build({ v }) {
     }
     inner += line(rows([[0.62, 0.62, -0.02, 6, 2.6, 0.02], [0.8, 0.5, -0.3, 5, 2.4, 0.02]]), Bk, 1.2, { 'data-detail': tag('T', 'belly-scallops'), 'data-tract': 'belly' });
     inner += line(rows([[-0.08, -0.62, -0.94, 3, 2.6, 0.1], [0.18, -0.62, -0.92, 3, 2.6, 0.08]]), Bk, 1.15, { 'data-detail': tag('T', 'rump-scallops'), 'data-tract': 'rump' });
+    // the back + flank plumage the cropped vest now leaves bare: staggered contour-feather rows, coarse to fine
+    inner += line(rows([[-0.36, 0.06, -0.6, 4, 2.4, 0.06], [-0.18, 0.5, -0.62, 6, 2.5, 0.04]]), Bk, 1.15, { 'data-detail': tag('T', 'back-scallops'), 'data-tract': 'back' });
+    inner += line(rows([[0.02, 0.72, -0.56, 7, 2.6, 0.03], [0.22, 0.78, -0.5, 7, 2.6, 0.03], [0.42, 0.8, -0.36, 6, 2.5, 0.03]]), Bk, 1.1, { 'data-detail': tag('T', 'flank-scallops'), 'data-tract': 'flank' });
+    inner += line(rows([[0.12, 0.66, -0.5, 7, 1.7, 0.03], [0.32, 0.72, -0.44, 7, 1.7, 0.03]]), Bd, 0.7, { 'data-detail': tag('T', 'flank-fine-barbs'), transform: 'translate(3 1.4)', opacity: 0.8 });
     // breast bib (open jacket front): the yellowish breeding breast patch of P. onocrotalus in O, then fine P rows
     inner += h('path', { 'data-detail': tag('O', 'breast-buff-wash'), d: smooth([[98, -100], [116, -96], [126, -80], [126, -60], [118, -44], [106, -40], [104, -64]]), fill: O, opacity: 0.32 });
     inner += line(rows([[-0.64, 0.96, 0.7, 4, 1.8, 0.04], [-0.47, 0.98, 0.7, 4, 1.9, 0.04], [-0.3, 0.99, 0.72, 4, 2, 0.03]]), O, 1.3, { 'data-detail': tag('T', 'breast-buff-feathers'), 'data-tract': 'breast' });
@@ -432,9 +441,11 @@ export function build({ v }) {
 
     // ---------------- the bomber jacket: the puffed body shell above the ribbed hem, open at the front zipper
     {
-      const HEM = [[-66, -47], [-57, -30], [-32, -14], [10, -8], [50, -9.5], [80, -14.5], [96, -19]];   // hem lower edge
-      const ZIP = [[93, -17], [101, -44], [107, -72], [111, -99]];                                          // zipper (open front edge)
-      const clipPoly = [[-240, -260], [124, -260], [119, -101], ...ZIP.slice().reverse().map(p => add(p, [0.6, 0])), ...HEM.slice().reverse().map(p => add(p, [0, 0.4])), [-240, -60]];
+      // a CROPPED courier vest over the shoulders only (C4.7: the white plumage stays the main mass of the bird; the
+      // back below the vest, the rump, the flank, the belly over the saddle and the breast all show), + a webbing harness
+      const HEM = [[-30, -79], [-22, -78], [0, -71], [30, -65.5], [62, -63.5], [88, -65], [103, -67]];   // vest lower edge
+      const ZIP = [[102, -66], [106, -77], [108.6, -88], [111, -99]];                                      // zipper (open front edge)
+      const clipPoly = [[-240, -260], [124, -260], [119, -101], ...ZIP.slice().reverse().map(p => add(p, [0.6, 0])), ...HEM.slice().reverse().map(p => add(p, [0, 0.4])), [-240, -79]];
       const shellAll = puff(poly, CTR, 2.2);
       const cpPoly = clipPoly;
       // explicit jacket outline = the puffed shell above the hem and behind the zip, closed by the zip and the hem
@@ -447,7 +458,7 @@ export function build({ v }) {
       // quilted back panel: a diamond stitch grid clipped to the panel between the yoke and the hem
       {
         // diamond stitch grid, segments cut analytically to the quilted back panel (no clip, no pattern)
-        const QP = resample([[-60, -40], [-34, -74], [4, -94], [48, -104], [66, -80], [56, -28], [10, -16], [-40, -20]], 4, true);
+        const QP = resample([[-18, -80], [2, -96], [30, -106], [62, -109], [92, -104], [98, -74], [64, -68], [30, -70], [0, -76]], 4, true);
         const cut = (a, c) => { const ts = []; for (let i = 0; i < QP.length - 1; i++) { const p0 = QP[i], p1 = QP[i + 1], dx = c[0] - a[0], dy = c[1] - a[1], ex = p1[0] - p0[0], ey = p1[1] - p0[1], den = dx * ey - dy * ex; if (Math.abs(den) < 1e-9) continue; const t = ((p0[0] - a[0]) * ey - (p0[1] - a[1]) * ex) / den, u = ((p0[0] - a[0]) * dy - (p0[1] - a[1]) * dx) / den; if (t >= 0 && t <= 1 && u >= 0 && u <= 1) ts.push(t); } ts.sort((x, y) => x - y); let d = ''; for (let i = 0; i + 1 < ts.length; i += 2) d += `M${pt(lerp2(a, c, ts[i] + 0.01))}L${pt(lerp2(a, c, ts[i + 1] - 0.01))}`; return d; };
         let dq = '';
         for (let k = -8; k <= 8; k++) { const x = -20 + k * 13; dq += cut([x - 50, -10], [x + 50, -120]) + cut([x + 50, -10], [x - 50, -120]); }
@@ -455,39 +466,41 @@ export function build({ v }) {
       }
       // satin sheen along the upper back + a cyan environment reflection streak
       jk += h('g', { 'data-detail': tag('O', 'jacket-satin-sheen') },
-        line(splitQ(resample([[-50, -52], [-28, -76], [0, -92], [30, -101], [60, -106], [88, -104]], 2)), HW.jkHi, 8, { opacity: 0.55 }),
-        line(crv([[-42, -58], [-20, -78], [4, -91], [30, -98]]), NE.cy, 1.4, { opacity: 0.35 }), line('M40 -104Q64 -108 84 -105', NE.hot, 0.9, { opacity: 0.45 }));
+        line(splitQ(resample([[-16, -84], [2, -96], [30, -105], [60, -108.6], [88, -105]], 2)), HW.jkHi, 6, { opacity: 0.55 }),
+        line(crv([[-12, -85], [6, -96], [30, -103]]), NE.cy, 1.4, { opacity: 0.35 }), line('M40 -105.6Q64 -109 84 -106', NE.hot, 0.9, { opacity: 0.45 }));
       // yoke seam with magenta piping (stacked-stroke neon) + stitch line under it
-      const YOKE = splitQ(resample([[-58, -46], [-30, -63.5], [2, -77.5], [40, -89], [84, -92.5], [112, -96]], 2));
-      jk += h('g', { 'data-detail': tag('O', 'jacket-yoke-seam') }, line(YOKE, HW.seam, 2.2), line(ticks([[-56, -41], [-28, -58.5], [4, -72.5], [40, -84], [84, -87.5]], 3, 0.1), HW.jkHi, 1.4, { 'stroke-linecap': 'butt' }));
+      const YOKE = splitQ(resample([[-12, -87], [6, -96], [36, -102.6], [66, -104.4], [96, -100.6], [112, -97]], 2));
+      jk += h('g', { 'data-detail': tag('O', 'jacket-yoke-seam') }, line(YOKE, HW.seam, 2.2), line(ticks([[-8, -84.4], [8, -92.6], [36, -98.8], [66, -100.6], [96, -97]], 3, 0.1), HW.jkHi, 1.4, { 'stroke-linecap': 'butt' }));
       jk += neon(YOKE, NE.mag, NE.magCore, 1.1, { 'data-detail': tag('O', 'jacket-magenta-piping'), transform: 'translate(0 -1.4)' });
       // taped side seam (techwear): dark tape with a hairline highlight
-      jk += h('g', { 'data-detail': tag('O', 'jacket-taped-side-seam') }, line(crv([[36, -92], [40.6, -70], [41.6, -46], [40, -14]]), HW.seam, 3.4), line(crv([[38, -92], [42.6, -70], [43.6, -46], [42, -15]]), HW.jkHi, 0.6));
+      jk += h('g', { 'data-detail': tag('O', 'jacket-taped-side-seam') }, line(crv([[40, -102], [42, -90], [42.6, -78], [42, -64]]), HW.seam, 3.4), line(crv([[42, -102], [44, -90], [44.6, -78], [44, -64]]), HW.jkHi, 0.6));
       // fabric compression folds where the jacket bunches above the saddle
       jk += h('g', { 'data-detail': tag('O', 'jacket-compression-folds') },
-        line('M-40 -22Q-26 -30 -12 -24M-8 -18Q6 -26 20 -18M-54 -30Q-48 -38 -38 -36', HW.jkLo, 1.5), line('M-38 -24.5Q-26 -32 -14 -26.5M-6 -20.5Q6 -28 18 -20.5', HW.jkHi, 0.6));
+        line('M-4 -76Q8 -82 20 -74M52 -68Q64 -73 76 -67M-14 -80Q-8 -86 0 -84', HW.jkLo, 1.5), line('M-2 -78.4Q8 -84 18 -76.6M54 -70.4Q64 -75 74 -69.4', HW.jkHi, 0.6));
       // PELICAN patch (woven label, cyan neon thread border) on the back panel
       {
         const pw = 50, ph = 15, gs = 44 / GLYPH.PELICAN.w * 100;
-        jk += h('g', { 'data-detail': tag('O', 'patch-pelican'), transform: 'translate(-2 -56) rotate(-14)' },
+        jk += h('g', { 'data-detail': tag('O', 'patch-pelican'), transform: 'translate(16 -88) rotate(-17) scale(0.78)' },
           h('rect', { x: -pw / 2 - 1.2, y: -ph / 2 + 1.4, width: pw + 2.4, height: ph, rx: 2.4, fill: HW.seam, opacity: 0.55 }),
           h('rect', { x: -pw / 2, y: -ph / 2, width: pw, height: ph, rx: 2.4, fill: HW.patch }),
           neon(`M${-pw / 2 + 1.2} ${-ph / 2 + 1.2}h${pw - 2.4}v${ph - 2.4}h${-(pw - 2.4)}Z`, NE.cy, NE.cyCore, 0.6),
           glyph(GLYPH.PELICAN, -22, 3.2, gs, NE.cyCore));
       }
       // courier number under the patch (reflective acid print)
-      jk += h('g', { 'data-detail': tag('O', 'courier-number') }, glyph(GLYPH.NUM, -12, -34, 6.2, NE.acid, { transform: 'translate(-12 -34) rotate(-14) scale(0.062)' }));
+      jk += h('g', { 'data-detail': tag('O', 'courier-number') }, glyph(GLYPH.NUM, 0, 0, 6.2, NE.acid, { transform: 'translate(34 -71.6) rotate(-8) scale(0.062)' }));
+      // 鹈鹕 embroidered tab, clipped onto the rear harness strap (drawn after the straps)
+      let hanziTab;
       // 鹈鹕 embroidered tab, vertical, magenta, near the rear of the back panel
       {
         const gs = 9.4;
-        jk += h('g', { 'data-detail': tag('O', 'patch-hanzi'), transform: 'translate(-38 -40) rotate(-26)' },
+        hanziTab = h('g', { 'data-detail': tag('O', 'patch-hanzi'), transform: 'translate(-31 -53) rotate(-26) scale(0.62)' },
           h('rect', { x: -6.6, y: -11.6, width: 13.2, height: 23.2, rx: 1.8, fill: NE.mag }),
           h('rect', { x: -5.2, y: -10.2, width: 10.4, height: 20.4, rx: 1.2, fill: 'none', stroke: NE.magCore, 'stroke-width': 0.4, opacity: 0.8 }),
           h('path', { d: HAN[0], fill: HW.patch, transform: `translate(-4.6 -1.6) scale(${f(gs / 100)})` }),
           h('path', { d: HAN[1], fill: HW.patch, transform: `translate(${f(-4.6 - gs)} 8.6) scale(${f(gs / 100)})` }));
       }
       // clip-on rear light on the back hem (blinks: opacity only, low rate)
-      const rearLight = h('g', { 'data-detail': tag('O', 'clip-on-rear-light'), transform: 'translate(-58.6 -39.6) rotate(-58)' },
+      const rearLight = h('g', { 'data-detail': tag('O', 'clip-on-rear-light'), transform: 'translate(-55.4 -31.4) rotate(-74)' },
         h('rect', { x: -3.6, y: -6.4, width: 7.2, height: 12.8, rx: 2.4, fill: HW.chromeDk, stroke: INK, 'stroke-width': 0.8 }),
         h('g', { 'data-ref': 'pb-rearLed' }, glowDisc(0, 0, 7.5, 'pb-rgRed', 0.8), h('rect', { x: -2.2, y: -4.6, width: 4.4, height: 9.2, rx: 1.6, fill: NE.red }),
           line('M-0.8 -3.4v6.8', NE.magCore, 0.9)));
@@ -501,11 +514,35 @@ export function build({ v }) {
       const hemD = splitQ(resample(HEM, 2));
       b += h('g', { 'data-detail': tag('O', 'hem-cast-shadow') }, line(splitQ(resample(HEM.slice(1).map(p => add(p, [0, 3.2])), 2)), Bd, 4.4, { opacity: 0.45 }));
       // ribbed hem band + acid reflective strip + magenta top piping (clipped to the shell)
-      const bandD = splitQ(resample(HEM.map(p => add(p, [0, -4.4])), 2));
+      const bandD = splitQ(resample(HEM.slice(1).map(p => add(p, [0, -3.2])), 2));
       b += h('g', {},
-        h('g', { 'data-detail': tag('O', 'jacket-hem-band') }, line(bandD, INK, 10.6, { 'stroke-linecap': 'butt' }), line(bandD, HW.jkLo, 8.6, { 'stroke-linecap': 'butt' })),
-        line(ticks(HEM.map(p => add(p, [0, -4.4])), 2.4, 7.4), HW.jkHi, 0.9, { 'stroke-linecap': 'butt', 'data-detail': tag('T', 'jacket-hem-rib') }),
-        h('g', { 'data-detail': tag('O', 'hem-reflective-strip') }, line(bandD, NE.acid, 1.3, { transform: 'translate(0 -0.4)' }), line(bandD, NE.acidCore, 0.4, { transform: 'translate(0 -0.4)' })), rearLight);
+        h('g', { 'data-detail': tag('O', 'jacket-hem-band') }, line(bandD, INK, 7.6, { 'stroke-linecap': 'butt' }), line(bandD, HW.jkLo, 5.8, { 'stroke-linecap': 'butt' })),
+        line(ticks(HEM.slice(1).map(p => add(p, [0, -3.2])), 2.2, 5), HW.jkHi, 0.8, { 'stroke-linecap': 'butt', 'data-detail': tag('T', 'jacket-hem-rib') }),
+        h('g', { 'data-detail': tag('O', 'hem-reflective-strip') }, line(bandD, NE.acid, 1.1, { transform: 'translate(0 -0.3)' }), line(bandD, NE.acidCore, 0.35, { transform: 'translate(0 -0.3)' })));
+      // ---- courier harness: a webbing waist belt low on the body (the white belly shows below it, the flank above it),
+      // two straps down from the vest, a chrome quick-release buckle at the breast, the rear light clipped on the belt
+      {
+        const BELT = [[-61.6, -33.4], [-40, -27.4], [-4, -21.6], [34, -20.6], [70, -24.4], [98, -32.4], [117.6, -42.6]];
+        const beltD = splitQ(resample(BELT, 3));
+        const STR = [[[-18, -80], [-28, -58], [-38, -38], [-42, -28.6]], [[90, -66], [93, -52], [95.6, -40], [96.6, -31.6]]];
+        const strD = STR.map(P => splitQ(resample(P, 3))).join('');
+        const web = (d, w) => line(d, INK, w + 1.8, { 'stroke-linecap': 'butt' }) + line(d, HW.jk, w, { 'stroke-linecap': 'butt' }) + line(d, HW.jkHi, 0.6, { 'stroke-linecap': 'butt', opacity: 0.7, transform: `translate(0 ${f(-w / 2 + 0.7)})` });
+        b += h('g', { 'data-detail': tag('O', 'harness-straps') }, web(strD, 4.2),
+          neon(strD, NE.mag, NE.magCore, 0.45, { opacity: 0.85 }));
+        b += hanziTab;
+        b += h('g', { 'data-detail': tag('O', 'harness-belt') }, line(splitQ(resample(BELT.map(p => add(p, [0, 4.6])), 3)), Bd, 3.4, { opacity: 0.4 }), web(beltD, 6.2));
+        b += line(ticks(BELT, 2.6, 0.1, -2.2) + ticks(BELT, 2.6, 0.1, 2.2), HW.chromeMid, 0.9, { 'stroke-linecap': 'round', 'data-detail': tag('T', 'harness-belt-stitching') });
+        b += h('g', { 'data-detail': tag('O', 'harness-reflective-stripe') }, line(beltD, NE.acid, 1.2), line(beltD, NE.acidCore, 0.4));
+        // strap-to-belt tri-glides (chrome)
+        b += h('g', { 'data-detail': tag('O', 'harness-tri-glides') }, ...[[-42, -27.2, 12], [96.6, -32, -14]].map(([x, y, r]) =>
+          h('rect', { x: f(x - 3.6), y: f(y - 4.4), width: 7.2, height: 8.8, rx: 1.4, fill: 'none', stroke: 'url(#pb-gChrome)', 'stroke-width': 1.6, transform: `rotate(${r} ${f(x)} ${f(y)})` })));
+        b += h('g', { 'data-detail': tag('O', 'harness-buckle'), transform: 'translate(108.4 -37.4) rotate(-27)' },
+          h('rect', { x: -6.4, y: -4.8, width: 12.8, height: 9.6, rx: 2.4, fill: 'url(#pb-gChrome)', stroke: INK, 'stroke-width': 0.9 }),
+          h('rect', { x: -3.4, y: -2.6, width: 6.8, height: 5.2, rx: 1.2, fill: HW.seam }),
+          h('circle', { cx: 0, cy: 0, r: 1.3, fill: NE.cy }), h('circle', { cx: 0, cy: 0, r: 3.2, fill: 'url(#pb-rgCy)', opacity: 0.7 }),
+          line('M-5 -3.6h4', HW.chromeHi, 0.7));
+        b += rearLight;
+      }
       // zipper: open front edge (tape, chrome teeth, pull with an LED tab)
       const zipD = splitQ(resample(ZIP, 2));
       b += h('g', { 'data-detail': tag('O', 'jacket-zipper') }, line(zipD, INK, 3.4), line(zipD, NE.cy, 0.7, { opacity: 0.65, transform: 'translate(1.8 0)' }));
@@ -673,26 +710,30 @@ export function build({ v }) {
   // but above the eye.
   let visor, lensG;
   {
-    const lensP = [[-5.6, -13.2], [5, -16.4], [15.4, -15.4], [22, -11.4], [23.4, -7.4], [20.2, -3], [9, -0.4], [-1.8, -0.9], [-6.6, -5.4]];
+    // a sleek WRAPAROUND band: from the earpiece hinge, across the eye (upper half; the pupil reads through the
+    // glass), tapering to a point over the bill base. Slim, so the pink facial skin stays the read around the eye.
+    const lensP = [[-14.6, -11.4], [-5, -13.7], [7, -14.4], [19, -13.9], [29, -12.4], [35.8, -9.8], [29.6, -7.6], [19, -6.8], [7, -6.4], [-5, -6.6], [-14.4, -5.8]];
     const lens = smooth(lensP);
     // scanlines cut to the lens analytically (no clip): x-extent of the lens polygon at each y
     const LD = resample(lensP, 6, true);
     const scanAt = (y, m = 0.3) => { const xs = []; for (let i = 0; i < LD.length - 1; i++) { const [x0, y0] = LD[i], [x1, y1] = LD[i + 1]; if ((y0 > y) !== (y1 > y)) xs.push(x0 + (x1 - x0) * (y - y0) / (y1 - y0)); } xs.sort((a, c) => a - c); return xs.length >= 2 ? `M${f(xs[0] + m)} ${f(y)}H${f(xs[xs.length - 1] - m)}` : ''; };
-    let scan = ''; for (let y = -15.4; y < 0; y += 1.3) scan += scanAt(y);
+    let scan = ''; for (let y = -13.8; y < -6; y += 1.1) scan += scanAt(y);
     const eye = EYE;
-    const dg = (n, x) => h('path', { 'data-ref': 'pb-hudD' + n, d: GLYPH.DIG[2 + n], fill: NE.hot, stroke: NE.cy, 'stroke-width': 9, 'paint-order': 'stroke', transform: `translate(${f(x)} -3.2) scale(0.05)` });
-    lensG = h('g', { 'data-detail': tag('O', 'visor-lens') },
-        h('path', { d: lens, fill: 'none', stroke: NE.cy, 'stroke-width': 5, opacity: 0.16 }),
-        h('path', { d: lens, fill: HW.lensDk, 'fill-opacity': 0.34 }),
+    const dg = (n, x) => h('path', { 'data-ref': 'pb-hudD' + n, d: GLYPH.DIG[2 + n], fill: NE.hot, stroke: NE.cy, 'stroke-width': 9, 'paint-order': 'stroke', transform: `translate(${f(x)} -8.5) scale(0.046)` });
+    // under the eye (head slot): only the soft glow the band throws on the face
+    lensG = h('path', { d: lens, fill: 'none', stroke: NE.cy, 'stroke-width': 5, opacity: 0.16 });
+    // over the eye (crest slot, head space): the translucent glass (eye shows through at ≈ 65 %), scanlines, edge
+    const glass = h('g', { 'data-detail': tag('O', 'visor-lens') },
+        h('path', { d: lens, fill: HW.lensDk, 'fill-opacity': 0.16 }),
         h('path', { d: lens, fill: 'url(#pb-gLens)' }),
-        h('g', { 'data-detail': tag('T', 'visor-scanlines') }, line(scan, NE.cyCore, 0.28, { opacity: 0.4, 'stroke-linecap': 'butt' }),
-          line(scanAt(-9.2, 0.6), NE.cy, 1.4, { opacity: 0.25 })),
-        h('path', { d: lens, fill: 'none', stroke: NE.cy, 'stroke-width': 0.9 }));
+        h('g', { 'data-detail': tag('T', 'visor-scanlines') }, line(scan, NE.cyCore, 0.26, { opacity: 0.38, 'stroke-linecap': 'butt' }),
+          line(scanAt(-10.4, 0.6), NE.cy, 1.2, { opacity: 0.25 })),
+        h('path', { d: lens, fill: 'none', stroke: NE.cy, 'stroke-width': 0.8 }));
     visor = h('g', { 'data-ref': 'pb-visorG' },
       // earpiece: chrome pod on the side of the skull, magenta status ring, mic stub
       h('g', { 'data-detail': tag('O', 'earpiece') },
-        h('path', { d: 'M-8 -7.4L-17 -6.4', fill: 'none', stroke: INK, 'stroke-width': 3.2, 'stroke-linecap': 'round' }),
-        h('path', { d: 'M-8 -7.4L-17 -6.4', fill: 'none', stroke: HW.chromeMid, 'stroke-width': 1.6, 'stroke-linecap': 'round', 'data-detail': tag('O', 'visor-arm') }),
+        h('path', { d: 'M-11.4 -8.6L-17 -7', fill: 'none', stroke: INK, 'stroke-width': 4, 'stroke-linecap': 'round' }),
+        h('path', { d: 'M-11.4 -8.6L-17 -7', fill: 'none', stroke: HW.chromeMid, 'stroke-width': 2.2, 'stroke-linecap': 'round', 'data-detail': tag('O', 'visor-arm') }),
         h('circle', { cx: -19, cy: -5.4, r: 5.2, fill: 'url(#pb-gChrome)', stroke: INK, 'stroke-width': 1 }),
         h('circle', { cx: -19, cy: -5.4, r: 2.8, fill: HW.seam }),
         h('g', { 'data-detail': tag('O', 'earpiece-led-ring') }, neon('M-19 -8.2A2.8 2.8 0 1 1 -19 -2.6A2.8 2.8 0 1 1 -19 -8.2', NE.mag, NE.magCore, 0.55)),
@@ -704,15 +745,16 @@ export function build({ v }) {
         h('path', { d: 'M-19.4 -9.6Q-21 -22 -25 -35', fill: 'none', stroke: INK, 'stroke-width': 2, 'stroke-linecap': 'round' }),
         h('path', { d: 'M-19.4 -9.6Q-21 -22 -25 -35', fill: 'none', stroke: HW.chromeMid, 'stroke-width': 0.9, 'stroke-linecap': 'round' }),
         h('g', { 'data-ref': 'pb-antTip', 'data-detail': tag('O', 'antenna-tip-led') }, glowDisc(-25, -35.4, 6, 'pb-rgMg'), h('circle', { cx: -25, cy: -35.4, r: 1.5, fill: NE.mag }), h('circle', { cx: -25.3, cy: -35.7, r: 0.6, fill: NE.magCore }))),
-      line(crv([[-6, -13], [5, -16.8], [15.4, -15.6], [20.6, -14], [22.6, -11]]), INK, 2.2, { 'data-detail': tag('O', 'visor-frame') }),
-      line(crv([[-4.4, -13.4], [5, -16.6], [15, -15.6]]), HW.chromeMid, 0.7),
-      h('g', { 'data-detail': tag('O', 'visor-glint') }, line(crv([[-1.8, -12.2], [6, -14.4], [14.4, -13.8]]), NE.hot, 0.9, { opacity: 0.85 }),
-        line(crv([[16.6, -4], [19.8, -5.2], [21.2, -7.4]]), NE.hot, 0.6, { opacity: 0.7 })),
+      glass,
+      line(crv([[-14.6, -11.8], [-5, -14.2], [7, -14.9], [19, -14.4], [29, -12.9], [35.8, -9.9]]), INK, 1.8, { 'data-detail': tag('O', 'visor-frame') }),
+      line(crv([[-13, -12.5], [-5, -14.5], [7, -15.2], [19, -14.7]]), HW.chromeMid, 0.6),
+      h('g', { 'data-detail': tag('O', 'visor-glint') }, line(crv([[-3, -12.2], [6, -12.8], [14, -12.6]]), NE.hot, 0.8, { opacity: 0.85 }),
+        line(crv([[24, -8.6], [29, -9.2], [32.4, -10]]), NE.hot, 0.6, { opacity: 0.7 })),
       // HUD glyphs on the lens: live speed readout, a delta arrow, signal bars, and the target reticle on the pupil
-      h('g', { 'data-detail': tag('O', 'visor-hud-speed'), opacity: 0.95 }, dg(0, 11.6), dg(1, 14.7),
-        h('path', { d: 'M18.2 -3.6l1.4 -2.2l1.4 2.2Z', fill: NE.acid })),
-      line('M-3.6 -4.2h3.2M-3.6 -6.2h2.2M-3.6 -8.2h1.2', NE.cyCore, 0.5, { opacity: 0.9, 'data-detail': tag('O', 'visor-hud-bars') }),
-      h('g', { 'data-ref': 'pb-reticle', 'data-detail': tag('O', 'hud-target-reticle'), transform: `translate(${f(eye[0])} ${f(eye[1])})`, opacity: 0.85 },
+      h('g', { 'data-detail': tag('O', 'visor-hud-speed'), opacity: 0.95 }, dg(0, 17.4), dg(1, 20.4),
+        h('path', { d: 'M23.8 -8.8l1.2 -1.9l1.2 1.9Z', fill: NE.acid })),
+      line('M-11 -8.2v-1.2M-9.4 -8.2v-2M-7.8 -8.2v-2.8M-6.2 -8.2v-3.6', NE.cyCore, 0.6, { opacity: 0.9, 'stroke-linecap': 'butt', 'data-detail': tag('O', 'visor-hud-bars') }),
+      h('g', { 'data-ref': 'pb-reticle', 'data-detail': tag('O', 'hud-target-reticle'), transform: `translate(${f(eye[0])} ${f(eye[1])})`, opacity: 0.6 },
         line('M-6.2 0h-2M6.2 0h2M0 -6.2v-1.6M0 6.2v1.6M-4.7 -4.7l-1.2 -1.2M4.7 -4.7l1.2 -1.2M4.7 4.7l1.2 1.2M-4.7 4.7l-1.2 1.2', NE.cyCore, 0.45)));
   }
 
@@ -760,8 +802,9 @@ export function build({ v }) {
 
   // ================================================================ EYE (eye-local; sy = blink)
   s.eye = h('g', {},
-    h('circle', { r: 6.6, fill: Ks, 'data-detail': tag('O', 'orbital-ring') }),
-    h('g', { 'data-detail': tag('O', 'iris') }, h('circle', { r: 5.6, fill: v('iris') }),
+    // bare pink-orange orbital skin (a great white pelican field mark), a pale skin rim, then the dark brown iris
+    h('g', { 'data-detail': tag('O', 'orbital-ring') }, h('ellipse', { rx: 8.4, ry: 7.4, cx: 0.6, fill: Ks }), h('ellipse', { rx: 7.4, ry: 6.6, cx: 0.4, fill: HW.orbit })),
+    h('g', { 'data-detail': tag('O', 'iris') }, h('circle', { r: 5.6, fill: v('iris') }), h('circle', { r: 5.05, fill: HW.iris }),
       h('g', { 'data-ref': 'pb-pupil' },
         h('circle', { 'data-detail': tag('O', 'pupil'), r: 3.6, fill: v('pupil') }),
         h('circle', { 'data-detail': tag('O', 'eye-highlight'), cx: 1.5, cy: -1.7, r: 1.4, fill: NE.hot }),
@@ -774,8 +817,8 @@ export function build({ v }) {
     // (cheek push: delight / focus). update() drives both from pose.face (lid, brow, mood).
     h('clipPath', { id: 'pb-orbitclip' }, h('circle', { r: 6.3 })),
     h('g', { 'clip-path': 'url(#pb-orbitclip)' },
-      h('g', { 'data-ref': 'pb-lidSkin' }, h('path', { 'data-detail': tag('O', 'upper-lid-skin'), d: 'M-8 -2.4Q0 -7.6 8 -3L8 -20L-8 -20Z', fill: Ks })),
-      h('g', { 'data-ref': 'pb-lowLid' }, h('path', { 'data-detail': tag('O', 'lower-lid-skin'), d: 'M-7 6.4Q0 4.2 7 5.4L7 14L-7 14Z', fill: Ks }),
+      h('g', { 'data-ref': 'pb-lidSkin' }, h('path', { 'data-detail': tag('O', 'upper-lid-skin'), d: 'M-8 -2.4Q0 -7.6 8 -3L8 -20L-8 -20Z', fill: HW.orbit })),
+      h('g', { 'data-ref': 'pb-lowLid' }, h('path', { 'data-detail': tag('O', 'lower-lid-skin'), d: 'M-7 6.4Q0 4.2 7 5.4L7 14L-7 14Z', fill: HW.orbit }),
         line('M-5.4 6.2Q0 4.2 5.6 5.4', Re, 1.1, { 'data-detail': tag('O', 'lower-eyelid') }))),
     h('g', { 'data-ref': 'pb-lid' },
       h('path', { 'data-detail': tag('O', 'upper-eyelid'), d: 'M-7.2 -1.8Q-1 -8.8 7.6 -3.6Q8.6 -2.6 8.2 -1.6Q0.4 -6.4 -7.2 -1.8Z', fill: N }),
@@ -905,22 +948,31 @@ export const detailItems = [
   ['plumage-neon-rim', 'O', 'dual rim on the plumage (cyan behind, magenta on the chest)'],
   ['belly-saddle-bulge', 'O', 'underbelly contour flattened and spread onto the saddle top (weight on the seat)'],
   ['belly-splay-tufts', 'O', 'feather tufts splaying where the belly spreads over the saddle edges'],
-  ['jacket-shell', 'O', 'short techwear bomber shell (satin gradient, puffed 2 u off the body), open at the chest'],
+  ['jacket-shell', 'O', 'cropped techwear courier vest over the shoulders only (satin gradient, puffed 2 u off the body), open at the chest'],
   ['jacket-quilt-stitching', 'T', 'diamond quilt stitching (seam + dashed thread) on the back panel'],
   ['jacket-satin-sheen', 'O', 'broad satin sheen on the upper back with a cyan sign reflection and a hot glint'],
   ['jacket-yoke-seam', 'O', 'yoke seam with a top-stitch line'],
   ['jacket-magenta-piping', 'O', 'magenta neon piping along the yoke seam (stacked strokes)'],
   ['jacket-taped-side-seam', 'O', 'taped side seam with a hairline highlight'],
-  ['jacket-compression-folds', 'O', 'fabric folds bunching above the saddle'],
+  ['jacket-compression-folds', 'O', 'fabric folds bunching above the vest hem'],
   ['patch-pelican', 'O', 'woven PELICAN label with a cyan neon thread border (lettering as paths)'],
   ['courier-number', 'O', 'acid reflective courier number #0719'],
   ['patch-hanzi', 'O', 'magenta embroidered 鹈鹕 tab with a dashed stitch border (glyph paths)'],
-  ['clip-on-rear-light', 'O', 'clip-on red rear light on the back hem that blinks'],
+  ['clip-on-rear-light', 'O', 'clip-on red rear light on the harness belt at the rump that blinks'],
   ['jacket-neon-rim', 'O', 'dual neon rim on the jacket (cyan along the back, magenta along the shoulders)'],
   ['hem-cast-shadow', 'O', 'shadow the jacket hem casts on the belly feathers'],
   ['jacket-hem-band', 'O', 'ribbed hem band'],
   ['jacket-hem-rib', 'T', 'knit ribbing on the hem band'],
   ['hem-reflective-strip', 'O', 'acid reflective strip on the hem'],
+  ['harness-straps', 'O', 'two webbing harness straps from the cropped vest down to the belt, magenta neon edge'],
+  ['harness-belt', 'O', 'webbing waist belt low on the body with its cast shadow on the belly feathers'],
+  ['harness-belt-stitching', 'T', 'chrome bar-tack stitching along both edges of the belt'],
+  ['harness-reflective-stripe', 'O', 'acid reflective stripe down the middle of the belt'],
+  ['harness-tri-glides', 'O', 'chrome tri-glides where the straps meet the belt'],
+  ['harness-buckle', 'O', 'chrome quick-release buckle at the breast with a cyan status LED'],
+  ['back-scallops', 'T', 'contour-feather rows on the bare back below the cropped vest'],
+  ['flank-scallops', 'T', 'three staggered contour-feather rows on the white flank above the belt'],
+  ['flank-fine-barbs', 'T', 'finer offset barb rows between the flank scallops'],
   ['jacket-zipper', 'O', 'open front zipper tape with a cyan edge light'],
   ['zipper-teeth', 'T', 'chrome zipper teeth'],
   ['zipper-pull', 'O', 'chrome zipper pull with an acid LED bead'],
@@ -981,8 +1033,8 @@ export const detailItems = [
   ['forehead-feather-point', 'O', 'feathered forehead point pressing onto the culmen base (P. onocrotalus field mark), magenta edge'],
   ['gape-smile-line', 'O', 'gape line running back under the eye, turning up (cool smirk)'],
   ['smile-crease', 'O', 'small upturn at the mouth corner'],
-  ['orbital-ring', 'O', 'bare peach orbital ring around the eye'],
-  ['iris', 'O', 'dark red iris'],
+  ['orbital-ring', 'O', 'bare pink-orange orbital skin patch with a pale rim around the eye'],
+  ['iris', 'O', 'dark brown iris with a thin warm outer rim'],
   ['pupil', 'O', 'pupil with saccades'],
   ['eye-highlight', 'O', 'hot catch-light'],
   ['eye-glint-secondary', 'O', 'second, cyan catch-light (visor reflection)'],
@@ -1002,7 +1054,7 @@ export const detailItems = [
   ['mic-boom', 'O', 'thin chrome mic boom curving toward the gape'],
   ['earpiece-antenna', 'O', 'earpiece antenna that sways with the crest follow-through'],
   ['antenna-tip-led', 'O', 'magenta LED on the antenna tip (glow disc, blinks slowly)'],
-  ['visor-lens', 'O', 'translucent cyan HUD visor across the eye (the eye reads through it)'],
+  ['visor-lens', 'O', 'slim wraparound cyan HUD band from the earpiece across the eye to the bill base (the eye reads through it)'],
   ['visor-scanlines', 'T', 'static HUD scanlines and a brighter scan band inside the lens'],
   ['visor-frame', 'O', 'dark visor top frame with a chrome hairline'],
   ['visor-glint', 'O', 'hot glints on the lens'],

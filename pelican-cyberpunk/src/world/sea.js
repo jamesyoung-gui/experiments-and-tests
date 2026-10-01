@@ -1237,14 +1237,16 @@ export function attach(svg, ctx) {
       if (sunOn) {
         const gx = sun.x + (cam.fx - 800) * 0.1, len = clamp(0.45 + Math.abs(sun.elev - 0.1) * 1.4, 0.45, 1);
         set(r.sunG, 'transform', `translate(${f(gx)} ${HZ}) scale(${f(0.9 + 0.4 * (1 - len))} ${f(len)}) translate(0 ${-HZ})`);
-        for (let k = 0; k < 3; k++) set(r['sg' + k], 'transform', `translate(${red ? 0 : f(Math.sin(t * (1.3 + k * 0.4) + k * 2.1) * 5)} 0)`);
+        const tg = Math.floor(t * 15) / 15;   // (perf) the glitter shimmer steps at 15 Hz: it repaints the water sheet
+        for (let k = 0; k < 3; k++) set(r['sg' + k], 'transform', `translate(${red ? 0 : f(Math.sin(tg * (1.3 + k * 0.4) + k * 2.1) * 5)} 0)`);
         for (let k = 0; k < 3; k++) { const p = red ? 0.8 : Math.max(0, Math.sin(t * (1.7 + k * 0.6) + k * 1.9)); set(r['spk' + k], 'transform', `scale(${f(p)})`); }
       }
       const moonOn = moon.elev > 0.02 && lampOn > 0.2;
       vis(r.moonG, moonOn);
       if (moonOn) {
         set(r.moonG, 'transform', `translate(${f(moon.x + (cam.fx - 800) * 0.1)} 0)`);
-        for (let k = 0; k < 3; k++) set(r['mg' + k], 'transform', `translate(${red ? 0 : f(Math.sin(t * (1.1 + k * 0.5) + k) * 4)} 0)`);
+        const tg = Math.floor(t * 15) / 15;
+        for (let k = 0; k < 3; k++) set(r['mg' + k], 'transform', `translate(${red ? 0 : f(Math.sin(tg * (1.1 + k * 0.5) + k) * 4)} 0)`);
       }
       // ---- container port + breakwater
       const hx = clamp(routeX(D, ANCH.harbour, HB.d), -6000, 6000);

@@ -8,7 +8,9 @@ html, body { margin: 0; height: 100%; background: var(--page-bg); overflow: hidd
 #scene > svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; overflow: visible; will-change: transform; pointer-events: none; }
 /* static sheets (no CSS move): clip to the screen box, so their composited layer is exactly the viewport (no raster of
    off-screen art, and the 256 px tile grid starts at the screen corner, which tile-aware layouts rely on) */
-#scene > svg.pb-sheet:not([data-move]) { overflow: hidden; }
+#scene > svg.pb-sheet:not([data-move]):not(.pb-rigid) { overflow: hidden; }
+/* ?rigid: a rigid rider slot moves as a CSS transform; its art may cross the screen box edge */
+#scene > svg.pb-rigid { overflow: visible; }
 #scene > svg > * { pointer-events: visiblePainted; }
 #scene [id^="j-"] { cursor: pointer; }
 /* Integrator: an element hidden via the visibility presentation attribute paints nothing, so drop it from the render tree too
@@ -21,3 +23,26 @@ html, body { margin: 0; height: 100%; background: var(--page-bg); overflow: hidd
 /* Lighting pass (perf): the HUD wordmark echo fades by fill-opacity, not group opacity (a group opacity over its
    glyph layers costs an offscreen render pass every frame in the software compositor). */
 #ui .ui-wordmark .ui-wm-c { opacity: 1; fill-opacity: .55; }
+
+/* Adaptive quality (main.js adaptQuality): composited sheets shed when the frame p95 stays above 18 ms. Ordered by
+   compositor area saved per unit of picture lost (layer tile area from cc traces, see README · perf). */
+#scene:is([data-quality="medium"], [data-quality="low"]) > svg:is([data-sheet="wx-rainB"], [data-sheet="fx-hazePools"], [data-sheet="sky-lane1"]) { display: none; }
+#scene[data-quality="low"] > svg:is([data-sheet="wx-rainA"], [data-sheet="sky-lane0"], [data-sheet="sky-smog1"], [data-sheet="sea-caperefl"]) { display: none; }
+
+/* Signature moment (main.js applyGlitch): SIGNAL LOST at the neon tunnel. The far city flashes into neon wireframe;
+   the near world tears sideways (CSS translate on whole sheets); the courier, the near fx and the HUD stay solid. */
+#scene.pb-glitch { background: #05040B; }
+#scene.pb-glitch-wire > svg.pb-sheet:is([data-sheet^="sky-"], [data-sheet="L-sky"], [data-sheet="L-stars"], [data-sheet="L-sunmoon"], [data-sheet="L-clouds"], [data-sheet^="sea-"], [data-sheet="L-hills-far"], [data-sheet="L-lighthouse"], [data-sheet="L-sea"], [data-sheet="L-boats"])
+  :is(path, rect, circle, ellipse, polygon, polyline, line, use):not(mask *, clipPath *, pattern *, linearGradient *, radialGradient *) {
+  fill: none !important; stroke: #19E6FF !important; stroke-opacity: .55 !important; stroke-width: .7px !important; stroke-dasharray: none !important; vector-effect: non-scaling-stroke; filter: none !important;
+}
+#scene.pb-glitch-wire > svg.pb-sheet:is([data-sheet^="sky-"], [data-sheet="L-sky"], [data-sheet="L-stars"], [data-sheet="L-clouds"]) :is(path, rect, circle, ellipse, polygon, use):not(mask *, clipPath *, pattern *) { stroke: #9B5CFF !important; }
+
+/* Animated-SVG export in progress (main.js download): aria-busy + a percentage on the button, a progress bar under it */
+#ui [data-act="dlSvg"][aria-busy="true"] { position: relative; }
+#ui [data-act="dlSvg"][aria-busy="true"][data-pb-progress]::after {
+  content: attr(data-pb-progress); position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font: 600 11px/1 ui-monospace, monospace; color: #D4FF3A;
+}
+#ui [data-act="dlSvg"][aria-busy="true"]::before {
+  content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: calc(var(--pb-progress, 0) * 100%); background: #19E6FF; pointer-events: none;
+}

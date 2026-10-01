@@ -24,7 +24,7 @@ export function createSheets(wrapper, svg, opts) {
   const P = doc.defaultView.Element.prototype;
   const nSet = P.setAttribute, nGet = P.getAttribute, nRem = P.removeAttribute;
   const rootAttrs = { id: svg.getAttribute('id'), role: svg.getAttribute('role') };
-  let parts = [svg], origOf = new Map(), clonesOf = new Map(), homeOf = new Map(), sheets = [], mo = null, isSplit = false;
+  let parts = [svg], origOf = new Map(), clonesOf = new Map(), homeOf = new Map(), sheets = [], rigids = [], mo = null, isSplit = false;
   let s = 1, dpr = 1, ox = 0, oy = 0, lastCam = null, handle = null, rotors = [];
   const scratch = doc.createElementNS(NS, 'g');
 
@@ -74,6 +74,7 @@ export function createSheets(wrapper, svg, opts) {
     }
     el.__pbSheet = sh;
     sh.live = true; sh.on = false; sh.attr = undefined;
+    sh.part.classList.add('pb-strip');
     put(sh, nGet.call(el, 'transform'));
   }
   function put(sh, v) {
@@ -92,7 +93,72 @@ export function createSheets(wrapper, svg, opts) {
     if (!sh.live) return;
     sh.live = false;
     if (sh.on) { if (sh.attr === null) nRem.call(sh.el, 'transform'); else nSet.call(sh.el, 'transform', sh.attr); }
-    sh.on = false; sh.part.style.transform = ''; sh.css = '';
+    sh.on = false; sh.part.style.transform = ''; sh.css = ''; sh.part.style.display = ''; sh.hid = false; sh.part.classList.remove('pb-strip');
+  }
+
+  // ---- rigid parts (opts.rigid: the rider slots; same mechanism as the storybook edition's engine): a part that holds
+  // exactly ONE listed element. In live play its SVG transform stays at a reference pose and the frame-to-frame motion
+  // (slot pose x rider x camera, a similarity) goes to the CSS transform of its <svg>, so a moving rigid slot is a
+  // compositor move: its art rasterises once instead of every frame. Content that really changes inside (the neck path,
+  // a blink, the LED scarf) repaints as before, in the reference frame. Deterministic renders (update(cam, false):
+  // renderAt, shots, bakes) write the true transform and clear the CSS, so stills are pixel-exact; a camera zoom / roll
+  // change re-references.
+  const XF = /(matrix|translate|scale|rotate|skewX|skewY)\s*\(([^)]*)\)/g;
+  const mul = (A, B) => [A[0] * B[0] + A[2] * B[1], A[1] * B[0] + A[3] * B[1], A[0] * B[2] + A[2] * B[3], A[1] * B[2] + A[3] * B[3], A[0] * B[4] + A[2] * B[5] + A[4], A[1] * B[4] + A[3] * B[5] + A[5]];
+  const inv = A => { const d = A[0] * A[3] - A[1] * A[2] || 1e-12; return [A[3] / d, -A[1] / d, -A[2] / d, A[0] / d, (A[2] * A[5] - A[3] * A[4]) / d, (A[1] * A[4] - A[0] * A[5]) / d]; };
+  const mcache = new Map();
+  function matOf(str) {
+    if (!str) return [1, 0, 0, 1, 0, 0];
+    let m = mcache.get(str); if (m) return m;
+    m = [1, 0, 0, 1, 0, 0];
+    for (const [, fn, args] of str.matchAll(XF)) {
+      const a = args.trim().split(/[\s,]+/).map(Number); let t;
+      if (fn === 'translate') t = [1, 0, 0, 1, a[0] || 0, a[1] || 0];
+      else if (fn === 'scale') t = [a[0], 0, 0, a.length > 1 ? a[1] : a[0], 0, 0];
+      else if (fn === 'rotate') { const r = (a[0] * Math.PI) / 180, c = Math.cos(r), n = Math.sin(r); t = [c, n, -n, c, 0, 0]; if (a.length > 2) t = mul(mul([1, 0, 0, 1, a[1], a[2]], t), [1, 0, 0, 1, -a[1], -a[2]]); }
+      else if (fn === 'matrix') t = a;
+      else if (fn === 'skewX') t = [1, 0, Math.tan((a[0] * Math.PI) / 180), 1, 0, 0];
+      else t = [1, Math.tan((a[0] * Math.PI) / 180), 0, 1, 0, 0];
+      m = mul(m, t);
+    }
+    if (mcache.size > 4000) mcache.clear();
+    mcache.set(str, m); return m;
+  }
+  function rigidify(el, part) {
+    const others = [...part.querySelectorAll('*')].some(n => n !== el && !el.contains(n) && !n.contains(el) && !n.closest('defs,title,desc'));
+    if (others) return;
+    const rs = { el, part, attr: nGet.call(el, 'transform'), dom: nGet.call(el, 'transform'), ref: null, css: '', live: true };
+    rs.chain = []; for (let n = el.parentNode; n && n !== part; n = n.parentNode) rs.chain.unshift(n);
+    if (!el.__pbRigid) {
+      el.setAttribute = function (k, v) { const r = this.__pbRigid; if (k === 'transform' && r.live) { r.attr = String(v); if (!r.hoisting) { r.dom = r.attr; nSet.call(this, k, v); } return; } return nSet.call(this, k, v); };
+      el.getAttribute = function (k) { const r = this.__pbRigid; return k === 'transform' && r.live ? r.attr : nGet.call(this, k); };
+    }
+    el.__pbRigid = rs;
+    part.style.transformOrigin = '0 0'; part.classList.add('pb-rigid');
+    rigids.push(rs);
+  }
+  function unrigid(rs) {
+    rs.live = false; rs.hoisting = false;
+    if (rs.dom !== rs.attr) { rs.attr === null ? nRem.call(rs.el, 'transform') : nSet.call(rs.el, 'transform', rs.attr); }
+    rs.part.style.transform = ''; rs.part.style.transformOrigin = ''; rs.part.classList.remove('pb-rigid'); rs.css = ''; rs.ref = null;
+  }
+  function updateRigid(camChanged, live) {
+    for (const rs of rigids) {
+      const write = () => { if (rs.dom !== rs.attr) { rs.dom = rs.attr; rs.attr === null ? nRem.call(rs.el, 'transform') : nSet.call(rs.el, 'transform', rs.attr); } if (rs.css) { rs.css = ''; rs.part.style.transform = ''; } };
+      if (!live) { rs.hoisting = false; rs.ref = null; write(); continue; }
+      rs.hoisting = true;
+      let P = [1, 0, 0, 1, 0, 0];
+      for (const n of rs.chain) P = mul(P, matOf(nGet.call(n, 'transform')));
+      const M = mul(P, matOf(rs.attr));
+      if (!rs.ref || camChanged) { write(); rs.ref = M; continue; }
+      const D = mul(M, inv(rs.ref));
+      // viewBox -> px: q = s·p + o  =>  Dpx = A·D·A⁻¹ (the translation picks up s and o)
+      let e = s * D[4] + ox * (1 - D[0]) - oy * D[2], f = s * D[5] + oy * (1 - D[3]) - ox * D[1];
+      const still = Math.abs(D[0] - 1) < 1e-4 && Math.abs(D[3] - 1) < 1e-4 && Math.abs(D[1]) < 1e-4 && Math.abs(D[2]) < 1e-4;
+      if (still) { e = Math.round(e * dpr) / dpr; f = Math.round(f * dpr) / dpr; }   // pure moves land on device pixels (crisp)
+      const css = still ? (e || f ? `translate(${e}px,${f}px)` : '') : `matrix(${D[0].toFixed(5)},${D[1].toFixed(5)},${D[2].toFixed(5)},${D[3].toFixed(5)},${e.toFixed(2)},${f.toFixed(2)})`;
+      if (css !== rs.css) { rs.css = css; rs.part.style.transform = css; }
+    }
   }
 
   // ---- affine hoisting (rider slots, opts.affine): the slot sits alone on its own sheet; its transform attribute
@@ -202,6 +268,7 @@ export function createSheets(wrapper, svg, opts) {
     };
     for (const o of new Set([...clonesOf.keys(), ...elided])) mo.observe(o, { attributes: true });
     isSplit = true; wrapper.__pbSplit = true; lastCam = null;
+    for (const sel of opts.rigid || []) for (const el of wrapper.querySelectorAll(sel)) { const part = el.closest('svg'); if (part && part !== svg) rigidify(el, part); }
     resize();
   }
 
@@ -211,6 +278,8 @@ export function createSheets(wrapper, svg, opts) {
     for (const sh of sheets) unhoist(sh);
     for (const sh of rotors) unhoistA(sh);
     rotors = [];
+    for (const rs of rigids) unrigid(rs);
+    rigids = [];
     const merge = (parent, box) => { for (const n of [...box.childNodes]) { const o = origOf.get(n); if (o) merge(o, n); else (homeOf.get(n) || parent).appendChild(n); } };
     for (const p of parts.slice(1)) { merge(svg, p); p.remove(); }
     parts = [svg]; origOf = new Map(); clonesOf = new Map(); homeOf = new Map(); sheets = [];
@@ -230,13 +299,22 @@ export function createSheets(wrapper, svg, opts) {
   // after the modules' update: write each strip's translate as a CSS transform. On screen a layer maps world p to
   // C + z·R(roll)·(p − T), so a translate (x, y) inside it moves the pixels by z·R·(x, y) (viewBox units) × s px.
   // Rounded to device pixels: a composited layer at a fractional offset would be resampled (soft edges).
-  function update(cam) {
+  // live: true in real-time play (rigid parts move on the compositor); false for deterministic renders (exact stills)
+  function update(cam, live = false) {
     if (!isSplit) return;
     updateA();
     const camChanged = !lastCam || lastCam.zoom !== cam.zoom || lastCam.roll !== cam.roll;
     lastCam = { zoom: cam.zoom, roll: cam.roll };
+    updateRigid(camChanged, live);
     const r = ((cam.roll || 0) * Math.PI) / 180, c = Math.cos(r), sn = Math.sin(r);
     for (const sh of sheets) {
+      // a strip whose root is hidden (idle weather, a pooled prop between passes) takes its whole sheet out of
+      // compositing (display:none on its <svg>): an empty full-size layer still costs compositor work
+      const hid = nGet.call(sh.el, 'visibility') === 'hidden' || nGet.call(sh.el, 'display') === 'none';
+      if (hid !== !!sh.hid) {
+        const can = !hid || !sh.el.querySelector('[visibility="visible"]');
+        if (can) { sh.hid = hid; sh.part.style.display = hid ? 'none' : ''; }
+      }
       if (!camChanged && sh.x === sh.lx && sh.y === sh.ly) continue;
       sh.lx = sh.x; sh.ly = sh.y;
       const k = opts.scale(sh.depth, cam) * s;
@@ -254,5 +332,32 @@ export function createSheets(wrapper, svg, opts) {
     unsplit();
     try { return fn(svg); } finally { if (was) split(); }
   }
-  return { split, unsplit, update, flush, resize, whole, get parts() { return parts; }, get sheets() { return sheets; }, get isSplit() { return isSplit; } };
+  return { split, unsplit, update, flush, resize, whole, get parts() { return parts; }, get sheets() { return sheets; }, get rigids() { return rigids; }, get isSplit() { return isSplit; } };
+}
+
+// Perf: fold static leaf `opacity` into fill-opacity / stroke-opacity (same rule as the storybook engine). In Chromium
+// every SVG element with an `opacity` below 1 gets its own effect node, i.e. a separate paint chunk, and the per-frame
+// Layerize / PaintArtifactCompositor passes scale with the chunk count. A shape that paints ONLY its fill (or ONLY its
+// stroke) renders identically with the alpha moved onto that paint. Skipped, to stay exact and never fight a module
+// that animates opacity: shapes painting both fill and stroke, anything with data-ref / id / class / inline style, and
+// pattern / clip / mask / marker / egg content. Returns the number of folded shapes.
+const LEAF = new Set(['path', 'circle', 'ellipse', 'rect', 'polygon', 'polyline', 'line']);
+export function foldOpacity(root) {
+  const win = root.ownerDocument.defaultView;
+  let n = 0;
+  for (const el of root.querySelectorAll('[opacity]')) {
+    if (!LEAF.has(el.localName) || el.hasAttribute('data-ref') || el.hasAttribute('id') || el.hasAttribute('style') || el.hasAttribute('class')) continue;
+    if (el.closest('pattern,clipPath,mask,marker,[data-ref*="egg"],[id^="egg"]')) continue;
+    const o = parseFloat(el.getAttribute('opacity'));
+    if (!(o >= 0 && o < 1)) continue;
+    const cs = win.getComputedStyle(el);
+    const fillOn = cs.fill !== 'none', strokeOn = cs.stroke !== 'none' && parseFloat(cs.strokeWidth) > 0;
+    if (fillOn === strokeOn) continue;          // both painted (their overlap would differ) or nothing painted
+    const k = fillOn ? 'fill-opacity' : 'stroke-opacity';
+    const base = parseFloat(el.getAttribute(k) ?? (fillOn ? cs.fillOpacity : cs.strokeOpacity));
+    el.setAttribute(k, +((isFinite(base) ? base : 1) * o).toFixed(4));
+    el.removeAttribute('opacity');
+    n++;
+  }
+  return n;
 }

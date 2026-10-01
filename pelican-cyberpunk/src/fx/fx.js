@@ -669,7 +669,9 @@ export function attach(svg, ctx) {
       }
       const escW = dronesOn ? sstep(84, 92, cad) : 0;
       let head = J.head ? W(J.head.x, J.head.y) : [RIDER_X + 125, GROUND_Y - 520];
-      for (let i = 0; i < ESC.length; i++) {
+      // (perf) the slow world-space movers (escort drones, danmaku, feathers, flyer, butterfly) advance at 30 Hz in
+      // live play: each step repaints a patch of the big fx sheets
+      if (half) for (let i = 0; i < ESC.length; i++) {
         const g = ESC[i], el = r['esc' + i];
         if (!dronesOn) { vis(el, false); continue; }
         const w = i === 0 ? escW : sstep(0, 1, (escW - (i - 1) * 0.12) / 0.64);
@@ -709,7 +711,7 @@ export function attach(svg, ctx) {
         if (txt !== wpTxt) { wpTxt = txt; r.wpT.setAttribute('d', tpath(GM, txt, 6.4, -20, 28).d); }
       }
       // ================= danmaku (one comment every 3.2 s, 300 u/s, two lanes)
-      {
+      if (half) {
         const P = 3.2, SPD = 300, LIFE = 2100 / SPD, act = new Array(DM.length).fill(null);
         if (dronesOn) for (let k = Math.floor((t - LIFE) / P) + 1; k <= Math.floor(t / P); k++) { const age = t - k * P; if (age >= 0 && age < LIFE) act[wrap(k, DM.length)] = [k, age]; }
         for (let i = 0; i < DM.length; i++) {
@@ -843,7 +845,7 @@ export function attach(svg, ctx) {
       }
 
       // ================= feathers (now and then) + the takeaway flyer
-      for (let i = 0; i < 3; i++) {
+      if (half) for (let i = 0; i < 3; i++) {
         const P = 7.4, off = 0.6 + i * 2.5, k = Math.floor((t - off) / P), age = t - off - k * P, el = r['fea' + i];
         const LIFE_F = 5.2;
         const on = age >= 0 && age < LIFE_F && (k === 0 || hash(k, 70 + i) < 0.7) && !(reduced && i === 2);
@@ -857,7 +859,7 @@ export function attach(svg, ctx) {
         set(el, 'transform', `translate(${f1(x)} ${f1(y)}) rotate(${f1(rot)}) scale(${i === 1 ? 1.7 : 1.35})`);
         set(el, 'opacity', f(sstep(0, 0.25, age) * (1 - sstep(0.8, 1, u))));
       }
-      {
+      if (half) {
         const P = 9.3, off = 0.7, k = Math.floor((t - off) / P), age = t - off - k * P, LIFE_L = 4.4;
         const on = age >= 0 && age < LIFE_L && (k === 0 || hash(k, 210) < 0.75);
         vis(r.leaf, on);
@@ -870,7 +872,7 @@ export function attach(svg, ctx) {
       }
 
       // ================= holographic butterfly (blown off when sprinting; glitches now and then)
-      {
+      if (half) {
         const el = r.bf0, blow = sstep(70, 90, cad);
         if (blow > 0.98) vis(el, false);
         else {

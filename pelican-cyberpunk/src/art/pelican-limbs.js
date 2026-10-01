@@ -1,8 +1,8 @@
 // OWNER: pelican-limbs. Legs and wings of the great white pelican, near + far: CYBERPUNK edition "Neon Pelican"
 // (docs/STYLE-X.md §3). The bird wears a short techwear bomber: the upper arm is a jacket SLEEVE and the wing
 // feathers emerge from its ribbed cuff; the legs keep their feathered "trousers" under a techwear knee wrap, the
-// orange tarsus stays bare and scaly, and the totipalmate feet sit in open-toe high-top sneaker wraps so every web
-// stays visible. Lighting language: dual-colour rim light, CYAN from the front (−y edges facing the direction of
+// trousers carry on below the knee as a tibial feather sleeve, a short stretch of orange tarsus stays bare and scaly
+// under a neon ankle band, and the bare totipalmate foot stands on a thin cleat plate so every toe and web shows. Lighting language: dual-colour rim light, CYAN from the front (−y edges facing the direction of
 // travel) and MAGENTA from behind (+y / trailing edges), always as stacked strokes (a wide low-opacity stroke under a
 // thin bright one and a pale core): rider slots carry NO filters (STYLE-X §2). The far side is darker and less lit.
 //
@@ -22,7 +22,8 @@
 //                 into a fan for the wave.
 // Legs: feathered trousers merge into the belly; a techwear wrap hides the rig knee (a disc r 17.5 about the knee
 //   pivot, so bare skin starts ≥ 17 u below it at every knee angle) with a white feather fringe peeking out below;
-//   orange tarsus 13.6→10 u with transverse scutes and reticulate rear scales; totipalmate foot (all four toes webbed,
+//   a tibial feather sleeve below it; orange tarsus 14→12 u with transverse scutes and reticulate rear scales and a
+//   neon ankle band; bare totipalmate foot (all four toes webbed,
 //   incl. the hallux web) flat on the pedal, sole on the pedal's top face (foot-local y = 6), toes over its front edge.
 //
 // Hit-testing note: long curved lines are emitted as short C1-continuous quadratic pieces (splitQ) so a stroke's
@@ -344,6 +345,18 @@ function wingHand(I, far, side) {
     ...[...al].reverse().map(p => fill(p.d, I.N, { stroke: far ? Z.ink : I.S, 'stroke-width': 0.8 })),
     far ? '' : neon(`M${pt(al[0].P(0.3, -2.4))}Q${pt(al[0].P(0.8, -2.8))} ${pt(al[0].P(1, 0))}`, X.cyan, null, 0.7, false),
     far ? '' : line(al.map(p => p.r).join(''), I.S, 0.5)])));
+  // smear multiples (near hand only): hidden neon afterimages of the fan / gripping primaries and of the alula,
+  // shown for a frame or two when the hand whips faster than ~330°/s (the wave flick, the bell pop). Stacked
+  // strokes only, transformed + faded per frame; no filters, no fills (they never occlude).
+  if (!far) {
+    const ghostStroke = (d, col) => h('g', { fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+      h('path', { d, stroke: col, 'stroke-width': 3.2, 'stroke-opacity': 0.22 }), h('path', { d, stroke: col, 'stroke-width': 0.9 }));
+    const fanD = fan.map(p => p.d).join(''), gripD = F.map(p => p.d).join('') + carpal;
+    const copies = (key, d) => [1, 2].map(k => h('g', { 'data-ref': ref(key + k) }, ghostStroke(d, k === 1 ? X.cyan : X.mag)));
+    s.push(h('g', { 'data-ref': ref('ghost'), 'data-detail': tag('O', 'wing-smear-afterimage'), display: 'none', style: 'pointer-events:none' },   // display ATTRIBUTE: the baker prunes it (never in the zero-JS SVG)
+      h('g', { 'data-ref': ref('ghostFan') }, copies('gF', fanD)), h('g', { 'data-ref': ref('ghostGrip') }, copies('gG', gripD)),
+      h('g', { 'data-ref': ref('ghostAl') }, ghostStroke(al.map(p => p.d).join(''), X.cyan))));
+  }
   return s.join('');
 }
 
@@ -373,7 +386,16 @@ function thigh(I, far) {
   const top = [[-14, -25], [12, -27], [44, -21], [76, -14], [106, -10.5], [128, -10], [140, -9.6]];
   const bottom = [[140, 11.6], [112, 11.5], [86, 11], [60, 9.5], [36, 6.5], [14, 4], [-4, 3], [-17, -8]];
   const cuff = cuffGeom(K);
-  const kids = [fill(smooth([...top, ...bottom]), I.P), fill(cuff.d, I.P)];
+  let kids;
+  if (!far) kids = [fill(smooth([...top, ...bottom]), I.P), fill(cuff.d, I.P)];
+  else {
+    // far trousers: the dark flat far flight ink (N, graded into the smog by the mood), with a feathered (scalloped) rear edge so
+    // it reads as a plumed leg in shadow, never a flat board; clearly darker than the near leg in every mood.
+    const body = smooth([...top, ...bottom]);
+    const rear = scallops(rowPts([30, 6.4], [132, 11.4], 9), [0.25, 1], 1.6), tuft = rear;
+    kids = [fill(body + cuff.d + tuft, I.N),
+      line(rear, XF.ink, 0.9, { 'data-detail': tag('O', 'far-trouser-feather-edge') }), line(cuff.edge, XF.ink, 0.9)];
+  }
   if (!far) {
     // lavender volume on the underside of the trousers
     kids.push(fill(smooth([[30, 2.6], [60, 4.4], [90, 6], [120, 6.4], [136, 7], [128, 11.6], [100, 11.4], [70, 10.4], [44, 7.6], [24, 5]], true, 0.16), I.B, { 'fill-opacity': 0.5, 'data-detail': tag('T', 'trouser-volume-shade') }));
@@ -392,8 +414,9 @@ function thigh(I, far) {
     kids.push(neon(curve([[40, -20], [76, -12.4], [104, -8.8], [116, -8.4]]), X.cyan, X.cyanCore, 1.6, false, { 'data-detail': tag('O', 'thigh-cyan-rim') }));
     kids.push(neon(curve([[34, 4.2], [60, 8], [86, 9.6], [116, 10]]), X.mag, X.magCore, 1.6, false, { 'data-detail': tag('O', 'thigh-magenta-rim') }));
   } else {
-    kids.push(line(scallops(rowPts([80, -11], [82, 9], 3), [1, 0.1], 2.4), I.B, 1, { 'data-detail': tag('T', 'far-trouser-scallops') }));
+    kids.push(line(scallops(rowPts([60, -14], [64, 8], 4), [1, 0.1], 2.4) + scallops(rowPts([92, -10.6], [94, 9.6], 3), [1, 0.1], 2.2), XF.pale, 0.8, { 'stroke-opacity': 0.45, 'data-detail': tag('T', 'far-trouser-scallops') }));
     kids.push(line(curve([[60, -16.4], [86, -12.4], [112, -9.8]]), XF.cyan, 0.9, { 'data-detail': tag('O', 'far-thigh-rim') }));
+    kids.push(line(curve([[40, 7.4], [70, 10.4], [100, 11.8], [116, 12]]), XF.mag, 0.8, { 'stroke-opacity': 0.8 }));
   }
   // techwear knee wrap: a band from x 112 that closes in a disc r 17.5 round the knee pivot
   const wrap = `M116 -11.6C124 -12.8 132 -15 ${K} ${f(-KNEE_R)}A${KNEE_R} ${KNEE_R} 0 0 1 ${K} ${f(KNEE_R)}C132 15.4 124 13.8 116 12.8Q113.8 0.6 116 -11.6Z`;
@@ -420,53 +443,83 @@ function thigh(I, far) {
   return G('thigh-trousers', 'O', far, kids);
 }
 // ---- shank / tarsus (knee-local; +x toward the ankle, +y = rear)
+// The feathered "trousers" continue below the knee wrap as a tibial feather sleeve whose pointed fringe ends at
+// x ≈ 44, so the bare scaly tarsus (14 → 12 u) only shows from there to the ankle band (≈ 70 u of bare leg).
+const SLEEVE_X = 36;
 function shank(I, far) {
-  const L = SKEL.shank;
-  const hw = x => lerp(6.8, 5, x / L);               // half width 13.6 -> 10
-  const outline = `M0 ${f(-hw(0))}C40 ${f(-hw(40))} 90 ${f(-hw(90))} ${L} ${f(-hw(L))}A5 5 0 0 1 ${L} ${f(hw(L))}` +
-    `C92 ${f(hw(92))} 36 ${f(hw(36) + 0.4)} 29 ${f(hw(29) + 0.6)}C26 ${f(hw(26) + 3.6)} 20 ${f(hw(20) + 3.8)} 16 ${f(hw(16) + 1.2)}C10 ${f(hw(10))} 4 ${f(hw(0))} 0 ${f(hw(0))}Z`;
-  // intertarsal knuckle: the joint bulges forward just below the wrap and the tarsus leaves it at a slight angle
-  const knuckle = 'M13 -6.4C16 -10.6 25 -11 30 -7.6C33 -5.6 34 -3 33 0L14 0Z';
+  const L = SKEL.shank, Z = far ? XF : X;
+  const hw = x => lerp(7, 6, x / L);                 // half width 14 -> 12
+  const outline = `M0 ${f(-hw(0))}C40 ${f(-hw(40))} 90 ${f(-hw(90))} ${L} ${f(-hw(L))}A6 6 0 0 1 ${L} ${f(hw(L))}` +
+    `C92 ${f(hw(92))} 62 ${f(hw(62) + 0.4)} 55 ${f(hw(55) + 0.6)}C52 ${f(hw(52) + 3.6)} 46 ${f(hw(46) + 3.8)} 42 ${f(hw(42) + 1.2)}C36 ${f(hw(36))} 4 ${f(hw(0))} 0 ${f(hw(0))}Z`;
+  // intertarsal knuckle: the joint bulges forward just below the feather sleeve, the tarsus leaves it at a slight angle
+  const knuckle = 'M39 -6.8C42 -11 51 -11.4 56 -8C59 -6 60 -3 59 0L40 0Z';
   const kids = [fill(outline, I.O), fill(knuckle, I.O)];
   const SC = '#5A1E0A';   // scale lines: translucent dark over whatever orange the mood prints
   if (!far) {
-    kids.push(line('M17 7.6Q21 11.4 23.4 10.6Q27 9.6 29.5 7.4M19.5 5.2q3.6 2.4 7.2 0', SC, 1.1, { 'stroke-opacity': 0.6, 'data-detail': tag('O', 'intertarsal-heel-pad') }));
-    kids.push(line('M15.6 -7.8Q23 -11.6 30.4 -7.2M18 -3.6Q23 -1.2 28.6 -3.8M31.6 -5.4Q34.6 -1 31.4 3.2', SC, 1, { 'stroke-opacity': 0.6, 'data-detail': tag('O', 'intertarsal-knuckle') }));
+    kids.push(line('M43 8.2Q47 12 49.4 11.2Q53 10.2 55.5 8M45.5 5.8q3.6 2.4 7.2 0', SC, 1.1, { 'stroke-opacity': 0.6, 'data-detail': tag('O', 'intertarsal-heel-pad') }));
+    kids.push(line('M41.6 -8.2Q49 -12 56.4 -7.6M44 -4Q49 -1.6 54.6 -4.2M57.6 -5.8Q60.6 -1.4 57.4 2.8', SC, 1, { 'stroke-opacity': 0.6, 'data-detail': tag('O', 'intertarsal-knuckle') }));
     // rear shade band keeps the tarsus round; reticulate rear scales sit on it
     let rt = '';
-    for (let x = 34, k = 0; x <= 112; x += 4.6, k++) { const w = hw(x), y = w * (k % 2 ? 0.62 : 0.3); rt += `M${f(x)} ${f(y)}q1.6 -1.3 3.2 0q-1.6 1.3 -3.2 0`; }
-    kids.push(G('tarsus-shade-band', 'T', far, [fill(`M30 ${f(hw(30) - 3)}C70 ${f(hw(70) - 3.2)} 110 ${f(hw(110) - 3)} ${118} ${f(hw(118) - 2.4)}L118 ${f(hw(118))}C110 ${f(hw(110))} 70 ${f(hw(70))} 30 ${f(hw(30))}Z`, '#6A2410', { 'fill-opacity': 0.42 }),
+    for (let x = 58, k = 0; x <= 114; x += 4.6, k++) { const w = hw(x), y = w * (k % 2 ? 0.62 : 0.3); rt += `M${f(x)} ${f(y)}q1.6 -1.3 3.2 0q-1.6 1.3 -3.2 0`; }
+    kids.push(G('tarsus-shade-band', 'T', far, [fill(`M56 ${f(hw(56) - 3.2)}C80 ${f(hw(80) - 3.4)} 110 ${f(hw(110) - 3.2)} ${118} ${f(hw(118) - 2.6)}L118 ${f(hw(118))}C110 ${f(hw(110))} 80 ${f(hw(80))} 56 ${f(hw(56))}Z`, '#6A2410', { 'fill-opacity': 0.42 }),
       line(rt, SC, 0.6, { 'stroke-opacity': 0.7, 'data-detail': tag('T', 'tarsus-reticulate-scales') })]));
     // dual rim: cyan down the front of the shin, magenta down the back
-    kids.push(neon(splitQ([30, 52, 74, 96, 112].map(x => [x, -hw(x) + 0.9])), X.cyan, X.cyanCore, 1.1, false, { 'data-detail': tag('O', 'tarsus-cyan-rim') }));
-    kids.push(neon(splitQ([34, 56, 78, 98, 112].map(x => [x, hw(x) - 0.9])), X.mag, X.magCore, 1.1, false, { 'data-detail': tag('O', 'tarsus-magenta-rim') }));
+    kids.push(neon(splitQ([54, 70, 86, 100, 114].map(x => [x, -hw(x) + 0.9])), X.cyan, X.cyanCore, 1.1, false, { 'data-detail': tag('O', 'tarsus-cyan-rim') }));
+    kids.push(neon(splitQ([58, 74, 88, 102, 114].map(x => [x, hw(x) - 0.9])), X.mag, X.magCore, 1.1, false, { 'data-detail': tag('O', 'tarsus-magenta-rim') }));
     // transverse scutes on the front (scale rings), overlapping downward
     let sc = '';
-    for (let x = 24; x <= 114; x += 7.4) { const w = hw(x); sc += `M${f(x)} ${f(-w + 0.3)}Q${f(x + 2.6)} ${f(-w * 0.2)} ${f(x + 0.6)} ${f(w * 0.45)}`; }
+    for (let x = 60; x <= 114; x += 6.8) { const w = hw(x); sc += `M${f(x)} ${f(-w + 0.3)}Q${f(x + 2.6)} ${f(-w * 0.2)} ${f(x + 0.6)} ${f(w * 0.45)}`; }
     kids.push(line(sc, SC, 0.95, { 'stroke-opacity': 0.62, 'data-detail': tag('T', 'tarsus-scutes') }));
-    // scute highlights (pale warm) just above each ring
     let sh = '';
-    for (let x = 27; x <= 112; x += 7.4) { const w = hw(x); sh += `M${f(x)} ${f(-w + 1.3)}l2.4 0.2`; }
+    for (let x = 62.6; x <= 112; x += 6.8) { const w = hw(x); sh += `M${f(x)} ${f(-w + 1.3)}l2.4 0.2`; }
     kids.push(line(sh, '#FFE7C8', 0.9, { 'stroke-opacity': 0.8, 'data-detail': tag('T', 'scute-highlights') }));
   } else {
-    kids.push(fill(outline, XF.ink, { 'fill-opacity': 0.42 }));
+    kids.push(fill(outline + knuckle, XF.ink, { 'fill-opacity': FAR_SKIN }));
     let sc = '';
-    for (let x = 36; x <= 126; x += 9) { const w = hw(x); sc += `M${f(x)} ${f(-w + 0.4)}q2.4 ${f(w * 0.6)} 0.6 ${f(w * 1.2)}`; }
-    kids.push(line(sc, XF.ink, 0.8, { 'stroke-opacity': 0.6, 'data-detail': tag('T', 'far-tarsus-scutes') }));
-    kids.push(line(splitQ([34, 58, 82, 106, L - 2].map(x => [x, -hw(x) + 0.6])), XF.cyan, 0.9, { 'data-detail': tag('O', 'far-tarsus-rim') }));
+    for (let x = 60; x <= 118; x += 8) { const w = hw(x); sc += `M${f(x)} ${f(-w + 0.4)}q2.4 ${f(w * 0.6)} 0.6 ${f(w * 1.2)}`; }
+    kids.push(line(sc, XF.ink, 0.8, { 'stroke-opacity': 0.7, 'data-detail': tag('T', 'far-tarsus-scutes') }));
+    kids.push(line(splitQ([56, 74, 92, 108, L - 6].map(x => [x, -hw(x) + 0.6])), XF.cyan, 0.8, { 'data-detail': tag('O', 'far-tarsus-rim') }));
   }
+  // tibial feather sleeve: the white trousers carried on below the knee wrap, ending in a pointed fringe
+  const fr = [];   // fringe tips across the leg (front −y → rear +y), pointing down the shank (+x)
+  const nT = 6, Y0 = -10.6, Y1 = 11.6, jt = [0, 3.2, -1.4, 4.6, 1.2, 5.4, 2];
+  let sd = `M-8 ${f(Y0)}Q4 ${f(Y0 - 1.6)} ${SLEEVE_X - 2} ${f(Y0 - 0.6)}`;
+  for (let i = 0; i < nT; i++) {
+    const ya = lerp(Y0, Y1, i / nT), yb = lerp(Y0, Y1, (i + 1) / nT), ym = (ya + yb) / 2, tipX = SLEEVE_X + 6 + jt[i + 1];
+    fr.push([tipX, ym + 0.6]);
+    sd += `Q${f(SLEEVE_X + 3 + jt[i])} ${f(ya + 0.6)} ${f(tipX)} ${f(ym + 0.9)}Q${f(SLEEVE_X + 1)} ${f(yb - 0.6)} ${f(SLEEVE_X - 2 + (i === nT - 1 ? 2 : 0))} ${f(yb)}`;
+  }
+  sd += `Q4 ${f(Y1 + 1.4)} -8 ${f(Y1)}Z`;
+  const sk = [fill(sd, far ? I.N : I.P, { stroke: far ? XF.ink : I.B, 'stroke-width': far ? 0.8 : 1.1, 'stroke-linejoin': 'round' })];
+  if (!far) {
+    sk.push(fill(`M14 4.8Q28 5.4 ${SLEEVE_X} 6.2L${SLEEVE_X + 4} 11.4Q20 12.6 14 12Z`, I.B, { 'fill-opacity': 0.5, 'data-detail': tag('T', 'shin-sleeve-shade') }));
+    sk.push(line(scallops(rowPts([24, -10.4], [25, 11.2], 4), [1, 0.05], 2.2), I.B, 1, { 'data-detail': tag('T', 'shin-feather-scallops'), 'data-tract': 'leg' }));
+    sk.push(line(fr.map(t => `M${pt([t[0] - 8, t[1] * 0.92])}L${pt([t[0] - 2.4, t[1]])}`).join(''), I.B, 0.7, { 'data-detail': tag('T', 'shin-fringe-shafts') }));
+    sk.push(neon(curve([[16, -11.2], [26, -11.4], [SLEEVE_X - 1, -10.8]], 2), X.cyan, X.cyanCore, 1.2, false, { 'data-detail': tag('O', 'shin-sleeve-cyan-rim') }));
+    sk.push(neon(curve([[16, 12.2], [26, 12.4], [SLEEVE_X - 1, 11.8]], 2), X.mag, X.magCore, 1.1, false, { 'data-detail': tag('O', 'shin-sleeve-magenta-rim') }));
+  }
+  kids.push(G('tibial-feather-sleeve', 'O', far, sk));
+  // neon ankle band round the tarsus above the foot: the leg's techwear accent now that the foot is bare
+  const AB = L - 22, bw = hw(AB) + 1.2;
+  const ab = [fill(`M${AB} ${f(-bw)}L${AB + 9} ${f(-bw + 0.2)}Q${AB + 10.2} 0 ${AB + 9} ${f(bw - 0.2)}L${AB} ${f(bw)}Q${AB - 1.2} 0 ${AB} ${f(-bw)}Z`, Z.jacket, { stroke: Z.ink, 'stroke-width': far ? 0.7 : 1 })];
+  if (!far) {
+    ab.push(neon(`M${AB + 4.5} ${f(-bw + 0.6)}L${AB + 4.5} ${f(bw - 0.6)}`, X.cyan, X.cyanCore, 1.2, false, { 'data-detail': tag('O', 'ankle-band-cyan-ring') }));
+    ab.push(line(`M${AB + 1.2} ${f(-bw + 1)}Q${AB + 0.4} 0 ${AB + 1.2} ${f(bw - 1)}M${AB + 7.8} ${f(-bw + 1)}Q${AB + 8.8} 0 ${AB + 7.8} ${f(bw - 1)}`, X.pale, 0.4, { 'stroke-dasharray': '1 1', 'stroke-opacity': 0.55, 'data-detail': tag('T', 'ankle-band-stitching') }));
+    ab.push(G('ankle-band-led', 'O', far, [h('circle', { cx: AB + 4.5, cy: f(-bw + 2.4), r: 2.6, fill: X.acid, 'fill-opacity': 0.2 }), h('circle', { cx: AB + 4.5, cy: f(-bw + 2.4), r: 1.1, fill: X.acid })]));
+  } else ab.push(line(`M${AB + 4.5} ${f(-bw + 0.6)}L${AB + 4.5} ${f(bw - 0.6)}`, XF.cyan, 0.9));
+  kids.push(G('ankle-band', 'O', far, ab));
   return G('tarsus', 'O', far, kids);
 }
 // ---- foot (ankle-local; ball (17,9) sits on the pedal spindle; pedal top face at y = 6 spans x ≈ 4..30)
 // Totipalmate: toes IV (outer, nearest, longest), III, II and the hallux I, all joined by webs. The near toes
 // drape over the pedal's front edge; the farther ones are seen across its top face (a slightly raised viewpoint
-// fans them so every web is visible). The sneaker wrap is open-toed: it covers heel, ankle and the toe roots only.
-const SOLE = 6, EDGE = 30;
+// fans them so every web is visible). No shoe: a bare metatarsal pad on a thin cleat plate.
+const SOLE = 6, EDGE = 30, FAR_SKIN = 0.62;   // far skin sinks under a 62 % night-ink overlay (dark orange-brown)
 const TOES = [
   { n: 'IV', root: [8, 4.3], mid: [EDGE - 1, 4.8], tip: [40.5, 12.4], w: 3.6 },
   { n: 'III', root: [8, 2.5], mid: [EDGE - 1, 2.4], tip: [41, 6.6], w: 3.2 },
   { n: 'II', root: [7, 0.7], mid: [EDGE - 4, -0.8], tip: [38, -0.6], w: 2.9 },
-  { n: 'I', root: [-2.5, -0.4], mid: [9, -5], tip: [20.5, -8.6], w: 2.6 },
+  { n: 'I', root: [-2.5, -0.4], mid: [12, -4.4], tip: [27.5, -6.2], w: 2.7 },
 ];
 function toeD(t) {
   const a = t.root, b = t.mid, c = t.tip, w = t.w / 2;
@@ -506,39 +559,41 @@ function foot(I, far, side) {
     }
     toeKids.push(line(sc, SC, 0.65, { 'stroke-opacity': 0.7, 'data-detail': tag('T', 'toe-scutes') }));
   } else {
-    toeKids.push(fill([T[2], T[1], T[0]].map(toeD).join(''), XF.ink, { 'fill-opacity': 0.42 }));
+    toeKids.push(fill([T[2], T[1], T[0]].map(toeD).join(''), XF.ink, { 'fill-opacity': FAR_SKIN }));
   }
   const claws = T.map(t => { const u = norm(sub(t.tip, t.mid)), nn = perp(u), c = t.tip; return `M${pt(add(c, mul(nn, -t.w * 0.4)))}Q${pt(add(add(c, mul(u, 3.4)), mul(nn, -0.2)))} ${pt(add(add(c, mul(u, 3.3)), mul(nn, 2.6)))}Q${pt(add(c, mul(u, 1.4)))} ${pt(add(c, mul(nn, t.w * 0.45)))}Z`; }).join('');
   toeKids.push(fill(claws, far ? XF.ink : '#C9CEE6', { stroke: far ? 'none' : X.ink, 'stroke-width': 0.5, 'data-detail': tag('O', far ? 'far-claws' : 'chrome-claws') }));
   // the webbed foot: hallux + its web (farthest), the other two webs with pleats and veins, then the toes
-  const webDark = far ? h('g', {}, fill(webs.join(''), XF.ink, { 'fill-opacity': 0.42 })) : '';
+  const webDark = far ? h('g', {}, fill(webs.join(''), XF.ink, { 'fill-opacity': FAR_SKIN })) : '';
   const foot = G('totipalmate-webs', 'O', far, [
-    G('hallux-web', 'O', far, [fill(webs[2], W, st), fill(toeD(T[3]), Tc, st), far ? fill(webs[2] + toeD(T[3]), XF.ink, { 'fill-opacity': 0.42 }) : '']),
+    G('hallux-web', 'O', far, [fill(webs[2], W, st), fill(toeD(T[3]), Tc, st), far ? fill(webs[2] + toeD(T[3]), XF.ink, { 'fill-opacity': FAR_SKIN }) : '']),
     fill(webs[1], W, st), fill(webs[0], W, st), webDark,
     far ? '' : line(pleats.join(''), SC, 0.6, { 'stroke-opacity': 0.55, 'data-detail': tag('T', 'web-pleats') }),
     far ? '' : fill(webs.join(''), '#FFE2B8', { 'fill-opacity': 0.3, 'data-detail': tag('T', 'web-translucent-membrane') }),
     far ? '' : neon(webs.slice(0, 2).map((w, i) => { const A = T[i], B = T[i + 1], tA = lerp2(A.mid, A.tip, 0.92), tB = lerp2(B.mid, B.tip, 0.92), dp = add(lerp2(tA, tB, 0.5), mul(norm(sub(lerp2(A.root, B.root, 0.5), lerp2(tA, tB, 0.5))), 5.5)); return `M${pt(tA)}Q${pt(dp)} ${pt(tB)}`; }).join(''), X.mag, null, 0.7, false, { 'data-detail': tag('O', 'web-magenta-edge') }),
     G('toes', 'O', far, toeKids)]);
-  // open-toe high-top sneaker wrap: heel counter, collar over the ankle, velcro strap, magenta sole stripe
-  const shoe = smooth([[-10.4, -17.6], [-1, -19.2], [8.2, -17.4], [10.4, -10], [13.4, -3.6], [17.6, 1.4], [18.4, SOLE], [6, SOLE], [-8, SOLE], [-12.6, 2], [-13.4, -8]], true, 0.15);
-  const sk = [fill(shoe, Z.sneaker, { stroke: Z.ink, 'stroke-width': far ? 0.9 : 1.1 })];
-  if (!far) {
-    sk.push(fill('M-13 -6C-13.4 -1 -12.4 3 -9 5.2L-2 5.2C-4.6 1 -5 -5 -3 -10.6Z', X.sneakerHi, { 'data-detail': tag('O', 'sneaker-heel-counter') }));
-    sk.push(G('sneaker-velcro-straps', 'O', far, [fill('M-4 -12.6L9.6 -14.2L11.8 -10L-2.8 -8.2Z', X.strap, { stroke: X.ink, 'stroke-width': 0.5 }), fill('M-1.6 -5.6L11.6 -6.6L13.8 -2.8L-0.4 -1.4Z', X.strap, { stroke: X.ink, 'stroke-width': 0.5 }),
-      line('M9.6 -12.8l1.2 2.2M11.8 -5.4l1.2 2.2', X.pale, 0.8)]));
-    sk.push(line('M-8.6 -1.4l3.4 -2.4l3.4 2.4l3.4 -2.4l3.4 2.4', X.pale, 1, { 'data-detail': tag('O', 'sneaker-zigzag-logo') }));
-    sk.push(G('sneaker-collar-leds', 'O', far, [0, 4.4, 8.8].map(x => h('circle', { cx: f(-7 + x), cy: f(-16.4 - x * 0.05), r: 1.05, fill: X.cyan }))));
-    sk.push(neon('M-11 -17.2Q-13 -24 -8.4 -24.4Q-6 -24.2 -6.8 -18.2', X.mag, null, 1, false, { 'data-detail': tag('O', 'sneaker-pull-loop') }));
-    // midsole: pale band with tread notches + magenta neon stripe
-    sk.push(G('sneaker-glow-sole', 'O', far, [fill(`M-11.4 1.8L17.4 1.8L18.4 ${SOLE}L-8 ${SOLE}Q-11.6 ${SOLE - 0.6} -11.4 1.8Z`, X.sole),
-      line(`M-6 ${SOLE - 1.2}v1.2M-1 ${SOLE - 1.2}v1.2M4 ${SOLE - 1.2}v1.2M9 ${SOLE - 1.2}v1.2M14 ${SOLE - 1.2}v1.2`, X.jacketHi, 0.8),
-      neon('M-11 3.1H17.8', X.mag, X.magCore, 1.3, false)]));
-    sk.push(neon('M-10 -17.2Q-1 -19 8.2 -17', X.cyan, X.cyanCore, 1, false, { 'data-detail': tag('O', 'sneaker-cyan-collar-rim') }));
-  } else {
-    sk.push(line('M-11 3.2H17.8', XF.mag, 1.6));
+  // metatarsal pad: bare orange skin from the ankle (a disc r 6.4 round the pivot, so the joint never seams)
+  // to the toe roots, its sole flat on the cleat; reticulate scales on top, a cyan glint on the front.
+  const pad = smooth([[-6.4, -2.6], [-4.6, -5.8], [-0.6, -7.2], [4.4, -5.8], [8.6, -2.6], [11.2, 0.8], [11.6, 4.2], [8, SOLE - 0.6], [0, SOLE - 0.4], [-5.2, 4.2], [-6.8, 0.8]], true, 0.16);
+  const pk = [fill(pad, Tc, st)];
+  if (far) pk.push(fill(pad, XF.ink, { 'fill-opacity': FAR_SKIN }));
+  else {
+    let ms = '';
+    for (const [x, y] of [[-2.6, -3.6], [1.2, -4.4], [4.8, -2.6], [-3.4, 0.2], [0.6, -0.6], [4.6, 0.8], [8, 1.6], [-0.8, 3]]) ms += `M${f(x - 1.5)} ${f(y)}q1.5 -1.3 3 0q-1.5 1.3 -3 0`;
+    pk.push(line(ms, SC, 0.55, { 'stroke-opacity': 0.7, 'data-detail': tag('T', 'metatarsal-scales') }));
+    pk.push(line('M-5.2 -3.2Q-2 -6.6 3 -6', '#FFE7C8', 0.9, { 'stroke-opacity': 0.75, 'data-detail': tag('T', 'metatarsal-highlight') }));
+    pk.push(neon('M-4.6 4.6Q2 6 9.6 4.8', X.mag, null, 0.7, false, { 'data-detail': tag('O', 'heel-magenta-rim') }));
   }
-  const shoeG = G('sneaker-wrap', 'O', far, sk);
-  const out = [h('g', { 'data-ref': ref('toes') }, h('g', { 'data-ref': ref('webs') }, foot)), shoeG];
+  const padG = G('metatarsal-pad', 'O', far, pk);
+  // thin techwear cleat plate between the sole and the pedal (no shoe: every toe and web stays bare and visible)
+  const ck = [fill(`M2.4 ${SOLE - 1.4}L24.6 ${SOLE - 1.4}Q26 ${SOLE - 0.4} 25 ${SOLE + 0.9}L3 ${SOLE + 0.9}Q1.6 ${SOLE - 0.2} 2.4 ${SOLE - 1.4}Z`, Z.sneaker, { stroke: Z.ink, 'stroke-width': 0.6 })];
+  if (!far) {
+    ck.push(neon(`M3.4 ${SOLE + 0.5}H24.2`, X.mag, X.magCore, 0.8, false, { 'data-detail': tag('O', 'cleat-neon-edge') }));
+    ck.push(G('cleat-bolts', 'T', far, [7.4, 13.6, 19.8].map(x => h('circle', { cx: f(x), cy: f(SOLE - 0.4), r: 0.6, fill: '#A7AED0' }))));
+    ck.push(fill(`M22 ${SOLE - 1.3}h2.2l0.6 1.6h-2.4z`, X.cyan, { 'data-detail': tag('O', 'cleat-cyan-tab') }));
+  }
+  const cleatG = G('cleat-plate', 'O', far, ck);
+  const out = [cleatG, padG, h('g', { 'data-ref': ref('toes') }, h('g', { 'data-ref': ref('webs') }, foot))];
   return out.join('');
 }
 
@@ -573,7 +628,7 @@ export function limbState(pose, reduced = false) {
       e: wrapA(L.rot - U.rot),
       prims: `rotate(${f(wrapA(H.rot - L.rot) + 0.35 * lag)} 74 0)`,
       p: PRIM.map((q, i) => { const k = clamp(open * 1.35 - (4 - i) * 0.09, 0, 1); return k > 0.001 ? `rotate(${f(-k * (26 + i * 17))} ${f(q.b[0])} ${f(q.b[1])})` : 'rotate(0)'; }),
-      fanOn: grip < 0.5,
+      fanOn: grip < 0.5, open, thumb: wg.thumb || 0,
       fan: Array.from({ length: 6 }, (_, i) => `rotate(${f((1 - clamp(open * 1.3 - i * 0.06, 0, 1)) * (40 + i * 10))})`),
       alula: `rotate(${f(24 * (wg.thumb || 0))} -5 -13)`,
       gc: `translate(0 ${f(-0.9 * (wg.covertLift || 0))})`,
@@ -588,6 +643,37 @@ export function attach(svg) {
   const last = {};
   const set = (key, el, attr, val) => { if (!el || last[key] === val) return; last[key] = val; el.setAttribute(attr, val); };
   const show = (key, el, on) => { if (!el || last[key] === on) return; last[key] = on; el.style.display = on ? '' : 'none'; };
+  // Smear multiples: compare the near hand with the previous rendered frame (sequential renders only: 0 < Δt ≤ 0.1 s,
+  // so seeks and paused frames never smear). Ghost k sits where the hand was k·1.4 frames ago, in hand-local space.
+  let prev = null, ghostOn = false;
+  const SMEAR_ON = 330, SMEAR_FULL = 620;   // deg/s (rotation + wrist travel in deg-equivalent at a 50 u feather)
+  function smear(fr, pose, S) {
+    const H = pose.joints.wingNearHand; if (!H || !S || !r['Near-ghost']) return;
+    const cur = { t: fr.t, x: H.x, y: H.y, rot: H.rot, thumb: S.thumb };
+    const p = prev; prev = cur;
+    let a = 0, aA = 0, dRot = 0, lx = 0, ly = 0, dTh = 0;
+    const dt = p ? cur.t - p.t : 0;
+    if (p && !fr.reduced && dt > 0 && dt <= 0.1) {
+      dRot = wrapA(p.rot - cur.rot); dTh = p.thumb - cur.thumb;
+      const c = Math.cos(-cur.rot * D2R), sn = Math.sin(-cur.rot * D2R), dx = p.x - cur.x, dy = p.y - cur.y;
+      lx = c * dx - sn * dy; ly = sn * dx + c * dy;
+      const w = (Math.abs(dRot) + Math.hypot(dx, dy) * 0.8) / dt;
+      if (Math.abs(dRot) < 40) a = clamp((w - SMEAR_ON) / (SMEAR_FULL - SMEAR_ON), 0, 1);
+      aA = clamp((Math.abs(dTh) * 24 / dt - SMEAR_ON) / (SMEAR_FULL - SMEAR_ON), 0, 1);
+    }
+    const on = a > 0.02 || aA > 0.02;
+    if (on !== ghostOn) { ghostOn = on; r['Near-ghost'].setAttribute('display', on ? 'inline' : 'none'); }
+    if (!on) return;
+    const fanG = S.fanOn && S.open > 0.85, gripG = !S.fanOn && a > 0.02;
+    show('gfan', r['Near-ghostFan'], fanG); show('ggrip', r['Near-ghostGrip'], gripG);
+    for (const [key, vis] of [['gF', fanG], ['gG', gripG]]) if (vis) for (const k of [1, 2]) {
+      const m = 1.4 * k, el = r['Near-' + key + k];
+      el.setAttribute('transform', `translate(${f(lx * m)} ${f(ly * m)}) rotate(${f(dRot * m)})`);
+      el.setAttribute('opacity', f(a * (k === 1 ? 0.8 : 0.42)));
+    }
+    show('gal', r['Near-ghostAl'], aA > 0.02);
+    if (aA > 0.02) { const el = r['Near-ghostAl']; el.setAttribute('transform', `rotate(${f(24 * (cur.thumb + dTh))} -5 -13)`); el.setAttribute('opacity', f(aA * 0.6)); }
+  }
   return {
     update(fr) {
       const pose = fr.pose; if (!pose || !pose.joints) return;
@@ -604,6 +690,7 @@ export function attach(svg) {
         set(side + 'toes', r[side + '-toes'], 'transform', S.toes);
         set(side + 'webs', r[side + '-webs'], 'transform', S.webs);
       }
+      smear(fr, pose, st.Near);
     },
     // Baker: spec.poseAt(phase) -> pose (phase 0..1 over spec.dur seconds). Samples the per-frame state.
     bake(kit, spec = {}) {
@@ -689,14 +776,26 @@ export const detailItems = [
   ['tarsus-reticulate-scales', 'T', 'small reticulate scales on the rear of the tarsus'],
   ['tarsus-cyan-rim', 'O', 'cyan rim down the front of the shin'],
   ['tarsus-magenta-rim', 'O', 'magenta rim down the back of the shin'],
-  ['sneaker-wrap', 'O', 'open-toe high-top sneaker wrap over heel and ankle, webs left free'],
-  ['sneaker-heel-counter', 'O', 'lighter heel counter panel'],
-  ['sneaker-velcro-straps', 'O', 'two velcro straps with pale tab edges'],
-  ['sneaker-zigzag-logo', 'O', 'pale zigzag logo on the side'],
-  ['sneaker-collar-leds', 'O', 'three cyan LEDs on the collar'],
-  ['sneaker-pull-loop', 'O', 'magenta neon heel pull loop'],
-  ['sneaker-glow-sole', 'O', 'pale midsole with tread notches and a magenta neon stripe'],
-  ['sneaker-cyan-collar-rim', 'O', 'cyan rim on the collar'],
+  ['tibial-feather-sleeve', 'O', 'white feathered trousers carried below the knee wrap, ending in a pointed fringe (short bare leg)'],
+  ['shin-sleeve-shade', 'T', 'lavender volume on the rear of the feather sleeve'],
+  ['shin-feather-scallops', 'T', 'a row of contour-feather scallops on the sleeve'],
+  ['shin-fringe-shafts', 'T', 'shaft ticks in the pointed fringe feathers'],
+  ['shin-sleeve-cyan-rim', 'O', 'cyan front rim on the feather sleeve'],
+  ['shin-sleeve-magenta-rim', 'O', 'magenta back rim on the feather sleeve'],
+  ['ankle-band', 'O', 'techwear ankle band round the tarsus above the foot'],
+  ['ankle-band-cyan-ring', 'O', 'cyan neon ring on the ankle band (stacked strokes)'],
+  ['ankle-band-stitching', 'T', 'stitched hems of the ankle band'],
+  ['ankle-band-led', 'O', 'acid status LED with a soft halo on the ankle band'],
+  ['metatarsal-pad', 'O', 'bare orange metatarsal pad from the ankle to the toe roots, flat on the cleat'],
+  ['metatarsal-scales', 'T', 'reticulate scales on the metatarsal pad'],
+  ['metatarsal-highlight', 'T', 'pale warm highlight on top of the foot'],
+  ['heel-magenta-rim', 'O', 'magenta back-light under the heel'],
+  ['cleat-plate', 'O', 'thin techwear cleat plate between the bare sole and the pedal'],
+  ['cleat-neon-edge', 'O', 'magenta neon strip along the cleat edge'],
+  ['cleat-bolts', 'T', 'three chrome cleat bolts'],
+  ['cleat-cyan-tab', 'O', 'cyan release tab at the front of the cleat'],
+  ['far-trouser-feather-edge', 'O', 'scalloped feather edge on the far (shadowed) trousers'],
+  ['wing-smear-afterimage', 'O', 'neon afterimage multiples of the wing hand / alula on fast actions (wave flick, bell pop)'],
   ['hallux-web', 'O', 'hallux (toe I, turned forward) and the web joining it to toe II: what makes the foot totipalmate'],
   ['totipalmate-webs', 'O', 'webs IV–III and III–II'],
   ['web-pleats', 'T', 'pleats / veins in the webs'],
