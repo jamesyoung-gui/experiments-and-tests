@@ -1,6 +1,6 @@
 // Render the BGM "鹈鹕湾海滨路 · Coast Road Swing" (src/audio/bgm.js) to a standalone MP3: exactly one full pass,
 // Intro → Outro with the final "button" ending, rendered by OfflineAudioContext in headless Chromium, then mastered in
-// node (makeup to ≈ −15 LUFS, look-ahead brick-wall limiter at −1.3 dBFS, 0.4 s fade-in) and encoded with lamejs
+// node (makeup to ≈ −15 LUFS, look-ahead brick-wall limiter at −1.6 dBFS, 0.4 s fade-in) and encoded with lamejs
 // (192 kbps, stereo, 44.1 kHz). The MP3 is decoded again in Chromium to report its real peak / RMS.
 // usage: node tools/render-bgm.mjs [--out dist/bgm-poster.mp3] [--analyze]
 //   --analyze  listening-analysis gates: 10 s excerpt per section (RMS + low/mid/high balance), clipped samples,
@@ -16,7 +16,7 @@ import { FORM, SONG, BAR, BEAT, lineOf } from '../src/audio/bgm.js';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i < 0 ? d : (process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : true); };
 const OUT = path.resolve(ROOT, arg('out', 'dist/bgm-poster.mp3'));
-const SR = 44100, LEAD = 0.05, TAIL = 1.9, TARGET_LUFS = -15, CEIL_DB = -1.3;
+const SR = 44100, LEAD = 0.05, TAIL = 1.9, TARGET_LUFS = -15, CEIL_DB = -1.6;
 const db = x => 20 * Math.log10(Math.max(1e-9, x));
 const fail = [];
 

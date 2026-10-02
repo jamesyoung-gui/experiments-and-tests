@@ -185,10 +185,10 @@ export function createBGM(ac, dest, o = {}) {
   function banjoBuf(m) {                     // Karplus–Strong pluck, bright and short
     return memo('b' + m, () => buffer(1, 0.9, (d, c, n) => {
       const N = Math.max(2, Math.round(sr / mtof(m) - 0.5)), ring = noiseArr(N);
-      for (let p = 0; p < 2; p++) for (let i = 1; i < N; i++) ring[i] = 0.55 * ring[i] + 0.45 * ring[i - 1];
+      for (let p = 0; p < 3; p++) for (let i = 1; i < N; i++) ring[i] = 0.5 * ring[i] + 0.5 * ring[i - 1];
       for (let i = 0; i < n; i++) { const j = i % N, y = 0.5 * (ring[j] + ring[(j + 1) % N]) * 0.9965; d[i] = ring[j]; ring[j] = y; }
-      biquad(d, 'hp', 140, 0.7, sr); peakNorm(d, 0.9); fadeTail(d, Math.floor(0.1 * sr));
-      for (let i = 0; i < 88; i++) d[i] *= i / 88;
+      biquad(biquad(d, 'hp', 140, 0.7, sr), 'lp', 6500, 0.7, sr); peakNorm(d, 0.9); fadeTail(d, Math.floor(0.1 * sr));
+      for (let i = 0; i < 132; i++) d[i] *= i / 132;
     }));
   }
   const DR = {};
@@ -200,8 +200,8 @@ export function createBGM(ac, dest, o = {}) {
       for (const [f, a, tau] of [[3080, 0.35, 0.55], [4370, 0.22, 0.4], [5630, 0.16, 0.3], [7310, 0.1, 0.2]]) {
         const w = TAU * f / sr; for (let i = 0; i < n; i++) d[i] += Math.sin(w * i) * a * Math.exp(-i / (tau * sr));
       }
-      for (let i = 0; i < 0.004 * sr; i++) d[i] += (R() * 2 - 1) * 0.6 * (1 - i / (0.004 * sr));
-      for (let i = 0; i < 16; i++) d[i] *= i / 16;
+      for (let i = 0; i < 0.004 * sr; i++) d[i] += (R() * 2 - 1) * 0.6 * (1 - i / (0.004 * sr)) * Math.min(1, i / 60);
+      for (let i = 0; i < 88; i++) d[i] *= i / 88;
       peakNorm(d); fadeTail(d, 4000);
     });
     DR.crash = buffer(2, 3.2, (d, c, n) => {
@@ -212,9 +212,9 @@ export function createBGM(ac, dest, o = {}) {
       peakNorm(d); fadeTail(d, 8000);
     });
     DR.tap = buffer(1, 0.3, (d, c, n) => {                // brush slap on the snare head
-      const ns = biquad(biquad(noiseArr(n), 'hp', 1500, 0.7, sr), 'lp', 7500, 0.7, sr);
+      const ns = biquad(biquad(noiseArr(n), 'hp', 1500, 0.7, sr), 'lp', 6500, 0.7, sr);
       for (let i = 0; i < n; i++) d[i] = ns[i] * Math.exp(-i / (0.07 * sr)) + Math.sin(TAU * 196 * i / sr) * 0.35 * Math.exp(-i / (0.035 * sr));
-      for (let i = 0; i < 24; i++) d[i] *= i / 24;
+      for (let i = 0; i < 100; i++) d[i] *= i / 100;
       peakNorm(d); fadeTail(d, 1200);
     });
     DR.swish = buffer(1, BEAT * 1.15, (d, c, n) => {       // one circular sweep (rises, then fades)
@@ -230,7 +230,7 @@ export function createBGM(ac, dest, o = {}) {
     });
     DR.hat = buffer(1, 0.12, (d, c, n) => {                 // foot "chick"
       const ns = biquad(noiseArr(n), 'hp', 6500, 0.9, sr);
-      for (let i = 0; i < n; i++) d[i] = ns[i] * Math.exp(-i / (0.018 * sr)) * Math.min(1, i / (0.002 * sr));
+      for (let i = 0; i < n; i++) d[i] = ns[i] * Math.exp(-i / (0.018 * sr)) * Math.min(1, i / (0.003 * sr));
       peakNorm(d); fadeTail(d, 300);
     });
   }
