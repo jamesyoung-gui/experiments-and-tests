@@ -43,13 +43,16 @@ const HOP = { takeoff: TIMING.hop.takeoff, land: TIMING.hop.land, hold0: 0.2, ho
 const GAP = { hop: TIMING.hop.gap, bell: 0.12, wave: TIMING.wave.gap, gulp: TIMING.gulp.gap };
 const EV_DUR = { bell: 0.7, hop: 1.4, wave: 2.8, gulp: 3.4 };
 const CAPTION = {
-  bell: ['[bell rings]', '[车铃叮铃]'], land: ['[thump]', '[咚]'], gulp: ['[gulp]', '[咕嘟]'],
+  bell: ['[a tiny bell: ting-a-ling]', '[小铃铛叮铃铃]'], land: ['[thump]', '[咚]'], gulp: ['[gulp]', '[咕嘟]'],
   gull: ['[gulls call]', '[海鸥鸣叫]'], horn: ['[distant fog horn]', '[远处雾笛]'], boat: ['[ship\'s horn]', '[轮船汽笛]'],
   hup: ['[pelican: “hup!”]', '[鹈鹕：“嘿哟！”]'], honk: ['[pelican honks hello]', '[鹈鹕嘎嘎打招呼]'],
   burp: ['[a small, satisfied burp]', '[心满意足的小饱嗝]'], hum: ['[pelican hums the tune]', '[鹈鹕哼着小曲]'],
   meow: ['[cat: meow!]', '[猫：喵！]'], friend: ['[a friendly honk overhead]', '[头顶传来友好的嘎嘎声]'],
   fireworks: ['[soft distant fireworks]', '[远处轻轻的烟花声]'], owl: ['[an owl hoots]', '[猫头鹰咕咕]'],
-  ding: ['[a passing bell]', '[对面车铃叮叮]'], music: ['[♪ a bedtime tune]', '[♪ 睡前小曲]'],
+  ding: ['[a passing bell]', '[对面车铃叮叮]'],
+  boing: ['[boing!]', '[嘣——！]'], gulpPop: ['[gulp… pop!]', '[咕嘟……啵！]'], page: ['[a page turns]', '[哗啦，翻页]'], pencil: ['[a pencil scribbles]', '[铅笔沙沙地写]'],
+  egg: ['[a music box plays]', '[音乐盒叮叮咚]'], chimes: ['[wind chimes]', '[风铃叮叮]'], kids: ['[children laughing far away]', '[远处孩子们的笑声]'],
+  train: ['[a little steam train whistles]', '[小火车呜——呜]'], yawn: ['[pelican yawns]', '[鹈鹕打了个大哈欠]'], giggle: ['[pelican giggles]', '[鹈鹕咯咯笑]'], music: ['[♪ a bedtime tune]', '[♪ 睡前小曲]'],
 };
 
 function mulberry(a) {
@@ -102,7 +105,7 @@ const chordOf = name => {
 export const BARS = [];
 SCORE.forEach((S, si) => {
   const ch = S.chords.split(' ').map(chordOf), mel = S.mel.split('|').map(parseBar), ctr = S.ctr ? S.ctr.split('|').map(parseBar) : null;
-  ch.forEach((c, bi) => BARS.push({ sec: S.name, si, bi, ch: c, notes: mel[bi] || [], ctr: ctr ? ctr[bi] : null, A: S.arr, lvl: S.lvl, last: bi === ch.length - 1, mlen: mel.length, clen: ctr ? ctr.length : 0 }));
+  ch.forEach((c, bi) => BARS.push({ sec: S.name, key: S.key, si, bi, ch: c, notes: mel[bi] || [], ctr: ctr ? ctr[bi] : null, A: S.arr, lvl: S.lvl, last: bi === ch.length - 1, mlen: mel.length, clen: ctr ? ctr.length : 0 }));
 });
 BARS.forEach((b, i) => { b.next = BARS[(i + 1) % BARS.length].ch; });
 export const BGM = { title: '晚安，鹈鹕 · Goodnight, Pelican', key: 'F major', meter: '3/4', bpm: 88, night: 80, bars: BARS.length, beats: 3 };
@@ -116,13 +119,15 @@ export function createAudio(bus, opts = {}) {
   let ac = null, N = null, timer = 0, wantOn = false, paused = false, hidden = false, vol = clamp(opts.volume ?? 0.8, 0, 1);
   let masterTarget = -1, lastLive = 0, lastCtl = -1, simT = 0, lastFrame = null;
   let tickOn = false, tickRate = 0, nextTick = 0, tickN = 0;
+  let nextKids = 0, nextTrain = 0, nextChime = 0, nextCreak = 0, nextTink = 0, lastStretch = null, lastPage = null, yawned = false;
   let nextSwell = 0, nextGull = 0, nextHorn = 0, nextBoat = 0, nextCricket = 0, nextOwl = 0, nextGrunt = 0, nextDrop = 0, nightOn = false;
   let gust = 1, gustV = 0, gullsOn = true, night = 0, speedN = 0.5, cadence = 60, coasting = false, coastSince = 0;
   let wx = {}, musicWant = opts.music === true ? true : null, musicOn = false, duckUntil = 0, voiceUntil = 0, reduced = false;
   const seen = new Set(), lastAcc = {}, cues = [], hops = [], log = [], stings = [], encSeen = new Map(), fwSeen = new Set();
   const now = () => (opts.clock ? opts.clock() : ac.currentTime);
   const logCue = (kind, at, extra) => { log.push({ kind, at: +at.toFixed(4), ...extra }); if (log.length > 400) log.shift(); };
-  const caption = k => { if (CAPTION[k]) bus.emit('audio:caption', { kind: k, en: CAPTION[k][0], zh: CAPTION[k][1] }); };
+  const capAt = {}, CAP_GAP = { chimes: 25, kids: 25, giggle: 8, page: 2, pencil: 2, gull: 6 };   // ambient captions stay rare
+  const caption = k => { if (!CAPTION[k]) return; const n = Date.now() / 1000; if (CAP_GAP[k] && n - (capAt[k] || -1e9) < CAP_GAP[k]) return; capAt[k] = n; bus.emit('audio:caption', { kind: k, en: CAPTION[k][0], zh: CAPTION[k][1] }); };
 
   // ------------------------------------------------------------------ node helpers
   const G = (v = 1) => { const g = ac.createGain(); g.gain.value = v; return g; };
@@ -176,12 +181,12 @@ export function createAudio(bus, opts = {}) {
     }
     return buf;
   }
-  function clickBuf(f1, f2, f3) {  // freewheel pawl snap: three damped modes + a grain of noise (softened)
-    const sr = ac.sampleRate, n = Math.floor(0.008 * sr), buf = ac.createBuffer(1, n, sr), d = buf.getChannelData(0);
+  function clickBuf(f1, f2, f3) {  // freewheel tick: a wooden bead knocking (three damped modes, a little grain)
+    const sr = ac.sampleRate, n = Math.floor(0.014 * sr), buf = ac.createBuffer(1, n, sr), d = buf.getChannelData(0);
     for (let i = 0; i < n; i++) {
       const t = i / sr;
-      d[i] = (0.6 * Math.sin(TAU * f1 * t) * Math.exp(-t / 0.0011) + 0.3 * Math.sin(TAU * f2 * t) * Math.exp(-t / 0.0006) +
-        0.15 * Math.sin(TAU * f3 * t) * Math.exp(-t / 0.0012) + (R() * 2 - 1) * 0.18 * Math.exp(-t / 0.0002)) * Math.min(1, i / 10) * (1 - i / n);
+      d[i] = (0.65 * Math.sin(TAU * f1 * t) * Math.exp(-t / 0.0024) + 0.28 * Math.sin(TAU * f2 * t) * Math.exp(-t / 0.0013) +
+        0.1 * Math.sin(TAU * f3 * t) * Math.exp(-t / 0.0008) + (R() * 2 - 1) * 0.08 * Math.exp(-t / 0.0003)) * Math.min(1, i / 14) * (1 - i / n);
     }
     return buf;
   }
@@ -239,8 +244,9 @@ export function createAudio(bus, opts = {}) {
     const comp = ac.createDynamicsCompressor();
     comp.threshold.value = -20; comp.knee.value = 10; comp.ratio.value = 2.5; comp.attack.value = 0.008; comp.release.value = 0.3;
     const master = G(0), hpf = F('highpass', 38, 0.6);                    // keep sub-rumble out of laptop speakers
-    const warm = F('highshelf', 6500, 0.7); warm.gain.value = -4;            // storybook softness: a gentle top roll-off
-    wire(master, hpf, warm, comp, lim, out, ac.destination);
+    const warm = F('highshelf', 5500, 0.7); warm.gain.value = -6;            // storybook softness: a gentle top roll-off
+    const soft = F('lowpass', 10500, 0.5);                                   // … and nothing sharp above it
+    wire(master, hpf, warm, soft, comp, lim, out, ac.destination);
     const B = n => { const g = G(solo && !solo.has(n) ? 0 : 1); g.connect(master); return g; };
     const amb = B('amb'), mech = B('mech'), fx = B('fx'), far = B('far'), voice = B('voice'), music = B('music');
     const verb = ac.createConvolver(); verb.normalize = false; verb.buffer = plate(2.6);
@@ -263,8 +269,12 @@ export function createAudio(bus, opts = {}) {
     const seaSrc = bufSrc(brownB, true, 0.87), seaLp = F('lowpass', 170, 0.7), seaG = G(0.1);
     wire(seaSrc, seaLp, seaG, amb);
     // rain bed: soft hiss on leaves and the road (level from frame.weather.rain; drops are one-shots)
-    const rainSrc = bufSrc(pinkB, true, 1.31), rainHp = F('highpass', 900, 0.5), rainLp = F('lowpass', 5200, 0.5), rainG = G(0);
+    const rainSrc = bufSrc(pinkB, true, 1.31), rainHp = F('highpass', 900, 0.5), rainLp = F('lowpass', 3800, 0.5), rainG = G(0);
     wire(rainSrc, rainHp, rainLp, rainG, amb);
+    // river mouth: a babbling bed (gain per stretch)
+    const rivSrc = bufSrc(pinkB, true, 1.21), rivBp = F('bandpass', 1300, 0.9), rivLp = F('lowpass', 3000, 0.6), riverG = G(0);
+    const rivAM = O('sine', 0.7), rivAMg = G(0.012); wire(rivAM, rivAMg); rivAMg.connect(riverG.gain);
+    wire(rivSrc, rivBp, rivLp, riverG, amb);
     // chain whirr: band noise amplitude-modulated at the tooth-engagement rate, plus a low roller hum
     const chSrc = bufSrc(whiteB, true, 1.07), chBp = F('bandpass', 2400, 1.3), chAM = G(0.55), chG = G(0), chPan = Pan(-0.12);
     const chOsc = O('sine', 48), chDepth = G(0.45);
@@ -274,8 +284,8 @@ export function createAudio(bus, opts = {}) {
     const humOsc = O('sine', 2), humDepth = G(0.4); wire(humOsc, humDepth); humDepth.connect(humAM.gain);
     wire(humSrc, humBp, humAM, humG, chPan);
     // freewheel ticks (a soft wooden-ish tick: lowpassed)
-    const tickBus = G(1), tickLp = F('lowpass', 4600, 0.6), tickPan = Pan(-0.22); wire(tickBus, tickLp, tickPan, mech);
-    const clicks = [clickBuf(2950, 4700, 6900), clickBuf(3120, 4490, 7150), clickBuf(2850, 4960, 6700)];
+    const tickBus = G(1), tickLp = F('lowpass', 3400, 0.6), tickPan = Pan(-0.22); wire(tickBus, tickLp, tickPan, mech);
+    const clicks = [clickBuf(1250, 2080, 3350), clickBuf(1340, 2190, 3150), clickBuf(1180, 1990, 3420)];   // wooden beads
     const pawlAmp = Array.from({ length: AUDIO.pawls }, (_, i) => 0.82 + 0.18 * Math.sin(i * 2.4) * Math.cos(i * 0.7) + 0.08 * R());
 
     // the pelican's voice bus + the coasting croon (a persistent formant voice that follows the melody)
@@ -299,9 +309,10 @@ export function createAudio(bus, opts = {}) {
     const lv = {}; for (const k in IN) { lv[k] = G(0); lv[k].connect(IN[k]); }
 
     const t0 = now();
-    for (const s of [windSrc, roadSrc, gritSrc, seaSrc, rainSrc, chSrc, humSrc]) s.start(t0, R() * 5);
-    chOsc.start(t0); humOsc.start(t0); crOsc.start(t0); crVib.start(t0);
-    N = { master, amb, mech, fx, far, voice, music, verb, vin, duck, windSrc, windBp, windG, whisBp, whisG, roadSrc, roadLp, roadG, tyreGate, gritG, seaG, seaLp,
+    for (const s of [windSrc, roadSrc, gritSrc, seaSrc, rainSrc, chSrc, humSrc, rivSrc]) s.start(t0, R() * 5);
+    rivAM.start(t0); chOsc.start(t0); humOsc.start(t0); crOsc.start(t0); crVib.start(t0);
+    const blip = ac.createBuffer(1, 1, ac.sampleRate);
+    N = { blip, riverG, master, amb, mech, fx, far, voice, music, verb, vin, duck, windSrc, windBp, windG, whisBp, whisG, roadSrc, roadLp, roadG, tyreGate, gritG, seaG, seaLp,
       rainG, chOsc, chG, chBp, humOsc, humG, tickBus, clicks, pawlAmp, pinkB, brownB, whiteB,
       vPan, crOsc, crF1, crG, crVibG, musIn, musDuck, musLvl, musSend, lv };
     nextSwell = t0 + 0.4; nextGull = t0 + rr(4, 8); nextHorn = t0 + rr(6, 14); nextBoat = t0 + rr(30, 70); nextCricket = t0 + rr(1, 3);
@@ -346,7 +357,7 @@ export function createAudio(bus, opts = {}) {
   }
   function bell(at) {
     const pan = screenPan('#j-bars') ?? 0.05;
-    bellStrike(at, 1, pan); bellStrike(at + (AUDIO.bellStrikes[1] - AUDIO.bellStrikes[0]), 0.72, pan);
+    tinyBell(at, 1, pan); tinyBell(at + (AUDIO.bellStrikes[1] - AUDIO.bellStrikes[0]), 0.7, pan, 2700);
     ramp(N.duck.gain, 0.5, at, 0.03); ramp(N.duck.gain, 1, at + 0.4, 0.6);
     logCue('bell', at, { pan }); caption('bell');
   }
@@ -413,9 +424,8 @@ export function createAudio(bus, opts = {}) {
     slap(at + T.scoop[0] + 0.06);
     whoosh(at + T.toss[0], 0.3, 500, 1400, 0.04, 0.1);
     clack(at + T.toss[1] - 0.02);
-    bubble(at + T.swallow[0] + 0.06, 190, 560, 0.1, 0.3);
-    bubble(at + T.swallow[0] + 0.24, 260, 780, 0.09, 0.24);
-    bubble(at + T.swallow[0] + 0.44, 340, 640, 0.07, 0.11);
+    gulpPop(at + T.swallow[0] + 0.06);
+    bubble(at + T.swallow[0] + 0.5, 340, 640, 0.07, 0.08);
     // the satisfied voice: "mm-hm!" … then a small burp (and sometimes a shy giggle)
     mmm(at + T.swallow[1] + 0.08);
     burp(at + T.settle[1] + 0.12);
@@ -427,7 +437,7 @@ export function createAudio(bus, opts = {}) {
     const T = TIMING.wave;
     whoosh(at + T.unfold[0], T.unfold[1] - T.unfold[0], 2200, 3800, 0.028, 0.15);
     for (let i = 0; i < 3; i++) whoosh(at + T.wave[0] + i * 0.28, 0.24, 1700, 3100, 0.02, 0.2);
-    honk(at + T.wave[0] + 0.02, 1); honk(at + T.wave[0] + 0.3, 1.12);
+    honk(at + T.wave[0] + 0.02, 1); honk(at + T.wave[0] + 0.3, 1.12); if (R() < 0.5) giggle(at + T.wave[0] + 0.75);
     stings.push({ kind: 'wave', notBefore: at + T.wave[0] });
     logCue('wave', at);
   }
@@ -462,7 +472,7 @@ export function createAudio(bus, opts = {}) {
     reap(o1, [o1, o2, vib, vg, m1, m2, b1, b2, lp, g, pn]);
   }
   function gullCall(at, forceNear = false, panHint = null) {
-    const escort = cadence > 85, near = forceNear || (escort && R() < 0.6);
+    const escort = cadence > CADENCE.sprint - 6, near = forceNear || (escort && R() < 0.6);
     let pan = panHint ?? screenPan(near ? '[data-ref^="fx-esc"]' : '[data-ref^="fx-gfar"]', true);
     if (pan == null) pan = rr(-0.8, 0.8);
     const panV = (2 * (170 - 0.15 * speedN * V_MAX)) / 1600 * (near ? 0.3 : 1);    // far gulls drift with their layer
@@ -515,9 +525,152 @@ export function createAudio(bus, opts = {}) {
     reap(o, [o, og]); reap(nb, [nb, lp, ng]); reap(cr, [cr, hp, cg, pn]);
   }
   function dingDing(at, pan) {   // the oncoming cyclist's little bell (higher, far, two quick strikes)
-    const save = N.fx; N.fx = N.far;
-    try { bellStrike(at, 0.6, pan, 2890, 0.06); bellStrike(at + 0.16, 0.5, pan, 2890, 0.06); } finally { N.fx = save; }
+    tinyBell(at, 0.6, pan, 3150, 0.05, N.far); tinyBell(at + 0.16, 0.5, pan, 3150, 0.05, N.far);
     logCue('ding', at, { pan }); caption('ding');
+  }
+
+  // ================================================================== storybook foley (docs/SOUND.md)
+  // A bedtime picture book read aloud: small, rounded, slightly toy-like sounds. Every transient is low-passed.
+  function reapAt(at, nodes) {    // disconnect a sub-bus once its last voice has rung out (audio-clock, offline-safe)
+    const s = ac.createBufferSource(), z = G(0); s.buffer = N.blip; wire(s, z, N.master); s.start(at); reap(s, [s, z, ...nodes]);
+  }
+  function tinyBell(at, amp, pan, f0 = 2640, lvl = 0.07, dest = N.fx) {   // a tiny brass handbell: ting-a-ling
+    const pn = Pan(pan), lp = F('lowpass', 6200, 0.5), bus = G(amp * lvl), sv = send(pn, 0.34, dest === N.far ? 'far' : 'fx'); wire(bus, lp, pn, dest);
+    const P = [[1, 1, 0.75], [2.0, 0.22, 0.42], [2.92, 0.16, 0.3], [4.1, 0.05, 0.16]];
+    let last = null, end = 0;
+    for (const [dt, k, a] of [[0, 1, 1], [0.048, 1.06, 0.42], [0.097, 0.97, 0.3]]) P.forEach(([r, pa, d], i) => {
+      const o = O('sine', f0 * k * r + (i ? rr(-3, 3) : 0)), g = G(0); wire(o, g, bus);
+      const e = envAD(g.gain, at + dt, pa * a, 0.0015, d); o.start(at + dt); o.stop(e);
+      if (e > end) { if (last) reap(last[0], last); end = e; last = [o, g]; } else reap(o, [o, g]);
+    });
+    reap(last[0], [...last, bus, lp, pn, sv].filter(Boolean));
+  }
+  function boing(at) {             // the hop: a spring "boyoyoing" (triangle + sub, a wobble that dies away)
+    const o = O('triangle', 170), s = O('sine', 85), wob = O('sine', 13), wg = G(0), g = G(0), sg = G(0.5), lp = F('lowpass', 2200, 0.6), pn = Pan(0.04);
+    o.frequency.setValueAtTime(170, at); o.frequency.exponentialRampToValueAtTime(470, at + 0.22); o.frequency.exponentialRampToValueAtTime(390, at + 0.55);
+    s.frequency.setValueAtTime(85, at); s.frequency.exponentialRampToValueAtTime(235, at + 0.22);
+    wire(wob, wg); wg.connect(o.frequency); wg.gain.setValueAtTime(60, at); wg.gain.exponentialRampToValueAtTime(2, at + 0.55);
+    wire(o, g); wire(s, sg, g); wire(g, lp, pn, N.fx); send(pn, 0.12);
+    const e = envAD(g.gain, at, 0.14, 0.012, 0.5);
+    for (const x of [o, s, wob]) { x.start(at); x.stop(e); }
+    reap(o, [o, s, wob, wg, g, sg, lp, pn]);
+    logCue('boing', at); caption('boing');
+  }
+  function gulpPop(at) {           // feeding: a round throat "gulp" sliding down, then a cork "pop!"
+    const o = O('sine', 260), g = G(0), lp = F('lowpass', 900, 0.7), pn = Pan(0.12);
+    o.frequency.setValueAtTime(300, at); o.frequency.exponentialRampToValueAtTime(105, at + 0.14); o.frequency.exponentialRampToValueAtTime(150, at + 0.2);
+    wire(o, g, lp, pn, N.fx); const e = envAD(g.gain, at, 0.32, 0.01, 0.17); o.start(at); o.stop(e);
+    const p = at + 0.27, po = O('sine', 1100), pg = G(0); po.frequency.setValueAtTime(1100, p); po.frequency.exponentialRampToValueAtTime(380, p + 0.045);
+    wire(po, pg, pn); const e2 = envAD(pg.gain, p, 0.2, 0.001, 0.06); po.start(p); po.stop(e2);
+    const n = bufSrc(N.brownB), nl = F('lowpass', 2400, 0.7), ng = G(0); wire(n, nl, ng, pn); envAD(ng.gain, p, 0.18, 0.0008, 0.012); n.start(p, R() * 5); n.stop(p + 0.03);
+    send(pn, 0.12); reap(o, [o, g, lp]); reap(po, [po, pg, n, nl, ng, pn]);
+    caption('gulpPop');
+  }
+  function paperRustle(at, amp = 1) {   // a page turning: a soft swish across the stereo and a few paper crinkles
+    const s = bufSrc(N.pinkB), bp = F('bandpass', 900, 0.9), lp = F('lowpass', 5200, 0.6), g = G(0), pn = Pan(0.55);
+    bp.frequency.setValueAtTime(900, at); bp.frequency.exponentialRampToValueAtTime(3200, at + 0.32); bp.frequency.exponentialRampToValueAtTime(1500, at + 0.6);
+    if (pn.pan) { pn.pan.setValueAtTime(0.55, at); pn.pan.linearRampToValueAtTime(-0.45, at + 0.55); }
+    wire(s, bp, lp, g, pn, N.fx); send(pn, 0.12);
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(0.07 * amp, at + 0.16); g.gain.linearRampToValueAtTime(0.025 * amp, at + 0.4); g.gain.linearRampToValueAtTime(0, at + 0.62);
+    s.start(at, R() * 5); s.stop(at + 0.65); reap(s, [s, bp, lp, g]);
+    for (let i = 0, t = at + 0.05; i < 6; i++, t += rr(0.04, 0.1)) {
+      const c = bufSrc(N.whiteB), cb = F('bandpass', rr(1800, 3600), 2.5), cg = G(0); wire(c, cb, cg, pn);
+      envAD(cg.gain, t, 0.05 * amp * rr(0.5, 1), 0.002, rr(0.012, 0.03)); c.start(t, R() * 5); c.stop(t + 0.06); reap(c, [c, cb, cg]);
+    }
+    logCue('page', at); caption('page');
+  }
+  function pencil(at, dur = 1.1) {  // the story text writing on: graphite strokes on paper, soft and dry
+    const s = bufSrc(N.whiteB, true), bp = F('bandpass', 2600, 1.4), lp = F('lowpass', 4800, 0.6), g = G(0), pn = Pan(-0.18);
+    wire(s, bp, lp, g, pn, N.fx); g.gain.setValueAtTime(0, at);
+    let t = at;
+    while (t < at + dur) {
+      const d = rr(0.05, 0.11), f = rr(2000, 3400);
+      bp.frequency.setValueAtTime(f, t); bp.frequency.linearRampToValueAtTime(f * rr(0.85, 1.15), t + d);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(rr(0.02, 0.035), t + d * 0.3); g.gain.linearRampToValueAtTime(0, t + d);
+      t += d + rr(0.01, 0.06);
+    }
+    s.start(at, R() * 5); s.stop(t + 0.05); reap(s, [s, bp, lp, g, pn]);
+    logCue('pencil', at); caption('pencil');
+  }
+  function musicBox(at, top = 84) { // the egg stinger: a wind-up click, then the hook on a music box, quick, and a ding
+    for (let i = 0; i < 3; i++) { const c = bufSrc(N.clicks[i % 3], false, 0.7), cg = G(0.12); wire(c, cg, N.fx); c.start(at + i * 0.06); reap(c, [c, cg]); }
+    const save = N.lv.glk, mbx = G(0.34), pn = Pan(0.2); wire(mbx, pn, N.fx); send(pn, 0.3);
+    [[0, 0], [0.16, -3], [0.27, 5], [0.38, 4], [0.49, 0], [0.7, 5]].forEach(([dt, iv], i) => bell2(at + 0.22 + dt, top + iv, i === 5 ? 1 : 0.75, mbx));
+    reapAt(at + 4, [mbx, pn]); void save; logCue('musicbox', at); caption('egg');
+  }
+  // ---- ambience per route stretch (route.js STRETCHES): lapping waves, children far away, a kettle-whistle steam
+  // train, wind chimes, wood creaks, a river; rain on a tin roof with puddle plops; crickets and the owl at night
+  const AMB = {
+    village: { lap: 1, chimes: 1, kids: 0.5 }, pier: { lap: 1.2, creak: 0.7 }, harbour: { lap: 1, creak: 1 }, funfair: { lap: 0.5, kids: 1.5 },
+    railway: { lap: 0.3, train: 1 }, lighthouse: { lap: 0.9 }, cliffs: { lap: 0.4 }, dunes: { lap: 0.5, chimes: 0.2 },
+    bridge: { lap: 0.3, river: 1 }, fort: { lap: 1, kids: 1 }, pines: { lap: 0.2, chimes: 0.6 }, return: { lap: 1, chimes: 1 },
+  };
+  const amb = () => AMB[wx.stretch] || AMB.village;
+  function lapWave(at, k) {        // a small wave lapping on the sand: a slosh, then a few round drips
+    const D = rr(1.3, 2.4), pk = rr(0.07, 0.11) * k, pan = rr(-0.6, 0.6);
+    const s = bufSrc(N.brownB), bp = F('bandpass', 320, 0.8), g = G(0), pn = Pan(pan);
+    bp.frequency.setValueAtTime(320, at); bp.frequency.exponentialRampToValueAtTime(rr(650, 900), at + D * 0.35); bp.frequency.exponentialRampToValueAtTime(280, at + D);
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(pk, at + D * 0.35); g.gain.linearRampToValueAtTime(0, at + D);
+    wire(s, bp, g, pn, N.amb); s.start(at, R() * 7); s.stop(at + D + 0.05); reap(s, [s, bp, g, pn]);
+    for (let i = 0; i < 3; i++) plop(at + D * rr(0.3, 0.7), rr(520, 900), 0.025 * k, pan + rr(-0.2, 0.2));
+    return D;
+  }
+  function plop(at, f, amp, pan = 0, dest = N.amb) {   // a round water drop / puddle plop (rising, then a bubble)
+    const o = O('sine', f), g = G(0), lp = F('lowpass', 2400, 0.7), pn = Pan(clamp(pan, -1, 1)); wire(o, g, lp, pn, dest);
+    o.frequency.setValueAtTime(f, at); o.frequency.exponentialRampToValueAtTime(f * 1.9, at + 0.05);
+    const e = envAD(g.gain, at, amp, 0.002, 0.07); o.start(at); o.stop(e); reap(o, [o, g, lp, pn]);
+  }
+  function tink(at, amp, pan) {    // a raindrop on a tin roof: a tiny, softened metallic tick
+    const f = rr(1700, 2900), o = O('sine', f), o2 = O('sine', f * 2.63), g = G(0), g2 = G(0.3), lp = F('lowpass', 4200, 0.6), pn = Pan(pan);
+    wire(o, g); wire(o2, g2, g); wire(g, lp, pn, N.amb);
+    const e = envAD(g.gain, at, amp, 0.001, 0.035); o.start(at); o2.start(at); o.stop(e); o2.stop(e); reap(o, [o, o2, g, g2, lp, pn]);
+  }
+  function chimes(at, n) {         // wind chimes: tuned tubes (C D F G A, the tune's pentatonic), a few touches
+    const T = [84, 86, 89, 91, 93], pn = Pan(rr(-0.7, -0.2)), g = G(0.16); wire(g, pn, N.far); send(pn, 0.5, 'far');
+    let t = at; for (let i = 0; i < n; i++) { bell2(t, T[Math.floor(R() * T.length)], rr(0.4, 1), g); t += rr(0.12, 0.5); }
+    reapAt(t + 3, [g, pn]);
+    logCue('chimes', at, { n }); caption('chimes');
+  }
+  function kids(at) {              // children laughing far away on the beach
+    const n = 2 + Math.floor(R() * 2);
+    for (let k = 0; k < n; k++) {
+      const pan = rr(-0.9, 0.9), f = rr(400, 560), t0 = at + rr(0, 0.6), syl = 3 + Math.floor(R() * 3);
+      for (let i = 0; i < syl; i++) vox(t0 + i * rr(0.13, 0.17), { dest: N.far, pan, dur: 0.1, f0: [[0, f * (1 - 0.04 * i)], [0.1, f * (0.92 - 0.04 * i)]], vow: [[0, R() < 0.5 ? 'a' : 'e']], amp: 0.03, h: 0.03, breath: 0.4, shift: 1.35, mute: true });
+    }
+    logCue('kids', at); caption('kids');
+  }
+  function steamTrain(at) {        // a little steam train: chuffs that speed up, a kettle whistle, far and soft
+    const pn = Pan(-0.8), bus = G(1); wire(bus, pn, N.far); send(pn, 0.4, 'far');
+    if (pn.pan) { pn.pan.setValueAtTime(-0.8, at); pn.pan.linearRampToValueAtTime(0.7, at + 7); }
+    let t = at;
+    for (let i = 0; i < 22; i++) {
+      const s = bufSrc(N.pinkB), bp = F('bandpass', i % 2 ? 520 : 680, 1.2), g = G(0); wire(s, bp, g, bus);
+      envAD(g.gain, t, (i % 2 ? 0.05 : 0.07) * Math.min(1, 0.3 + i / 8), 0.01, 0.12); s.start(t, R() * 6); s.stop(t + 0.2); reap(s, [s, bp, g]);
+      t += 0.42 - 0.012 * Math.min(i, 14);
+    }
+    for (const [dt, d] of [[1.6, 0.45], [2.25, 1.1]]) {            // "toot … tooooot", a kettle-like breathy whistle
+      const w = at + dt, f = 1480, o = O('sine', f), o2 = O('sine', f * 1.19), wob = O('sine', 6.5), wg = G(f * 0.012), g = G(0), lp = F('lowpass', 2800, 0.6);
+      const ns = bufSrc(N.whiteB), nb = F('bandpass', f, 6), ng = G(0.5);
+      for (const x of [o, o2]) { x.frequency.setValueAtTime(x === o ? f * 0.85 : f * 1.0, w); x.frequency.exponentialRampToValueAtTime(x === o ? f : f * 1.19, w + 0.12); }
+      wire(wob, wg); wg.connect(o.frequency); wire(o, g); wire(o2, g); wire(ns, nb, ng, g); wire(g, lp, bus);
+      g.gain.setValueAtTime(0, w); g.gain.linearRampToValueAtTime(0.022, w + 0.08); g.gain.setValueAtTime(0.022, w + d - 0.12); g.gain.linearRampToValueAtTime(0, w + d);
+      for (const x of [o, o2, wob]) { x.start(w); x.stop(w + d + 0.02); } ns.start(w, R() * 4); ns.stop(w + d + 0.02);
+      reap(o, [o, o2, wob, wg, g, lp, ns, nb, ng]);
+    }
+    reapAt(at + 14, [bus, pn]);
+    logCue('train', at); caption('train');
+  }
+  function creak(at) {             // old wood (boats, the pier's boards): a slow friction creak
+    const o = O('sawtooth', rr(90, 140)), am = O('square', rr(28, 45)), amg = G(0.5), g0 = G(0.5), bp = F('bandpass', rr(600, 900), 3), g = G(0), pn = Pan(rr(-0.8, 0.8));
+    o.frequency.linearRampToValueAtTime(o.frequency.value * rr(1.1, 1.4), at + 0.4);
+    wire(am, amg); amg.connect(g0.gain); wire(o, g0, bp, g, pn, N.far);
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(0.03, at + 0.12); g.gain.linearRampToValueAtTime(0, at + 0.45);
+    for (const x of [o, am]) { x.start(at); x.stop(at + 0.5); } reap(o, [o, am, amg, g0, bp, g, pn]);
+    logCue('creak', at);
+  }
+  function yawn(at) {              // bedtime: a big, sleepy pelican yawn ("mmhaaa-ooh")
+    vox(at, { dur: 1.5, f0: [[0, 290], [0.25, 330], [0.85, 245], [1.5, 170]], vow: [[0, 'm'], [0.18, 'a'], [0.85, 'o'], [1.3, 'u']], amp: 0.12, h: 0.08, breath: 0.5, attack: 0.12, release: 0.35 });
+    logCue('yawn', at); caption('yawn');
   }
 
   // ================================================================== the pelican's voice (formant synthesis)
@@ -527,7 +680,7 @@ export function createAudio(bus, opts = {}) {
   // spec: { dur, f0: [[t, Hz]…], vow: [[t, 'a']…], amp, breath 0..1, h (aspirated onset s), rough 0..1, src, pan, dest, shift, stop }
   function vox(at, sp) {
     const dur = sp.dur, dest = sp.dest || N.vPan, shift = sp.shift || 1.1;
-    const src = O(sp.src || 'sawtooth', sp.f0[0][1]), sg = G(1), lp = F('lowpass', 3200, 0.5), sum = G(1), env = G(0), pn = sp.pan != null ? Pan(sp.pan) : null;
+    const src = O(sp.src || 'sawtooth', sp.f0[0][1]), sg = G(1), lp = F('lowpass', 2300, 0.5), sum = G(1), env = G(0), pn = sp.pan != null ? Pan(sp.pan) : null;
     src.frequency.setValueAtTime(sp.f0[0][1], at);
     for (let i = 1; i < sp.f0.length; i++) src.frequency.linearRampToValueAtTime(sp.f0[i][1], at + sp.f0[i][0]);
     const nodes = [src, sg, lp, sum, env];
@@ -563,7 +716,7 @@ export function createAudio(bus, opts = {}) {
     src.start(Math.max(0, at - (sp.h || 0))); src.stop(at + dur + 0.03);
     if (rough) { rough.start(at); rough.stop(at + dur + 0.03); }
     reap(src, nodes);
-    voiceUntil = Math.max(voiceUntil, at + dur);
+    if (!sp.mute) voiceUntil = Math.max(voiceUntil, at + dur);
     return at + dur;
   }
   function pop(at, amp = 0.12) {  // lips / bill closing: a tiny low click
@@ -592,14 +745,17 @@ export function createAudio(bus, opts = {}) {
     pop(at + 0.31, 0.06);
     logCue('burp', at); caption('burp');
   }
-  function giggle(at) {     // "heh-heh" (shy)
-    for (let i = 0; i < 2; i++) vox(at + i * 0.13, { dur: 0.08, f0: [[0, 330 - i * 20], [0.08, 300 - i * 20]], vow: [[0, 'e']], amp: 0.07, h: 0.03, breath: 0.3 });
+  function giggle(at) {     // "hee-hee-hee" (shy, a little toy-like)
+    for (let i = 0; i < 3; i++) vox(at + i * 0.12, { dur: 0.08, f0: [[0, 380 - i * 22], [0.08, 340 - i * 22]], vow: [[0, 'i'], [0.05, 'e']], amp: 0.065, h: 0.03, breath: 0.32, src: 'triangle', shift: 1.25 });
+    logCue('giggle', at); caption('giggle');
   }
   function grunt(at, kind) {
     if (kind === 'effort') vox(at, { dur: 0.13, f0: [[0, 150], [0.13, 132]], vow: [[0, 'uh'], [0.1, 'n']], amp: 0.08, h: 0.03, breath: 0.35, attack: 0.015 });
-    else {                   // contented "hm-hm" on a falling third
-      vox(at, { dur: 0.14, f0: [[0, 240], [0.14, 245]], vow: [[0, 'm']], amp: 0.09 });
-      vox(at + 0.19, { dur: 0.2, f0: [[0, 205], [0.2, 190]], vow: [[0, 'm']], amp: 0.08 });
+    else {                   // a contented, mumbly "mm-mm-hmm" (as if telling itself the story)
+      const p = rr(0.95, 1.08);
+      vox(at, { dur: 0.13, f0: [[0, 235 * p], [0.13, 250 * p]], vow: [[0, 'm'], [0.07, 'o']], amp: 0.08 });
+      vox(at + 0.16, { dur: 0.12, f0: [[0, 225 * p], [0.12, 215 * p]], vow: [[0, 'u'], [0.08, 'm']], amp: 0.07 });
+      vox(at + 0.32, { dur: 0.24, f0: [[0, 210 * p], [0.24, 185 * p]], vow: [[0, 'm']], amp: 0.07, h: 0.02 });
     }
     logCue('grunt', at, { kind });
   }
@@ -869,8 +1025,8 @@ export function createAudio(bus, opts = {}) {
   // ------------------------------------------------------------------ rig events → sim-time cues
   const CUES = {
     bell: [[AUDIO.bellStrikes[0], bell]],
-    hop: [[0.05, (at) => whoosh(at, 0.2, 300, 700, 0.022)], [HOP.takeoff - 0.09, hup], [HOP.takeoff, (at) => { scuff(at); ramp(N.tyreGate.gain, 0, at, 0.03); whoosh(at, HOP.land - HOP.takeoff, 500, 1200, 0.045); }],
-      [HOP.land, (at) => { thump(at); ramp(N.tyreGate.gain, 1, at, 0.02); }], [HOP.land + 0.04, oof]],
+    hop: [[HOP.takeoff - 0.09, hup], [HOP.takeoff, (at) => { boing(at); ramp(N.tyreGate.gain, 0, at, 0.03); whoosh(at, HOP.land - HOP.takeoff, 400, 900, 0.025); }],
+      [HOP.land, (at) => { thump(at); ramp(N.tyreGate.gain, 1, at, 0.02); }], [HOP.land + 0.04, oof], [HOP.land + 0.4, (at) => { if (R() < 0.35) giggle(at); }]],
     wave: [[0, waveSeq]],
     gulp: [[0, gulpSeq]],
   };
@@ -939,20 +1095,37 @@ export function createAudio(bus, opts = {}) {
       while (nextTick < until) { tick(nextTick); nextTick += 1 / tickRate; }
     } else nextTick = 0;
     if (!paused) musicPump(t); else mus.nextT = t + 0.05;
-    if (nextSwell < until) { const s = Math.max(nextSwell, t); const D = swell(s); nextSwell = s + D * rr(0.55, 0.9); }
+    const A = amb(), day = night < 0.45 && (wx.rain || 0) < 0.3, wind = wx.wind ?? 0.3;
+    if (nextSwell < until) {                     // lapping waves (and, rarely, a bigger swell with foam)
+      const s = Math.max(nextSwell, t), k = A.lap || 0.15;
+      if (R() < 0.12) { const D = swell(s); nextSwell = s + D * rr(0.5, 0.8); } else nextSwell = s + lapWave(s, k) * rr(0.8, 1.3) + rr(0.3, 1.6) / (0.4 + k);
+    }
+    if (nextKids < until) { const s = Math.max(nextKids, t); if (!paused && day && A.kids) kids(s); nextKids = s + rr(14, 30) / Math.max(0.4, A.kids || 0.4); }
+    if (nextTrain < until) { const s = Math.max(nextTrain, t); if (!paused && A.train && night < 0.7) { steamTrain(s); nextTrain = s + rr(70, 120); } else nextTrain = s + 2; }
+    if (nextChime < until) {                     // wind chimes, more of them in the breeze
+      const s = Math.max(nextChime, t), w = (A.chimes || 0) * (0.25 + wind) + (wind > 0.55 ? 0.5 : 0);
+      if (!paused && w > 0.05) chimes(s, 2 + Math.floor(R() * 4 * Math.min(1, w)));
+      nextChime = s + rr(5, 12) / Math.max(0.12, w);
+    }
+    if (nextCreak < until) { const s = Math.max(nextCreak, t); if (!paused && A.creak) creak(s); nextCreak = s + rr(7, 16) / Math.max(0.5, A.creak || 0.5); }
+    glide(N.riverG.gain, A.river ? 0.05 : 0, t, 2);
     if (nextGull < until) {
       const s = Math.max(nextGull, t);
       if (gullsOn && night < 0.55 && !paused && (wx.rain || 0) < 0.5) gullCall(s);
-      nextGull = s + (cadence > 85 ? rr(6, 12) : rr(11, 26));
+      nextGull = s + (cadence > CADENCE.sprint - 6 ? rr(6, 12) : rr(11, 26));
     }
     const rain = wx.rain || 0;
     if (rain > 0.05 && nextDrop < until) {       // sparse, soft drops (plinks) on top of the rain bed
-      const s = Math.max(nextDrop, t); if (!paused) plip(s, rr(1800, 3600), 0.02 * rain, rr(-0.8, 0.8));
-      nextDrop = s + rr(0.04, 0.3) / (0.3 + rain);
+      const s = Math.max(nextDrop, t); if (!paused) plop(s, rr(480, 950), 0.03 * rain, rr(-0.8, 0.8));      // puddle plops
+      nextDrop = s + rr(0.08, 0.45) / (0.3 + rain);
     } else if (rain <= 0.05) nextDrop = t + 0.2;
+    if (rain > 0.25 && nextTink < until) {      // rain on a tin roof: soft little ticks
+      const s = Math.max(nextTink, t); if (!paused) tink(s, 0.016 * rain * rr(0.5, 1), rr(-0.7, 0.7));
+      nextTink = s + rr(0.03, 0.14) / rain;
+    } else if (rain <= 0.25) nextTink = t + 0.1;
     if (nextGrunt < until) {                     // the odd contented "hm-hm", and effort grunts in a sprint
-      const s = Math.max(nextGrunt, t), sprint = cadence > 88 && !coasting;
-      if (!paused && s > voiceUntil + 1 && !mus.crooning) grunt(s, sprint ? 'effort' : 'content');
+      const s = Math.max(nextGrunt, t), sprint = cadence > CADENCE.sprint - 2 && !coasting;
+      if (!paused && s > voiceUntil + 1 && !mus.crooning) { if (night > 0.6 && R() < 0.4) yawn(s); else grunt(s, sprint ? 'effort' : 'content'); }
       nextGrunt = s + (sprint ? rr(5, 10) : rr(28, 55));
     }
     const fog = wx.fog || 0;
@@ -993,6 +1166,14 @@ export function createAudio(bus, opts = {}) {
     glide(N.rainG.gain, 0.16 * (wx.rain || 0), t, 0.8);
     for (const src of [N.windSrc, N.roadSrc]) glide(src.playbackRate, 0.94 + 0.12 * R(), t, 2.5);   // no audible loop
     night = fr.night || 0;
+    const pg = (wx.stretch || '') + (night > 0.5 ? ':n' : ':d');
+    if (pg !== lastPage) {                       // the story turns a page and writes its new line
+      if (lastPage !== null && !paused && wantOn) { paperRustle(t + 0.03); pencil(t + 0.7, rr(0.9, 1.3)); }
+      lastPage = pg;
+    }
+    if (night > 0.6 && !yawned && lastStretch !== null && !paused) { yawned = true; yawn(t + rr(1.5, 3)); }
+    if (night < 0.4) yawned = false;
+    lastStretch = wx.stretch || '';
     gullsOn = !fr.toggles || fr.toggles.gulls !== false;
     reduced = !!fr.reduced;
     // coasting croon: starts ~0.6 s into a coast, stops on the first pedal stroke or when the pelican talks
@@ -1036,7 +1217,7 @@ export function createAudio(bus, opts = {}) {
   bus.on('ui:volume', ({ value } = {}) => api.setVolume(value));
   bus.on('ui:toggle', ({ key, value } = {}) => { if (key === 'music') { musicWant = !!value; if (ac && N) setMusic(musicWant); } });
   bus.on('ui:music', ({ on } = {}) => { musicWant = !!on; if (ac && N) setMusic(musicWant); });
-  bus.on('egg:found', ({ id } = {}) => { if (!ac || !N || !id) return; duckUntil = Math.max(duckUntil, now() + 2.2); stings.push({ kind: 'egg', notBefore: now() }); });
+  bus.on('egg:found', ({ id } = {}) => { if (!ac || !N || !id || paused) return; duckUntil = Math.max(duckUntil, now() + 2.4); const B = musicOn && mus.info; musicBox(now() + 0.03, B && B.key === 'Bb' ? 89 : 84); });
 
   const api = {
     async enable() {

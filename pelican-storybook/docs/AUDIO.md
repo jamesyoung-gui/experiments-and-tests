@@ -1,5 +1,7 @@
 # Pelican Bay · the sound of the storybook (AUDIO.md)
 
+> The soundscape's character (tiny bell, wooden-bead freewheel, boing, gulp-pop, page rustle and pencil, music-box egg stinger, per-stretch ambience, the pelican's yawns and giggles) is described in **[SOUND.md](SOUND.md)**, and the music in **[BGM.md](BGM.md)**. This file covers the engine: buses, sync, ducking and test hooks. Where it differs from SOUND.md, SOUND.md is current.
+
 Everything you hear is synthesized live in WebAudio by `src/audio/audio.js`. There are no samples and no files. Sound is **off by default**, and no `AudioContext` exists until the reader turns sound on. The **music has its own switch** (`ui:toggle {key:'music'}` → `state.toggles.music`, or `ui:music {on}`, or `audio.setMusic(on)`), so turning sound on gives you the seaside first. The tune comes only when you ask for it.
 
 ## 1. The tune: "晚安，鹈鹕 · Goodnight, Pelican" (F major, 3/4 waltz, ♩ = 88, 88 bars, 3:00)
@@ -33,16 +35,16 @@ A saw or square glottal source (with an aspirated "h" onset when needed) runs th
 **Director encounters** get their own sounds: the cat's **meow**, the oncoming cyclist's two-strike bell, the pelican friend's higher **honk** overhead, the thieving gulls arriving and fleeing, the fish's splash, and at night **soft fireworks**. The fireworks run on the same burst clock as `director.js`, and each boom arrives 0.35 s after its flash, as distance would make it.
 
 ## 8. Mix and etiquette
-- **Signal chain:** buses `amb mech fx far voice music` → master fade → highpass 38 Hz → high-shelf −4 dB at 6.5 kHz (storybook softness) → glue compressor → brick-wall limiter (−3 dB threshold). One procedural plate reverb.
+- **Signal chain:** buses `amb mech fx far voice music` → master fade → highpass 38 Hz → high-shelf −4 dB at 6.5 kHz (storybook softness) → glue compressor → brick-wall limiter (−3 dB threshold); since SOUND.md, the shelf is −6 dB at 5.5 kHz plus a 10.5 kHz lowpass. One procedural plate reverb.
 - **Fades:** in 0.6 s, out 0.45 s, pause 0.4 s. The tab suspends ≤ 100 ms after it is hidden, and the context is only suspended after a fade.
 - **Captions:** every audible event emits `audio:caption {en, zh}`, e.g. `[pelican: “hup!”] / [鹈鹕：“嘿哟！”]` or `[pelican hums the tune] / [鹈鹕哼着小曲]`.
 - **Measured** (OfflineAudioContext, 44.1 kHz, seed 7, 10–30 s renders):
 
 | Render | Result |
 |---|---|
-| sun music only | about −23 dBFS RMS per second, peak −4 dBFS |
-| full 30 s script (cruise, bell, hop, coast, sprint, gulp, wave) | −19…−23 dBFS RMS, peak −3.3 dBFS |
-| lullaby | about −25 dBFS |
-| rain | about −27 dBFS |
+| default 40 s script at cruise 42 rpm, music on (bell, hop, coast, sprint, gulp, wave, page turn) | −17…−28 dBFS RMS per second, peak −4.9 dBFS, 0 clicks |
+| music bus alone (tools/render-bgm.mjs, raw) | about −19.4 LUFS, peak −4.8 dBFS |
+| night (music, lullaby layers) | −17…−26 dBFS, peak −3.9 dBFS |
+| rain, no music | −17…−27 dBFS, peak −4.1 dBFS |
 
 - **Test hooks:** `createAudio(bus, {context, clock, seed, solo, inst, music, bgm, bgmFrom})`. `debug().music` reports `{on, bar, step, bpm, mode, section, chords, loops, done, crooning}`, and `debug().log` holds every cue (`tempo`, `arr`, `pageturn`, `loop`, `sting`, `hum`, `hup`, `honk`, `burp`, `meow`, …).

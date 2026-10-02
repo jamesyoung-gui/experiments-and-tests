@@ -67,4 +67,31 @@ The bar numbers count from the top of the loop. Each bar has one chord.
 
 `node tools/render-bgm.mjs [--wav]` renders one pass (`opts.bgm: 'once'`, music bus soloed) in an `OfflineAudioContext` in headless Chromium. It then applies a 0.15 s fade-in and a 1.6 s fade over the 1.8 s tail, normalises BS.1770 loudness to −15 LUFS, and runs a look-ahead limiter at −1.5 dBFS. It encodes MP3 at 192 kbps, stereo, 44.1 kHz (`@breezystack/lamejs`) and decodes the MP3 back in Chromium to measure it. The full report goes to `shots/bgm/analysis.json`.
 
-RESULTS
+**Final measurements** (iteration 3 of the arrangement, final master chain):
+
+| | |
+|---|---|
+| file | `dist/bgm-storybook.mp3`, 4.27 MB, 192 kbps, stereo, 44.1 kHz, **3:02.1** |
+| MP3, decoded again | **peak −1.76 dBFS · RMS −18.1 dBFS · −15.3 LUFS** (integrated, BS.1770) · 0 clipped samples |
+| before encoding | peak −1.5 dBFS (the limiter touches 0.4 % of samples), 0 clicks. The raw render (in-page level) peaks at −4.8 dBFS, about −19.4 LUFS |
+| hook check | 31 / 31 notes of section A detected as written (C5 A4 F5 E5 C5 D5 A4 F4 D5 B♭4 G5 F5 D5 E5 D5 C5 …) |
+| loop seam | Outro → Intro lands exactly on the bar grid (0 ms error). The 0.5 s RMS step across it is 7.9 dB, within the music's own steps (9.2 dB); the 4 s levels are −31.9 before and −30.8 after; 0 clicks |
+
+Per-section 10 s excerpts (band share of energy: low < 250 Hz < mid < 4 kHz < high):
+
+| Section | RMS dBFS | peak | low | mid | high |
+|---|---|---|---|---|---|
+| Intro | −27.5 | −7.8 | −7.2 | −0.9 | −29.2 |
+| A | −19.2 | −5.1 | −15.9 | −0.1 | −31.0 |
+| A′ | −15.9 | −1.5 | −13.3 | −0.2 | −33.6 |
+| B | −16.7 | −4.3 | −13.2 | −0.2 | −37.5 |
+| Bridge | −18.4 | −4.8 | −12.9 | −0.2 | −43.3 |
+| A″ | −15.0 | −1.5 | −13.1 | −0.2 | −30.5 |
+| Outro | −24.5 | −5.3 | −8.6 | −0.7 | −26.4 |
+
+The dynamic arc goes from a quiet music-box start, through A′/B, dips for the Bridge breakdown, peaks at A″ and settles again. The highs stay deliberately soft (a picture book at bedtime).
+
+**Iterations:**
+1. The first full render worked, and the hook matched. But the in-page music was about 8 dB too hot (−13.5 LUFS raw), the bass was thin (low share −16 dB), A″ was no fuller than A′, and the seam test was too strict for a sparse texture. The fixes: the music bus down to 0.26, bass +2.3 dB, A″ dynamics ×1.12, and a 0.5 s seam test relative to the music's own steps.
+2. Everything passed. But the Intro and Outro were bottom-heavy (low −4 dB, from the low piano pads) and the top end was very dark. The fixes: piano pads voiced up a fourth (57–72) and softer, a brighter celesta 4th partial, brush taps in A, and a humanised shaker with more level.
+3. The Intro and Outro low end dropped to −7…−9 dB, and A″ is now the loudest section. The final render followed the soundscape's softer master chain (docs/SOUND.md).
