@@ -1,97 +1,97 @@
 # 晚安，鹈鹕 · Goodnight, Pelican
 
-The storybook edition's background music: a bedtime-story waltz for a warm gouache picture book. It is composed, not generated. The score is data in `src/audio/audio.js` (`SCORE`), and every instrument is synthesised in WebAudio. There are no samples. The same code plays it in the page and renders the standalone track `dist/bgm-storybook.mp3` (`node tools/render-bgm.mjs`).
+**A wonky toy-box bedtime waltz.** Picture a slightly out-of-tune music box that gets wound up, runs down and is wound up again. A kazoo blows the tune, a tuba oom-pahs along with clumsy charm, and the waltz trips over its own feet into 4/4 and stumbles back. Then comes a sudden *"shh…"*: the pelican hums the tune off-key, yawns and snores, wakes with a *boing* and a slide whistle, joins in with everybody, and dozes off before the music box can finish its last phrase.
+
+The score is data (`SCORE` in `src/audio/audio.js`), and every sound is synthesised in WebAudio, with no samples. The same engine plays it in the page and renders `dist/bgm-storybook.mp3` (`node tools/render-bgm.mjs`).
 
 | | |
 |---|---|
-| **Key** | F major. B moves to B♭ major (IV), and the Bridge to D minor (vi), which turns back through a C7 pedal |
-| **Metre / tempo** | 3/4 waltz, ♩ = 88 (80 at night). Straight eighths with humanised timing |
-| **Form** | Intro (8) · A (16) · A′ (16) · B (16) · Bridge (8) · A″ (16) · Outro (8): **88 bars** |
-| **Length** | **3:00** per loop. The standalone MP3 runs 3:02 with a fade-in, a closing ritardando and a 1.8 s tail |
-| **Mood** | cosy and gently playful. A small "page-turn" flourish (a glockenspiel run plus a paper swish) closes every section |
+| **Key** | F major. The Hush is in D minor, and the Wake-up in B♭ major |
+| **Metre** | 3/4 waltz, with **4/4 stumbles**: two bars at the end of A′ and one in the middle of the Wake-up |
+| **Tempo** | ♩ = 88. The Hush drops to **72** and the Wake-up jumps to **104**. The music box **winds down** (slower and flatter) at the end of the Wind-up, the Hush and the Doze-off |
+| **Form** | Wind-up (5) · A, kazoo (16) · A′, melodica (16) · Hush (8) · Wake-up! (12) · A″, everyone (16) · Doze-off (6): **79 bars, deliberately lopsided** |
+| **Length** | about 2:48 per pass. The MP3 runs 2:50 (a fade-in, and the last snore rings out) |
+
+## The hook: a leap up a major seventh
+
+`F4 ⟶ E5 – D5 | C5 – A4 B♭4 – C5`, sung as "Good-**night** (leap!), pe-li-can". The major-seventh leap lands on the "wrong" note, the dreamy E over F, and tumbles down. It is the tune's fingerprint, and it changes every time:
+- **Wind-up:** a tinny, out-of-tune music box an octave up.
+- **A:** a cheeky kazoo, which scoops up into every note.
+- **A′:** a stuttered "F-F-leap" on melodica, then a leap of a full octave.
+- **Hush:** minor, a leap of a minor seventh (D5→C6), and the pelican hums it a third of a semitone flat.
+- **Wake-up:** in B♭ (B♭4→A5) on kazoo, after the bassoon's wake-up arpeggios.
+- **A″:** a double leap, F4→E5→**E6**, the kazoo squeaking up an extra octave.
+- **Doze-off:** the music box, slowing, sagging flat, and stopping one note short.
 
 ## Form, bars and chords
 
-The bar numbers count from the top of the loop. Each bar has one chord.
+The bar numbers count from the top of the pass.
 
 | Bars | Section | Chords | What happens |
 |---|---|---|---|
-| 1–8 | **Intro**, F | F · F · B♭ · C7 · F · Dm · B♭ · C7 | A music box (glockenspiel) plays the hook alone over a felt-piano pad, "once upon a time". The ukulele waltz and bass come in at bar 5. Page turn |
-| 9–24 | **A**, F | F · F · Dm · Dm · B♭ · Gm · C · C7 ‖ F · F · Dm · Am · B♭ · C7 · F · F | **The hook** on celesta: an 8-bar question ending on C7, then an 8-bar answer home to F. Ukulele "oom-pah-pah", bass on 1, a brush swish on 1, glockenspiel fills at the phrase ends |
-| 25–40 | **A′**, F | F · F · Dm · Dm · B♭ · Gm · C · C7 ‖ F · F · Dm · Am · B♭ · C7 · F · **F7** | The hook **varied**: dotted turns (C–B♭–A, F–G–F–E–C), higher answers up to B♭5, and a recorder counter-line. Ukulele finger-picks, the felt piano plays on 2 and 3, the bass on 1 and 3, brush taps. The F7 in the last bar pivots to B♭ |
-| 41–56 | **B**, B♭ | B♭ · Gm · E♭ · F · B♭ · Gm · Cm · F7 ‖ B♭ · Dm · E♭ · Cm · B♭/F · F7 · B♭ · B♭ | **Contrast**: a new key and texture. The recorder takes a lyrical tune (rising F–B♭–D), the celesta plays broken chords, the piano carries the waltz and the ukulele rests |
-| 57–64 | **Bridge**, Dm → C | Dm · Dm · B♭ · B♭ · Gm7 · Gm7 · C7sus · C7 | **Breakdown**: no drums and no ukulele. Bass pedals, piano pads, and the hook's head on celesta in minor (A–F, D–C–A). A brush roll swells over bars 63–64, and the pickup E–G leads into… |
-| 65–80 | **A″**, F | F · F · Dm · Dm · B♭ · Gm · C · C7 ‖ F · **F7 · B♭ · B♭m · F/C** · C7 · F · F | **The full, final hook**: celesta doubled an octave up by glockenspiel, the recorder counter-line, a strummed ukulele, piano, a two-feel bass, brushes and shaker. The second half is reharmonised (F7 → B♭ → borrowed B♭m → F/C) and climbs to B♭5 |
-| 81–88 | **Outro**, F | F · B♭/F · F · B♭/F · Gm7 · C7 · F · F | The music box sings the hook's head twice over a plagal rocking (F–B♭/F), then cadences Gm7–C7–F. In the page, the last bar's page-turn run leads straight back to bar 1 (the same F, so the seam is seamless). The standalone track slows and rings out instead |
-
-### The hook
-
-"Good-night, pe-li-can": `C5 (half) A4 (quarter) | F5 E5 C5 (quarters)`, then `D5 A4 | F4` (A, bars 9–12). It is heard on the music box (Intro, an octave up), on the celesta (A), varied (A′), in minor fragments (Bridge), in full with the octave doubling (A″), and as an echo (Outro).
-
-`tools/render-bgm.mjs` renders the celesta alone through section A, detects each note's pitch (Goertzel on the attack) and compares it with the score. All 31 notes match.
+| 1–5 | **Wind-up**, F, ♩ 88 | F · F · F · Gm · C7 | A wooden ratchet **winds the music box**. It plays the hook, out of tune (each tine has its own ±16 cents error), then **runs down** in bar 4: 70 % slower and 70 cents flat. It stalls; another crank, a boing, and off we go |
+| 6–21 | **A (kazoo)**, F | F · F · Gm · C7 · F · Dm · G7 · C7 ‖ F · F · B♭ · B♭m · F/C · C7 · F · F | A kazoo states the hook. The tuba plays "oom" on 1 and the ukulele "pah-pah" on 2 and 3, with brushes. A cheeky G7 brings a B♮ into the tune. A **page turn is played as a rhythm hit** on beat 3 of bar 13. The last bar is a percussion break: boing, page, boing |
+| 22–37 | **A′ (melodica)**, F, **trips into 4/4** | … · F/C · **C7 (4/4) · C7 (4/4)** · F | A wheezy melodica plays a stuttered, higher variation, with a recorder counter-line, a finger-picked ukulele, a piano "pah-pah" and the tuba on 1 and 3. In bars 35–36 the waltz **trips into two bars of 4/4**: the tuba lumbers up root–fifth–sixth–seventh and the tune climbs chromatically (G A B♭ B♮ C), boinging on its way back into 3/4 |
+| 38–45 | **Hush ("shh…")**, D minor, **♩ 72** | Dm · Dm · B♭ · B♭ · Gm · A7 · Dm · Dm | **Sudden quiet** (about −11 dB): a soft *"shh!"*. Only the music box and a felt-piano pad play, while **the pelican hums the tune off-key** (−38 cents, plus a wobble) and the music box winds down again. Bar 45: **a yawn glissando** (slide whistle down plus a sleepy "haaa-oh") and **a snore** ("hrrrk… pshhh") |
+| 46–57 | **Wake-up!**, B♭, **♩ 104** | B♭ · B♭ · E♭ · F7 · B♭ · Gm · **C7 (4/4)** · F7 · B♭ · E♭ · F7 · C7 | **Boing!** plus a slide whistle up. A grumpy bassoon plays wake-up arpeggios, then the kazoo takes the hook in B♭. A strummed ukulele, shaker, tuba oom-pah and one more **4/4 stumble** with three boings |
+| 58–73 | **A″ (everyone)**, F, ♩ 88 | F · F · Gm · C7 · F · Dm · G7 · C7 ‖ F · F · B♭ · B♭m · F/C · C7 · F · F | The loudest part: kazoo plus a glockenspiel an octave up, the recorder counter-line, strummed ukulele, piano, tuba on 1 and 3, brushes and shaker, and boings on the page turns. Bar 66 holds the **double leap** up to E6. The B♭→B♭m sigh before the final cadence |
+| 74–79 | **Doze-off**, F | F · B♭/F · F · C7 · F · F | The music box plays the hook again over a pad, **winding down** across four bars (up to 110 % slower and 160 cents flat), and **stops mid-phrase** on A–G. Last bar: a tuba **"bwomp"** that sags a minor third, a yawn and a snore. In the page, the next pass starts with the crank winding the box up again |
 
 ## Instruments (all procedural)
 
-| Voice | Synthesis | Role |
-|---|---|---|
-| **Celesta** | additive steel bar: a fundamental with a 0.08 % detuned shimmer pair (≈0.4 Hz beat), a faint octave, the bright 4th partial (fast decay), a 9.8× ping and a felt hammer tick. Pre-rendered with a rotating phasor | the lead in A, A′, the Bridge and A″, plus the broken chords in B |
-| **Glockenspiel / music box** | inharmonic bar partials (1, 2.756, 5.404) and a mallet tick | the Intro and Outro lead, the A″ octave doubling, phrase-end fills, page-turn runs and event stings |
-| **Recorder** | a mostly-fundamental periodic wave, a chiff noise burst at 2.3·f, breath noise tuned to the pitch, a 1.2 % scoop up to pitch, and a vibrato that arrives only on notes longer than 0.5 s | the B lead and the counter-line in A′ and A″ |
-| **Felt piano** | live partials (slightly stretched, two unison strings ±0.9 cent), a fast-then-slow two-stage decay, a lowpass that opens with velocity, a soft hammer thump and a damper release | pads in the Intro, Bridge and Outro; the waltz "pah-pah" in A′, B and A″ |
-| **Ukulele** | Karplus-Strong (2-tap loop, pluck-position comb), with each string damping its previous pluck | the waltz (beats 2 and 3), finger-picked eighths, a D-DU-DU strum, and a final roll |
-| **Upright bass** | Karplus-Strong with a darker 3-tap loop and a thumb excitation, lowpassed at 900 Hz, **mono in the centre** | the root on 1, the fifth on 3, and pedals |
-| **Brushes / shaker** | band-passed noise: a swish on 1, taps on 2 and 3, a 6 kHz shaker in eighths, and a two-bar roll swell | light time-keeping |
-| **Page turn** | a glockenspiel run (six chord tones of the *next* section, over one beat) plus a pink-noise "paper" swish swept 1.4→5.2 kHz and panned L→R | the last beat of every section |
+| Voice | Synthesis |
+|---|---|
+| **Music box** | inharmonic comb-tine partials (1, 2.756, 5.404) and a mallet tick, played back with a stable per-note detune (±16 cents) plus the wind-down **sag** |
+| **Kazoo** | a sawtooth scooping up −70 cents into each note, through three nasal formants (560, 1400, 2600 Hz), with a **membrane buzz** (noise gated by the tone) and a 6 Hz vibrato on long notes |
+| **Melodica** | square plus a beating second voice at +9 cents, a soft scoop and a breathy wheeze, formants at 900 and 2100 Hz |
+| **Bassoon** | a double-reed sawtooth through formants at 460 and 1150 Hz, woody and slightly grumpy |
+| **Tuba** | a sawtooth plus sub, with a lowpass that **blooms open on the attack** (2.5→9→3.5 × f) and a clumsy −90 cents scoop. The "bwomp" falls a minor third |
+| **Recorder** | a mostly-fundamental tone, a chiff, breath noise tuned to the pitch, and a late vibrato |
+| **Felt piano** | stretched partials, two unison strings, a two-stage decay and a damper release |
+| **Ukulele** | Karplus-Strong, plucks damping each other per string (waltz "pah-pah", picked, strummed) |
+| **Glockenspiel** | the A″ octave doubling, and the page-turn runs that close sections |
+| **The toy box** | the wooden ratchet **crank**; a **boing** (a triangle wobbling 150→390 Hz); **page hits** (a pink-noise swish); **"shh"**; a **slide whistle** (up for the wake-up, down for the yawn); the pelican's **off-key hum**, **yawn** and **snore** (the same formant voice as the pelican in the page) |
+| **Brushes / shaker** | a swish on 1, taps on the other beats, a shaker in eighths in the loud sections |
 
-**Humanising:** every note gets ±10–15 ms of timing (±6 ms on the bass) and ±10 % velocity, with beat accents (1 > 3 > 2). **Mix:** each voice has its own low cut (bass 30 Hz, piano 110 Hz, ukulele 140 Hz, celesta 200 Hz, glockenspiel 300 Hz) and a lowpass. The ukulele, celesta, glockenspiel and piano share a gentle stereo chorus (two slow modulated taps at 11 and 16 ms, about ±5 cents). The bass, recorder and drums stay dry. Then come the music bus, the shared plate reverb (send 0.22, 0.32 in rain and at night), the master glue compressor and a brick-wall limiter.
+**Humanising:** ±10–15 ms timing on every note and ±10 % velocity, plus the deliberate wonk (out-of-tune tines, scoops, the flat hum). **Mix:** a low cut per voice, and a chorus on ukulele, glockenspiel and piano. Tuba, kazoo, recorder, drums and toys stay dry and centred-ish. The plate reverb send rises in the Hush.
 
 ## In the page
 
-- **Off by default.** No `AudioContext` exists until sound is turned on, and the music has its own switch (the 音乐 Music button, `ui:toggle {key:'music'}`, `ui:music`, or `audio.setMusic(on)`). It always starts at bar 1.
-- **Lookahead scheduler.** An eighth-note clock schedules 200 ms ahead from a 25 ms timer. When the tab is hidden, the master fades and the context suspends (≤ 100 ms). After a stall, the clock skips ahead instead of bursting.
-- **The tempo never follows the pedals.** It is ♩ = 88, with one quantised step to ♩ = 80 at night (`night > 0.6`). The step is taken only on the first bar of a section.
-- **The layers follow the page**, re-chosen at every bar line:
+- **Off by default.** It has its own Music switch (`ui:toggle {key:'music'}`, `ui:music`, `audio.setMusic`) and always starts with the crank.
+- **Scheduling:** a lookahead scheduler (eighth notes, 200 ms ahead; 6 steps per 3/4 bar, 8 per 4/4 bar). It suspends when the tab is hidden and skips ahead after a stall.
+- **Tempo** is the score's own (88 / 72 / 104), switched only on a section's first bar, and ×0.9 at night. It **never follows the pedals**.
+- **Layers follow the page:** the toys, drums and counter-lines thin out at dusk, in rain and at night (sun / soft / rain / lullaby).
+- **Ducking:** −4.4 dB under bell, hop, wave, gulp and eggs.
+- **Stings:** the gulp and wave stings land on the next beat. The egg stinger (the hook on a music box) and the rest of the foley are described in [SOUND.md](SOUND.md).
+- **The pelican hums:** while coasting, the lead steps back and the pelican hums the melody.
 
-| Mode | When | Change |
-|---|---|---|
-| sun | day, clear | the full arrangement as written |
-| soft | dusk, fog, overcast | brushes ×0.65, no shaker, ukulele and recorder a touch softer |
-| rain | `weather.rain > 0.3` | swish only (no taps or shaker), more plate reverb, recorder ×0.8 |
-| lullaby | night | no drums, ukulele ×0.7, recorder ×0.55, more reverb, ♩ = 80 |
+## The standalone track and its measurements
 
-- **Ducking.** Rig events (bell, hop, wave, gulp) and found **eggs** duck the music by −4.4 dB, pelican speech by −2.9 dB and a nearby director gag by −1.4 dB, recovering with a 0.5 s time constant.
-- **Stings on the beat.** A gulp gives a glockenspiel "ta-da" (chord tones plus a bass note), a wave a rising chord-tone arpeggio, and an egg a three-note "ta-da-ding". Each lands on the next beat in the current chord.
-- **The pelican hums the tune.** While coasting, the lead steps back (×0.3) and the pelican's formant voice hums the melody, folded into its range. This also works with the music off.
+`node tools/render-bgm.mjs [--wav]` renders one pass (`opts.bgm: 'once'`, music bus soloed) in an `OfflineAudioContext` in headless Chromium. It applies a 0.15 s fade-in and a tail with a fade, then **peak-normalises only** (to −1.5 dBFS, with no loudness target, so the Hush stays a hush). A safety look-ahead limiter follows. It encodes MP3 at 192 kbps, stereo, 44.1 kHz with `@breezystack/lamejs`, and decodes the MP3 back in Chromium to measure it. It also checks the loop seam (Doze-off → Wind-up) for clicks. The report goes to `shots/bgm/analysis.json`.
 
-## The standalone track and the self-review
-
-`node tools/render-bgm.mjs [--wav]` renders one pass (`opts.bgm: 'once'`, music bus soloed) in an `OfflineAudioContext` in headless Chromium. It then applies a 0.15 s fade-in and a 1.6 s fade over the 1.8 s tail, normalises BS.1770 loudness to −15 LUFS, and runs a look-ahead limiter at −1.5 dBFS. It encodes MP3 at 192 kbps, stereo, 44.1 kHz (`@breezystack/lamejs`) and decodes the MP3 back in Chromium to measure it. The full report goes to `shots/bgm/analysis.json`.
-
-**Final measurements** (iteration 3 of the arrangement, final master chain):
+**Final measurements:**
 
 | | |
 |---|---|
-| file | `dist/bgm-storybook.mp3`, 4.27 MB, 192 kbps, stereo, 44.1 kHz, **3:02.1** |
-| MP3, decoded again | **peak −1.76 dBFS · RMS −18.1 dBFS · −15.3 LUFS** (integrated, BS.1770) · 0 clipped samples |
-| before encoding | peak −1.5 dBFS (the limiter touches 0.4 % of samples), 0 clicks. The raw render (in-page level) peaks at −4.8 dBFS, about −19.4 LUFS |
-| hook check | 31 / 31 notes of section A detected as written (C5 A4 F5 E5 C5 D5 A4 F4 D5 B♭4 G5 F5 D5 E5 D5 C5 …) |
-| loop seam | Outro → Intro lands exactly on the bar grid (0 ms error). The 0.5 s RMS step across it is 7.9 dB, within the music's own steps (9.2 dB); the 4 s levels are −31.9 before and −30.8 after; 0 clicks |
+| file | `dist/bgm-storybook.mp3`, 3.99 MB, 192 kbps, stereo, 44.1 kHz, **2:50.2** (one pass is 2:47.9) |
+| MP3, decoded again | **peak −1.74 dBFS · RMS −18.8 dBFS** (about −15.9 LUFS, not targeted) · 0 clipped samples |
+| before encoding | peak −1.5 dBFS, **0 clicks**. The safety limiter touches 0.3 % of samples. The raw render (in-page level) peaks at −7.3 dBFS |
+| loop seam (Doze-off → crank → Wind-up) | 0 clicks, 0 clipping. It is meant to go from snoring to a wind-up, so there is no level-matching test |
+| dynamics | **13.2 dB** between the loudest and quietest sections |
 
-Per-section 10 s excerpts (band share of energy: low < 250 Hz < mid < 4 kHz < high):
+| Section | starts | length | RMS dBFS | peak | low | mid | high |
+|---|---|---|---|---|---|---|---|
+| Wind-up | 0:00 | 10.6 s | −28.2 | −12.5 | −21.2 | −0.0 | −29.8 |
+| A (kazoo) | 0:10.6 | 32.7 s | −20.9 | −5.7 | −5.3 | −1.5 | −26.1 |
+| A′ (melodica, 4/4 trip) | 0:43.4 | 34.1 s | −16.9 | −3.1 | −6.3 | −1.2 | −30.2 |
+| Hush ("shh…") | 1:17.5 | 21.4 s | **−27.8** | −10.6 | −8.2 | −0.7 | −28.6 |
+| Wake-up! | 1:38.8 | 21.3 s | −19.0 | −2.1 | −4.6 | −1.9 | −24.4 |
+| A″ (everyone) | 2:00.2 | 32.7 s | **−15.0** | −1.5 | −6.9 | −1.0 | −27.6 |
+| Doze-off | 2:32.9 | 15.1 s | −27.6 | −11.6 | −13.3 | −0.2 | −31.3 |
 
-| Section | RMS dBFS | peak | low | mid | high |
-|---|---|---|---|---|---|
-| Intro | −27.5 | −7.8 | −7.2 | −0.9 | −29.2 |
-| A | −19.2 | −5.1 | −15.9 | −0.1 | −31.0 |
-| A′ | −15.9 | −1.5 | −13.3 | −0.2 | −33.6 |
-| B | −16.7 | −4.3 | −13.2 | −0.2 | −37.5 |
-| Bridge | −18.4 | −4.8 | −12.9 | −0.2 | −43.3 |
-| A″ | −15.0 | −1.5 | −13.1 | −0.2 | −30.5 |
-| Outro | −24.5 | −5.3 | −8.6 | −0.7 | −26.4 |
+(The band columns are each band's share of the excerpt's energy, in dB: low < 250 Hz < mid < 4 kHz < high. RMS and band shares come from the first ≤ 10 s of each section.)
 
-The dynamic arc goes from a quiet music-box start, through A′/B, dips for the Bridge breakdown, peaks at A″ and settles again. The highs stay deliberately soft (a picture book at bedtime).
-
-**Iterations:**
-1. The first full render worked, and the hook matched. But the in-page music was about 8 dB too hot (−13.5 LUFS raw), the bass was thin (low share −16 dB), A″ was no fuller than A′, and the seam test was too strict for a sparse texture. The fixes: the music bus down to 0.26, bass +2.3 dB, A″ dynamics ×1.12, and a 0.5 s seam test relative to the music's own steps.
-2. Everything passed. But the Intro and Outro were bottom-heavy (low −4 dB, from the low piano pads) and the top end was very dark. The fixes: piano pads voiced up a fourth (57–72) and softer, a brighter celesta 4th partial, brush taps in A, and a humanised shaker with more level.
-3. The Intro and Outro low end dropped to −7…−9 dB, and A″ is now the loudest section. The final render followed the soundscape's softer master chain (docs/SOUND.md).
+**Iterations of the rewrite:**
+1. A per-section audition showed every section playing and every toy event landing as written. But the Hush was as loud as A (−26 dB) because the off-key hum ignored the section dynamics, and the kazoo was timid. The fixes: the hum scaled by the section level, the Hush level at 0.32, and the kazoo +2.4 dB.
+2. The full render passed with 13.6 dB of contrast. The tuba made A bottom-heavy (low band −3.9 dB), so the tuba was trimmed 2.3 dB.
+3. Final, as above.

@@ -13,7 +13,7 @@ The goal: **a bedtime picture book read aloud.** Everything is small, rounded an
 | **Hop** | a breathy "hup!", then a spring **"boing"** (a triangle plus sub sliding 170→470 Hz with a 13 Hz wobble that dies away), a pillowy landing thump with a wicker rattle, an "oof", and sometimes a giggle |
 | **Gulp** | a fish flop and a bill clop, then the **"gulp… pop!"**: a round throat slide 300→105 Hz and a cork pop (1100→380 Hz plus a soft click), followed by "mm-hm!", a small burp, and sometimes "hee-hee" |
 | **Wave** | feather rustles, a two-note honk hello, and half the time a giggle |
-| **Egg found** | a **music-box stinger**: three wind-up clicks, then the BGM's hook on a music box (C–A–F–E–C… F) in the current key (B♭ during the B section). It plays on the effects bus, so it is heard with the music off too, and it ducks the music (−4.4 dB) |
+| **Egg found** | a **music-box stinger**: three wind-up clicks, then the BGM's hook on a music box, with its major-seventh leap (F–E′–D′–C′–A… F′), in the current key (B♭ during the Wake-up). It plays on the effects bus, so it is heard with the music off too, and it ducks the music (−4.4 dB) |
 
 ## Foley: the book
 

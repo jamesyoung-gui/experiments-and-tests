@@ -4,12 +4,12 @@
 
 Everything you hear is synthesized live in WebAudio by `src/audio/audio.js`. There are no samples and no files. Sound is **off by default**, and no `AudioContext` exists until the reader turns sound on. The **music has its own switch** (`ui:toggle {key:'music'}` → `state.toggles.music`, or `ui:music {on}`, or `audio.setMusic(on)`), so turning sound on gives you the seaside first. The tune comes only when you ask for it.
 
-## 1. The tune: "晚安，鹈鹕 · Goodnight, Pelican" (F major, 3/4 waltz, ♩ = 88, 88 bars, 3:00)
+## 1. The tune: "晚安，鹈鹕 · Goodnight, Pelican" (a wonky toy-box waltz, F major, 79 bars, about 2:48)
 
-The full score, form, chord chart and arrangement are in **[docs/BGM.md](BGM.md)**. The form is Intro · A · A′ · B (B♭) · Bridge (Dm → C7) · A″ · Outro, and a page-turn flourish closes each section. The score is data (`SCORE` in `src/audio/audio.js`). The same engine plays it in the page and renders `dist/bgm-storybook.mp3` (`node tools/render-bgm.mjs`).
+The full score, form, chord chart and arrangement are in **[docs/BGM.md](BGM.md)**. The form is Wind-up · A (kazoo) · A′ (melodica, trips into 4/4) · Hush (♩ 72) · Wake-up! (♩ 104) · A″ · Doze-off. The score is data (`SCORE` in `src/audio/audio.js`). The same engine plays it in the page and renders `dist/bgm-storybook.mp3` (`node tools/render-bgm.mjs`).
 
 ## 2–4. Instruments, arrangement, tempo
-See [BGM.md](BGM.md). In brief: celesta, glockenspiel/music box, recorder, felt piano, Karplus-Strong ukulele and upright bass (mono), brushes and shaker, with a gentle chorus on the plucks and pads. The tempo is **fixed** (♩ = 88; one quantised step to 80 at night, taken only on a section's first bar). The page changes **layers** at bar lines (sun / soft / rain / lullaby), never the tempo with cadence. Instrument buffers are pre-rendered in the background, ≤ 2 ms per 25 ms tick, once the music is on.
+See [BGM.md](BGM.md). In brief: an out-of-tune music box, kazoo, melodica, bassoon, tuba, recorder, felt piano, Karplus-Strong ukulele, brushes and shaker, and a toy box (crank, boings, page hits, "shh", slide whistle, the pelican's hum, yawn and snore). The tempo is the score's own (88, 72 in the Hush, 104 in the Wake-up; ×0.9 at night), switched only on a section's first bar and never by cadence. The page changes **layers** at bar lines (sun / soft / rain / lullaby).
 
 ## 5. The music listens to the story
 - **Ducking.** A rig event (bell, hop, wave, gulp) or a found egg ducks the music by −4.4 dB for the event's length, pelican speech by −2.9 dB, and a nearby director gag (cat, cyclist, gulls, fish…) by −1.4 dB. It recovers with a 0.5 s time constant.
@@ -43,7 +43,7 @@ A saw or square glottal source (with an aspirated "h" onset when needed) runs th
 | Render | Result |
 |---|---|
 | default 40 s script at cruise 42 rpm, music on (bell, hop, coast, sprint, gulp, wave, page turn) | −17…−28 dBFS RMS per second, peak −4.9 dBFS, 0 clicks |
-| music bus alone (tools/render-bgm.mjs, raw) | about −19.4 LUFS, peak −4.8 dBFS |
+| music bus alone (tools/render-bgm.mjs, raw) | peak −7.3 dBFS, Hush to A″ spanning 13 dB |
 | night (music, lullaby layers) | −17…−26 dBFS, peak −3.9 dBFS |
 | rain, no music | −17…−27 dBFS, peak −4.1 dBFS |
 

@@ -1,26 +1,24 @@
 // Render the storybook BGM "晚安，鹈鹕 · Goodnight, Pelican" (docs/BGM.md) as a standalone, shareable MP3.
-// usage: node tools/render-bgm.mjs [--out dist/bgm-storybook.mp3] [--wav] [--lufs -15]
+// usage: node tools/render-bgm.mjs [--out dist/bgm-storybook.mp3] [--wav]
 // 1. In headless Chromium, the page's own createAudio() (src/audio/audio.js, music bus soloed, opts.bgm 'once') plays
-//    exactly one pass, Intro → Outro, into an OfflineAudioContext. The outro resolves with a short ritardando.
-// 2. Node side: trim, 0.15 s fade-in, a 1.8 s tail after the last bar with a fade, loudness-normalise (BS.1770
-//    K-weighted, gated) to about −15 LUFS, a look-ahead peak limiter at −1.5 dBFS, then MP3 192 kbps stereo 44.1 kHz
-//    with @breezystack/lamejs → dist/bgm-storybook.mp3.
-// 3. Self-review by measurement ("listening analysis"): a 10 s excerpt per section (RMS + low/mid/high band balance),
-//    clipped samples, clicks; the hook's pitches detected from a celesta-only render vs the written score; the loop
-//    seam (Outro → Intro, rendered in loop mode) for continuity; and the encoded MP3 decoded again for peak / RMS.
-// Exits 1 on page errors, a peak above −1 dBFS, clipping, clicks, a wrong hook note or a broken seam.
+//    exactly one pass, Wind-up → Doze-off, into an OfflineAudioContext.
+// 2. Node side: trim, 0.15 s fade-in, a tail after the last bar with a fade, a PEAK normalisation to −1.5 dBFS (no
+//    loudness target: the hush stays a hush), a safety look-ahead limiter, then MP3 192 kbps stereo 44.1 kHz with
+//    @breezystack/lamejs → dist/bgm-storybook.mp3.
+// 3. Measurement: a ≤ 10 s excerpt per section (RMS, peak, low/mid/high balance), clipped samples, clicks, the loop
+//    seam (Doze-off → Wind-up, rendered in loop mode) for clicks, and the encoded MP3 decoded again for peak / RMS.
+// Exits 1 on page errors, a decoded peak above −1 dBFS, clipping or clicks.
 const { chromium } = await import(process.env.PB_PLAYWRIGHT || '/opt/node22/lib/node_modules/playwright/index.mjs');
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Mp3Encoder } from '@breezystack/lamejs';
 import { serve } from './serve.mjs';
-import { BARS, BGM, SCORE } from '../src/audio/audio.js';
+import { BARS, BGM } from '../src/audio/audio.js';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i < 0 ? d : (process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : true); };
 const OUT = path.resolve(ROOT, arg('out', 'dist/bgm-storybook.mp3'));
-const LUFS_T = +arg('lufs', -15), CEIL = -1.5, SR = 44100;
-const BAR = BGM.beats * 60 / BGM.bpm, T0 = 0.1;              // music starts 0.1 s into each render
+const CEIL = -1.5, SR = 44100, T0 = 0.1;                   // music starts 0.1 s into each render
 const db = x => 20 * Math.log10(x + 1e-12);
 const fail = [];
 
@@ -51,7 +49,7 @@ async function render(name, o) {
     }
     const buf = await ctx.startRendering();
     (window.__bufs ||= {})[name] = [buf.getChannelData(0), buf.getChannelData(1)];
-    return { n: buf.length, log: a.debug().log.filter(e => /^(loop|end|pageturn|tempo)$/.test(e.kind)) };
+    return { n: buf.length, log: a.debug().log.filter(e => /^(loop|end|section|tempo)$/.test(e.kind)) };
   }, [name, o]);
   console.log(`rendered ${name}: ${(r.n / SR).toFixed(1)} s in ${((Date.now() - t) / 1000).toFixed(1)} s`);
   return r;
@@ -111,28 +109,21 @@ function bands([L, R], a, b) {            // low < 250 Hz < mid < 4 kHz < high (
   const lo = E(lp(mono, 250)), hi = E(hp(mono, 4000)), mid = E(hp(lp(mono, 4000), 250)), tot = lo + mid + hi;
   return { low: +(10 * Math.log10(lo / tot)).toFixed(1), mid: +(10 * Math.log10(mid / tot)).toFixed(1), high: +(10 * Math.log10(hi / tot)).toFixed(1) };
 }
-function goertzel(x, a, n, f) {           // power at f in a Hann-windowed segment
-  const w = 2 * Math.PI * f / SR, k = 2 * Math.cos(w); let s1 = 0, s2 = 0;
-  for (let i = 0; i < n; i++) { const v = (x[a + i] || 0) * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (n - 1))); const s = v + k * s1 - s2; s2 = s1; s1 = s; }
-  return s1 * s1 + s2 * s2 - k * s1 * s2;
-}
-const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
-const NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'], nm = m => NAMES[m % 12] + (Math.floor(m / 12) - 1);
 
 // ------------------------------------------------------------------ 1. the standalone pass
-const full = await render('full', { dur: BGM.bars * BAR + 4.5, bgm: 'once' });
+const full = await render('full', { dur: BGM.seconds + 22, bgm: 'once' });
 const endT = full.log.find(e => e.kind === 'end')?.at;
 if (!endT) fail.push('no end cue');
 const raw = await fetchBuf('full', full.n);
 const rawStats = stats(raw);
-const a0 = Math.round(0.06 * SR), a1 = Math.min(full.n, Math.round((endT + 1.8) * SR));
+const a0 = Math.round(0.06 * SR), a1 = Math.min(full.n, Math.round((endT + 2.2) * SR));   // the snore's last breath
 const trk = [raw[0].slice(a0, a1), raw[1].slice(a0, a1)], n = a1 - a0;
 const FI = Math.round(0.15 * SR), FO = Math.round(1.6 * SR);
 for (const c of trk) {
   for (let i = 0; i < FI; i++) c[i] *= 0.5 - 0.5 * Math.cos(Math.PI * i / FI);
   for (let i = 0; i < FO; i++) c[n - 1 - i] *= 0.5 - 0.5 * Math.cos(Math.PI * i / FO);
 }
-const lufs0 = lufs(trk), gain = Math.pow(10, (LUFS_T - lufs0) / 20);
+const gain = Math.pow(10, (CEIL + 0.2) / 20) / Math.pow(10, stats(trk).peakDb / 20);
 for (const c of trk) for (let i = 0; i < n; i++) c[i] *= gain;
 { // look-ahead peak limiter (4 ms attack backwards, 80 ms release forwards): never exceeds CEIL
   const thr = Math.pow(10, CEIL / 20), need = new Float32Array(n);
@@ -143,44 +134,23 @@ for (const c of trk) for (let i = 0; i < n; i++) c[i] *= gain;
   for (let i = 0; i < n; i++) { g = Math.min(need[i], 1 - (1 - g) * kr); if (g < 0.999) red++; trk[0][i] *= g; trk[1][i] *= g; }
   console.log(`limiter active on ${(100 * red / n).toFixed(2)} % of samples`);
 }
-const lufs1 = lufs(trk), trkStats = stats(trk);
+const trkStats = stats(trk);
 
-// per-section 10 s excerpts
-const secs = []; let bar0 = 0;
-for (const S of SCORE) {
-  const nb = S.chords.split(' ').length, t = T0 + bar0 * BAR - 0.06, a = Math.round(t * SR), b = Math.min(n, a + 10 * SR);
-  secs.push({ section: S.name, bars: `${bar0 + 1}-${bar0 + nb}`, at: +t.toFixed(2), ...stats(trk, a, b), bands: bands(trk, a, b) });
-  bar0 += nb;
-}
+// per-section excerpts (≤ 10 s from each section's first downbeat, from the 'section' cues)
+const SEC = full.log.filter(e => e.kind === 'section'), secs = [];
+SEC.forEach((e, i) => {
+  const t = e.at - 0.06, tEnd = (SEC[i + 1] ? SEC[i + 1].at : endT) - 0.06, a = Math.round(t * SR), b = Math.min(n, Math.round(Math.min(tEnd, t + 10) * SR));
+  secs.push({ section: e.name, at: +t.toFixed(1), len: +(tEnd - t).toFixed(1), ...stats(trk, a, b), bands: bands(trk, a, b) });
+});
+const contrast = +(Math.max(...secs.map(s => s.rmsDb)) - Math.min(...secs.map(s => s.rmsDb))).toFixed(1);
 
-// ------------------------------------------------------------------ 2. the hook, heard back (celesta only, section A)
-const A0 = BARS.findIndex(b => b.sec === 'A');
-const hookR = await render('hook', { dur: 16 * BAR + 1.5, from: A0, inst: ['cel'] });
-const hk = (await fetchBuf('hook', hookR.n))[0];
-const hook = []; let wrong = 0;
-for (let bi = 0; bi < 16; bi++) for (const nt of BARS[A0 + bi].notes) {
-  const on = T0 + bi * BAR + nt.s * BAR / 6, a = Math.round((on + 0.03) * SR), p = Math.round((on - 0.13) * SR), W = Math.round(0.1 * SR);
-  let best = 0, bv = -Infinity;
-  for (let m = 60; m <= 88; m++) { const f = mtof(m), v = goertzel(hk, a, W, f) - goertzel(hk, p, W, f); if (v > bv) { bv = v; best = m; } }
-  if (best !== nt.m) wrong++;
-  hook.push(`${nm(nt.m)}${best === nt.m ? '' : '≠' + nm(best)}`);
-}
-
-// ------------------------------------------------------------------ 3. the loop seam (Outro → Intro, loop mode)
-const seamR = await render('seam', { dur: 8 * BAR + 10, from: BARS.findIndex(b => b.sec === 'Outro') });
+// ------------------------------------------------------------------ 3. the loop seam (Doze-off → Wind-up, loop mode)
+const D0 = BARS.findIndex(b => b.sec === BARS[BARS.length - 1].sec);
+const seamR = await render('seam', { dur: 30, from: D0 });
 const sm = await fetchBuf('seam', seamR.n), loopT = seamR.log.find(e => e.kind === 'loop')?.at;
-const seam = { expect: +(T0 + 8 * BAR).toFixed(4), at: loopT };
-if (loopT != null) {
-  // 0.5 s RMS windows from −6 s to +6 s: the step across the seam must be no bigger than the music's own steps
-  const w = Math.round(0.5 * SR), c = Math.round(loopT * SR), win = [];
-  for (let k = -12; k < 12; k++) win.push(stats(sm, c + k * w, c + (k + 1) * w).rmsDb);
-  let inner = 0; for (let k = 1; k < win.length; k++) if (k !== 12) inner = Math.max(inner, Math.abs(win[k] - win[k - 1]));
-  const avg = a => +(a.reduce((x, y) => x + y) / a.length).toFixed(1);
-  Object.assign(seam, { gridErrMs: +(1000 * Math.abs(loopT - seam.expect)).toFixed(2), minRms: Math.min(...win), stepDb: +Math.abs(win[12] - win[11]).toFixed(1),
-    innerMaxStepDb: +inner.toFixed(1), before4s: avg(win.slice(4, 12)), after4s: avg(win.slice(12, 20)),
-    ...(({ clicks, clip }) => ({ clicks, clip }))(stats(sm, c - SR, c + SR)) });
-  if (seam.gridErrMs > 1 || seam.minRms < -45 || seam.stepDb > Math.max(3, seam.innerMaxStepDb) || Math.abs(seam.before4s - seam.after4s) > 3 || seam.clicks) fail.push('seam');
-} else fail.push('no loop cue');
+const seam = { at: loopT };
+if (loopT != null) { const c = Math.round(loopT * SR); Object.assign(seam, stats(sm, c - 2 * SR, Math.min(sm[0].length, c + 4 * SR))); if (seam.clicks || seam.clip) fail.push('seam clicks'); }
+else fail.push('no loop cue');
 
 // ------------------------------------------------------------------ 4. MP3 (192 kbps stereo 44.1 kHz), decoded back
 const enc = new Mp3Encoder(2, SR, 192), parts = [], I16 = x => { const o = new Int16Array(x.length); for (let i = 0; i < x.length; i++) o[i] = Math.max(-32768, Math.min(32767, Math.round(x[i] * 32767))); return o; };
@@ -209,22 +179,19 @@ await browser.close(); srv.close();
 const mmss = s => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;
 const rep = {
   file: path.relative(ROOT, OUT), kB: +(mp3.length / 1024).toFixed(0), length: mmss(n / SR), decoded: { ...dec, length: mmss(dec.n / dec.sr) },
-  title: BGM.title, key: BGM.key, meter: BGM.meter, bpm: BGM.bpm, bars: BGM.bars, loop: mmss(BGM.bars * BAR),
-  raw: { ...rawStats, lufs: +lufs(raw).toFixed(1) }, gainDb: +db(gain).toFixed(2),
-  master: { ...trkStats, lufs: +lufs1.toFixed(1) }, mp3: { ...mp3Stats, lufs: +mp3Lufs.toFixed(1) },
-  hook: { notes: hook.join(' '), wrong }, seam, sections: secs,
+  title: BGM.title, key: BGM.key, meter: BGM.meter, bpm: BGM.bpm, bars: BGM.bars, loop: mmss(endT - T0),
+  raw: rawStats, gainDb: +db(gain).toFixed(2), master: trkStats, mp3: { ...mp3Stats, lufs: +mp3Lufs.toFixed(1) },
+  contrastDb: contrast, seam, sections: secs,
 };
 if (errs.length) fail.push('page errors: ' + errs.join(' | '));
 if (mp3Stats.peakDb > -1) fail.push('mp3 peak ' + mp3Stats.peakDb);
 if (rawStats.clip || trkStats.clip) fail.push('clipping');
 if (trkStats.clicks) fail.push('clicks ' + trkStats.clicks);
-if (wrong) fail.push(`hook: ${wrong} wrong notes`);
 fs.mkdirSync(path.join(ROOT, 'shots/bgm'), { recursive: true });
 fs.writeFileSync(path.join(ROOT, 'shots/bgm/analysis.json'), JSON.stringify(rep, null, 1));
 console.log(`\n${rep.title} · ${rep.key} · ${rep.meter} · ${rep.bpm} bpm · ${rep.bars} bars (loop ${rep.loop}) → ${rep.file} (${rep.kB} kB, ${rep.length})`);
-console.log(`MP3 peak ${mp3Stats.peakDb} dBFS · RMS ${mp3Stats.rmsDb} dBFS · ${rep.mp3.lufs} LUFS · clip ${mp3Stats.clip} · (pre-encode peak ${trkStats.peakDb}, clicks ${trkStats.clicks}; raw render peak ${rawStats.peakDb}, gain ${rep.gainDb} dB)`);
-console.table(secs.map(s => ({ section: s.section, bars: s.bars, rms: s.rmsDb, peak: s.peakDb, low: s.bands.low, mid: s.bands.mid, high: s.bands.high })));
-console.log('hook (A, celesta, detected):', rep.hook.notes, `→ ${wrong} wrong`);
+console.log(`MP3 peak ${mp3Stats.peakDb} dBFS · RMS ${mp3Stats.rmsDb} dBFS (≈ ${rep.mp3.lufs} LUFS, no target) · clip ${mp3Stats.clip} · (pre-encode peak ${trkStats.peakDb}, clicks ${trkStats.clicks}; raw peak ${rawStats.peakDb}, gain ${rep.gainDb} dB) · section contrast ${contrast} dB`);
+console.table(secs.map(s => ({ section: s.section, at: s.at, len: s.len, rms: s.rmsDb, peak: s.peakDb, low: s.bands.low, mid: s.bands.mid, high: s.bands.high })));
 console.log('seam:', JSON.stringify(seam));
 console.log(fail.length ? 'FAIL: ' + fail.join('; ') : 'PASS');
 process.exit(fail.length ? 1 : 0);
