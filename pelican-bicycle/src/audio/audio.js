@@ -5,16 +5,18 @@
 //                 created lazily inside enable() (0 AudioContexts before the user opts in).
 //   opts.clock    () => audio time; the offline harness passes the sim clock so update() can schedule ahead.
 //   opts.seed     deterministic variation (default: time-seeded).
-//   opts.solo     ['amb'|'mech'|'fx'|'far'] keep only these buses (analysis renders).
+//   opts.solo     ['amb'|'mech'|'fx'|'far'|'mus'] keep only these buses (analysis renders).
 //   opts.volume   0…1 (default 0.8).
 //
-// Mix:  sources → buses (amb: wind/road/sea · mech: chain/freewheel · fx: bell/thump/gulp · far: gulls/horns/crickets)
+// Mix:  sources → buses (amb: wind/road/sea · mech: chain/freewheel · fx: bell/thump/gulp · far: gulls/horns/crickets
+//       · mus: the BGM "Coast Road Swing", bgm.js — plays while sound is on and the Music toggle is on, under the effects)
 //       → master (fade) → glue compressor → brick-wall limiter → trim → out.  Shared procedural plate reverb send.
 // Sync: rig events are cued in SIM time from TIMING (rig/solve.js X-sheets) and scheduled from update(frame) with
 //       a 120 ms lookahead, compensated for output latency, so the bell rings on the thumb pop and the thump lands
 //       on the tyre contact frame. The freewheel tick rate is exactly wheel rev/s × AUDIO.pawls.
 import { TIMING } from '../rig/solve.js';
 import { BIKE, DIST_PER_REV, CADENCE } from '../contract.js';
+import { createBGM } from './bgm.js';
 
 export const AUDIO = {
   pawls: 18,                 // freehub engagement points (coast tick rate = wheel rev/s × pawls)
@@ -22,6 +24,7 @@ export const AUDIO = {
   lookahead: 0.12, interval: 25,
   fadeIn: 0.6, fadeOut: 0.45, pauseFade: 0.4, hideFade: 0.08, hideSuspendMs: 100,
   bellStrikes: [TIMING.bell.strike, TIMING.bell.strike + 0.105],
+  music: { gain: 0.62, duck: 0.6, duckHold: 0.55, duckRelease: 0.9, gateFade: 0.6 },   // duck 0.6 ≈ −4.4 dB under bell / gulp / eggs
 };
 
 const TAU = Math.PI * 2;
@@ -50,6 +53,7 @@ export function createAudio(bus, opts = {}) {
   let tickOn = false, tickRate = 0, nextTick = 0, tickN = 0;
   let nextSwell = 0, nextGull = 0, nextHorn = 0, nextBoat = 0, nextCricket = 0, nightOn = false;
   let gust = 1, gustV = 0, gullsOn = true, night = 0, speedN = 0.5, cadence = 60;
+  let musicOn = true, musicRun = false;
   const seen = new Set(), lastAcc = {}, cues = [], hops = [], log = [];
   const now = () => (opts.clock ? opts.clock() : ac.currentTime);
   const logCue = (kind, at, extra) => { log.push({ kind, at: +at.toFixed(4), ...extra }); if (log.length > 400) log.shift(); };
@@ -127,7 +131,8 @@ export function createAudio(bus, opts = {}) {
     const master = G(0), hpf = F('highpass', 42, 0.6);                    // keep sub-rumble out of laptop speakers
     wire(master, hpf, comp, lim, out, ac.destination);
     const B = n => { const g = G(solo && !solo.has(n) ? 0 : 1); g.connect(master); return g; };
-    const amb = B('amb'), mech = B('mech'), fx = B('fx'), far = B('far');
+    const amb = B('amb'), mech = B('mech'), fx = B('fx'), far = B('far'), mus = B('mus');
+    const musDuck = G(1), musGate = G(0); wire(musGate, musDuck, mus);       // BGM: on/off gate → event duck → bus
     const verb = ac.createConvolver(); verb.normalize = false; verb.buffer = plate(2.4);
     const verbRet = G(0.8); wire(verb, verbRet, master);
     const vin = {}; for (const b of ['amb', 'mech', 'fx', 'far']) { vin[b] = G(solo && !solo.has(b) ? 0 : 1); vin[b].connect(verb); }
@@ -164,11 +169,15 @@ export function createAudio(bus, opts = {}) {
     for (const s of [windSrc, roadSrc, gritSrc, seaSrc, chSrc, humSrc]) s.start(t0, R() * 5);
     chOsc.start(t0); humOsc.start(t0);
     N = { master, amb, mech, fx, far, verb, vin, duck, windSrc, windBp, windG, whisBp, whisG, roadSrc, roadLp, roadG, tyreGate, gritG, seaG, seaLp,
-      chOsc, chG, chBp, humOsc, humG, tickBus, clicks, pawlAmp, pinkB, brownB, whiteB };
+      chOsc, chG, chBp, humOsc, humG, tickBus, clicks, pawlAmp, pinkB, brownB, whiteB, musDuck, musGate, bgm: null };
     nextSwell = t0 + 0.4; nextGull = t0 + rr(4, 8); nextHorn = t0 + rr(6, 14); nextBoat = t0 + rr(30, 70); nextCricket = t0 + rr(1, 3);
   }
 
   // ------------------------------------------------------------------ voices
+  function duckMusic(at) {      // a few dB under the bell, the gulp and the easter eggs
+    if (!N || !musicRun) return;
+    const M = AUDIO.music; ramp(N.musDuck.gain, M.duck, at, 0.04); ramp(N.musDuck.gain, 1, at + M.duckHold, M.duckRelease);
+  }
   function send(node, amt, b = 'fx') { if (amt > 0) { const s = G(amt); node.connect(s); s.connect(N.vin[b]); return s; } return null; }
   function screenPan(sel, pick) {
     if (!hasDoc || offline) return null;
@@ -205,7 +214,7 @@ export function createAudio(bus, opts = {}) {
   function bell(at) {
     const pan = screenPan('#j-bars') ?? 0.05;
     bellStrike(at, 1, pan); bellStrike(at + (AUDIO.bellStrikes[1] - AUDIO.bellStrikes[0]), 0.72, pan);
-    ramp(N.duck.gain, 0.5, at, 0.03); ramp(N.duck.gain, 1, at + 0.4, 0.6);
+    ramp(N.duck.gain, 0.5, at, 0.03); ramp(N.duck.gain, 1, at + 0.4, 0.6); duckMusic(at);
     logCue('bell', at, { pan }); caption('bell');
   }
   function thump(at) {
@@ -262,6 +271,7 @@ export function createAudio(bus, opts = {}) {
     bubble(at + T.swallow[0] + 0.06, 190, 560, 0.1, 0.34);
     bubble(at + T.swallow[0] + 0.24, 260, 780, 0.09, 0.28);
     bubble(at + T.swallow[0] + 0.44, 340, 640, 0.07, 0.13);
+    duckMusic(at + T.scoop[0]);
     logCue('gulp', at + T.swallow[0] + 0.06); caption('gulp');
   }
   function waveSeq(at) {         // feather rustle while the wing unfolds and waves
@@ -376,9 +386,20 @@ export function createAudio(bus, opts = {}) {
   }
 
   // ------------------------------------------------------------------ scheduler (audio time)
+  // BGM transport: bar-quantised lookahead (whole bars are queued as their downbeat enters the window); stops while
+  // the sim is paused / the tab is hidden / music is toggled off, and picks up again on the next free bar line
+  function music(t, until) {
+    const want = musicOn && wantOn && !paused && !hidden && (!solo || solo.has('mus'));
+    if (want) {
+      if (!N.bgm) N.bgm = createBGM(ac, N.musGate, { seed: (R() * 1e9) | 0, loop: true, gain: AUDIO.music.gain });
+      if (!musicRun) { musicRun = true; N.bgm.start(Math.max(t + 0.08, N.bgm.nextTime)); ramp(N.musGate.gain, 1, t, 0.05); }
+      N.bgm.pump(until + 0.1);
+    } else if (musicRun) { musicRun = false; N.bgm.stop(); ramp(N.musGate.gain, 0, t, AUDIO.music.gateFade); }
+  }
   function pump() {
     if (!ac || !N) return;
     const t = now(), until = t + AUDIO.lookahead;
+    music(t, until);
     if (tickOn && tickRate > 1 && !paused) {
       if (nextTick < t) nextTick = t + 0.004;
       while (nextTick < until) { tick(nextTick); nextTick += 1 / tickRate; }
@@ -422,6 +443,8 @@ export function createAudio(bus, opts = {}) {
     for (const src of [N.windSrc, N.roadSrc]) glide(src.playbackRate, 0.92 + 0.16 * R(), t, 1.5);   // no audible loop
     night = fr.night || 0;
     gullsOn = !fr.toggles || fr.toggles.gulls !== false;
+    musicOn = !fr.toggles || fr.toggles.music !== false;
+    if (N.bgm) { const w = fr.weather || {}; N.bgm.setMood({ night, rain: w.rain || 0, fog: w.fog || 0 }); }   // applied on bar lines
   }
 
   function applyMaster(force) {
@@ -445,6 +468,8 @@ export function createAudio(bus, opts = {}) {
   bus.on('rig:event', e => { if (ac) ingest(e); });
   bus.on('ui:play', ({ on } = {}) => { if (!ac) return; if (on === false) { paused = true; applyMaster(); } else if (on === true) { paused = false; lastLive = performance.now(); applyMaster(); } });
   bus.on('ui:volume', ({ value } = {}) => api.setVolume(value));
+  bus.on('ui:toggle', ({ key, value } = {}) => { if (key === 'music') { musicOn = value !== false; if (ac && N) pump(); } });
+  bus.on('egg:found', e => { if (ac && N && e && e.id) duckMusic(now()); });
 
   const api = {
     async enable() {
@@ -491,7 +516,8 @@ export function createAudio(bus, opts = {}) {
     },
     setVolume(v) { if (typeof v !== 'number' || !isFinite(v)) return; vol = clamp(v, 0, 1); applyMaster(); },
     // tests / judge: scheduled cue log (kind, audio time, pan), context state, tick rate
-    debug: () => ({ state: ac ? ac.state : 'none', log: log.slice(), tickRate, tickOn, masterTarget, paused, hidden, pawls: AUDIO.pawls, simT, hasFrame: !!lastFrame }),
+    debug: () => ({ state: ac ? ac.state : 'none', log: log.slice(), tickRate, tickOn, masterTarget, paused, hidden, pawls: AUDIO.pawls, simT, hasFrame: !!lastFrame,
+      music: { on: musicOn, running: musicRun, ...(N && N.bgm ? N.bgm.info() : {}) } }),
     get context() { return ac; },
   };
   return api;

@@ -15,11 +15,12 @@
 // Sync: rig events are cued in SIM time from TIMING (rig/solve.js X-sheets) and scheduled from update(frame) with a
 //       120 ms lookahead, compensated for output latency, so the bell rings on the thumb pop and the thump lands on
 //       the tyre-contact frame. The freewheel tick rate is exactly wheel rev/s × AUDIO.pawls.
-// Music (docs/AUDIO.md): a composed 32-bar AA'BA'' tune in F major on an 8th-note lookahead clock (200 ms ahead).
-//       Karplus-Strong ukulele + upright bass, additive glockenspiel, a whistled lead, brushes and a felt kick.
-//       Tempo = cadence quantised to a ladder of musical tempi, one rung per bar with an accelerando inside the bar.
-//       Arrangement per bar from time of day and weather (sun / soft / rain (minor-tinged) / lullaby). It ducks under
-//       events, and event "stings" land on the next beat. While coasting, the pelican hums the melody.
+// Music (docs/BGM.md): "晚安，鹈鹕 · Goodnight, Pelican", a composed 88-bar bedtime waltz in F (3/4, 88 bpm, 3:00 a
+//       pass, Intro·A·A'·B·Bridge·A''·Outro) on an 8th-note lookahead clock (200 ms ahead). Celesta, glockenspiel,
+//       recorder, felt piano, Karplus-Strong ukulele + upright bass, brushes and shaker. The tempo is fixed (80 at
+//       night, switched only on a section's first bar); the page thins or fills the layers by time of day and
+//       weather, the music ducks under events, and stings land on the next beat. While coasting, the pelican hums.
+//   opts.bgm 'once' plays one pass and resolves (tools/render-bgm.mjs); opts.bgmFrom starts at a bar (seam tests).
 import { TIMING } from '../rig/solve.js';
 import { BIKE, DIST_PER_REV, CADENCE } from '../contract.js';
 import { hash } from '../world/route.js';
@@ -30,7 +31,6 @@ export const AUDIO = {
   lookahead: 0.12, musicAhead: 0.2, interval: 25,
   fadeIn: 0.6, fadeOut: 0.45, pauseFade: 0.4, hideFade: 0.08, hideSuspendMs: 100,
   bellStrikes: [TIMING.bell.strike, TIMING.bell.strike + 0.105],
-  tempi: [60, 66, 72, 80, 88, 96, 104, 112],   // the tempo ladder (bpm): cadence snaps to a rung
 };
 
 const TAU = Math.PI * 2;
@@ -73,7 +73,7 @@ export const SCORE = [
     arr: { lead: 'glk', uke: 'waltz', pno: 'pad', bass: 'one', dr: 0, enter: 4 } },
   { name: 'A', key: 'F', chords: 'F F Dm Dm Bb Gm C C7 F F Dm Am Bb C7 F F', lvl: 0.9,
     mel: HOOK + '|D5:4 A4:2|F4:6|D5:4 Bb4:2|G5:2 F5:2 D5:2|E5:4 D5:2|C5:6|' + HOOK + '|D5:4 F5:2|E5:4 C5:2|F5:4 D5:2|C5:4 Bb4:2|A4:6|F4:4 r:2',
-    arr: { lead: 'cel', uke: 'waltz', bass: 'one', dr: 0.5, spark: 1 } },
+    arr: { lead: 'cel', uke: 'waltz', bass: 'one', dr: 1, spark: 1 } },
   { name: "A'", key: 'F', chords: 'F F Dm Dm Bb Gm C C7 F F Dm Am Bb C7 F F7', lvl: 1,
     mel: 'C5:3 Bb4:1 A4:2|F5:2 G5:1 F5:1 E5:1 C5:1|D5:4 A4:2|F5:4 E5:2|D5:3 C5:1 Bb4:2|G5:2 A5:2 Bb5:2|A5:2 G5:2 E5:2|G5:4 r:2|' + HOOK + '|D5:4 F5:2|A5:4 E5:2|Bb5:2 A5:2 F5:2|G5:2 E5:2 C5:2|F5:6|Eb5:2 D5:2 C5:2',
     ctr: CTR + 'r:2 A4:4|G4:2 A4:4|r:2 A4:4|C5:6|r:2 D5:4|Bb4:6|A4:4 C5:2|A4:2 Bb4:2 C5:2',
@@ -84,7 +84,7 @@ export const SCORE = [
   { name: 'Bridge', key: 'Dm', chords: 'Dm Dm Bb Bb Gm7 Gm7 C7sus C7', lvl: 0.8,
     mel: 'A4:4 F4:2|D5:2 C5:2 A4:2|Bb4:4 F4:2|D5:2 C5:2 Bb4:2|Bb4:4 G4:2|D5:2 C5:2 Bb4:2|C5:6|r:2 E4:2 G4:2',
     arr: { lead: 'cel', pno: 'pad', bass: 'pedal', dr: 0, spark: 1, swell: 6 } },
-  { name: "A''", key: 'F', chords: 'F F Dm Dm Bb Gm C C7 F F7 Bb Bbm F/C C7 F F', lvl: 1.05,
+  { name: "A''", key: 'F', chords: 'F F Dm Dm Bb Gm C C7 F F7 Bb Bbm F/C C7 F F', lvl: 1.12,
     mel: HOOK + '|D5:4 A4:2|F5:4 E5:2|D5:4 Bb4:2|G5:2 F5:2 D5:2|E5:4 D5:2|C5:6|' + HOOK.split('|')[0] + '|F5:2 G5:2 A5:2|Bb5:4 F5:2|F5:4 Db5:2|A4:2 C5:2 F5:2|G5:4 E5:2|F5:6|r:6',
     ctr: CTR + 'r:2 A4:4|r:2 Eb5:4|D5:6|Bb4:6|C5:6|Bb4:4 G4:2|A4:6|r:6',
     arr: { lead: 'cel', dbl: 1, uke: 'strum', pno: 'waltz', bass: 'onethree', dr: 2 } },
@@ -303,10 +303,10 @@ export function createAudio(bus, opts = {}) {
     chOsc.start(t0); humOsc.start(t0); crOsc.start(t0); crVib.start(t0);
     N = { master, amb, mech, fx, far, voice, music, verb, vin, duck, windSrc, windBp, windG, whisBp, whisG, roadSrc, roadLp, roadG, tyreGate, gritG, seaG, seaLp,
       rainG, chOsc, chG, chBp, humOsc, humG, tickBus, clicks, pawlAmp, pinkB, brownB, whiteB,
-      vPan, crOsc, crF1, crG, crVibG, musDuck, musLvl, lv };
+      vPan, crOsc, crF1, crG, crVibG, musIn, musDuck, musLvl, musSend, lv };
     nextSwell = t0 + 0.4; nextGull = t0 + rr(4, 8); nextHorn = t0 + rr(6, 14); nextBoat = t0 + rr(30, 70); nextCricket = t0 + rr(1, 3);
     nextOwl = t0 + rr(15, 30); nextGrunt = t0 + rr(18, 35); nextDrop = t0 + 0.2;
-    mus.nextT = t0 + 0.15; mus.bar = -INTRO.length; mus.step = 0;
+    mus.nextT = t0 + 0.15; mus.bar = opts.bgmFrom || 0; mus.step = 0;
   }
 
   // ------------------------------------------------------------------ small helpers for one-shots
@@ -667,7 +667,7 @@ export function createAudio(bus, opts = {}) {
     let e = CEL.get(midi); if (e) return e;
     const sr = ac.sampleRate, f = mtof(midi), n = Math.floor(2.2 * sr), buf = ac.createBuffer(1, n, sr), d = buf.getChannelData(0);
     const k = clamp(1 - (midi - 72) * 0.025, 0.5, 1.3);
-    for (const [r, a, t] of [[1, 1, 1.5], [1.0008, 0.32, 1.3], [2, 0.05, 0.5], [3.98, 0.15, 0.2], [9.8, 0.03, 0.05]]) addPartial(d, sr, f * r, a, t * k);
+    for (const [r, a, t] of [[1, 1, 1.5], [1.0008, 0.32, 1.3], [2, 0.05, 0.5], [3.98, 0.22, 0.2], [9.8, 0.03, 0.05]]) addPartial(d, sr, f * r, a, t * k);
     const A = Math.floor(sr * 0.0012), Z = Math.floor(sr * 0.04);
     for (let i = 0; i < n; i++) d[i] = (d[i] + (R() * 2 - 1) * 0.1 * Math.exp(-i / (sr * 0.0012))) * Math.min(1, i / A) * Math.min(1, (n - i) / Z) * 0.62;
     e = { buf }; CEL.set(midi, e);
@@ -713,7 +713,7 @@ export function createAudio(bus, opts = {}) {
     reap(o, [o, vib, vg, env, lp, ns, cb, cg, bb, bg]);
   }
   function brush(at, vel, long) {       // brush swish (long) or tap
-    const s = bufSrc(N.whiteB), bp = F('bandpass', long ? 3600 : 5000, long ? 0.5 : 0.9), g = G(0); wire(s, bp, g, N.lv.dr);
+    const s = bufSrc(N.whiteB), bp = F('bandpass', long ? 4200 : 5600, long ? 0.5 : 0.9), g = G(0); wire(s, bp, g, N.lv.dr);
     if (long) { g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(vel, at + 0.07); g.gain.exponentialRampToValueAtTime(vel * 0.01, at + 0.36); g.gain.linearRampToValueAtTime(0, at + 0.38); s.start(at, R() * 5); s.stop(at + 0.4); }
     else { const e = envAD(g.gain, at, vel, 0.002, 0.045); s.start(at, R() * 5); s.stop(e); }
     reap(s, [s, bp, g]);
@@ -771,9 +771,9 @@ export function createAudio(bus, opts = {}) {
     glide(lv.rec.gain, m('rec') * (lead === 'rec' ? 1 : M.rec), t, 0.3);
     glide(lv.uke.gain, m('uke') * 0.5 * M.uke, t, 0.4);
     glide(lv.pno.gain, m('pno') * 0.36 * M.pno, t, 0.4);
-    glide(lv.bass.gain, m('bass') * 0.42, t, 0.4);
-    glide(lv.dr.gain, m('dr') * M.dr * (coasting ? 0.5 : 1) * 0.3, t, 0.4);
-    glide(N.musLvl.gain, on * M.lvl * 0.62, t, musicOn ? 0.8 : 0.4);
+    glide(lv.bass.gain, m('bass') * 0.55, t, 0.4);
+    glide(lv.dr.gain, m('dr') * M.dr * (coasting ? 0.5 : 1) * 0.4, t, 0.4);
+    glide(N.musLvl.gain, on * M.lvl * 0.26, t, musicOn ? 0.8 : 0.4);      // sits about −22 dBFS under the effects
     glide(N.musSend.gain, mode === 'rain' || mode === 'lullaby' ? 0.32 : 0.22, t, 1);
     mus.info = B;
   }
@@ -810,7 +810,7 @@ export function createAudio(bus, opts = {}) {
     }
     // --- felt piano
     if (A.pno) {
-      if (A.pno === 'pad' || ending) { if (step === 0) voicing(pcs, 53, 69, 4).forEach((m, i) => piano(t + i * 0.01 + ht(8), m, 3 * beat * 0.98, hv(0.3))); }
+      if (A.pno === 'pad' || ending) { if (step === 0) voicing(pcs, 57, 72, 4).forEach((m, i) => piano(t + i * 0.01 + ht(8), m, 3 * beat * 0.98, hv(0.26))); }
       else if (step === 2 || step === 4) voicing(pcs, 57, 72, 3).forEach((m, i) => piano(t + i * 0.006 + ht(8), m, beat * 0.8, hv(step === 2 ? 0.26 : 0.22)));
     }
     // --- upright bass (mono, centre)
@@ -825,7 +825,7 @@ export function createAudio(bus, opts = {}) {
     if (A.dr && M.dr) {
       if (step === 0) brush(t + ht(10), hv(0.32), true);
       if (A.dr >= 1 && M.taps && (step === 2 || step === 4)) brush(t + ht(10), hv(0.16), false);
-      if (A.dr >= 2 && M.shk) shaker(t + ht(8), step % 2 ? 0.06 : 0.1);
+      if (A.dr >= 2 && M.shk) shaker(t + ht(8), hv(step % 2 ? 0.08 : 0.13));
     }
     if (A.swell != null && B.bi === A.swell && step === 0 && M.dr) brushSwell(t, 6 * beat, 0.22);
     // --- the page-turn flourish on the last beat of every section (and of the loop)
@@ -1005,7 +1005,8 @@ export function createAudio(bus, opts = {}) {
     // music duck: events (rig + voice) and nearby gags
     let near = false; const dz = fr.director;
     if (dz && dz.enc) for (const { kind, u } of dz.enc) if (kind !== 'kites' && kind !== 'fireworks' && u > -1.5 && u < 2) near = true;
-    const dk = t < duckUntil ? 0.5 : t < voiceUntil ? 0.62 : near ? 0.78 : 1;
+    const vz = solo && !solo.has('voice') ? 0 : voiceUntil;                // a muted voice never ducks (analysis renders)
+    const dk = t < duckUntil ? 0.6 : t < vz ? 0.72 : near ? 0.85 : 1;      // −4.4 / −2.9 / −1.4 dB
     glide(N.musDuck.gain, dk, t, dk < 1 ? 0.08 : 0.5);
     // music toggle (ui:toggle key music → state.toggles.music); opts.music / setMusic() win when given
     const want = musicWant !== null ? musicWant : !!(fr.toggles && fr.toggles.music === true);
@@ -1035,6 +1036,7 @@ export function createAudio(bus, opts = {}) {
   bus.on('ui:volume', ({ value } = {}) => api.setVolume(value));
   bus.on('ui:toggle', ({ key, value } = {}) => { if (key === 'music') { musicWant = !!value; if (ac && N) setMusic(musicWant); } });
   bus.on('ui:music', ({ on } = {}) => { musicWant = !!on; if (ac && N) setMusic(musicWant); });
+  bus.on('egg:found', ({ id } = {}) => { if (!ac || !N || !id) return; duckUntil = Math.max(duckUntil, now() + 2.2); stings.push({ kind: 'egg', notBefore: now() }); });
 
   const api = {
     async enable() {
@@ -1086,7 +1088,7 @@ export function createAudio(bus, opts = {}) {
     setMusic(on) { musicWant = !!on; if (ac && N) setMusic(musicWant); },
     // tests / judge: scheduled cue log (kind, audio time, pan), context state, tick rate, the music clock
     debug: () => ({ state: ac ? ac.state : 'none', log: log.slice(), tickRate, tickOn, masterTarget, paused, hidden, pawls: AUDIO.pawls, simT, hasFrame: !!lastFrame,
-      music: { on: musicOn, bar: mus.bar, step: mus.step, bpm: +mus.bpm.toFixed(2), mode: mus.arr ? mus.arr.mode : null, section: mus.info ? mus.info.sec : null, chords: mus.info ? mus.info.chords : null, crooning: mus.crooning } }),
+      music: { on: musicOn, bar: mus.bar, step: mus.step, bpm: +mus.bpm.toFixed(2), mode: mus.mode, section: mus.info ? mus.info.sec : null, chords: mus.info ? mus.info.ch.name : null, loops: mus.loops, done: mus.done, crooning: mus.crooning } }),
     get context() { return ac; },
   };
   return api;

@@ -27,7 +27,7 @@ export const STRINGS = {
     stroll: '散步', cruise: '巡航', sprint: '冲刺',
     tod: '时刻', auto: '自动昼夜',
     wide: '远景', close: '特写', cinematic: '电影',
-    sound: '声音', dlSvg: '动画 SVG', dlFrame: '当前帧', keys: '快捷键', lang: '语言',
+    sound: '声音', music: '音乐', dlSvg: '动画 SVG', dlFrame: '当前帧', keys: '快捷键', lang: '语言',
     langBi: '中 / EN', langZh: '中文', langEn: 'EN',
     dist: '里程', speed: '时速', rpm: '踏频', km: '公里', kmh: '公里/时', rpmU: '转/分',
     riding: '骑行中', paused: '已暂停', coasting: '滑行中',
@@ -35,7 +35,7 @@ export const STRINGS = {
     aBell: '叮铃叮铃！', aWave: '鹈鹕挥了挥翅膀', aHop: '蹦！', aNotYet: '还没落地呢，稍等', aFeed: '喂了一条鱼，咕嘟！',
     aPaused: '已暂停', aPlaying: '继续骑行', aCoastOn: '滑行中', aCoastOff: '继续踩踏',
     aCam: '镜头：{x}', aTod: '时刻：{x}', aAutoOn: '自动昼夜已开启', aAutoOff: '自动昼夜已关闭',
-    aSoundOn: '声音已开启', aSoundOff: '声音已关闭', aCadence: '{rpm} 转/分 · {kmh} 公里/时',
+    aSoundOn: '声音已开启', aSoundOff: '声音已关闭', aMusicOn: '背景音乐已开启', aMusicOff: '背景音乐已关闭', aCadence: '{rpm} 转/分 · {kmh} 公里/时',
     aBeat: '按你的节拍骑：{rpm} 转/分', aPrinting: '正在印制……', aSaved: '已下载 {x}', aLang: '语言：中文与英文',
     aLangZh: '语言：中文', aLangEn: '语言：英文', aKeysOff: '单键快捷键已关闭', aKeysOn: '单键快捷键已开启',
     hintFine: '点一下鹈鹕，喂它一条鱼', hintCoarse: '轻触鹈鹕，喂它一条鱼',
@@ -56,7 +56,7 @@ export const STRINGS = {
     stroll: 'Stroll', cruise: 'Cruise', sprint: 'Sprint',
     tod: 'Time of day', auto: 'Auto day cycle',
     wide: 'Wide', close: 'Close-up', cinematic: 'Cinematic',
-    sound: 'Sound', dlSvg: 'Animated SVG', dlFrame: 'This frame', keys: 'Shortcuts', lang: 'Language',
+    sound: 'Sound', music: 'Music', dlSvg: 'Animated SVG', dlFrame: 'This frame', keys: 'Shortcuts', lang: 'Language',
     langBi: '中 / EN', langZh: '中文', langEn: 'EN',
     dist: 'Distance', speed: 'Speed', rpm: 'Cadence', km: 'km', kmh: 'km/h', rpmU: 'rpm',
     riding: 'Riding', paused: 'Paused', coasting: 'Coasting',
@@ -64,7 +64,7 @@ export const STRINGS = {
     aBell: 'Ring ring!', aWave: 'The pelican waves a wing', aHop: 'Hop!', aNotYet: 'Not landed yet, one moment', aFeed: 'Fed a fish. Gulp!',
     aPaused: 'Paused', aPlaying: 'Riding on', aCoastOn: 'Coasting', aCoastOff: 'Pedalling again',
     aCam: 'Camera: {x}', aTod: 'Time of day: {x}', aAutoOn: 'Auto day cycle on', aAutoOff: 'Auto day cycle off',
-    aSoundOn: 'Sound on', aSoundOff: 'Sound off', aCadence: '{rpm} rpm · {kmh} km/h',
+    aSoundOn: 'Sound on', aSoundOff: 'Sound off', aMusicOn: 'Music on', aMusicOff: 'Music off', aCadence: '{rpm} rpm · {kmh} km/h',
     aBeat: 'Pedalling to your beat: {rpm} rpm', aPrinting: 'Printing…', aSaved: 'Downloaded {x}', aLang: 'Language: Chinese and English',
     aLangZh: 'Language: Chinese', aLangEn: 'Language: English', aKeysOff: 'Single-key shortcuts off', aKeysOn: 'Single-key shortcuts on',
     hintFine: 'Click the pelican to feed it a fish', hintCoarse: 'Tap the pelican to feed it a fish',
@@ -150,6 +150,7 @@ const IC = {
   cinematic: '<rect x="2.5" y="5" width="19" height="14" rx="1"/><path d="M2.5 8.5h19M2.5 15.5h19" stroke-width="3"/>',
   soundOn: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/>',
   soundOff: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9.5l5 5M20.5 9.5l-5 5"/>',
+  music: '<path d="M9 17.5V6l10-2.5v11.5"/><circle cx="6.6" cy="17.5" r="2.4"/><circle cx="16.6" cy="15" r="2.4"/>',
   dl: '<path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5M4 17v3.5h16V17"/>',
   frame: '<rect x="3.5" y="4.5" width="17" height="15" rx="1"/><rect x="6.5" y="7.5" width="11" height="9"/><circle cx="14.5" cy="10" r="1.3" fill="currentColor"/>',
   keys: '<rect x="2.5" y="6" width="19" height="12" rx="1.5"/><path d="M6 9.5h1M9.5 9.5h1M13 9.5h1M16.5 9.5h1M6 12.5h1M17 12.5h1M8.5 15h7"/>',
@@ -322,7 +323,8 @@ export function createUI(host, bus, init) {
           ${btn('dlSvg', 'dl', 'dlSvg')}
           ${btn('dlFrame', 'frame', 'dlFrame')}
         </div>
-        <div class="ui-row two" style="margin-top:5px">
+        <div class="ui-row" style="margin-top:5px">
+          ${rowb(btn('music', 'music', 'music', 'aria-pressed="false"'))}
           ${rowb(btn('help', 'keys', 'keys', 'aria-haspopup="dialog"'))}
           ${rowb(btn('lang', 'lang', 'lang'))}
         </div>
@@ -446,6 +448,7 @@ export function createUI(host, bus, init) {
     setIf('coast', !!S.coasting, c => { host.dataset.coasting = c; B.coast.setAttribute('aria-pressed', c); });
     setIf('stateTxt', `${playing}${S.coasting}${lang}`, () => { stateEl.innerHTML = bi(!playing ? 'paused' : S.coasting ? 'coasting' : 'riding'); });
     setIf('auto', !!S.todAuto, a => B.auto.setAttribute('aria-pressed', a));
+    setIf('music', !!S.toggles.sound && S.toggles.music !== false, m => B.music.setAttribute('aria-pressed', m));   // music plays only with sound on
     setIf('sound', !!S.toggles.sound, s => { B.sound.setAttribute('aria-pressed', s); B.sound.querySelector('.ico').innerHTML = IC[s ? 'soundOn' : 'soundOff']; });
     setIf('cam', S.cam, m => camBtns.forEach(b => { const on = b.dataset.cam === m; b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1; }));
     setIf('hud', S.toggles.hud !== false, on => { host.dataset.hud = on ? 'on' : 'off'; });
@@ -519,6 +522,12 @@ export function createUI(host, bus, init) {
     auto() { const on = !S.todAuto; bus.emit('ui:tod', { auto: on }); announce(on ? 'aAutoOn' : 'aAutoOff'); },
     coast() { const on = !S.coasting; bus.emit('ui:coast', { on }); announce(on ? 'aCoastOn' : 'aCoastOff'); },
     sound() { const on = !S.toggles.sound; bus.emit('ui:sound', { on }); announce(on ? 'aSoundOn' : 'aSoundOff'); },
+    music() {
+      const on = !(S.toggles.sound && S.toggles.music !== false);
+      bus.emit('ui:toggle', { key: 'music', value: on });
+      if (on && !S.toggles.sound) bus.emit('ui:sound', { on: true });                  // Music on also opens the sound
+      announce(on ? 'aMusicOn' : 'aMusicOff');
+    },
     speed(c, say) {
       const v = Math.max(CADENCE.min, Math.min(CADENCE.max, Math.round(c)));
       if (S.coasting) bus.emit('ui:coast', { on: false });

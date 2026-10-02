@@ -55,15 +55,15 @@ const parseBars = (str, tr = 0) => (str || '').split('|').map(b => {
 // the flattened loop: one record per bar
 const K4 = [0, 4, 8, 12], SN = [4, 12], E8 = [0, 2, 4, 6, 8, 10, 12, 14], X16 = [...Array(16).keys()];
 function arrange(id, bi) {
-  const A = { kick: K4, snare: SN, hat: 'off', bass: '8', arp: 16, pad: 1, padLp: 2400, lead: 1, leadLp: 2400, dbl: 0, sub: 0, bell: 1,
-    crash: bi === 0, lp: 20000, fill: false, riser: 0, roll: false, gap: 16, clap: false, arpLp: 2600, pat: 0 };
+  const A = { kick: K4, snare: SN, hat: 'off', bass: '8', arp: 16, pad: 1, padLp: 3800, lead: 1, leadLp: 3600, dbl: 0, sub: 0, bell: 1,
+    crash: bi === 0, lp: 20000, fill: false, riser: 0, roll: false, gap: 16, clap: false, arpLp: 4000, pat: 0 };
   if (id === 'Intro') {
     A.crash = false; A.lead = 0; A.fill = bi === 7; A.riser = bi === 6 ? 2 : 0;
-    if (bi < 4) { A.kick = []; A.snare = []; A.hat = 'none'; A.bass = 'none'; A.padLp = 500 + 420 * bi; A.arpLp = 700 + 450 * bi; }
+    if (bi < 4) { A.kick = []; A.snare = []; A.hat = 'none'; A.bass = 'none'; A.padLp = 500 + 420 * bi; A.arpLp = 700 + 450 * bi; A.pad = 1.35; }
     else if (bi < 6) { A.snare = []; A.hat = '16s'; }
   } else if (id === 'A') { A.fill = bi === 7; }
-  else if (id === 'A1') { A.hat = '16'; A.bass = '16'; A.fill = bi === 7; A.leadLp = 3000; A.pat = 1; A.arpLp = 3200; }
-  else if (id === 'B') { A.kick = [0, 10]; A.snare = [8]; A.hat = '8'; A.bass = 'half'; A.arp = 8; A.padLp = 3200; A.pad = 1.2; A.leadLp = 2800; A.riser = bi === 7 ? 1 : 0; }
+  else if (id === 'A1') { A.hat = '16'; A.bass = '16'; A.fill = bi === 7; A.leadLp = 4400; A.pat = 1; A.arpLp = 4800; }
+  else if (id === 'B') { A.kick = [0, 10]; A.snare = [8]; A.hat = '8'; A.bass = 'half'; A.arp = 8; A.padLp = 4600; A.pad = 1.2; A.leadLp = 4000; A.riser = bi === 7 ? 1 : 0; }
   else if (id === 'Br') {
     A.crash = false;
     if (bi < 4) { A.kick = []; A.snare = []; A.hat = 'none'; A.bass = 'hold'; A.lp = 1000; A.pad = 1.1; }
@@ -71,10 +71,10 @@ function arrange(id, bi) {
       A.lp = 1400 + 4200 * (bi - 4); A.kick = bi === 4 ? [0, 8] : K4; A.roll = true; A.hat = bi >= 5 ? '8' : 'none';
       A.snare = bi === 4 ? [] : bi === 5 ? K4 : bi === 6 ? E8 : X16; A.riser = bi === 6 ? 2 : 0; A.gap = bi === 7 ? 14 : 16;
     }
-  } else if (id === 'A2') { A.hat = '16'; A.bass = '16'; A.clap = true; A.dbl = 1; A.sub = 1; A.crash = bi % 8 === 0; A.fill = bi === 15; A.leadLp = 3400; A.pad = 1.15; A.pat = 1; A.arpLp = 3600; }
+  } else if (id === 'A2') { A.hat = '16'; A.bass = '16'; A.clap = true; A.dbl = 1; A.sub = 1; A.crash = bi % 8 === 0; A.fill = bi === 15; A.leadLp = 5200; A.pad = 1.15; A.pat = 1; A.arpLp = 5600; }
   else if (id === 'Out') {
     if (bi >= 4) { A.snare = []; A.hat = bi < 6 ? 'off' : 'none'; }
-    if (bi >= 6) { A.kick = []; A.bass = 'hold'; A.pad = bi === 6 ? 0.9 : 0.7; A.padLp = bi === 6 ? 1800 : 1200; }
+    if (bi >= 6) { A.kick = []; A.bass = 'hold'; A.pad = bi === 6 ? 0.9 : 0.7; A.padLp = bi === 6 ? 2400 : 1400; A.fade = bi === 7; }
   }
   return A;
 }
@@ -92,7 +92,7 @@ export const BARS = LOOP.length, LOOP_SEC = BARS * BAR;
 export const SECTIONS = (() => { let b = 0; return FORM.map(s => { const n = s.ch.split(' ').length, r = { id: s.id, name: s.name, from: b, bars: n }; b += n; return r; }); })();
 
 // ============================================================================ the synth
-const BASE = { kick: 0.8, snare: 0.4, hat: 0.15, bass: 0.3, pad: 0.17, arp: 0.1, lead: 0.17, bell: 0.13, fx: 0.12 };
+const BASE = { kick: 0.4, snare: 0.26, hat: 0.24, bass: 0.13, pad: 0.095, arp: 0.09, lead: 0.1, bell: 0.12, fx: 0.065 };
 export function createBGM(ac, dest, o = {}) {
   let seed = (o.seed ?? 7) >>> 0;
   const R = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -170,7 +170,7 @@ export function createBGM(ac, dest, o = {}) {
     const e1 = env(xg.gain, t, 0.55, 0.001, 0.08);
     const s = ac.createBufferSource(), bp = F('bandpass', 2200, 0.6), sg = G(0); s.buffer = white; wire(s, bp, sg, bus);
     const e2 = env(sg.gain, t, 0.75, 0.002, 0.12);
-    const tl = ac.createBufferSource(), thp = F('highpass', 600, 0.5), tlp = F('lowpass', 7000, 0.5), tgn = G(0); tl.buffer = pink; wire(tl, thp, tlp, tgn, bus);
+    const tl = ac.createBufferSource(), thp = F('highpass', 600, 0.5), tlp = F('lowpass', 10000, 0.5), tgn = G(0); tl.buffer = pink; wire(tl, thp, tlp, tgn, bus);
     const hold = gated ? 0.22 : 0.05;
     tgn.gain.setValueAtTime(0, t + 0.004); tgn.gain.linearRampToValueAtTime(0.5, t + 0.016); tgn.gain.linearRampToValueAtTime(0.34, t + hold); tgn.gain.linearRampToValueAtTime(0, t + hold + 0.015);
     x.start(t); x.stop(e1); s.start(t, R() * 1.5); s.stop(e2); tl.start(t, R() * 2); tl.stop(t + hold + 0.04);
@@ -184,7 +184,7 @@ export function createBGM(ac, dest, o = {}) {
   }
   function hat(t, v, open) {
     const s = ac.createBufferSource(), hp = F('highpass', 7800, 0.7), lp = F('lowpass', 14000, 0.7), g = G(0), pn = Pan(0.25); s.buffer = white;
-    wire(s, hp, lp, g, pn, part.hat); const e = env(g.gain, t, v, 0.0015, open ? 0.12 : 0.03); s.start(t, R() * 2); s.stop(e); reap(s, [s, hp, lp, g, pn]);
+    wire(s, hp, lp, g, pn, part.hat); const e = env(g.gain, t, v, 0.0015, open ? 0.14 : 0.04); s.start(t, R() * 2); s.stop(e); reap(s, [s, hp, lp, g, pn]);
   }
   function crash(t, v) {
     const s = ac.createBufferSource(), hp = F('highpass', 4500, 0.6), g = G(0), pn = Pan(-0.2); s.buffer = white; s.loop = true;
@@ -247,7 +247,7 @@ export function createBGM(ac, dest, o = {}) {
       tg(bF.frequency, cut, tb, 0.002); tg(bF.frequency, cut * 0.3, tb + 0.008, s16 * 0.7);
     };
     if (!mute) {
-      if (A.bass === 'hold') { if (s === 0) { b1.frequency.setTargetAtTime(mtof(root), t, 0.02); b2.frequency.setTargetAtTime(mtof(root), t, 0.02); tg(bV.gain, 0.6, t, 0.05); tg(bF.frequency, 380, t, 0.05); } if (s === 12) tg(bV.gain, 0.3, t, 0.2); }
+      if (A.bass === 'hold') { if (s === 0) { b1.frequency.setTargetAtTime(mtof(root), t, 0.02); b2.frequency.setTargetAtTime(mtof(root), t, 0.02); tg(bV.gain, 0.6, t, 0.05); tg(bF.frequency, 380, t, 0.05); } if (s === 12) tg(bV.gain, 0.3, t, 0.2); if (A.fade && s === 4) tg(bV.gain, 0, t, 0.5); }
       else if (A.bass === '8') { if (s % 2 === 0) bn(root + (s % 4 === 2 ? 12 : 0), s16 * 2, hum(s % 4 ? 0.75 : 0.95), s % 4 ? 1500 : 1900); }
       else if (A.bass === '16') bn(root + (s % 4 === 2 ? 12 : 0), s16, hum(s % 4 === 0 ? 0.95 : 0.72), s % 4 === 0 ? 2000 : 1400);
       else if (A.bass === 'half') { if (s % 2 === 0) bn(root + (s === 14 ? 12 : 0), s16 * 2.6, hum(s % 8 ? 0.7 : 0.9), 900); }
