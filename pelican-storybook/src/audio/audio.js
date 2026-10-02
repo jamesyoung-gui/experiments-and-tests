@@ -56,32 +56,56 @@ function mulberry(a) {
   return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 
-// ======================================================================================== the score (docs/AUDIO.md)
-// F major, 4/4, 8th-note grid (8 steps per bar). Melody tokens: <note>:<eighths>, r = rest.
+// ======================================================================================== the score (docs/BGM.md)
+// "晚安，鹈鹕 · Goodnight, Pelican": a bedtime waltz in F major, 3/4, 88 bpm, 88 bars = 3:00 a pass.
+// Intro(8) · A(16) · A'(16) · B(16, in B♭) · Bridge(8, D minor → C7) · A''(16) · Outro(8). One chord per bar.
+// Melody / counter tokens: <note>:<eighths> (6 eighths to the bar), bars separated by '|', r = rest.
+// Arrangement keys: lead cel|glk|rec · dbl glock octave · ctr recorder counter-line · uke waltz|pick|strum ·
+// pno pad|waltz · bass one|onethree|pedal · dr 0 / 0.5 swish / 1 +taps / 2 +shaker · arp celesta broken chords ·
+// spark glock fills at phrase ends · enter: bar where uke + bass come in · roll: bar where the ending begins.
 const PC = { C: 0, Db: 1, D: 2, Eb: 3, E: 4, F: 5, 'F#': 6, Gb: 6, G: 7, Ab: 8, A: 9, Bb: 10, B: 11 };
-const CHORD = {              // pitch classes, root first; bass = slash-chord bass
-  F: [5, 9, 0], Dm: [2, 5, 9], Bb: [10, 2, 5], C: [0, 4, 7], C7: [0, 4, 7, 10], Am: [9, 0, 4], Gm: [7, 10, 2],
-  Bbm: [10, 1, 5], D7: [2, 6, 9, 0], 'F/A': [5, 9, 0],
-};
-const BASS = { 'F/A': 9 };
-const COLOR = { F: 4, Dm: 0, Bb: 9, C: 2, Am: 7, Gm: 5, C7: 2, D7: 4 };   // lullaby colour tones (maj7 / m7 / add9)
-export const SONG = [
-  { name: 'A', chords: ['F', 'Dm', 'Bb', 'C', 'F', 'Am', 'Bb C', 'F'],
-    mel: ['C5:3 A4:1 F4:2 A4:2', 'D5:3 C5:1 A4:4', 'Bb4:2 D5:2 F5:3 D5:1', 'C5:6 r:2', 'C5:3 A4:1 F4:2 A4:2', 'E5:3 D5:1 C5:2 A4:2', 'Bb4:2 D5:2 C5:2 E4:2', 'F4:6 r:2'] },
-  { name: "A'", chords: ['F', 'Dm', 'Gm', 'C7', 'F', 'Am', 'Bb C7', 'F'],
-    mel: ['A4:2 C5:2 F5:3 E5:1', 'D5:2 F5:2 A5:3 G5:1', 'G5:3 F5:1 D5:2 Bb4:2', 'C5:4 E5:2 G5:2', 'A5:3 G5:1 F5:2 C5:2', 'E5:2 G5:2 E5:2 C5:2', 'D5:2 Bb4:2 C5:2 E5:2', 'F5:6 r:2'] },
-  { name: 'B', chords: ['Bb', 'C', 'Am', 'Dm', 'Gm', 'C', 'F/A Bb', 'C7'],
-    mel: ['F5:3 D5:1 Bb4:4', 'G5:3 E5:1 C5:4', 'A5:2 G5:2 E5:2 C5:2', 'D5:6 r:2', 'Bb4:2 D5:2 G5:3 F5:1', 'E5:2 G5:2 C5:4', 'A4:2 C5:2 D5:2 F5:2', 'E5:3 D5:1 C5:2 Bb4:2'] },
-  { name: "A''", chords: ['F', 'Dm', 'Bb', 'C', 'Dm', 'Bb', 'C7', 'F'],
-    mel: ['C5:3 A4:1 F4:2 A4:2', 'D5:3 C5:1 A4:2 F5:2', 'F5:3 D5:1 Bb4:2 D5:2', 'C5:4 G4:2 C5:2', 'D5:2 F5:2 A5:2 F5:2', 'G5:2 F5:2 D5:2 Bb4:2', 'G5:2 E5:2 C5:2 E5:2', 'F5:6 r:2'] },
+const QUAL = { '': [0, 4, 7], m: [0, 3, 7], 7: [0, 4, 7, 10], m7: [0, 3, 7, 10], '7sus': [0, 5, 7, 10] };
+const HOOK = 'C5:4 A4:2|F5:2 E5:2 C5:2';                 // the hook: "good-night, pe-li-can"
+const CTR = 'r:2 A4:4|G4:2 A4:4|r:2 F4:4|A4:6|r:2 F4:4|Bb4:6|G4:4 F4:2|Bb4:6|';
+export const SCORE = [
+  { name: 'Intro', key: 'F', chords: 'F F Bb C7 F Dm Bb C7', lvl: 0.8,
+    mel: 'C6:4 A5:2|F6:2 E6:2 C6:2|D6:4 Bb5:2|G5:6|r:6|r:6|r:2 D6:2 F6:2|E6:4 r:2',
+    arr: { lead: 'glk', uke: 'waltz', pno: 'pad', bass: 'one', dr: 0, enter: 4 } },
+  { name: 'A', key: 'F', chords: 'F F Dm Dm Bb Gm C C7 F F Dm Am Bb C7 F F', lvl: 0.9,
+    mel: HOOK + '|D5:4 A4:2|F4:6|D5:4 Bb4:2|G5:2 F5:2 D5:2|E5:4 D5:2|C5:6|' + HOOK + '|D5:4 F5:2|E5:4 C5:2|F5:4 D5:2|C5:4 Bb4:2|A4:6|F4:4 r:2',
+    arr: { lead: 'cel', uke: 'waltz', bass: 'one', dr: 0.5, spark: 1 } },
+  { name: "A'", key: 'F', chords: 'F F Dm Dm Bb Gm C C7 F F Dm Am Bb C7 F F7', lvl: 1,
+    mel: 'C5:3 Bb4:1 A4:2|F5:2 G5:1 F5:1 E5:1 C5:1|D5:4 A4:2|F5:4 E5:2|D5:3 C5:1 Bb4:2|G5:2 A5:2 Bb5:2|A5:2 G5:2 E5:2|G5:4 r:2|' + HOOK + '|D5:4 F5:2|A5:4 E5:2|Bb5:2 A5:2 F5:2|G5:2 E5:2 C5:2|F5:6|Eb5:2 D5:2 C5:2',
+    ctr: CTR + 'r:2 A4:4|G4:2 A4:4|r:2 A4:4|C5:6|r:2 D5:4|Bb4:6|A4:4 C5:2|A4:2 Bb4:2 C5:2',
+    arr: { lead: 'cel', uke: 'pick', pno: 'waltz', bass: 'onethree', dr: 1 } },
+  { name: 'B', key: 'Bb', chords: 'Bb Gm Eb F Bb Gm Cm F7 Bb Dm Eb Cm Bb/F F7 Bb Bb', lvl: 0.95,
+    mel: 'F4:2 Bb4:2 D5:2|F5:4 D5:2|Eb5:4 G4:2|C5:6|F4:2 Bb4:2 D5:2|G5:4 F5:2|Eb5:2 D5:2 C5:2|A4:4 C5:2|D5:2 F5:2 Bb5:2|A5:4 F5:2|G5:4 Eb5:2|C5:4 Eb5:2|D5:4 F5:2|Eb5:2 C5:2 A4:2|Bb4:6|r:6',
+    arr: { lead: 'rec', arp: 1, pno: 'waltz', bass: 'onethree', dr: 1 } },
+  { name: 'Bridge', key: 'Dm', chords: 'Dm Dm Bb Bb Gm7 Gm7 C7sus C7', lvl: 0.8,
+    mel: 'A4:4 F4:2|D5:2 C5:2 A4:2|Bb4:4 F4:2|D5:2 C5:2 Bb4:2|Bb4:4 G4:2|D5:2 C5:2 Bb4:2|C5:6|r:2 E4:2 G4:2',
+    arr: { lead: 'cel', pno: 'pad', bass: 'pedal', dr: 0, spark: 1, swell: 6 } },
+  { name: "A''", key: 'F', chords: 'F F Dm Dm Bb Gm C C7 F F7 Bb Bbm F/C C7 F F', lvl: 1.05,
+    mel: HOOK + '|D5:4 A4:2|F5:4 E5:2|D5:4 Bb4:2|G5:2 F5:2 D5:2|E5:4 D5:2|C5:6|' + HOOK.split('|')[0] + '|F5:2 G5:2 A5:2|Bb5:4 F5:2|F5:4 Db5:2|A4:2 C5:2 F5:2|G5:4 E5:2|F5:6|r:6',
+    ctr: CTR + 'r:2 A4:4|r:2 Eb5:4|D5:6|Bb4:6|C5:6|Bb4:4 G4:2|A4:6|r:6',
+    arr: { lead: 'cel', dbl: 1, uke: 'strum', pno: 'waltz', bass: 'onethree', dr: 2 } },
+  { name: 'Outro', key: 'F', chords: 'F Bb/F F Bb/F Gm7 C7 F F', lvl: 0.85,
+    mel: 'C6:4 A5:2|D6:4 Bb5:2|C6:4 A5:2|D6:4 Bb5:2|Bb5:2 A5:2 G5:2|E5:2 G5:2 Bb5:2|A5:6|F5:6',
+    arr: { lead: 'glk', uke: 'pick', pno: 'pad', bass: 'one', dr: 0, roll: 6 } },
 ];
-const LIFT_B8 = { chord: 'D7', mel: 'F#5:3 E5:1 D5:2 C5:2' };   // odd verses: pivot to G major for the last A''
-const INTRO = ['C7'];                 // a one-bar vamp on the dominant before 'once upon a time'
 const noteNum = s => { const m = /^([A-G](?:b|#)?)(-?\d)$/.exec(s); return m ? PC[m[1]] + 12 * (+m[2] + 1) : null; };
-const parseBar = str => { let s = 0; const out = []; for (const tok of str.trim().split(/\s+/)) { const [n, d] = tok.split(':'); const dd = +d; if (n !== 'r') out.push({ s, d: dd, m: noteNum(n) }); s += dd; } return out; };
-const SONG_P = SONG.map(sec => ({ ...sec, notes: sec.mel.map(parseBar), ch: sec.chords.map(c => c.split(' ')) }));
-const LIFT_P = parseBar(LIFT_B8.mel);
-export const SONG_BARS = SONG.length * 8;
+const parseBar = str => { let s = 0; const out = []; for (const tok of str.trim().split(/\s+/)) { const [n, d] = tok.split(':'); if (n !== 'r') out.push({ s, d: +d, m: noteNum(n) }); s += +d; } out.len = s; return out; };
+const chordOf = name => {
+  const m = /^([A-G][b#]?)(m7|7sus|m|7|)(?:\/([A-G][b#]?))?$/.exec(name), r = PC[m[1]];
+  return { name, pcs: QUAL[m[2]].map(x => (x + r) % 12), bass: m[3] ? PC[m[3]] : r };
+};
+// the score flattened to bars: { sec, si, bi, ch, notes, ctr, A, lvl, last, next (first chord of the next section) }
+export const BARS = [];
+SCORE.forEach((S, si) => {
+  const ch = S.chords.split(' ').map(chordOf), mel = S.mel.split('|').map(parseBar), ctr = S.ctr ? S.ctr.split('|').map(parseBar) : null;
+  ch.forEach((c, bi) => BARS.push({ sec: S.name, si, bi, ch: c, notes: mel[bi] || [], ctr: ctr ? ctr[bi] : null, A: S.arr, lvl: S.lvl, last: bi === ch.length - 1, mlen: mel.length, clen: ctr ? ctr.length : 0 }));
+});
+BARS.forEach((b, i) => { b.next = BARS[(i + 1) % BARS.length].ch; });
+export const BGM = { title: '晚安，鹈鹕 · Goodnight, Pelican', key: 'F major', meter: '3/4', bpm: 88, night: 80, bars: BARS.length, beats: 3 };
 
 export function createAudio(bus, opts = {}) {
   const offline = !!(opts.context && typeof opts.context.startRendering === 'function');
@@ -261,11 +285,18 @@ export function createAudio(bus, opts = {}) {
     wire(crOsc, crLp); crLp.connect(crF1); wire(crLp, crF2, crF2g, crSum); crF1.connect(crSum); wire(crSum, crG, vPan);
 
     // music: instrument buses → musIn → duck → level → music bus (+ plate send)
-    const musIn = G(1), musHp = F('highpass', 55, 0.6), musDuck = G(1), musLvl = G(0);
+    // (the bass stays mono in the centre and skips the chorus; pads and plucks get a low cut and a gentle chorus)
+    const musIn = G(1), musHp = F('highpass', 40, 0.6), musDuck = G(1), musLvl = G(0);
     wire(musIn, musHp, musDuck, musLvl, music); const musSend = G(0.22); musLvl.connect(musSend); musSend.connect(vin.music);
-    const inst = (pan, lpF) => { const p = Pan(pan); if (lpF) { const lp = F('lowpass', lpF, 0.6); wire(lp, p, musIn); return { in: lp, g: null }; } p.connect(musIn); return { in: p }; };
-    const ukeI = inst(-0.28, 3600), melI = inst(0.05, 4200), bassI = inst(0.02, 900), glkI = inst(0.32, 0), whiI = inst(0.12, 0), drI = inst(-0.08, 0);
-    const lv = {}; for (const [k, i] of Object.entries({ uke: ukeI, mel: melI, bass: bassI, glk: glkI, whi: whiI, dr: drI })) { lv[k] = G(0); lv[k].connect(i.in); }
+    const wide = G(1); wide.connect(musIn);                                   // stereo chorus: two slow modulated taps
+    for (const [d0, lfoF, p] of [[0.011, 0.27, -0.7], [0.016, 0.33, 0.7]]) {
+      const dl = ac.createDelay(0.05), lfo = O('sine', lfoF), dep = G(0.0014), pn = Pan(p), wg = G(0.32);
+      dl.delayTime.value = d0; wire(lfo, dep); dep.connect(dl.delayTime); wire(wide, dl, pn, wg, musIn); lfo.start(now());
+    }
+    const inst = (pan, hpF, lpF, dest = wide) => { const p = Pan(pan), hp = F('highpass', hpF, 0.7), lp = F('lowpass', lpF, 0.6); wire(hp, lp, p, dest); return hp; };
+    const IN = { uke: inst(-0.3, 140, 3800), cel: inst(0.12, 200, 7000), glk: inst(0.34, 300, 9000), pno: inst(-0.12, 110, 5000),
+      rec: inst(0.22, 220, 6000, musIn), bass: inst(0, 30, 900, musIn), dr: inst(-0.1, 200, 12000, musIn) };
+    const lv = {}; for (const k in IN) { lv[k] = G(0); lv[k].connect(IN[k]); }
 
     const t0 = now();
     for (const s of [windSrc, roadSrc, gritSrc, seaSrc, rainSrc, chSrc, humSrc]) s.start(t0, R() * 5);
@@ -589,56 +620,23 @@ export function createAudio(bus, opts = {}) {
     logCue('owl', at); caption('owl');
   }
 
-  // ================================================================== music
-  const mus = { bar: -1, step: 0, nextT: 0, bpm: 84, bpm0: 84, bpm1: 84, arr: null, strings: [], lastMode: '', started: false, crooning: false, lastRoot: 41 };
-  function rung(raw, cur) {             // snap to the tempo ladder with hysteresis (±35 % of a rung)
-    const L = AUDIO.tempi; let best = L[0];
-    for (const v of L) if (Math.abs(v - raw) < Math.abs(best - raw)) best = v;
-    const i = L.indexOf(cur);
-    if (i >= 0 && best !== cur) { const gap = best > cur ? (L[i + 1] ?? cur) - cur : cur - (L[i - 1] ?? cur); if (Math.abs(raw - cur) < gap * 0.85) return cur; }
-    return best;
-  }
-  function tempoTarget() {
-    let raw = 58 + 0.5 * cadence;
-    if (night > 0.6) raw *= 0.86; else if (night > 0.3) raw *= 0.94;
-    if ((wx.rain || 0) > 0.3) raw *= 0.94;
-    return rung(clamp(raw, 60, 116), mus.bpm1);
-  }
-  function arrangement(bar) {
+  // ================================================================== music: "Goodnight, Pelican" (docs/BGM.md)
+  const NB = BARS.length, once = opts.bgm === 'once';
+  const mus = { bar: 0, step: 0, nextT: 0, bpm: BGM.bpm, mode: 'sun', strings: [], lastMode: '', crooning: false, done: false, loops: 0 };
+  // the page adapts by layers (never by tempo jitter): drums, shaker, recorder and doubling thin out at dusk, in rain,
+  // and at night; the tempo only steps between two rungs (88 day / 80 night), and only at a section's first bar.
+  const MODES = {
+    sun: { dr: 1, shk: 1, taps: 1, uke: 1, pno: 1, rec: 1, glk: 1, lvl: 1 },
+    soft: { dr: 0.65, shk: 0, taps: 1, uke: 0.9, pno: 1, rec: 0.9, glk: 0.9, lvl: 0.92 },
+    rain: { dr: 0.5, shk: 0, taps: 0, uke: 0.85, pno: 1.05, rec: 0.8, glk: 0.8, lvl: 0.88 },
+    lullaby: { dr: 0, shk: 0, taps: 0, uke: 0.7, pno: 0.85, rec: 0.55, glk: 0.75, lvl: 0.85 },
+  };
+  function modeNow() {
     const rain = wx.rain || 0, fog = wx.fog || 0, cloud = wx.cloud || 0;
-    const mode = night > 0.6 ? 'lullaby' : rain > 0.3 ? 'rain' : (fog > 0.4 || cloud > 0.55 || night > 0.3) ? 'soft' : 'sun';
-    const b = ((bar % SONG_BARS) + SONG_BARS) % SONG_BARS, sec = Math.floor(b / 8), cyc = Math.max(0, Math.floor(bar / SONG_BARS));
-    const A = { mode, sec, cyc, minor: mode === 'rain', color: mode === 'lullaby', swing: mode === 'sun' ? 0.57 : mode === 'soft' ? 0.54 : 0.5 };
-    if (mode === 'lullaby') Object.assign(A, { mel: 'glk', melUp: 12, pat: 'pick2', bass: 'whole', drums: 0, kick: false, glkFill: true, level: 0.8 });
-    else if (mode === 'rain') Object.assign(A, { mel: 'uke', melUp: 0, pat: 'pick', bass: 'two', drums: 0.45, kick: false, glkFill: false, level: 0.72 });
-    else if (mode === 'soft') Object.assign(A, { mel: cyc % 2 ? 'whi' : 'uke', melUp: 0, pat: 'pick', bass: 'two', drums: 0.55, kick: false, glkFill: true, level: 0.82 });
-    else {
-      const rot = [['uke', 'whi', 'uke', 'whi'], ['whi', 'uke', 'glk', 'whi']][cyc % 2];
-      Object.assign(A, { mel: rot[sec], melUp: rot[sec] === 'glk' ? 12 : 0, pat: 'strum', bass: 'walk', drums: 1, kick: true, glkFill: true, dbl: sec === 3, level: 1 });
-    }
-    A.shaker = mode !== 'lullaby' && cadence > 86 && !coasting;
-    A.lift = cyc % 2 === 1 && mode !== 'rain';                 // odd verses modulate the last A'' up a tone
-    A.tr = A.lift && sec === 3 ? 2 : 0;
-    A.orn = cyc >= 1;
-    return A;
+    return night > 0.6 ? 'lullaby' : rain > 0.3 ? 'rain' : (fog > 0.4 || cloud > 0.55 || night > 0.3) ? 'soft' : 'sun';
   }
-  function barInfo(bar, A) {            // chords (per half bar) and melody of this bar, with the variations applied
-    if (bar < 0) { const c = INTRO[bar + INTRO.length]; return { chords: [c, c], notes: [], intro: true }; }
-    const b = ((bar % SONG_BARS) + SONG_BARS) % SONG_BARS, sec = SONG_P[Math.floor(b / 8)], bi = b % 8;
-    let ch = sec.ch[bi].slice(), notes = sec.notes[bi];
-    if (A.lift && sec.name === 'B' && bi === 7) { ch = [LIFT_B8.chord]; notes = LIFT_P; }
-    if (ch.length === 1) ch = [ch[0], ch[0]];
-    if (A.minor) {                     // rain: borrowed iv (Bb → Bbm) and I → vi in the middle of the phrase
-      ch = ch.map(c => c === 'Bb' ? 'Bbm' : c);
-      if (bi === 4 && ch[0] === 'F') ch = ['Dm', 'Dm'];
-      notes = notes.map(n => (ch[n.s < 4 ? 0 : 1] === 'Bbm' && (n.m % 12) === 2) ? { ...n, m: n.m - 1 } : n);
-    }
-    return { chords: ch, notes, bi, sec: sec.name };
-  }
-  const chordPcs = (name, tr, color) => { const c = CHORD[name] || CHORD.F; let p = c.map(x => (x + tr) % 12); if (color && COLOR[name] != null) p = [...p, (COLOR[name] + tr) % 12]; return p; };
-  const chordRoot = (name, tr) => ((BASS[name] ?? (CHORD[name] || CHORD.F)[0]) + tr) % 12;
   function voicing(pcs, lo = 55, hi = 70, max = 4) { const v = []; for (let m = lo; m <= hi; m++) if (pcs.includes(m % 12)) v.push(m); return v.slice(0, max); }
-  const bassMidi = pc => 33 + ((pc - 9 + 12) % 12);
+  const bassMidi = pc => 33 + ((pc - 9 + 12) % 12);       // A1 … G#2
 
   // --- instruments (one-shots)
   function pluck(at, midi, vel, kind, dest, stringIx = -1, dur = 0) {
@@ -656,36 +654,94 @@ export function createAudio(bus, opts = {}) {
   function bell2(at, midi, vel, dest = N.lv.glk) {
     const e = glk(midi), s = bufSrc(e.buf), g = G(vel); wire(s, g, dest); s.start(at); reap(s, [s, g]);
   }
-  function whistle(at, midi, dur, vel) {
-    const f = mtof(midi), o = O('sine', f), h2 = O('sine', f * 2), h2g = G(0.06), vib = O('sine', rr(4.8, 5.6)), vg = G(0), env = G(0);
-    const ns = bufSrc(N.whiteB), nb = F('bandpass', f, 6), ng = G(0.25);
-    o.frequency.setValueAtTime(f * 0.975, at); o.frequency.exponentialRampToValueAtTime(f, at + 0.05);
-    h2.frequency.setValueAtTime(f * 1.95, at); h2.frequency.exponentialRampToValueAtTime(f * 2, at + 0.05);
-    wire(vib, vg); vg.connect(o.frequency); vg.gain.setValueAtTime(0, at); vg.gain.linearRampToValueAtTime(f * 0.007, at + Math.min(0.35, dur));
-    wire(o, env); wire(h2, h2g, env); wire(ns, nb, ng, env); env.connect(N.lv.whi);
-    const rel = 0.07, end = at + Math.max(0.09, dur);
-    env.gain.setValueAtTime(0, at); env.gain.linearRampToValueAtTime(vel, at + 0.035); env.gain.setValueAtTime(vel * 0.85, end - rel); env.gain.linearRampToValueAtTime(0, end);
-    for (const x of [o, h2, vib]) { x.start(at); x.stop(end + 0.02); }
+  // celesta: hammered steel bar over a resonator. A strong fundamental with a slow 0.4 Hz shimmer pair, a faint
+  // octave, the bright 4th partial that dies fast, and a felt hammer tick. Pre-rendered with a rotating phasor.
+  const CEL = new Map();
+  function addPartial(d, sr, f, a, tau) {
+    if (f >= sr * 0.45) return;
+    const w = TAU * f / sr, c = Math.cos(w), s = Math.sin(w), k = Math.exp(-1 / (tau * sr));
+    let x = 0, y = 1, e = a;
+    for (let i = 0; i < d.length; i++) { d[i] += x * e; const nx = x * c + y * s; y = y * c - x * s; x = nx; e *= k; }
+  }
+  function cel(midi) {
+    let e = CEL.get(midi); if (e) return e;
+    const sr = ac.sampleRate, f = mtof(midi), n = Math.floor(2.2 * sr), buf = ac.createBuffer(1, n, sr), d = buf.getChannelData(0);
+    const k = clamp(1 - (midi - 72) * 0.025, 0.5, 1.3);
+    for (const [r, a, t] of [[1, 1, 1.5], [1.0008, 0.32, 1.3], [2, 0.05, 0.5], [3.98, 0.15, 0.2], [9.8, 0.03, 0.05]]) addPartial(d, sr, f * r, a, t * k);
+    const A = Math.floor(sr * 0.0012), Z = Math.floor(sr * 0.04);
+    for (let i = 0; i < n; i++) d[i] = (d[i] + (R() * 2 - 1) * 0.1 * Math.exp(-i / (sr * 0.0012))) * Math.min(1, i / A) * Math.min(1, (n - i) / Z) * 0.62;
+    e = { buf }; CEL.set(midi, e);
+    return e;
+  }
+  function celesta(at, midi, vel) { const e = cel(midi), s = bufSrc(e.buf), g = G(vel); wire(s, g, N.lv.cel); s.start(at); reap(s, [s, g]); }
+  // felt piano: live partials (slightly stretched, two detuned unison strings), a fast-then-slow two-stage decay,
+  // a soft hammer thump, a velocity-dependent felt lowpass and a damper release at the note's end
+  function piano(at, midi, dur, vel) {
+    const f = mtof(midi), lp = F('lowpass', 1100 + 1600 * vel, 0.5), env = G(0), kt = clamp(1.7 - (midi - 60) * 0.03, 0.6, 2.4);
+    wire(lp, env, N.lv.pno);
+    const end = at + Math.max(0.12, dur), nodes = [lp, env], oscs = [];
+    for (const [n, a, det] of [[1, 0.62, -0.9], [1, 0.5, 0.9], [2, 0.34, 0.4], [3, 0.13, -0.3], [4, 0.06, 0]]) {
+      const o = O('sine', f * n * Math.sqrt(1 + 0.0004 * n * n)), g = G(0); o.detune.value = det;
+      wire(o, g, lp); nodes.push(o, g); oscs.push(o);
+      g.gain.setValueAtTime(a, at); g.gain.setTargetAtTime(a * 0.4, at + 0.004, 0.11 / n); g.gain.setTargetAtTime(0, at + 0.3, kt / n);
+    }
+    env.gain.setValueAtTime(0, at); env.gain.linearRampToValueAtTime(vel, at + 0.005);
+    env.gain.setValueAtTime(vel, end); env.gain.setTargetAtTime(0, end, 0.09);
+    const th = bufSrc(N.brownB), tl = F('lowpass', 900, 0.7), tg = G(0); wire(th, tl, tg, N.lv.pno); nodes.push(th, tl, tg);
+    envAD(tg.gain, at, vel * 0.18, 0.002, 0.03); th.start(at, R() * 5); th.stop(at + 0.06);
+    for (const o of oscs) { o.start(at); o.stop(end + 0.5); }
+    reap(oscs[0], nodes);
+  }
+  // recorder: a breathy, mostly-fundamental tone with a chiff on the attack, a small scoop up to pitch and a
+  // vibrato that only arrives on long notes
+  let recWave = null;
+  function recorder(at, midi, dur, vel, dest = N.lv.rec) {
+    if (!recWave) recWave = ac.createPeriodicWave(new Float32Array(6), new Float32Array([0, 1, 0.16, 0.1, 0.03, 0.015]));
+    const f = mtof(midi), o = ac.createOscillator(); o.setPeriodicWave(recWave);
+    const vib = O('sine', rr(4.6, 5.4)), vg = G(0), env = G(0), lp = F('lowpass', Math.min(5200, f * 5), 0.5);
+    const ns = bufSrc(N.whiteB), cb = F('bandpass', f * 2.3, 2.5), cg = G(0), bb = F('bandpass', f, 9), bg = G(0.07);
+    const end = at + Math.max(0.1, dur * 0.96);
+    o.frequency.setValueAtTime(f * 0.988, at); o.frequency.exponentialRampToValueAtTime(f, at + 0.045);
+    wire(vib, vg); vg.connect(o.frequency);
+    vg.gain.setValueAtTime(0, at); if (dur > 0.5) { vg.gain.setValueAtTime(0, at + 0.25); vg.gain.linearRampToValueAtTime(f * 0.0045, at + Math.min(dur, 0.7)); }
+    wire(o, lp, env); wire(ns, cb, cg, env); wire(ns, bb, bg, env); env.connect(dest);
+    envAD(cg.gain, at, 0.5, 0.004, 0.035);
+    env.gain.setValueAtTime(0, at); env.gain.linearRampToValueAtTime(vel, at + 0.04);
+    env.gain.setValueAtTime(vel * 0.9, Math.max(at + 0.05, end - 0.07)); env.gain.linearRampToValueAtTime(0, end);
+    for (const x of [o, vib]) { x.start(at); x.stop(end + 0.02); }
     ns.start(at, R() * 4); ns.stop(end + 0.02);
-    reap(o, [o, h2, h2g, vib, vg, env, ns, nb, ng]);
+    reap(o, [o, vib, vg, env, lp, ns, cb, cg, bb, bg]);
   }
   function brush(at, vel, long) {       // brush swish (long) or tap
-    const s = bufSrc(N.whiteB), bp = F('bandpass', long ? 3800 : 5200, long ? 0.5 : 0.9), g = G(0); wire(s, bp, g, N.lv.dr);
-    if (long) { g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(vel, at + 0.06); g.gain.exponentialRampToValueAtTime(vel * 0.01, at + 0.3); g.gain.linearRampToValueAtTime(0, at + 0.32); s.start(at, R() * 5); s.stop(at + 0.34); }
+    const s = bufSrc(N.whiteB), bp = F('bandpass', long ? 3600 : 5000, long ? 0.5 : 0.9), g = G(0); wire(s, bp, g, N.lv.dr);
+    if (long) { g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(vel, at + 0.07); g.gain.exponentialRampToValueAtTime(vel * 0.01, at + 0.36); g.gain.linearRampToValueAtTime(0, at + 0.38); s.start(at, R() * 5); s.stop(at + 0.4); }
     else { const e = envAD(g.gain, at, vel, 0.002, 0.045); s.start(at, R() * 5); s.stop(e); }
     reap(s, [s, bp, g]);
   }
-  function kick(at, vel) {              // felt kick: a round, short thud
-    const o = O('sine', 88), g = G(0); wire(o, g, N.lv.dr);
-    o.frequency.setValueAtTime(88, at); o.frequency.exponentialRampToValueAtTime(46, at + 0.12);
-    const e = envAD(g.gain, at, vel, 0.004, 0.2); o.start(at); o.stop(e); reap(o, [o, g]);
+  function brushSwell(at, dur, vel) {   // a slow brush roll crescendo into the last A (bridge bars 7–8)
+    const s = bufSrc(N.whiteB, true), bp = F('bandpass', 3000, 0.6), g = G(0); wire(s, bp, g, N.lv.dr);
+    bp.frequency.setValueAtTime(2200, at); bp.frequency.exponentialRampToValueAtTime(5200, at + dur);
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(vel, at + dur - 0.03); g.gain.linearRampToValueAtTime(0, at + dur + 0.06);
+    s.start(at, R() * 5); s.stop(at + dur + 0.1); reap(s, [s, bp, g]);
   }
   function shaker(at, vel) {
     const s = bufSrc(N.whiteB), hp = F('highpass', 6000, 0.7), g = G(0); wire(s, hp, g, N.lv.dr);
     const e = envAD(g.gain, at, vel, 0.008, 0.035); s.start(at, R() * 5); s.stop(e); reap(s, [s, hp, g]);
   }
+  // the page-turn flourish: a quick glockenspiel run up the next section's chord and a paper swish across the stereo
+  function pageTurn(at, ch, beat) {
+    const run = voicing(ch.pcs, 79, 98, 6), sp = beat * 0.9 / run.length;
+    run.forEach((m, i) => bell2(at + i * sp, m, 0.18 + 0.05 * i));
+    const s = bufSrc(N.pinkB), bp = F('bandpass', 1400, 1.1), g = G(0), pn = Pan(-0.5); wire(s, bp, g, pn, N.musIn);
+    bp.frequency.setValueAtTime(1400, at); bp.frequency.exponentialRampToValueAtTime(5200, at + 0.42);
+    if (pn.pan) { pn.pan.setValueAtTime(-0.5, at); pn.pan.linearRampToValueAtTime(0.5, at + 0.45); }
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(0.05, at + 0.12); g.gain.linearRampToValueAtTime(0, at + 0.46);
+    s.start(at, R() * 5); s.stop(at + 0.5); reap(s, [s, bp, g, pn]);
+    logCue('pageturn', at);
+  }
   function croonNote(at, midi, dur) {    // the pelican hums the melody (legato, a lazy portamento, "mm" opening to "oo")
-    const f = mtof(midi - 12);
+    let m = midi - 12; while (m > 64) m -= 12;
+    const f = mtof(m);
     glide(N.crOsc.frequency, f, at - 0.01, 0.03);
     glide(N.crG.gain, 0.08, at, 0.03);
     glide(N.crG.gain, 0.035, at + Math.max(0.05, dur - 0.06), 0.03);
@@ -694,122 +750,119 @@ export function createAudio(bus, opts = {}) {
   }
   function croonStop(at) { glide(N.crG.gain, 0, at, 0.12); }
 
-  function playSting(kind, at, info, A) {
-    const tr = A.tr, c = info.chords[0], pcs = chordPcs(c, tr, false), top = voicing(pcs, 77, 91, 3);
+  function playSting(kind, at, B) {
+    const top = voicing(B.ch.pcs, 77, 93, 3);
     if (!top.length) return;
-    if (kind === 'tada') { bell2(at, top[0], 0.9); bell2(at + 0.11, top[top.length - 1], 1); pluck(at, bassMidi(chordRoot(c, tr)), 0.7, 'bass', N.lv.bass); }
-    else if (kind === 'wave') top.forEach((m, i) => bell2(at + i * 0.07, m, 0.7 + 0.1 * i));
+    if (kind === 'tada' || kind === 'egg') { bell2(at, top[0], 0.8); bell2(at + 0.11, top[top.length - 1], 0.9); if (kind === 'egg') bell2(at + 0.22, top[0] + 12, 0.7); pluck(at, bassMidi(B.ch.bass), 0.7, 'bass', N.lv.bass); }
+    else if (kind === 'wave') top.forEach((m, i) => bell2(at + i * 0.07, m, 0.6 + 0.1 * i));
     logCue('sting', at, { kind });
   }
 
-  // one 8th-note step of the score
+  // bar line: pick the arrangement layer levels for the page's mood; tempo only moves on a section's first bar
   function barStart(bar, t) {
-      mus.arr = arrangement(bar);
-      const A = mus.arr;
-      if (A.mode !== mus.lastMode) { logCue('arr', t, { mode: A.mode }); mus.lastMode = A.mode; }
-      const lv = N.lv, on = musicOn ? 1 : 0, coast = coasting ? 0.3 : 1;
-      const m = k => on * (opts.inst ? +opts.inst.includes(k) : 1);          // opts.inst: per-instrument analysis renders
-      glide(lv.uke.gain, m('uke') * (A.pat === 'strum' ? 0.5 : 0.66), t, 0.4);
-      glide(lv.bass.gain, m('bass') * (A.mode === 'lullaby' ? 0.36 : 0.42), t, 0.4);
-      glide(lv.mel.gain, m('mel') * coast * 1.1, t, 0.3);
-      glide(lv.glk.gain, m('glk') * (A.mode === 'lullaby' ? coast * 0.24 + 0.06 : 0.2), t, 0.3);
-      glide(lv.whi.gain, m('whi') * coast * 0.6, t, 0.3);
-      glide(lv.dr.gain, m('dr') * A.drums * (coasting ? 0.5 : 1) * 0.34, t, 0.4);
-      glide(N.musLvl.gain, on * A.level * 0.62, t, musicOn ? 0.8 : 0.4);
-      mus.info = barInfo(bar, A);
+    const B = BARS[bar], mode = modeNow();
+    if (mode !== mus.lastMode) { logCue('arr', t, { mode }); mus.lastMode = mode; }
+    mus.mode = mode;
+    if (B.bi === 0 && !once) { const bpm = mode === 'lullaby' ? BGM.night : BGM.bpm; if (bpm !== mus.bpm) { mus.bpm = bpm; logCue('tempo', t, { bpm }); } }
+    const M = MODES[mode], lv = N.lv, on = musicOn ? 1 : 0, lead = B.A.lead;
+    const m = k => on * (opts.inst ? +opts.inst.includes(k) : 1) * (k === lead && coasting ? 0.3 : 1);   // the lead steps back for the croon
+    glide(lv.cel.gain, m('cel') * 0.5, t, 0.3);
+    glide(lv.glk.gain, m('glk') * 0.24 * M.glk, t, 0.3);
+    glide(lv.rec.gain, m('rec') * (lead === 'rec' ? 1 : M.rec), t, 0.3);
+    glide(lv.uke.gain, m('uke') * 0.5 * M.uke, t, 0.4);
+    glide(lv.pno.gain, m('pno') * 0.36 * M.pno, t, 0.4);
+    glide(lv.bass.gain, m('bass') * 0.42, t, 0.4);
+    glide(lv.dr.gain, m('dr') * M.dr * (coasting ? 0.5 : 1) * 0.3, t, 0.4);
+    glide(N.musLvl.gain, on * M.lvl * 0.62, t, musicOn ? 0.8 : 0.4);
+    glide(N.musSend.gain, mode === 'rain' || mode === 'lullaby' ? 0.32 : 0.22, t, 1);
+    mus.info = B;
   }
+  // one 8th-note step of the score (6 per bar)
   function musicStep(bar, step, t, beat) {
-    const A = mus.arr, I = mus.info, tr = A.tr, half = step < 4 ? 0 : 1, chord = I.chords[half];
-    const pcs = chordPcs(chord, tr, A.color), voice = voicing(pcs, 55, 70, A.color ? 5 : 4);
-    const hum = (v = 1) => v * (0.9 + 0.2 * R());
-    const jit = () => rr(-0.004, 0.006);
-    // --- melody + croon
-    for (const n of I.notes) if (n.s === step) {
-      const m = n.m + tr, dur = n.d * beat / 2;
+    const B = BARS[bar], A = B.A, M = MODES[mus.mode], ch = B.ch, sv = B.lvl;
+    const hv = v => v * sv * (0.9 + 0.2 * R());               // ±10 % velocity
+    const ht = (ms = 15) => (R() * 2 - 1) * ms / 1000;         // ±10–20 ms timing
+    const ending = A.roll != null && B.bi >= A.roll, entered = B.bi >= (A.enter || 0);
+    // --- melody (+ croon) and the recorder counter-line
+    for (const n of B.notes) if (n.s === step) {
+      const dur = n.d * beat / 2, at = t + ht(12), acc = step === 0 ? 1 : step % 2 ? 0.82 : 0.92;
       if (musicOn) {
-        const accent = step === 0 ? 1 : step % 2 ? 0.8 : 0.9;
-        if (A.mel === 'whi') whistle(t, m + 12, dur * 0.95, 0.19 * accent);
-        else if (A.mel === 'glk') bell2(t + jit(), m + A.melUp, 0.9 * accent);
-        else pluck(t + jit(), m, 0.85 * accent, 'mel', N.lv.mel, -1);
-        if (A.mel === 'uke' && n.d >= 3 && A.mode !== 'lullaby') pluck(t + beat, m, 0.35, 'mel', N.lv.mel);   // a soft re-pluck under long notes
-        if (A.dbl && A.mel !== 'glk') bell2(t + jit(), m + 12, 0.5);
-        if (A.orn && n.d >= 3 && n.s > 0 && hash(bar * 7 + n.s, 3) < 0.55 && A.mel !== 'glk') {       // grace note from the upper neighbour
-          const up = [2, 1, 2, 2, 1, 2, 2]; const deg = [5, 7, 9, 10, 0, 2, 4].map(x => (x + tr) % 12).indexOf(m % 12);
-          const g = m + (deg >= 0 ? up[deg] : 2), gt = t - Math.min(0.07, beat * 0.12);
-          if (A.mel === 'whi') whistle(gt, g + 12, 0.06, 0.12); else pluck(gt, g, 0.4, 'mel', N.lv.mel);
-        }
+        if (A.lead === 'glk') bell2(at, n.m, hv(0.8 * acc));
+        else if (A.lead === 'rec') recorder(at, n.m, dur, hv(0.2 * acc));
+        else celesta(at, n.m, hv(0.85 * acc));
+        if (A.dbl) bell2(at + 0.006, n.m + 12, hv(0.34));
       }
-      if (mus.crooning) croonNote(t, m, dur);
+      if (mus.crooning) croonNote(t, n.m, dur);
     }
     if (!musicOn) return;
-    // --- ukulele accompaniment
-    if (A.pat === 'strum') {
-      const PAT = { 0: [1, 'D'], 2: [0.75, 'D'], 3: [0.45, 'U'], 5: [0.5, 'U'], 6: [0.7, 'D'], 7: [0.42, 'U'] };
-      const p = PAT[step];
-      if (p) { const vs = p[1] === 'D' ? voice : voice.slice(1).reverse(); vs.forEach((m, i) => pluck(t + i * (p[1] === 'D' ? 0.012 : 0.009) + jit(), m, hum(p[0]) * (p[1] === 'D' ? 0.55 : 0.4), 'uke', N.lv.uke, p[1] === 'D' ? i : voice.length - 1 - i)); }
-    } else {
-      const ORD = A.pat === 'pick2' ? { 0: 0, 2: 2, 4: 3, 6: 1 } : { 0: 0, 1: 2, 2: 1, 3: 3, 4: 0, 5: 2, 6: 1, 7: 3 };
-      const k = ORD[step];
-      if (k != null) { const m = voice[Math.min(k, voice.length - 1)]; pluck(t + jit(), m, hum(step === 0 ? 0.62 : 0.46), 'uke', N.lv.uke, k); if (A.color && step === 4 && voice[4]) pluck(t + 0.02, voice[4] + 12, 0.25, 'uke', N.lv.uke, 4); }
+    if (B.ctr) for (const n of B.ctr) if (n.s === step) recorder(t + ht(14), n.m, n.d * beat / 2, hv(0.12));
+    const pcs = ch.pcs;
+    // --- celesta broken chords (B section)
+    if (A.arp) { const v = voicing(pcs, 74, 90, 4); celesta(t + ht(10), v[[0, 1, 2, 3, 2, 1][step] % v.length], hv(step === 0 ? 0.3 : 0.22)); }
+    // --- ukulele
+    if (A.uke && entered) {
+      const v = voicing(pcs, 57, 72, 4);
+      const strum = (vel, up, spread = 0.012) => { const vs = up ? v.slice(1).reverse() : v; vs.forEach((m, i) => pluck(t + i * spread + ht(8), m, hv(vel), 'uke', N.lv.uke, up ? v.length - 1 - i : i)); };
+      if (ending) { if (step === 0 && B.bi === A.roll) strum(0.42, false, 0.045); }
+      else if (A.uke === 'waltz') { if (step === 2 || step === 4) strum(step === 2 ? 0.4 : 0.34, false); }
+      else if (A.uke === 'pick') { const k = [0, 2, 1, 3, 2, 1][step]; pluck(t + ht(10), v[k % v.length], hv(step === 0 ? 0.5 : 0.38), 'uke', N.lv.uke, k); }
+      else if (A.uke === 'strum') { const P = { 0: [0.46, 0], 2: [0.4, 0], 3: [0.24, 1], 4: [0.38, 0], 5: [0.22, 1] }[step]; if (P) strum(P[0], P[1]); }
     }
-    // --- upright bass
-    const root = bassMidi(chordRoot(chord, tr));
-    if (step === 0) { pluck(t, root, hum(0.95), 'bass', N.lv.bass, 10, A.bass === 'whole' ? 4 * beat : 0); mus.lastRoot = root; }
-    else if (step === 4 && A.bass !== 'whole') { const r2 = I.chords[1] !== I.chords[0] ? root : (root + 7 <= 48 ? root + 7 : root - 5); pluck(t, r2, hum(0.75), 'bass', N.lv.bass, 10); }
-    else if (step === 6 && A.bass === 'walk' && I.chords[1] === I.chords[0]) {
-      const nb = barInfo(bar + 1, A), nr = bassMidi(chordRoot(nb.chords[0], tr));
-      const ap = nr === root ? root + 7 - 12 * (root + 7 > 48) : nr + (nr > root ? -1 : 2);   // approach the next root
-      pluck(t, ap, hum(0.55), 'bass', N.lv.bass, 10);
+    // --- felt piano
+    if (A.pno) {
+      if (A.pno === 'pad' || ending) { if (step === 0) voicing(pcs, 53, 69, 4).forEach((m, i) => piano(t + i * 0.01 + ht(8), m, 3 * beat * 0.98, hv(0.3))); }
+      else if (step === 2 || step === 4) voicing(pcs, 57, 72, 3).forEach((m, i) => piano(t + i * 0.006 + ht(8), m, beat * 0.8, hv(step === 2 ? 0.26 : 0.22)));
     }
-    // --- glockenspiel fills at the phrase ends
-    if (A.glkFill && (I.bi === 3 || I.bi === 7) && step >= 4 && step <= 6) {
-      const top = voicing(chordPcs(chord, tr, false), 76, 91, 4); const seq = A.mode === 'lullaby' ? top : top.slice().reverse();
-      const m = seq[(step - 4) % seq.length]; if (m) bell2(t + jit(), m, 0.55 - 0.08 * (step - 4));
+    // --- upright bass (mono, centre)
+    if (A.bass && entered) {
+      const root = bassMidi(ch.bass);
+      if (step === 0) pluck(t + ht(6), root, hv(0.95), 'bass', N.lv.bass, 10, (A.bass === 'pedal' || ending ? 3 : 2) * beat * 0.95);
+      else if (step === 4 && A.bass === 'onethree' && !ending) pluck(t + ht(6), root + 7 <= 47 ? root + 7 : root - 5, hv(0.7), 'bass', N.lv.bass, 10, beat * 0.9);
     }
-    // --- brushes / kick / shaker
-    if (A.drums > 0) {
-      if (step === 2 || step === 6) brush(t, hum(0.5), true);
-      if (A.mode === 'sun' && step % 2 === 1) brush(t, hum(0.18), false);
-      if (A.kick && (step === 0 || step === 4)) kick(t, hum(0.55));
-      if (A.shaker) shaker(t, step % 2 ? 0.12 : 0.07);
+    // --- glockenspiel fills where the melody rests at a phrase end
+    if (A.spark && !B.last && B.bi % 4 === 3 && step >= 3) { const v = voicing(pcs, 79, 93, 4).reverse(); bell2(t + ht(10), v[(step - 3) % v.length], hv(0.42 - 0.08 * (step - 3))); }
+    // --- brushes / shaker
+    if (A.dr && M.dr) {
+      if (step === 0) brush(t + ht(10), hv(0.32), true);
+      if (A.dr >= 1 && M.taps && (step === 2 || step === 4)) brush(t + ht(10), hv(0.16), false);
+      if (A.dr >= 2 && M.shk) shaker(t + ht(8), step % 2 ? 0.06 : 0.1);
     }
-    // --- event stings, quantised to this beat
+    if (A.swell != null && B.bi === A.swell && step === 0 && M.dr) brushSwell(t, 6 * beat, 0.22);
+    // --- the page-turn flourish on the last beat of every section (and of the loop)
+    if (B.last && step === 4 && !(once && bar === NB - 1)) pageTurn(t, B.next, beat);
+    // --- event stings, quantised to the beat
     if (step % 2 === 0) for (let i = stings.length - 1; i >= 0; i--) {
       const s = stings[i];
-      if (t >= s.notBefore) { stings.splice(i, 1); if (t - s.notBefore < 1.2) playSting(s.kind, t, I, A); }
+      if (t >= s.notBefore) { stings.splice(i, 1); if (t - s.notBefore < 1.2) playSting(s.kind, t, B); }
     }
   }
   function musicPump(t) {
     const until = t + AUDIO.musicAhead;
     if (mus.nextT < t - 0.05) mus.nextT = t + 0.03;                       // fell behind (tab away / paused): no backlog
-    while (mus.nextT < until) {
-      if (mus.step === 0) {          // bar line: one rung of tempo per bar, as an accelerando across the bar
-        mus.bpm0 = mus.bpm1; mus.bpm1 = tempoTarget();
-        const L = AUDIO.tempi, i0 = L.indexOf(mus.bpm0), i1 = L.indexOf(mus.bpm1);
-        if (i0 >= 0 && i1 >= 0 && Math.abs(i1 - i0) > 1) mus.bpm1 = L[i0 + Math.sign(i1 - i0)];
-        if (mus.bpm1 !== mus.bpm0) logCue('tempo', mus.nextT, { bpm: mus.bpm1 });
+    while (mus.nextT < until && !mus.done) {
+      if (mus.step === 0) {
+        if (mus.bar >= NB) { if (once) { mus.done = true; logCue('end', mus.nextT); break; } mus.bar = 0; mus.loops++; logCue('loop', mus.nextT); }
         try { barStart(mus.bar, mus.nextT); } catch (err) { console.warn('[audio] music', err); }
       }
-      const k = mus.step / 8, bpm = mus.bpm0 + (mus.bpm1 - mus.bpm0) * k; mus.bpm = bpm;
-      const beat = 60 / bpm, sw = mus.arr ? mus.arr.swing : 0.55;
-      const stepDur = mus.step % 2 === 0 ? beat * sw : beat * (1 - sw);
-      if (mus.arr) try { musicStep(mus.bar, mus.step, mus.nextT, beat); } catch (err) { console.warn('[audio] music', err); }
-      mus.nextT += stepDur;
-      if (++mus.step === 8) { mus.step = 0; mus.bar++; }
+      let beat = 60 / mus.bpm;
+      if (once && mus.bar >= NB - 2) beat *= 1 + 0.16 * ((mus.bar - NB + 2) * 6 + mus.step) / 12;    // the standalone track's ritardando
+      try { musicStep(mus.bar, mus.step, mus.nextT, beat); } catch (err) { console.warn('[audio] music', err); }
+      mus.nextT += beat / 2;
+      if (++mus.step === 6) { mus.step = 0; mus.bar++; }
     }
   }
   // pre-render the instrument buffers a few per tick while idle, so no strum ever pays for a Karplus-Strong loop
   let warmQ = null;
   function warm() {
     if (!ac || !N || !musicOn) return;
-    if (!warmQ) { warmQ = []; for (let m = 55; m <= 70; m++) warmQ.push(['uke', m]); for (let m = 28; m <= 48; m++) warmQ.push(['bass', m]); for (let m = 62; m <= 84; m++) warmQ.push(['mel', m]); for (let m = 72; m <= 96; m++) warmQ.push(['glk', m]); }
+    if (!warmQ) { warmQ = []; for (let m = 57; m <= 72; m++) warmQ.push(['uke', m]); for (let m = 28; m <= 47; m++) warmQ.push(['bass', m]); for (let m = 64; m <= 90; m++) warmQ.push(['cel', m]); for (let m = 72; m <= 100; m++) warmQ.push(['glk', m]); }
     const t0 = performance.now();
-    while (warmQ.length && performance.now() - t0 < 2) { const [k, m] = warmQ.shift(); if (k === 'glk') glk(m); else ks(m, k); }
+    while (warmQ.length && performance.now() - t0 < 2) { const [k, m] = warmQ.shift(); if (k === 'glk') glk(m); else if (k === 'cel') cel(m); else ks(m, k); }
   }
   function setMusic(on) {
     const was = musicOn; musicOn = !!on;
     if (!ac || !N) return;
-    if (musicOn && !was) { mus.bar = -INTRO.length; mus.step = 0; mus.nextT = now() + 0.1; caption('music'); logCue('music', now(), { on: true }); }
+    if (musicOn && !was) { mus.bar = opts.bgmFrom || 0; mus.step = 0; mus.done = false; mus.nextT = now() + 0.1; caption('music'); logCue('music', now(), { on: true }); }
     if (!musicOn && was) { glide(N.musLvl.gain, 0, now(), 0.3); for (const k in N.lv) glide(N.lv[k].gain, 0, now() + 0.9, 0.2); logCue('music', now(), { on: false }); }
   }
 
