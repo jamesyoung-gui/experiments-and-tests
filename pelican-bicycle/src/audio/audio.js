@@ -4,7 +4,7 @@
 // three-chime steam-ship whistle, the lighthouse diaphone ("BEEE-oh") at night or in fog, a carousel band organ at the
 // pleasure pier, a tram gong in the village, promenade crowd murmur, rain on the awnings, wind in the pines, a pelican
 // that honks like a 1930s cartoon and clacks its bill, swing-band event stings, and the BGM (bgm.js) sitting on a
-// gramophone crackle bed. The ambience follows the route stretch (frame.weather.stretch / km), the weather and the hour.
+// gramophone record character (wow, narrow band, crackle; bgm.js). The ambience follows the route stretch (frame.weather.stretch / km), the weather and the hour.
 // Full description: docs/BGM.md (§ Soundscape).
 //
 // createAudio(bus, opts?) -> { enable():Promise<boolean>, disable(), update(frame), setVolume(v), debug() }
@@ -145,20 +145,6 @@ export function createAudio(bus, opts = {}) {
     }
     return buf;
   }
-  function crackleBuf(sec) {        // 78-rpm shellac: soft hiss, ticks, the odd pop, a once-per-turn swish (1.3 Hz)
-    const sr = ac.sampleRate, n = Math.floor(sec * sr), buf = ac.createBuffer(2, n, sr);
-    for (let c = 0; c < 2; c++) {
-      const d = buf.getChannelData(c); let lp = 0;
-      for (let i = 0; i < n; i++) { lp += ((R() * 2 - 1) - lp) * 0.35; d[i] = lp * 0.035 * (1 + 0.35 * Math.sin(TAU * 1.3 * i / sr)); }
-      const ev = Math.floor(sec * 26);
-      for (let k = 0; k < ev; k++) {
-        const at = Math.floor(R() * (n - 400)), big = R() < 0.05, a = (big ? 0.5 : 0.18) * (0.3 + R() * R()), tau = (big ? 0.0009 : 0.00025) * sr, f = 1800 + 3000 * R();
-        for (let i = 0; i < 6 * tau && at + i < n; i++) d[at + i] += a * Math.exp(-i / tau) * Math.sin(TAU * f * i / sr + 0.5) * Math.min(1, i / 3);
-      }
-      const X = Math.floor(0.05 * sr); for (let i = 0; i < X; i++) { const k = i / X; d[i] = d[i] * k + d[n - X + i] * (1 - k); }   // loopable
-    }
-    return buf;
-  }
   function shingleBuf(sec) {        // pebbles knocking as the backwash drags them: hundreds of tiny stone "tik"s
     const sr = ac.sampleRate, n = Math.floor(sec * sr), buf = ac.createBuffer(2, n, sr);
     for (let c = 0; c < 2; c++) {
@@ -227,13 +213,10 @@ export function createAudio(bus, opts = {}) {
     wire(rainSrc, rainHp, rainLp, rainG, amb);
     const pineSrc = bufSrc(pinkB, true, 1.21), pineBp = F('bandpass', 4600, 0.6), pineG = G(0);
     wire(pineSrc, pineBp, pineG, duck);
-    // gramophone bed the BGM sits on (inside the music gate, so it comes and goes with the music)
-    const crSrc = bufSrc(crackleBuf(6.13), true), crG = G(0.55), crLp = F('lowpass', 7000, 0.6);
-    wire(crSrc, crLp, crG, musGate);
     const pawlAmp = Array.from({ length: AUDIO.pawls }, (_, i) => 0.82 + 0.18 * Math.sin(i * 2.4) * Math.cos(i * 0.7) + 0.08 * R());
 
     const t0 = now();
-    for (const s of [windSrc, roadSrc, gritSrc, seaSrc, chSrc, humSrc, murSrc, rainSrc, pineSrc, crSrc]) s.start(t0, R() * 5);
+    for (const s of [windSrc, roadSrc, gritSrc, seaSrc, chSrc, humSrc, murSrc, rainSrc, pineSrc]) s.start(t0, R() * 5);
     for (const o of [chOsc, humOsc, whine, murL1, murL2]) o.start(t0);
     N = { master, amb, mech, fx, far, verb, vin, duck, windSrc, windBp, windG, whisBp, whisG, roadSrc, roadLp, roadG, tyreGate, gritG, seaG, seaLp,
       chOsc, chG, chBp, humOsc, humG, tickBus, clicks, pawlAmp, pinkB, brownB, whiteB, shingleB, musDuck, musGate, bgm: null, sting: null,
@@ -302,7 +285,7 @@ export function createAudio(bus, opts = {}) {
   }
   // swing-band stings in the BGM's own voices (a second, never-started bgm instance routed to the effects bus)
   function sting(kind, at, id) {
-    try { if (!N.sting) N.sting = createBGM(ac, N.fx, { seed: 11, gain: AUDIO.music.sting }); N.sting.sting(kind, at, id); logCue('sting:' + kind, at); }
+    try { if (!N.sting) N.sting = createBGM(ac, N.fx, { seed: 11, gain: AUDIO.music.sting, lofi: false }); N.sting.sting(kind, at, id); logCue('sting:' + kind, at); }
     catch (err) { console.warn('[audio] sting', err); }
   }
   // the pelican: honks like a 1930s cartoon (reedy buzz, two formants, a throaty flutter) and clacks its bill

@@ -1,22 +1,24 @@
-// Render the BGM "鹈鹕湾海滨路 · Coast Road Swing" (src/audio/bgm.js) to a standalone MP3: exactly one full pass,
-// Intro → Outro with the final "button" ending, rendered by OfflineAudioContext in headless Chromium, then mastered in
-// node (makeup to ≈ −15 LUFS, look-ahead brick-wall limiter at −1.6 dBFS, 0.4 s fade-in) and encoded with lamejs
-// (192 kbps, stereo, 44.1 kHz). The MP3 is decoded again in Chromium to report its real peak / RMS.
+// Render the BGM "鹈鹕大摇摆 · The Pelican Strut" (src/audio/bgm.js) to a standalone MP3: exactly one pass of the record,
+// rubato intro → tag "shave and a haircut … two bits" with its ring-out, rendered by OfflineAudioContext in headless
+// Chromium (the gramophone character and crackle are part of the render), then mastered in node (makeup to ≈ −15 LUFS
+// — informational, the piece is deliberately dynamic — look-ahead brick-wall limiter at −1.6 dBFS, 0.4 s fade-in) and
+// encoded with lamejs (192 kbps, stereo, 44.1 kHz). The MP3 is decoded again in Chromium for its real peak / RMS.
 // usage: node tools/render-bgm.mjs [--out dist/bgm-poster.mp3] [--analyze]
-//   --analyze  listening-analysis gates: 10 s excerpt per section (RMS + low/mid/high balance), clipped samples,
-//              click scan, hook pitch check (solo clarinet vs the score) and the loop seam (outro → intro).
+//   gates (always): MP3 peak ≤ −1 dBFS, no clipped samples, length 2:00–3:30.
+//   --analyze: per-section level + low/mid/high balance (from the full render), and a click scan of a crackle-free
+//              render (the surface noise is the intended record texture) with a self-test of the detector.
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import { Mp3Encoder } from '@breezystack/lamejs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serve } from './serve.mjs';
-import { FORM, SONG, BAR, BEAT, lineOf } from '../src/audio/bgm.js';
+import { SONG } from '../src/audio/bgm.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i < 0 ? d : (process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : true); };
 const OUT = path.resolve(ROOT, arg('out', 'dist/bgm-poster.mp3'));
-const SR = 44100, LEAD = 0.05, TAIL = 1.9, TARGET_LUFS = -15, CEIL_DB = -1.6;
+const SR = 44100, LEAD = 0.05, TAIL = 2.2, TARGET_LUFS = -15, CEIL_DB = -1.6;
 const db = x => 20 * Math.log10(Math.max(1e-9, x));
 const fail = [];
 
@@ -28,19 +30,19 @@ page.on('console', m => { if (m.type() === 'warning' || m.type() === 'error') fa
 await page.goto(`http://127.0.0.1:${port}/src/audio/bgm.js`);
 
 // ------------------------------------------------------------------ render in Chromium, pull the floats back in chunks
-async function render({ from = 0, sec, loop = true, solo = null }) {
+async function render({ from = 0, sec, loop = true, solo = null, crackle = true }) {
   const meta = await page.evaluate(async o => {
     const m = await import('/src/audio/bgm.js');
     const len = Math.ceil(o.sec * o.sr), ac = new OfflineAudioContext(2, len, o.sr);
     const glue = ac.createDynamicsCompressor();          // bus glue (the page uses its own master chain)
     glue.threshold.value = -18; glue.knee.value = 8; glue.ratio.value = 2.2; glue.attack.value = 0.015; glue.release.value = 0.22;
     glue.connect(ac.destination);
-    const bgm = m.createBGM(ac, glue, { seed: 7, loop: o.loop, solo: o.solo, log: true });
+    const bgm = m.createBGM(ac, glue, { seed: 7, loop: o.loop, solo: o.solo, log: true, crackle: o.crackle });
     bgm.start(o.lead, o.from); bgm.pump(o.sec);
     const b = await ac.startRendering();
     window.__R = [b.getChannelData(0), b.getChannelData(1)];
-    return { len, log: bgm.log };
-  }, { from, sec, loop, solo, sr: SR, lead: LEAD });
+    return { len, log: bgm.log, marks: bgm.marks };
+  }, { from, sec, loop, solo, crackle, sr: SR, lead: LEAD });
   const ch = [new Float32Array(meta.len), new Float32Array(meta.len)], N = 1 << 20;
   for (let off = 0; off < meta.len; off += N) {
     const parts = await page.evaluate(([off, n]) => [0, 1].map(c => {
@@ -50,7 +52,7 @@ async function render({ from = 0, sec, loop = true, solo = null }) {
     }), [off, N]);
     parts.forEach((p, c) => { const b = Buffer.from(p, 'base64'); ch[c].set(new Float32Array(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)), off); });
   }
-  return { L: ch[0], R: ch[1], log: meta.log };
+  return { L: ch[0], R: ch[1], log: meta.log, marks: meta.marks };
 }
 
 // ------------------------------------------------------------------ measurement
@@ -128,9 +130,8 @@ function toMp3(L, R) {
 }
 
 // ------------------------------------------------------------------ 1. the full track
-const startBar = name => { let b = 0; for (const s of FORM) { if (s.id === name) return b; b += s.ch.split('|').length; } return -1; };
-const fullSec = LEAD + SONG.loopSec + TAIL;
-console.log(`render: ${SONG.title}  ${SONG.bars} bars @ ${SONG.bpm} bpm = ${SONG.loopSec.toFixed(1)} s (+ ${TAIL} s ending tail)`);
+const fullSec = LEAD + SONG.finalSec + TAIL;
+console.log(`render: ${SONG.title}  ${SONG.bars} bars, tempo ${SONG.bpm} bpm, ${SONG.finalSec.toFixed(1)} s (+ ${TAIL} s ring-out)`);
 const full = await render({ sec: fullSec, loop: false });
 const raw = stats(full.L, full.R), rawLufs = lufs(full.L, full.R);
 const makeup = Math.pow(10, (TARGET_LUFS - rawLufs) / 20);
@@ -152,72 +153,41 @@ const mm = Math.floor(dec.dur / 60), ss = (dec.dur % 60).toFixed(1).padStart(4, 
 console.log(`MP3 ${path.relative(ROOT, OUT)}: ${(mp3.length / 1024).toFixed(0)} KB, 192 kbps, ${dec.ch} ch, ${dec.sr} Hz, ${mm}:${ss}  ` +
   `peak ${dec.peak.toFixed(2)} dBFS  RMS ${dec.rms.toFixed(2)} dBFS  clipped ${dec.clip}`);
 if (dec.peak > -1) fail.push(`MP3 peak ${dec.peak.toFixed(2)} dBFS > -1`);
-if (finLufs < -16.5 || finLufs > -13.5) fail.push(`loudness ${finLufs.toFixed(2)} LUFS outside -16..-14`);
+if (clipped || dec.clip) fail.push('clipped samples');
 if (dec.dur < 120 || dec.dur > 210) fail.push(`length ${dec.dur.toFixed(1)} s outside 2:00-3:30`);
 
 // ------------------------------------------------------------------ 2. listening analysis
 if (arg('analyze', false)) {
-  // clicks: a step shows as a spike in the second difference Δ² far above its local median (±5 ms). Smooth music
-  // (energy mostly < 5 kHz) has a tiny Δ²; noisy sources (brushes, cymbals) raise the local median with it.
+  // per section, from the mastered full track: level and spectral balance (the dynamic arc of the record)
+  console.log('\nsection     start    len   RMS dBFS   peak    low<250  mid  high>4k  (dB share of energy)');
+  const mk = full.marks, end = full.L.length;
+  mk.forEach((m, i) => {
+    const a = Math.floor(m.t * SR), b = i + 1 < mk.length ? Math.floor(mk[i + 1].t * SR) : end, st = stats(full.L, full.R, a, b), bd = bands(full.L.subarray(a, b), full.R.subarray(a, b));
+    console.log(`${m.sec.padEnd(9)} ${m.t.toFixed(1).padStart(6)}s ${((b - a) / SR).toFixed(1).padStart(5)}s ${st.rms.toFixed(1).padStart(8)} ${st.peak.toFixed(1).padStart(7)}   ${bd.map(v => v.toFixed(1).padStart(6)).join(' ')}`);
+  });
+  // clicks: a step shows as a spike of the second difference far above its local mean (±5 ms, prefix sums). Smooth
+  // music has a tiny Δ²; noisy sources (brushes, cymbals) raise the local mean with them.
   function clickScan(x, at = []) {
-    let n = 0; const w = Math.floor(0.005 * SR), d2 = new Float32Array(x.length);
-    for (let i = 2; i < x.length; i++) d2[i] = Math.abs(x[i] - 2 * x[i - 1] + x[i - 2]);
-    for (let i = w; i < x.length - w; i++) {
-      if (d2[i] < 0.03) continue;
-      const win = Array.from(d2.subarray(i - w, i + w)).sort((a, b) => a - b), med = win[win.length >> 1];
-      if (d2[i] > 12 * med + 0.02) { n++; if (at.length < 12) at.push((i / SR).toFixed(3)); i += w; }
+    const n = x.length, w = Math.floor(0.005 * SR), d2 = new Float64Array(n), cs = new Float64Array(n + 1); let c = 0;
+    for (let i = 2; i < n; i++) d2[i] = Math.abs(x[i] - 2 * x[i - 1] + x[i - 2]);
+    for (let i = 0; i < n; i++) cs[i + 1] = cs[i] + d2[i];
+    for (let i = w; i < n - w; i++) {
+      if (d2[i] < 0.015) continue;
+      const mean = (cs[i + w] - cs[i - w] - d2[i]) / (2 * w - 1);
+      if (d2[i] > 9 * mean + 0.012) { c++; if (at.length < 12) at.push((i / SR).toFixed(3)); i += w; }
     }
-    return n;
+    return c;
   }
-  const at = []; let clicks = 0;
-  for (const x of [full.L, full.R]) clicks += clickScan(x, at);
-  { // self-test: the detector must catch a 0.06 step injected into a quiet stretch of the real track, and only that
-    const seg = full.L.slice(Math.floor(0.6 * SR), Math.floor(1.6 * SR)), base = clickScan(seg);
-    for (let i = 22050; i < 22050 + 300; i++) seg[i] += 0.06 * (1 - (i - 22050) / 300);
-    const hit = clickScan(seg) - base; console.log(`click detector self-test: injected step found ${hit === 1 ? 'yes' : 'NO'}`);
-    if (hit !== 1) fail.push('click detector self-test failed');
-  }
-  console.log(`click scan (mastered): ${clicks} suspicious discontinuities${at.length ? ' at ' + at.join(', ') + ' s' : ''}`);
-  if (at.length) for (const t of at.slice(0, 6)) console.log('   near ' + t + ': ' + full.log.filter(e => Math.abs(e.t - t) < 0.004).map(e => e.b + (e.n ? ':' + e.n : ':' + e.m)).join(' '));
-  if (clicks) fail.push(`${clicks} possible clicks`);
-  // section excerpts
-  console.log('\nsection      bars   RMS dBFS   low<250  mid  high>4k  (dB share of energy, 10 s excerpt, same makeup)');
-  for (const s of FORM) {
-    const b0 = startBar(s.id), ex = await render({ from: b0, sec: 10, loop: true });
-    for (let i = 0; i < ex.L.length; i++) { ex.L[i] *= makeup; ex.R[i] *= makeup; }
-    const st = stats(ex.L, ex.R), bd = bands(ex.L, ex.R);
-    console.log(`${s.id.padEnd(10)} ${String(b0 + 1).padStart(3)}–${String(b0 + s.ch.split('|').length).padEnd(3)} ${st.rms.toFixed(1).padStart(8)}   ${bd.map(v => v.toFixed(1).padStart(6)).join(' ')}`);
-  }
-  // stems: each bus solo over the A section, so the balance can be read instrument by instrument
-  const stems = ['cl', 'tp', 'bass', 'pno', 'bjo', 'vib', 'ride', 'sn', 'kick', 'hat'];
-  for (const sec of ['A', "A''"]) {
-    const row = [];
-    for (const b of stems) { const r = await render({ from: startBar(sec), sec: 8, loop: true, solo: [b] }); for (let i = 0; i < r.L.length; i++) { r.L[i] *= makeup; r.R[i] *= makeup; } const st = stats(r.L, r.R); row.push(`${b} ${st.rms < -90 ? '  —  ' : st.rms.toFixed(1)}`); }
-    console.log(`stems ${sec.padEnd(4)} RMS dBFS: ${row.join(' · ')}`);
-  }
-  // hook pitch check: solo clarinet, A bars 1–4 (the hook), A' bars 9–12 (the hook returns), A'' bars 1–4
-  console.log('');
-  for (const [sec, bar0] of [['A', 0], ["A'", 8], ["A''", 0]]) {
-    const b0 = startBar(sec) + bar0, score = FORM.find(s => s.id === sec).lead[1].split('|').slice(bar0, bar0 + 4).flatMap(lineOf).map(n => n[2]);
-    const r = await render({ from: b0, sec: 4 * BAR + 0.6, loop: true, solo: ['cl'] });
-    const notes = r.log.filter(e => e.b === 'cl' && e.t < LEAD + 4 * BAR - 0.06).sort((a, b) => a.t - b.t);
-    const got = notes.map(e => { const a = Math.floor((e.t + 0.05) * SR), b = Math.floor((e.t + Math.min(0.24, e.d - 0.01)) * SR); return Math.round(69 + 12 * Math.log2(pitchOf(r.L, a, b) / 440)); });
-    const ok = got.length === score.length && got.every((m, i) => m === score[i]);
-    console.log(`hook check ${sec.padEnd(4)} bars ${bar0 + 1}-${bar0 + 4}: score [${score.join(' ')}]\n${' '.repeat(26)}heard [${got.join(' ')}]  ${ok ? 'MATCH' : 'MISMATCH'}`);
-    if (!ok) fail.push(`hook mismatch in ${sec}`);
-  }
-  // loop seam: outro bars 83–84 straight into intro bars 1–2 (page loop mode)
-  const seamBar = SONG.bars - 2, sr = await render({ from: seamBar, sec: 4 * BAR + 0.3, loop: true });
-  const seamT = LEAD + 2 * BAR, si = Math.floor(seamT * SR), win = Math.floor(0.5 * SR);
-  const before = stats(sr.L, sr.R, si - win, si), after = stats(sr.L, sr.R, si, si + win);
-  let jmp = 0; for (let i = si - 2205; i < si + 2205; i++) jmp = Math.max(jmp, Math.abs(sr.L[i] - sr.L[i - 1]), Math.abs(sr.R[i] - sr.R[i - 1]));
-  const on = sr.log.filter(e => e.b === 'bass').map(e => e.t).sort((a, b) => a - b);
-  let gap = 0; for (let i = 1; i < on.length; i++) if (on[i - 1] < seamT + 0.5 && on[i] > seamT - 0.5) gap = Math.max(gap, on[i] - on[i - 1]);
-  const d = Math.abs(after.rms - before.rms);
-  console.log(`\nloop seam (bar ${SONG.bars} -> bar 1): RMS 0.5 s before ${before.rms.toFixed(1)} / after ${after.rms.toFixed(1)} dBFS (Δ ${d.toFixed(1)} dB), ` +
-    `max sample step ±50 ms ${jmp.toFixed(3)}, longest bass gap ${(gap * 1000).toFixed(0)} ms (two-feel half note = ${(2 * BEAT * 1000).toFixed(0)} ms)`);
-  if (d > 4) fail.push(`seam level jump ${d.toFixed(1)} dB`);
-  if (gap > 2 * BEAT + 0.05) fail.push('seam: rhythm section drops out');
+  const clean = await render({ sec: fullSec, loop: false, crackle: false });
+  for (let i = 0; i < clean.L.length; i++) { clean.L[i] *= makeup; clean.R[i] *= makeup; }
+  const at = []; let clicks = 0; for (const x of [clean.L, clean.R]) clicks += clickScan(x, at);
+  const seg = clean.L.slice(Math.floor(40 * SR), Math.floor(41 * SR)), base = clickScan(seg);
+  for (let i = 22050; i < 22050 + 300; i++) seg[i] += 0.05 * (1 - (i - 22050) / 300);       // inject a −26 dBFS step
+  const found = clickScan(seg) - base;
+  console.log(`\nclick scan (crackle-free render, both channels): ${clicks}${at.length ? ' at ' + at.join(', ') + ' s' : ''}; detector self-test (−26 dBFS step injected mid-chorus): ${found === 1 ? 'found' : 'MISSED'}`);
+  if (clicks) fail.push(`${clicks} clicks`); if (found !== 1) fail.push('click detector self-test');
+  let pc = 0; for (let i = 0; i < clean.L.length; i++) if (Math.abs(clean.L[i]) >= 0.999 || Math.abs(clean.R[i]) >= 0.999) pc++;
+  console.log(`pre-limiter clip check (clean render × makeup): ${pc} samples ≥ 0 dBFS (the limiter catches these)`);
 }
 
 await browser.close(); srv.close();

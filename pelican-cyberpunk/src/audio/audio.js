@@ -6,7 +6,7 @@
 //   opts.clock    () => audio time; the offline harness passes the sim clock so update() can schedule ahead.
 //   opts.seed     deterministic variation (default: time-seeded).
 //   opts.solo     ['amb'|'mech'|'fx'|'far'|'voice'|'music'] keep only these buses (analysis renders).
-//   opts.inst     ['kick','snare','hat','bass','pad','arp','lead','bell','fx'] keep only these music parts (analysis renders).
+//   opts.inst     ['kick','snare','hat','bass','pad','zheng','erhu','lead','talk','stab','pa','fx'] keep only these music parts (analysis renders).
 //   opts.volume   0…1 (default 0.8).
 //   opts.music    true: the track starts with the sound (default: follows toggles.music / ui:toggle {key:'music'}).
 //
@@ -16,7 +16,7 @@
 // Sync: rig events are cued in SIM time from TIMING (rig/solve.js X-sheets) and scheduled from update(frame) with a
 //       120 ms lookahead, compensated for output latency, so the chime rings on the thumb pop and the thump lands on
 //       the tyre-contact frame. The freewheel tick rate is exactly wheel rev/s × AUDIO.pawls.
-// Music: 霓虹快递 · Neon Delivery (src/audio/bgm.js, docs/BGM.md), a composed 64-bar synthwave loop at a fixed 104 bpm on
+// Music: 霓虹快递 · Neon Delivery (src/audio/bgm.js, docs/BGM.md), the 48-bar cyber-Chinatown theme at a fixed 96 bpm on
 //       a 16th-note lookahead clock (200 ms ahead). The city thins or fills it per beat (mood, district, pace), it ducks
 //       under events, and event stings (gulp, wave, mech suit-up) land on the next beat. While coasting, the pelican
 //       hums the hook through its vocoder.
@@ -657,7 +657,7 @@ export function createAudio(bus, opts = {}) {
   }
 
   // ================================================================== music: 霓虹快递 · Neon Delivery (src/audio/bgm.js, docs/BGM.md)
-  // The composed loop runs on its own fixed 104 bpm clock (it never follows the cadence). The city only thins or fills
+  // The composed loop runs on its own fixed 96 bpm clock (it never follows the cadence). The city only thins or fills
   // it, per beat: levels and filters from the mood, the district and the pace; a coast strips the drums and the lead
   // while the pelican croons the hook through its vocoder.
   let E = null, CR = null;
@@ -672,16 +672,16 @@ export function createAudio(bus, opts = {}) {
   }
   function musicMood() {
     const m = moodOf(), X = {};
-    if (m === 'day') Object.assign(X, { kick: 0.85, snare: 0.8, bass: 0.85, pad: 1.1, bell: 1.15, hat: 0.85 });
-    else if (m === 'acid') X.drive = 0.45;
-    else if (m === 'dark') Object.assign(X, { lp: 6500, hat: 0.6, arp: 0.8, pad: 0.9, bell: 0.85, drive: 0.55 });
+    if (m === 'day') Object.assign(X, { kick: 0.85, snare: 0.8, bass: 0.85, pad: 1.1, erhu: 1.15, zheng: 1.1 });
+    else if (m === 'acid') Object.assign(X, { bass: 1.1, stab: 1.15 });
+    else if (m === 'dark') Object.assign(X, { lp: 6500, hat: 0.6, zheng: 0.8, pad: 0.9, erhu: 0.85, bass: 1.1 });
     else if (m === 'rain') Object.assign(X, { lp: 3200, kick: 0.8, hat: 0.5, snare: 0.75 });
     if (district === 'cliffs') X.lp = Math.min(X.lp ?? 2e4, 1500);          // the neon tunnel
-    if (district === 'dunes') X.drive = Math.max(X.drive ?? 0, 0.6);         // the scrapyard
-    if (district === 'fort') X.bell = (X.bell ?? 1) * 1.3;                   // the temple: the bells come forward
-    if (district === 'funfair') X.arp = (X.arp ?? 1) * 1.3;                  // the arcade: the plucks come forward
+    if (district === 'dunes') X.bass = (X.bass ?? 1) * 1.15;                 // the scrapyard
+    if (district === 'fort') { X.erhu = (X.erhu ?? 1) * 1.3; X.zheng = (X.zheng ?? 1) * 1.3; }   // the temple: the Chinese voices forward
+    if (district === 'funfair') X.talk = (X.talk ?? 1) * 1.2;               // the arcade: the talk-box forward
     if (!coasting && cadence >= CADENCE.sprint * 0.9) X.hat = (X.hat ?? 1) * 1.3;
-    if (coasting) Object.assign(X, { kick: 0, snare: 0, hat: 0.3, lead: 0, bass: 0.6 });
+    if (coasting) Object.assign(X, { kick: 0, snare: 0, hat: 0.3, lead: 0, talk: 0, bass: 0.6 });
     return X;
   }
   function buildMusic() {
