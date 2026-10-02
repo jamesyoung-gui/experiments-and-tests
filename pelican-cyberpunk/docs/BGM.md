@@ -104,7 +104,7 @@ node tools/render-bgm.mjs --check   # + the listening analysis below (exits 1 on
 ```
 The tool bundles `src/audio/bgm.js` with esbuild and renders it in headless Chromium (Playwright) with an `OfflineAudioContext`. It schedules like the live page, suspending every 0.5 s and pumping 1 s ahead, because queuing thousands of `AudioParam` events up front slows Chromium down quadratically. It renders one loop (bars 1–64, `loop: false`), lets the outro's voices release over a 2.5 s tail, and applies a 0.25 s fade-in and a 0.6 s raised-cosine fade at the very end. It then encodes in node with `@breezystack/lamejs` (192 kbps, stereo, 44.1 kHz) and decodes the MP3 back in Chromium to measure what a listener actually gets.
 
-**The MP3:** 3522 KB, 150.3 s. **Peak −1.39 dBFS, RMS −18.05 dBFS, integrated −15.36 LUFS**, 0 clipped samples.
+**The MP3:** 3522 KB, 150.3 s. **Peak −1.70 dBFS, RMS −18.08 dBFS, integrated −15.39 LUFS**, 0 clipped samples.
 
 ## 7. Self-review by measurement (I can't listen, so I measured)
 
@@ -113,12 +113,12 @@ The final `--check` (seed 7) gave these results.
 | Section (10 s from its start, mastered) | RMS dBFS | Low / mid / high energy % (<250 Hz / 250 Hz–4 kHz / 4–16 kHz) |
 |---|---|---|
 | Intro | −22.4 | 31 / 68 / 0.5 |
-| A | −17.1 | 52 / 43 / 4.9 |
-| A′ | −17.1 | 46 / 49 / 6.0 |
-| B | −17.1 | 49 / 46 / 4.9 |
+| A | −17.1 | 52 / 44 / 4.9 |
+| A′ | −17.2 | 45 / 49 / 6.0 |
+| B | −17.2 | 49 / 46 / 4.9 |
 | Bridge | −20.2 | 51 / 49 / 0 (the breakdown, low-passed) |
 | A″ | −16.9 | 44 / 50 / 6.1 |
-| Outro | −17.5 | 56 / 39 / 5.0 |
+| Outro | −17.6 | 56 / 40 / 5.0 |
 
 - **Clipping:** 0 samples at or above 0 dBFS in the raw mix (peak −0.02 dBFS before mastering) and 0 in the MP3.
 - **Clicks:** 0 on every tonal stem (bass, pad, arp, lead, bell, each rendered alone for the full loop). Two tests were run: isolated sample steps above 3 × the stem's own 99.99th-percentile step, and drops of more than 20 dB between adjacent 10 ms windows.
@@ -130,4 +130,4 @@ The final `--check` (seed 7) gave these results.
 2. **Too dark.** The 4–16 kHz band held 0.2 % of the energy and low frequencies 60–65 %. The lead, pad and arp filters opened (lead 3.6–5.2 kHz, pad 3.8–4.6 kHz, arp 4–5.6 kHz). The bass fades out over the last outro bar, so the outro hands over to the bass-less intro smoothly. The click detector's 1 ms windows were swapped for 10 ms windows: 1 ms cannot judge a 41 Hz bass.
 3. **A quiet intro and buried plucks.** The intro pad came up +2.6 dB and the arp +1.6 dB.
 4. **The hats and snare were still inaudible.** A per-part stem probe measured the hats at −52 dBFS and the snare at −39 dBFS, against a lead at −23. The snare came up +10 dB, the hats +16 dB and the bell +4.4 dB. The highs went from 1–2 % to 5–6 %, and the low band settled at 44–52 %.
-5. **The MP3's peak overshot.** The encoder's low-pass rings on the sharpest transients, so the decoded peak landed about 0.55 dB above the PCM peak. The limiter ceiling now iterates against the decoded MP3: −1.8 → −1.97 dBFS PCM gives −1.39 dBFS decoded.
+5. **The MP3's peak overshot.** The encoder's low-pass rings on the sharpest transients, so the decoded peak landed about 0.55 dB above the PCM peak. The limiter ceiling now iterates against the decoded MP3 until it peaks at or below −1.3 dBFS. In the final render, −1.8 → −2.21 dBFS PCM gave −1.70 dBFS decoded.

@@ -1,7 +1,7 @@
 // Render 霓虹快递 · Neon Delivery (src/audio/bgm.js) offline and encode it to dist/bgm-cyberpunk.mp3 (192 kbps, stereo,
 // 44.1 kHz). One full loop, Intro through Outro, with a short fade-in and the outro's natural 2.5 s tail.
 // The synth runs in an OfflineAudioContext in headless Chromium (Playwright); mastering (gain to about -15 LUFS, a
-// look-ahead peak limiter at -1.8 dBFS), the analysis and the MP3 encode (@breezystack/lamejs) run here in node.
+// look-ahead peak limiter iterated until the decoded MP3 peaks at or below -1.3 dBFS), the analysis and the MP3 encode (@breezystack/lamejs) run here in node.
 //
 // usage: node tools/render-bgm.mjs            render + encode, print peak / RMS / LUFS of the decoded MP3
 //        node tools/render-bgm.mjs --check    also the listening analysis (docs/BGM.md §7): per-section 10 s excerpts
