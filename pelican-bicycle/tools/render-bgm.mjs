@@ -165,16 +165,17 @@ if (arg('analyze', false)) {
     const a = Math.floor(m.t * SR), b = i + 1 < mk.length ? Math.floor(mk[i + 1].t * SR) : end, st = stats(full.L, full.R, a, b), bd = bands(full.L.subarray(a, b), full.R.subarray(a, b));
     console.log(`${m.sec.padEnd(9)} ${m.t.toFixed(1).padStart(6)}s ${((b - a) / SR).toFixed(1).padStart(5)}s ${st.rms.toFixed(1).padStart(8)} ${st.peak.toFixed(1).padStart(7)}   ${bd.map(v => v.toFixed(1).padStart(6)).join(' ')}`);
   });
-  // clicks: a step shows as a spike of the second difference far above its local mean (±5 ms, prefix sums). Smooth
-  // music has a tiny Δ²; noisy sources (brushes, cymbals) raise the local mean with them.
+  // clicks: a step is broadband, the record is not (its band stops at 5.2 kHz). So high-pass at 12 kHz (two RBJ
+  // sections) and flag a residual spike far above its ±5 ms local mean (prefix sums).
   function clickScan(x, at = []) {
-    const n = x.length, w = Math.floor(0.005 * SR), d2 = new Float64Array(n), cs = new Float64Array(n + 1); let c = 0;
-    for (let i = 2; i < n; i++) d2[i] = Math.abs(x[i] - 2 * x[i - 1] + x[i - 2]);
-    for (let i = 0; i < n; i++) cs[i + 1] = cs[i] + d2[i];
+    const n = x.length, w = Math.floor(0.005 * SR), hpc = (() => { const f = 12000, Q = 0.7071, w0 = 2 * Math.PI * f / SR, al = Math.sin(w0) / (2 * Q), c = Math.cos(w0), a0 = 1 + al;
+      return [[(1 + c) / 2 / a0, -(1 + c) / a0, (1 + c) / 2 / a0], [1, -2 * c / a0, (1 - al) / a0]]; })();
+    const y = biquadK(biquadK(x, ...hpc), ...hpc), e = new Float64Array(n), cs = new Float64Array(n + 1); let c = 0;
+    for (let i = 0; i < n; i++) { e[i] = Math.abs(y[i]); cs[i + 1] = cs[i] + e[i]; }
     for (let i = w; i < n - w; i++) {
-      if (d2[i] < 0.015) continue;
-      const mean = (cs[i + w] - cs[i - w] - d2[i]) / (2 * w - 1);
-      if (d2[i] > 9 * mean + 0.012) { c++; if (at.length < 12) at.push((i / SR).toFixed(3)); i += w; }
+      if (e[i] < 0.004) continue;
+      const mean = (cs[i + w] - cs[i - w] - e[i]) / (2 * w - 1);
+      if (e[i] > 10 * mean + 0.004) { c++; if (at.length < 12) at.push((i / SR).toFixed(3)); i += w; }
     }
     return c;
   }
