@@ -131,5 +131,26 @@ Iteration log, the rewrite ("The Pelican Strut", after the user asked for more p
 4. A negative pickup position broke the tempo map.
 5. The shellac drive was squashing the crest (the peak landed at −7 dBFS after loudness makeup) and the 170 Hz band
    was too thin, so I halved the drive and moved the band to 120 Hz.
+6. The Δ² click detector could not see a −26 dBFS step inside a busy chorus. A 12 kHz high-pass residual can (the
+   record's band ends at 5.2 kHz, and a step is broadband), so the self-test now finds the injected step.
 
-MEASUREMENTS_PLACEHOLDER
+### Measurements (`node tools/render-bgm.mjs --analyze`, final render)
+
+`dist/bgm-poster.mp3`: 192 kbps, stereo, 44.1 kHz, **2:28.1**, 3.4 MB. After decoding: **peak −2.75 dBFS, RMS
+−18.87 dBFS, 0 clipped samples**. Before encoding, the mastered track measures −15.0 LUFS integrated (informational
+only). Clicks in a crackle-free render: **0** (the detector self-test finds the injected step). There is a 0.4 s
+fade-in and a 2.2 s ring-out after "two bits".
+
+| Section | Starts | Length | RMS dBFS | Peak dBFS | low < 250 Hz | mid | high > 4 kHz (dB share of energy) |
+|---|---|---|---|---|---|---|---|
+| intro (rubato) | 0:00 | 11.4 s | −22.4 | −8.1 | −10.3 | −0.5 | −18.9 |
+| vamp | 0:11 | 3.8 s | −19.4 | −5.1 | −3.7 | −2.7 | −14.9 |
+| A | 0:15 | 30.5 s | −19.0 | −4.7 | −5.0 | −1.8 | −14.9 |
+| A′ | 0:46 | 30.5 s | −18.1 | −4.1 | −6.6 | −1.5 | −11.6 |
+| break + drum break | 1:16 | 15.2 s | −19.2 | −3.4 | −2.9 | −3.3 | −17.0 |
+| B + build | 1:32 | 21.2 s | −21.8 | −5.0 | −7.6 | −1.0 | −14.0 |
+| A″ (G major) | 1:53 | 29.1 s | −16.6 | −2.9 | −5.7 | −1.8 | −11.8 |
+| tag + ring-out | 2:22 | 6.3 s | −17.4 | −3.4 | −6.5 | −1.2 | −20.5 |
+
+Mids carry the record (the gramophone band). Contrast: about 6 dB between the quiet intro and bridge and the
+key-change chorus.
