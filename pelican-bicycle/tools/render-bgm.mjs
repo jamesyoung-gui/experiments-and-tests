@@ -113,7 +113,7 @@ function master(L, R, gain) {
   for (let i = 0; i < n; i++) { acc += s[i]; if (i > la) acc -= s[i - la - 1]; g[i] = acc / Math.min(i + 1, la + 1); }
   const fi = Math.floor(0.4 * SR), fo = Math.floor(0.3 * SR);
   for (let i = 0; i < n; i++) {
-    let k = gain * Math.min(g[i], req[i]);
+    let k = gain * g[i];
     if (i < fi) k *= Math.sin(0.5 * Math.PI * i / fi) ** 2;
     if (i > n - fo) k *= (n - i) / fo;
     L[i] *= k; R[i] *= k;
@@ -162,9 +162,11 @@ if (arg('analyze', false)) {
   for (const x of [full.L, full.R]) {
     const w = Math.floor(0.01 * SR);
     for (let i = w; i < x.length - w; i++) {
-      const j = Math.abs(x[i] - x[i - 1]); if (j < 0.08) continue;
-      let s = 0; for (let k = i - w; k < i - 2; k++) s += Math.abs(x[k] - x[k - 1]);
-      if (j > 12 * (s / (w - 2)) + 0.05) { clicks++; if (at.length < 12) at.push((i / SR).toFixed(3)); i += w; }
+      // a click is an isolated step: much larger than the slope both before AND after it (a musical onset keeps moving)
+      const j = Math.abs(x[i] - x[i - 1]); if (j < 0.05) continue;
+      let s = 0, a = 0; for (let k = i - w; k < i - 2; k++) s += Math.abs(x[k] - x[k - 1]);
+      for (let k = i + 2; k < i + 2 + 88; k++) a += Math.abs(x[k] - x[k - 1]);
+      if (j > 10 * (s / (w - 2)) + 0.03 && j > 5 * (a / 88)) { clicks++; if (at.length < 12) at.push((i / SR).toFixed(3)); i += w; }
     }
   }
   console.log(`click scan (mastered): ${clicks} suspicious discontinuities${at.length ? ' at ' + at.join(', ') + ' s' : ''}`);

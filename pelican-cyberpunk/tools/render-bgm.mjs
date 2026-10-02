@@ -1,7 +1,7 @@
 // Render 霓虹快递 · Neon Delivery (src/audio/bgm.js) offline and encode it to dist/bgm-cyberpunk.mp3 (192 kbps, stereo,
 // 44.1 kHz). One full loop, Intro through Outro, with a short fade-in and the outro's natural 2.5 s tail.
 // The synth runs in an OfflineAudioContext in headless Chromium (Playwright); mastering (gain to about -15 LUFS, a
-// look-ahead peak limiter at -1.5 dBFS), the analysis and the MP3 encode (@breezystack/lamejs) run here in node.
+// look-ahead peak limiter at -1.8 dBFS), the analysis and the MP3 encode (@breezystack/lamejs) run here in node.
 //
 // usage: node tools/render-bgm.mjs            render + encode, print peak / RMS / LUFS of the decoded MP3
 //        node tools/render-bgm.mjs --check    also the listening analysis (docs/BGM.md §7): per-section 10 s excerpts
@@ -18,7 +18,7 @@ import { FORM, SECTIONS, BARS, BAR, S16, noteNum } from '../src/audio/bgm.js';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'dist/bgm-cyberpunk.mp3');
 const SR = 44100, CHECK = process.argv.includes('--check'), T0 = 0.05, TAIL = 2.5;
-const CEIL = 10 ** (-1.5 / 20), TARGET_LUFS = -15;
+let CEIL = 10 ** (-1.8 / 20); const TARGET_LUFS = -15;
 const db = x => 20 * Math.log10(Math.max(1e-12, x));
 const fails = [];
 
@@ -138,13 +138,20 @@ console.log(`霓虹快递 · Neon Delivery: ${BARS} bars at ${(60 / (S16 * 4)).t
 const full = await render({ from: 0, secs: loopSec, tail: TAIL, finish: true });
 const raw = peakRms(full.ch);
 console.log(`raw mix     peak ${raw.peak.toFixed(2)} dBFS, RMS ${raw.rms.toFixed(2)} dBFS, ${lufs(full.ch).toFixed(2)} LUFS, samples ≥ 0 dBFS: ${raw.clip}`);
-const { out, gain } = master(full.ch);
-const mst = peakRms(out);
-console.log(`mastered    gain ${gain.toFixed(2)} dB, peak ${mst.peak.toFixed(2)} dBFS, RMS ${mst.rms.toFixed(2)} dBFS, ${lufs(out).toFixed(2)} LUFS`);
-const bytes = mp3(out);
+// the encoder's low-pass rings on the sharpest transients (≈ +0.5 dB): lower the ceiling until the decoded MP3 keeps
+// its peak at or below -1.3 dBFS (true to the -1 dBFS rule with margin)
+let out, gain, bytes, dec, dch, dm, dl;
+for (let k = 0; k < 4; k++) {
+  ({ out, gain } = master(full.ch.map(d => d.slice())));
+  const mst = peakRms(out);
+  console.log(`mastered    ceiling ${db(CEIL).toFixed(2)} dBFS, gain ${gain.toFixed(2)} dB, peak ${mst.peak.toFixed(2)} dBFS, RMS ${mst.rms.toFixed(2)} dBFS, ${lufs(out).toFixed(2)} LUFS`);
+  bytes = mp3(out);
+  dec = await page.evaluate(b64 => window.decodeMp3(b64), bytes.toString('base64'));
+  dch = await fetchOut(dec.len); dm = peakRms(dch); dl = lufs(dch);
+  if (dm.peak <= -1.3) break;
+  CEIL *= 10 ** ((-1.35 - dm.peak) / 20);
+}
 fs.mkdirSync(path.dirname(OUT), { recursive: true }); fs.writeFileSync(OUT, bytes);
-const dec = await page.evaluate(b64 => window.decodeMp3(b64), bytes.toString('base64'));
-const dch = await fetchOut(dec.len), dm = peakRms(dch), dl = lufs(dch);
 console.log(`MP3         ${path.relative(ROOT, OUT)}  ${(bytes.length / 1024).toFixed(0)} KB, ${dec.ch} ch, ${dec.sr} Hz, ${(dec.len / dec.sr).toFixed(2)} s`);
 console.log(`MP3 decoded peak ${dm.peak.toFixed(2)} dBFS, RMS ${dm.rms.toFixed(2)} dBFS, integrated ${dl.toFixed(2)} LUFS, clipped samples ${dm.clip}`);
 if (dm.peak > -1) fails.push(`MP3 peak ${dm.peak.toFixed(2)} dBFS > -1`);

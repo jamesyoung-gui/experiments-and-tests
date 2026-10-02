@@ -1,4 +1,11 @@
-// OWNER: audio. Pelican Bay soundscape: 100 % procedural WebAudio, no samples, no files.
+// OWNER: audio. Pelican Bay soundscape: 100 % procedural WebAudio, no samples, no files. Style C = a 1930s seaside
+// travel poster, so every voice is period-flavoured and physically modelled: a brass ring-ring bell (rotary clapper,
+// doppler glide), a clockwork freewheel ratchet, a wind-up-toy chain whirr, surf drawing back over shingle, gulls, a
+// three-chime steam-ship whistle, the lighthouse diaphone ("BEEE-oh") at night or in fog, a carousel band organ at the
+// pleasure pier, a tram gong in the village, promenade crowd murmur, rain on the awnings, wind in the pines, a pelican
+// that honks like a 1930s cartoon and clacks its bill, swing-band event stings, and the BGM (bgm.js) sitting on a
+// gramophone crackle bed. The ambience follows the route stretch (frame.weather.stretch / km), the weather and the hour.
+// Full description: docs/BGM.md (§ Soundscape).
 //
 // createAudio(bus, opts?) -> { enable():Promise<boolean>, disable(), update(frame), setVolume(v), debug() }
 //   opts.context  inject an (Offline)AudioContext (tests / judge render). Default: a real AudioContext,
@@ -24,18 +31,36 @@ export const AUDIO = {
   lookahead: 0.12, interval: 25,
   fadeIn: 0.6, fadeOut: 0.45, pauseFade: 0.4, hideFade: 0.08, hideSuspendMs: 100,
   bellStrikes: [TIMING.bell.strike, TIMING.bell.strike + 0.105],
-  music: { gain: 0.62, duck: 0.6, duckHold: 0.55, duckRelease: 0.9, gateFade: 0.6 },   // duck 0.6 ≈ −4.4 dB under bell / gulp / eggs
+  music: { gain: 0.62, sting: 0.5, duck: 0.6, duckHold: 0.55, duckRelease: 0.9, gateFade: 0.6 },   // duck 0.6 ≈ −4.4 dB under bell / gulp / eggs
 };
 
 const TAU = Math.PI * 2;
 const V_MAX = (CADENCE.max / 60) * DIST_PER_REV;
+// speed-driven levels are normalised to the cruise cadence (s = 0.6 at cruise), so they keep their feel when the
+// default cruise moves (60 → 42 rpm); nothing musical follows cadence (the BGM tempo is fixed)
+const V_CRUISE = (CADENCE.cruise / 60) * DIST_PER_REV;
 const WHEEL_C = TAU * BIKE.R;
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const HOP = { takeoff: TIMING.hop.takeoff, land: TIMING.hop.land, hold0: 0.2, hold1: TIMING.hop.land + 0.35 };
 const GAP = { hop: TIMING.hop.gap, bell: 0.12, wave: TIMING.wave.gap, gulp: TIMING.gulp.gap };
 const CAPTION = {
   bell: ['[bell rings]', '[车铃叮铃]'], land: ['[thump]', '[咚]'], gulp: ['[gulp]', '[咕嘟]'],
-  gull: ['[gulls call]', '[海鸥鸣叫]'], horn: ['[distant fog horn]', '[远处雾笛]'], boat: ['[ship\'s horn]', '[轮船汽笛]'],
+  gull: ['[gulls call]', '[海鸥鸣叫]'], horn: ['[distant fog horn]', '[远处雾笛]'], boat: ['[ship\'s whistle]', '[轮船汽笛]'],
+  honk: ['[pelican honks]', '[鹈鹕嘎嘎叫]'], clack: ['[bill clacks]', '[鹈鹕嘴壳嗒嗒响]'], tram: ['[tram gong]', '[电车铃]'], organ: ['[carousel organ]', '[旋转木马风琴]'],
+};
+// per route stretch (route.js): shingle under the surf, crowd murmur by day, gull activity
+const PLACE = {
+  village: { sh: 1, crowd: 0.8, gull: 1.1 }, pier: { sh: 0.8, crowd: 0.5, gull: 1.4 }, harbour: { sh: 0.6, crowd: 0.4, gull: 1.7 },
+  funfair: { sh: 0.7, crowd: 0.9, gull: 1 }, railway: { sh: 0.8, crowd: 0, gull: 0.9 }, lighthouse: { sh: 0.7, crowd: 0, gull: 1 },
+  cliffs: { sh: 0.4, crowd: 0, gull: 1.3, boom: 1 }, dunes: { sh: 0.1, crowd: 0, gull: 0.7 }, bridge: { sh: 0.3, crowd: 0.2, gull: 0.9 },
+  fort: { sh: 1, crowd: 1, gull: 1 }, pines: { sh: 0.4, crowd: 0, gull: 0.5, pines: 1 }, return: { sh: 1, crowd: 0.8, gull: 1.1 },
+};
+const FUNFAIR_KM = 6.5, LIGHTHOUSE = 'lighthouse';
+// carousel band organ: an 8-bar waltz in C (melody [midi, beats]) over oom-pah-pah (bass, dyad per bar)
+const ORGAN = {
+  bpm: 168,
+  mel: [[76, 1], [79, 1], [84, 1], [83, 2], [81, 1], [79, 2], [76, 1], [77, 3], [74, 1], [77, 1], [81, 1], [79, 2], [77, 1], [76, 2], [74, 1], [72, 3]],
+  ch: [[48, 64, 67], [43, 65, 71], [48, 64, 67], [50, 65, 69], [50, 65, 69], [43, 65, 71], [43, 65, 71], [48, 64, 67]],
 };
 
 function mulberry(a) {
@@ -52,6 +77,7 @@ export function createAudio(bus, opts = {}) {
   let masterTarget = -1, lastLive = 0, lastCtl = -1, simT = 0, lastFrame = null;
   let tickOn = false, tickRate = 0, nextTick = 0, tickN = 0;
   let nextSwell = 0, nextGull = 0, nextHorn = 0, nextBoat = 0, nextCricket = 0, nightOn = false;
+  let nextTram = 0, nextOrgan = 0, nextClack = 0, nextHonk = 0, nextDrip = 0, tod = 0.7, wx = {}, place = PLACE.village, stretch = 'village', km = 0, speedU = 0;
   let gust = 1, gustV = 0, gullsOn = true, night = 0, speedN = 0.5, cadence = 60;
   let musicOn = true, musicRun = false;
   const seen = new Set(), lastAcc = {}, cues = [], hops = [], log = [];
@@ -111,12 +137,37 @@ export function createAudio(bus, opts = {}) {
     }
     return buf;
   }
-  function clickBuf(f1, f2, f3) {  // freewheel pawl snap: three damped modes + a grain of noise
-    const sr = ac.sampleRate, n = Math.floor(0.008 * sr), buf = ac.createBuffer(1, n, sr), d = buf.getChannelData(0);
-    for (let i = 0; i < n; i++) {
-      const t = i / sr;
-      d[i] = (0.55 * Math.sin(TAU * f1 * t) * Math.exp(-t / 0.0009) + 0.35 * Math.sin(TAU * f2 * t) * Math.exp(-t / 0.0006) +
-        0.25 * Math.sin(TAU * f3 * t) * Math.exp(-t / 0.0014) + (R() * 2 - 1) * 0.3 * Math.exp(-t / 0.00025)) * Math.min(1, i / 6) * (1 - i / n);
+  function clickBuf(f1, f2, f3) {  // vintage freewheel ratchet: pawl snap (three steel modes + grit), a hollow hub-shell
+    const sr = ac.sampleRate, n = Math.floor(0.012 * sr), buf = ac.createBuffer(1, n, sr), d = buf.getChannelData(0);   // "tok", and the
+    for (let i = 0; i < n; i++) {                                                                                      // spring's rebound
+      const t = i / sr, t2 = t - 0.0017, snap = tt => tt < 0 ? 0 : 0.5 * Math.sin(TAU * f1 * tt) * Math.exp(-tt / 0.0011) + 0.3 * Math.sin(TAU * f2 * tt) * Math.exp(-tt / 0.0007) + 0.2 * Math.sin(TAU * f3 * tt) * Math.exp(-tt / 0.0012);
+      d[i] = (snap(t) + 0.38 * snap(t2) + 0.28 * Math.sin(TAU * 1180 * t) * Math.exp(-t / 0.0028) + (R() * 2 - 1) * 0.25 * Math.exp(-t / 0.0003)) * Math.min(1, i / 6) * (1 - i / n);
+    }
+    return buf;
+  }
+  function crackleBuf(sec) {        // 78-rpm shellac: soft hiss, ticks, the odd pop, a once-per-turn swish (1.3 Hz)
+    const sr = ac.sampleRate, n = Math.floor(sec * sr), buf = ac.createBuffer(2, n, sr);
+    for (let c = 0; c < 2; c++) {
+      const d = buf.getChannelData(c); let lp = 0;
+      for (let i = 0; i < n; i++) { lp += ((R() * 2 - 1) - lp) * 0.35; d[i] = lp * 0.035 * (1 + 0.35 * Math.sin(TAU * 1.3 * i / sr)); }
+      const ev = Math.floor(sec * 26);
+      for (let k = 0; k < ev; k++) {
+        const at = Math.floor(R() * (n - 400)), big = R() < 0.05, a = (big ? 0.5 : 0.18) * (0.3 + R() * R()), tau = (big ? 0.0009 : 0.00025) * sr, f = 1800 + 3000 * R();
+        for (let i = 0; i < 6 * tau && at + i < n; i++) d[at + i] += a * Math.exp(-i / tau) * Math.sin(TAU * f * i / sr + 0.5) * Math.min(1, i / 3);
+      }
+      const X = Math.floor(0.05 * sr); for (let i = 0; i < X; i++) { const k = i / X; d[i] = d[i] * k + d[n - X + i] * (1 - k); }   // loopable
+    }
+    return buf;
+  }
+  function shingleBuf(sec) {        // pebbles knocking as the backwash drags them: hundreds of tiny stone "tik"s
+    const sr = ac.sampleRate, n = Math.floor(sec * sr), buf = ac.createBuffer(2, n, sr);
+    for (let c = 0; c < 2; c++) {
+      const d = buf.getChannelData(c);
+      for (let k = 0; k < sec * 340; k++) {
+        const at = Math.floor(R() * (n - 600)), f = 1700 + 4800 * R() * R(), tau = (0.0005 + 0.0018 * R()) * sr, a = 0.08 + 0.5 * R() ** 3;
+        for (let i = 0; i < 5 * tau && at + i < n; i++) d[at + i] += a * Math.exp(-i / tau) * Math.sin(TAU * f * i / sr) * Math.min(1, i / 4);
+      }
+      for (let i = 0; i < 400; i++) { d[i] *= i / 400; d[n - 1 - i] *= i / 400; }
     }
     return buf;
   }
@@ -138,7 +189,7 @@ export function createAudio(bus, opts = {}) {
     const vin = {}; for (const b of ['amb', 'mech', 'fx', 'far']) { vin[b] = G(solo && !solo.has(b) ? 0 : 1); vin[b].connect(verb); }
     const duck = G(1); duck.connect(amb);                                   // bell ducks wind + road
 
-    const pinkB = noise(9.73, 'pink'), brownB = noise(13.31, 'brown'), whiteB = noise(6.07, 'white');
+    const pinkB = noise(9.73, 'pink'), brownB = noise(13.31, 'brown'), whiteB = noise(6.07, 'white'), shingleB = shingleBuf(3.1);
     // wind: broad band that brightens with speed + a gust-driven narrow whistle
     const windSrc = bufSrc(pinkB, true), windBp = F('bandpass', 500, 0.55), windLp = F('lowpass', 2600, 0.5), windG = G(0);
     wire(windSrc, windBp, windLp, windG, duck);
@@ -152,9 +203,12 @@ export function createAudio(bus, opts = {}) {
     // sea bed (swells are one-shots on top)
     const seaSrc = bufSrc(brownB, true, 0.87), seaLp = F('lowpass', 170, 0.7), seaG = G(0.1);
     wire(seaSrc, seaLp, seaG, amb);
-    // chain whirr: band noise amplitude-modulated at the tooth-engagement rate, plus a low roller hum
-    const chSrc = bufSrc(whiteB, true, 1.07), chBp = F('bandpass', 2700, 1.3), chAM = G(0.55), chG = G(0), chPan = Pan(-0.12);
-    const chOsc = O('sine', 48), chDepth = G(0.45);
+    // chain whirr like a wind-up toy: a clockwork gear-train (resonant metal band, square-gated at the tooth rate),
+    // a little motor whine that rises with the pedalling, plus the low roller hum (two pedal strokes per turn)
+    const chSrc = bufSrc(whiteB, true, 1.07), chBp = F('bandpass', 2900, 5), chAM = G(0.5), chG = G(0), chPan = Pan(-0.12);
+    const chOsc = O('square', 34), chDepth = G(0.5);
+    const whine = O('sawtooth', 200), whineBp = F('bandpass', 1150, 3), whineG = G(0);
+    wire(whine, whineBp, whineG, chPan);
     wire(chOsc, chDepth); chDepth.connect(chAM.gain);
     wire(chSrc, chBp, chAM, chG, chPan, mech);
     const humSrc = bufSrc(pinkB, true, 0.95), humBp = F('bandpass', 620, 3), humAM = G(0.6), humG = G(0);
@@ -162,15 +216,30 @@ export function createAudio(bus, opts = {}) {
     wire(humSrc, humBp, humAM, humG, chPan);
     // freewheel ticks
     const tickBus = G(1), tickPan = Pan(-0.22); wire(tickBus, tickPan, mech);
-    const clicks = [clickBuf(3150, 5120, 7400), clickBuf(3320, 4890, 7650), clickBuf(3050, 5360, 7200)];
+    const clicks = [clickBuf(2150, 3480, 5200), clickBuf(2290, 3610, 5450), clickBuf(2080, 3390, 5050)];
+    // promenade crowd murmur (day; village, piers, lido): babble formants on slow, uneven swells
+    const murSrc = bufSrc(pinkB, true, 0.81), murA = F('bandpass', 480, 1.4), murB = F('bandpass', 1250, 2.2), murAM = G(0.6), murG = G(0), murPan = Pan(-0.35);
+    const murL1 = O('sine', 0.73), murL2 = O('sine', 2.3), murD1 = G(0.25), murD2 = G(0.15);
+    wire(murL1, murD1); wire(murL2, murD2); murD1.connect(murAM.gain); murD2.connect(murAM.gain);
+    wire(murSrc, murA, murAM); wire(murSrc, murB, G(0.6), murAM); wire(murAM, murG, murPan, far);
+    // rain on the awnings (bed; the drips are one-shots) and wind in the pines
+    const rainSrc = bufSrc(whiteB, true, 0.77), rainHp = F('highpass', 1600, 0.6), rainLp = F('lowpass', 6800, 0.6), rainG = G(0);
+    wire(rainSrc, rainHp, rainLp, rainG, amb);
+    const pineSrc = bufSrc(pinkB, true, 1.21), pineBp = F('bandpass', 4600, 0.6), pineG = G(0);
+    wire(pineSrc, pineBp, pineG, duck);
+    // gramophone bed the BGM sits on (inside the music gate, so it comes and goes with the music)
+    const crSrc = bufSrc(crackleBuf(6.13), true), crG = G(0.55), crLp = F('lowpass', 7000, 0.6);
+    wire(crSrc, crLp, crG, musGate);
     const pawlAmp = Array.from({ length: AUDIO.pawls }, (_, i) => 0.82 + 0.18 * Math.sin(i * 2.4) * Math.cos(i * 0.7) + 0.08 * R());
 
     const t0 = now();
-    for (const s of [windSrc, roadSrc, gritSrc, seaSrc, chSrc, humSrc]) s.start(t0, R() * 5);
-    chOsc.start(t0); humOsc.start(t0);
+    for (const s of [windSrc, roadSrc, gritSrc, seaSrc, chSrc, humSrc, murSrc, rainSrc, pineSrc, crSrc]) s.start(t0, R() * 5);
+    for (const o of [chOsc, humOsc, whine, murL1, murL2]) o.start(t0);
     N = { master, amb, mech, fx, far, verb, vin, duck, windSrc, windBp, windG, whisBp, whisG, roadSrc, roadLp, roadG, tyreGate, gritG, seaG, seaLp,
-      chOsc, chG, chBp, humOsc, humG, tickBus, clicks, pawlAmp, pinkB, brownB, whiteB, musDuck, musGate, bgm: null };
+      chOsc, chG, chBp, humOsc, humG, tickBus, clicks, pawlAmp, pinkB, brownB, whiteB, shingleB, musDuck, musGate, bgm: null, sting: null,
+      whine, whineG, murG, rainG, pineG };
     nextSwell = t0 + 0.4; nextGull = t0 + rr(4, 8); nextHorn = t0 + rr(6, 14); nextBoat = t0 + rr(30, 70); nextCricket = t0 + rr(1, 3);
+    nextTram = t0 + rr(6, 15); nextOrgan = t0 + 1; nextClack = t0 + rr(12, 25); nextHonk = t0 + rr(30, 60); nextDrip = t0 + 1;
   }
 
   // ------------------------------------------------------------------ voices
@@ -192,30 +261,75 @@ export function createAudio(bus, opts = {}) {
     } catch { return null; }
   }
 
-  function bellStrike(at, amp, pan) {
-    // bicycle-bell dome: inharmonic partials, each a near-degenerate pair (beating shimmer), upper modes die first
-    const f0 = 2215, P = [[1, 1, 2.3], [1.506, 0.42, 1.5], [2.013, 0.5, 1.15], [2.654, 0.26, 0.75], [3.212, 0.2, 0.5], [4.137, 0.11, 0.34], [0.503, 0.07, 1.2]];
-    const pn = Pan(pan), bus = G(amp * 0.11), sv = send(pn, 0.22); wire(bus, pn, N.fx);
-    let last = null, end = 0;
-    P.forEach(([r, a, d], i) => {
-      for (const det of [-1, 1]) {
-        const o = O('sine', f0 * r + det * (0.7 + 0.45 * i)), g = G(0);
-        wire(o, g, bus);
-        const e = envAD(g.gain, at, a * (det < 0 ? 0.55 : 0.45), 0.0015, d);
-        o.start(at); o.stop(e);
+  // modal one-shot: sine partials [ratio, amp, decay s, beat Hz] (beat > 0 = a near-degenerate pair that shimmers);
+  // bend = doppler glide (+bend → −bend over 0.45 s)
+  function modal(at, f0, P, amp, pan, dest, vb, vbBus, bend = 0, lpF = 0) {
+    const pn = Pan(pan), bus = G(amp), nodes = [bus, pn]; let x = bus;
+    if (lpF) { const lp = F('lowpass', lpF, 0.7); wire(bus, lp); x = lp; nodes.push(lp); }
+    wire(x, pn, dest); const sv = send(pn, vb, vbBus); if (sv) nodes.push(sv);
+    let end = 0, last = null;
+    P.forEach(([r, a, d, beat = 0]) => {
+      for (const det of beat ? [-1, 1] : [0]) {
+        const f = f0 * r + det * beat, o = O('sine', f), g = G(0); wire(o, g, bus);
+        if (bend) { o.frequency.setValueAtTime(f * (1 + bend), at); o.frequency.linearRampToValueAtTime(f * (1 - bend), at + 0.45); }
+        const e = envAD(g.gain, at, a * (beat ? (det < 0 ? 0.55 : 0.45) : 1), 0.0015, d); o.start(at); o.stop(e);
         if (e > end) { if (last) reap(last[0], last); end = e; last = [o, g]; } else reap(o, [o, g]);
       }
     });
-    const n = bufSrc(N.whiteB), hp = F('bandpass', 5200, 1.2), g = G(0);          // striker tick
-    wire(n, hp, g, bus); const e = envAD(g.gain, at, 0.5 * amp, 0.0008, 0.018);
+    reap(last[0], [...last, ...nodes]);
+    return pn;
+  }
+  function bellStrike(at, amp, pan, bend) {
+    // brass bicycle-bell dome: inharmonic modes, each a beating pair; the warm low "hum" mode rings longest
+    const P = [[1, 1, 2.4, 0.8], [1.52, 0.48, 1.5, 1.2], [2.03, 0.4, 1.1, 1.6], [2.71, 0.26, 0.7, 2], [3.31, 0.14, 0.45], [0.51, 0.12, 1.6]];
+    const pn = modal(at, 2040, P, amp * 0.1, pan, N.fx, 0.24, 'fx', bend);
+    if (pn.pan) { pn.pan.setValueAtTime(clamp(pan - 0.1, -1, 1), at); pn.pan.linearRampToValueAtTime(clamp(pan + 0.1, -1, 1), at + 0.5); }
+    const n = bufSrc(N.whiteB), hp = F('bandpass', 5200, 1.2), g = G(0);          // clapper tick
+    wire(n, hp, g, pn); const e = envAD(g.gain, at, 0.045 * amp, 0.0008, 0.016);
     n.start(at, R() * 3); n.stop(e); reap(n, [n, hp, g]);
-    reap(last[0], [...last, bus, pn, sv].filter(Boolean));
   }
   function bell(at) {
+    // ring-ring: each thumb flick spins the rotary clapper ~3 times (the period "dring"), two flicks; a slight doppler
+    // glide (the bell sweeps past the camera's ear) and a swing-band cymbal choke right after
     const pan = screenPan('#j-bars') ?? 0.05;
-    bellStrike(at, 1, pan); bellStrike(at + (AUDIO.bellStrikes[1] - AUDIO.bellStrikes[0]), 0.72, pan);
+    AUDIO.bellStrikes.forEach((st, k) => {
+      const t = at + st - AUDIO.bellStrikes[0];
+      [0, 0.031, 0.06].forEach((dt, j) => bellStrike(t + dt, (k ? 0.74 : 1) * [1, 0.6, 0.42][j], pan, 0.006 - 0.002 * k));
+    });
     ramp(N.duck.gain, 0.5, at, 0.03); ramp(N.duck.gain, 1, at + 0.4, 0.6); duckMusic(at);
+    sting('choke', at + AUDIO.bellStrikes[1] - AUDIO.bellStrikes[0] + 0.26);
     logCue('bell', at, { pan }); caption('bell');
+  }
+  // swing-band stings in the BGM's own voices (a second, never-started bgm instance routed to the effects bus)
+  function sting(kind, at, id) {
+    try { if (!N.sting) N.sting = createBGM(ac, N.fx, { seed: 11, gain: AUDIO.music.sting }); N.sting.sting(kind, at, id); logCue('sting:' + kind, at); }
+    catch (err) { console.warn('[audio] sting', err); }
+  }
+  // the pelican: honks like a 1930s cartoon (reedy buzz, two formants, a throaty flutter) and clacks its bill
+  const HONK = { honk: [[0, 0.26, 1, 1.12, 0.84]], double: [[0, 0.17, 1.04, 1.16, 0.9], [0.23, 0.27, 0.98, 1.1, 0.78]], hup: [[0, 0.13, 0.9, 1.32, 1.2]], hmm: [[0, 0.34, 0.8, 0.86, 0.7]] };
+  function honk(at, kind = 'honk', amp = 1) {
+    const pan = 0.14, f0 = 232 * (0.95 + 0.1 * R());
+    for (const [dt, dur, a, b, c] of HONK[kind]) {
+      const t = at + dt, o1 = O('sawtooth', f0), o2 = O('square', f0 * 1.006), fl = O('sine', 31 + 6 * R()), fd = G(f0 * 0.035);
+      wire(fl, fd); fd.connect(o1.frequency); fd.connect(o2.frequency);
+      for (const o of [o1, o2]) { const fr = o.frequency, k = o === o2 ? 1.006 : 1; fr.setValueAtTime(f0 * k * a, t); fr.linearRampToValueAtTime(f0 * k * b, t + dur * 0.35); fr.linearRampToValueAtTime(f0 * k * c, t + dur); }
+      const f1 = F('bandpass', 700, 3.2), f2 = F('bandpass', 1380, 4.5), nasal = F('peaking', 2500, 2.5, 7), m = G(1), m2 = G(0.5), m3 = G(0.75), g = G(0), pn = Pan(pan);
+      wire(o1, m); wire(o2, m2, m); m.connect(f1); m.connect(f2); f1.connect(nasal); wire(f2, m3, nasal); wire(nasal, g, pn, N.fx); send(pn, 0.1);
+      const A = 0.2 * amp; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(A, t + 0.022); g.gain.linearRampToValueAtTime(A * 0.85, t + dur * 0.7); g.gain.linearRampToValueAtTime(0, t + dur);
+      for (const o of [o1, o2, fl]) { o.start(t); o.stop(t + dur + 0.03); }
+      reap(o1, [o1, o2, fl, fd, f1, f2, nasal, m, m2, m3, g, pn]);
+    }
+    logCue('honk', at, { voice: kind }); caption('honk');
+  }
+  function woodClack(at, a) {      // two keratin plates meeting: a woody mode + a dry snap
+    const s = bufSrc(N.whiteB), bp = F('bandpass', 1800 + 500 * R(), 5), o = O('sine', 980 + 200 * R()), g = G(0), og = G(0), pn = Pan(0.15);
+    wire(s, bp, g, pn); wire(o, og, pn); pn.connect(N.fx);
+    const e = envAD(g.gain, at, 0.4 * a, 0.0008, 0.022); envAD(og.gain, at, 0.1 * a, 0.0006, 0.03);
+    s.start(at, R() * 4); s.stop(e); o.start(at); o.stop(at + 0.06); reap(o, [s, bp, g, o, og, pn]);
+  }
+  function clackRoll(at, n) {      // pelicans really do clack: a quick wooden rattle of the bill
+    for (let i = 0; i < n; i++) woodClack(at + i * (0.072 + 0.012 * R()), 0.9 - 0.09 * i);
+    logCue('clack', at, { n }); caption('clack');
   }
   function thump(at) {
     const pn = Pan(0), g0 = G(1); wire(g0, pn, N.fx); send(pn, 0.08);
@@ -271,6 +385,8 @@ export function createAudio(bus, opts = {}) {
     bubble(at + T.swallow[0] + 0.06, 190, 560, 0.1, 0.34);
     bubble(at + T.swallow[0] + 0.24, 260, 780, 0.09, 0.28);
     bubble(at + T.swallow[0] + 0.44, 340, 640, 0.07, 0.13);
+    sting('trill', at + T.swallow[0] + 0.1);
+    honk(at + T.settle[0] + 0.1, 'hmm', 0.55);
     duckMusic(at + T.scoop[0]);
     logCue('gulp', at + T.swallow[0] + 0.06); caption('gulp');
   }
@@ -285,9 +401,14 @@ export function createAudio(bus, opts = {}) {
     wire(s, g, N.tickBus); s.start(at); reap(s, [s, g]);
   }
   function swell(at) {
-    const D = rr(5.5, 9.5), peak = rr(0.14, 0.22), pan = rr(-0.65, 0.65), crest = rr(0.4, 0.5);
+    const boom = place.boom ? 1.35 : 1, D = rr(5.5, 9.5), peak = rr(0.14, 0.22) * boom, pan = rr(-0.65, 0.65), crest = rr(0.4, 0.5);
     const s = bufSrc(N.pinkB, true), lp = F('lowpass', 220, 0.6), g = G(0), pn = Pan(pan);
-    lp.frequency.setValueAtTime(220, at); lp.frequency.exponentialRampToValueAtTime(rr(900, 1600), at + D * crest); lp.frequency.exponentialRampToValueAtTime(260, at + D);
+    lp.frequency.setValueAtTime(220, at); lp.frequency.exponentialRampToValueAtTime(rr(900, 1600) / boom, at + D * crest); lp.frequency.exponentialRampToValueAtTime(260, at + D);
+    if (place.sh > 0.05) {          // the backwash drags the shingle: a rattle that swells after the crest and dies away
+      const sh = bufSrc(N.shingleB, true, rr(0.85, 1.15)), shBp = F('bandpass', 3400, 0.5), shG = G(0), a = peak * 0.75 * place.sh;
+      shG.gain.setValueAtTime(0, at + D * crest); shG.gain.linearRampToValueAtTime(a, at + D * (crest + 0.16)); shG.gain.linearRampToValueAtTime(a * 0.4, at + D * 0.8); shG.gain.linearRampToValueAtTime(0, at + D);
+      wire(sh, shBp, shG, pn); sh.start(at + D * crest, R() * 2); sh.stop(at + D + 0.05); reap(sh, [sh, shBp, shG]);
+    }
     g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(peak, at + D * crest); g.gain.linearRampToValueAtTime(peak * 0.35, at + D * 0.72); g.gain.linearRampToValueAtTime(0, at + D);
     wire(s, lp, g, pn, N.amb);
     const f = bufSrc(N.whiteB, true), hp = F('highpass', 1900, 0.5), fg = G(0);        // foam hiss on the sand
@@ -314,7 +435,7 @@ export function createAudio(bus, opts = {}) {
     const escort = cadence > 85, near = escort && R() < 0.6;
     let pan = screenPan(near ? '[data-ref^="fx-esc"]' : '[data-ref^="fx-gfar"]', true);
     if (pan == null) pan = rr(-0.8, 0.8);
-    const panV = (2 * (170 - 0.15 * speedN * V_MAX)) / 1600 * (near ? 0.3 : 1);    // far gulls drift with their layer
+    const panV = (2 * (170 - 0.15 * speedU)) / 1600 * (near ? 0.3 : 1);    // far gulls drift with their layer
     const dist = near ? 0.15 : rr(0.45, 0.8), amp = (near ? 0.24 : 0.16) * rr(0.8, 1.1);
     const kind = R(), f0 = rr(820, 1080);
     let t = at, p = pan;
@@ -334,16 +455,70 @@ export function createAudio(bus, opts = {}) {
     for (const o of [o1, o2, o3]) { o.start(at); o.stop(at + dur + 1); }
     reap(o1, [o1, o2, o3, m3, lp, g, pn]);
   }
+  function diaphone(at, amp, pan) {   // lighthouse diaphone: a long "BEEE" that drops into its famous grunt, "-oh"
+    const f = 176, D = 1.9, Gr = 0.75, o1 = O('sawtooth', f), o2 = O('sawtooth', f * 1.003), o3 = O('square', f / 2), m3 = G(0.35), lp = F('lowpass', 300, 1.1), g = G(0), pn = Pan(pan);
+    for (const [o, k] of [[o1, 1], [o2, 1.003], [o3, 0.5]]) { const fr = o.frequency; fr.setValueAtTime(f * k * 0.9, at); fr.exponentialRampToValueAtTime(f * k, at + 0.15); fr.setValueAtTime(f * k, at + D); fr.exponentialRampToValueAtTime(f * k * 0.66, at + D + 0.16); }
+    lp.frequency.setValueAtTime(300, at); lp.frequency.linearRampToValueAtTime(700, at + 0.4); lp.frequency.linearRampToValueAtTime(560, at + D); lp.frequency.linearRampToValueAtTime(420, at + D + Gr);
+    wire(o1, lp); wire(o2, lp); wire(o3, m3, lp); wire(lp, g, pn, N.far); send(pn, 0.7, 'far');
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(amp, at + 0.3); g.gain.setValueAtTime(amp, at + D); g.gain.linearRampToValueAtTime(amp * 1.15, at + D + 0.12);
+    g.gain.setValueAtTime(amp * 1.15, at + D + Gr); g.gain.exponentialRampToValueAtTime(amp * 1e-3, at + D + Gr + 0.8); g.gain.linearRampToValueAtTime(0, at + D + Gr + 0.85);
+    for (const o of [o1, o2, o3]) { o.start(at); o.stop(at + D + Gr + 0.9); }
+    reap(o1, [o1, o2, o3, m3, lp, g, pn]);
+  }
   function fogHorn(at) {
-    const pan = screenPan('[data-ref="sea-lantern"]') ?? 0.45;
-    hornBlast(at, 163, 2.6, 0.042, pan, 520, 0.7);
-    if (R() < 0.5) hornBlast(at + 4.2, 163, 2.6, 0.036, pan, 480, 0.7);
+    const pan = screenPan('[data-ref="sea-lantern"]') ?? 0.45, a = stretch === LIGHTHOUSE ? 0.055 : 0.04;
+    diaphone(at, a, pan);
+    if (R() < 0.5) diaphone(at + 4.6, a * 0.88, pan);
     logCue('horn', at, { pan }); caption('horn');
+  }
+  function steamWhistle(at, dur, f, amp, pan, lpF) {   // three-chime steam whistle: a chord of pipes + steam, slurps up
+    const lp = F('lowpass', lpF, 0.7), g = G(0), pn = Pan(pan), nodes = [lp, g, pn], os = [];
+    wire(lp, g, pn, N.far); send(pn, 0.6, 'far');
+    for (const [r, a] of [[1, 0.5], [1.26, 0.38], [1.5, 0.3]]) for (const h of [1, 2]) {
+      const fh = f * r * h * (1 + 0.002 * R()), o = O(h === 1 ? 'triangle' : 'sine', fh), og = G(a / (h * h)); wire(o, og, lp); os.push(o); nodes.push(o, og);
+      o.frequency.setValueAtTime(fh * 0.94, at); o.frequency.exponentialRampToValueAtTime(fh, at + 0.22); o.frequency.setValueAtTime(fh, at + dur); o.frequency.exponentialRampToValueAtTime(fh * 0.93, at + dur + 0.35);
+    }
+    const ns = bufSrc(N.whiteB, true), nb = F('bandpass', f * 2.6, 1.4), ng = G(0.22); wire(ns, nb, ng, lp); nodes.push(ns, nb, ng); os.push(ns);
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(amp, at + 0.2); g.gain.setValueAtTime(amp, at + dur); g.gain.exponentialRampToValueAtTime(amp * 1e-3, at + dur + 0.5); g.gain.linearRampToValueAtTime(0, at + dur + 0.55);
+    for (const o of os) { o.start(at); o.stop(at + dur + 0.6); }
+    reap(os[0], nodes);
   }
   function boatHorn(at) {
     let pan = screenPan('[data-ref="sea-steamlit"]'); if (pan == null) pan = rr(-0.7, 0.7);
-    hornBlast(at, 231, 0.55, 0.07, pan, 900, 0.6); hornBlast(at + 1.05, 231, 0.9, 0.07, pan, 900, 0.6);
+    steamWhistle(at, 0.6, 196, 0.06, pan, 1500); steamWhistle(at + 1.0, 1.25, 196, 0.06, pan, 1500);
     logCue('boat', at, { pan }); caption('boat');
+  }
+  function tramBell(at) {          // the village tram's foot gong: "clang-clang"
+    const pan = rr(-0.8, 0.8), P = [[1, 1, 1.5, 0.6], [2.0, 0.5, 0.9], [2.76, 0.42, 0.65], [5.4, 0.18, 0.3], [0.5, 0.22, 1.7]];
+    modal(at, 640, P, 0.05, pan, N.far, 0.35, 'far', 0, 3600); modal(at + 0.3, 640, P, 0.043, pan, N.far, 0.35, 'far', 0, 3600);
+    logCue('tram', at, { pan }); caption('tram');
+  }
+  function organ(at, near) {       // carousel band organ at the pleasure pier: flue + reed pipes, waltz, bass drum
+    const bt = 60 / ORGAN.bpm, len = ORGAN.ch.length * 3 * bt, dist = 1 - near;
+    const bus = G(0.05 * (0.35 + 0.65 * near)), lp = F('lowpass', 1500 + 1700 * near, 0.7), pn = Pan(0);
+    const p0 = clamp((FUNFAIR_KM - km) * 0.9, -0.9, 0.9), p1 = clamp(p0 - 0.5, -0.9, 0.9);
+    if (pn.pan) { pn.pan.setValueAtTime(p0, at); pn.pan.linearRampToValueAtTime(p1, at + len); }      // we ride past it
+    wire(bus, lp, pn, N.far); const sv = send(pn, 0.25 + 0.35 * dist, 'far');
+    const vib = O('sine', 6.3), vd = G(9); wire(vib, vd); vib.start(at); vib.stop(at + len + 0.5);
+    const pipe = (t, d, m, v) => {
+      const f = 440 * Math.pow(2, (m - 69) / 12), o1 = O('square', f), o2 = O('sawtooth', f * 2), g = G(0), m2 = G(0.25);
+      vd.connect(o1.detune); vd.connect(o2.detune); wire(o1, g); wire(o2, m2, g); g.connect(bus);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + 0.018); g.gain.setValueAtTime(v, t + d); g.gain.linearRampToValueAtTime(0, t + d + 0.05);
+      o1.start(t); o2.start(t); o1.stop(t + d + 0.08); o2.stop(t + d + 0.08); reap(o1, [o1, o2, g, m2]);
+    };
+    let t = at; for (const [m, b] of ORGAN.mel) { pipe(t + (R() - 0.5) * 0.01, b * bt * 0.9, m, 0.3); t += b * bt; }
+    ORGAN.ch.forEach(([b, x, y], i) => {
+      const t0 = at + i * 3 * bt; pipe(t0, bt * 0.8, b, 0.4); for (const k of [1, 2]) { pipe(t0 + k * bt, bt * 0.45, x, 0.17); pipe(t0 + k * bt, bt * 0.45, y, 0.17); }
+      const o = O('sine', 70), g = G(0); wire(o, g, bus); const e = envAD(g.gain, t0, 0.9, 0.004, 0.18); o.frequency.setValueAtTime(90, t0); o.frequency.exponentialRampToValueAtTime(52, t0 + 0.1); o.start(t0); o.stop(e); reap(o, [o, g]);
+    });
+    const end = O('sine', 1); end.start(at); end.stop(at + len + 0.6); reap(end, [end, vib, vd, bus, lp, pn, sv].filter(Boolean));
+    logCue('organ', at, { near: +near.toFixed(2) }); caption('organ');
+    return len;
+  }
+  function drip(at) {             // rain on the promenade awnings: a single drop
+    const o = O('sine', rr(1800, 4200)), g = G(0), pn = Pan(rr(-0.9, 0.9)); wire(o, g, pn, N.amb);
+    o.frequency.setValueAtTime(o.frequency.value, at); o.frequency.exponentialRampToValueAtTime(o.frequency.value * 1.35, at + 0.012);
+    const e = envAD(g.gain, at, rr(0.01, 0.03), 0.001, 0.012); o.start(at); o.stop(e); reap(o, [o, g, pn]);
   }
   function cricket(at, f, n, pan) {
     const o = O('sine', f), g = G(0), pn = Pan(pan); wire(o, g, pn, N.far);
@@ -356,9 +531,9 @@ export function createAudio(bus, opts = {}) {
   // ------------------------------------------------------------------ rig events → sim-time cues
   const CUES = {
     bell: [[AUDIO.bellStrikes[0], bell]],
-    hop: [[0.05, (at) => whoosh(at, 0.2, 300, 700, 0.03)], [HOP.takeoff, (at) => { scuff(at); ramp(N.tyreGate.gain, 0, at, 0.03); whoosh(at, HOP.land - HOP.takeoff, 500, 1300, 0.06); }],
+    hop: [[0.05, (at) => whoosh(at, 0.2, 300, 700, 0.03)], [HOP.takeoff, (at) => { scuff(at); ramp(N.tyreGate.gain, 0, at, 0.03); whoosh(at, HOP.land - HOP.takeoff, 500, 1300, 0.06); honk(at, 'hup', 0.6); sting('wah', at + 0.02); }],
       [HOP.land, (at) => { thump(at); ramp(N.tyreGate.gain, 1, at, 0.02); }]],
-    wave: [[0, waveSeq]],
+    wave: [[0, waveSeq], [TIMING.wave.unfold[1] - 0.1, (at) => honk(at, 'double', 0.9)]],
     gulp: [[0, gulpSeq]],
   };
   function ingest(e) {
@@ -406,24 +581,40 @@ export function createAudio(bus, opts = {}) {
     } else nextTick = 0;
     if (nextSwell < until) { const s = Math.max(nextSwell, t); const D = swell(s); nextSwell = s + D * rr(0.5, 0.85); }
     if (nextGull < until) {
-      const s = Math.max(nextGull, t);
+      const s = Math.max(nextGull, t), dawn = tod > 0.22 && tod < 0.36 ? 1.4 : 1, k = place.gull * dawn * (wx.fog > 0.4 ? 0.6 : 1) * (wx.rain > 0.4 ? 0.5 : 1);
       if (gullsOn && night < 0.55 && !paused) gullCall(s);
-      nextGull = s + (cadence > 85 ? rr(5, 11) : rr(9, 24));
+      nextGull = s + (cadence > 85 ? rr(5, 11) : rr(9, 24)) / Math.max(0.3, k);
+    }
+    // the place: tram gong in the village, the carousel organ at the pleasure pier, rain drips, the pelican idling
+    if (nextTram < until) { const s = Math.max(nextTram, t); if (!paused && (stretch === 'village' || stretch === 'return') && night < 0.7) tramBell(s); nextTram = s + rr(22, 55); }
+    if (nextOrgan < until) {
+      const s = Math.max(nextOrgan, t), near = stretch === 'funfair' ? clamp(1 - Math.abs(km - FUNFAIR_KM), 0, 1) : 0;
+      nextOrgan = near > 0.05 && !paused ? s + organ(s, near) + rr(1.5, 4) : s + 1;
+    }
+    if (wx.rain > 0.2 && nextDrip < until) { const s = Math.max(nextDrip, t); if (!paused) drip(s); nextDrip = s + rr(0.04, 0.25) / wx.rain; }
+    if (nextClack < until) { const s = Math.max(nextClack, t); if (!paused && wantOn) clackRoll(s, 3 + Math.floor(R() * 4)); nextClack = s + rr(28, 60) * (night > 0.6 ? 2 : 1); }
+    if (nextHonk < until) { const s = Math.max(nextHonk, t); if (!paused && wantOn && night < 0.6) honk(s, R() < 0.4 ? 'double' : 'honk', 0.8); nextHonk = s + rr(55, 120); }
+    const foggy = wx.fog > 0.4;
+    if (night > 0.6 || foggy) {
+      if (!nightOn) { nightOn = true; nextHorn = t + rr(6, 14); }
+      if (nextHorn < until) { const s = Math.max(nextHorn, t); if (!paused) fogHorn(s); nextHorn = s + (stretch === LIGHTHOUSE ? rr(22, 40) : rr(45, 85)); }
     }
     if (night > 0.6) {
-      if (!nightOn) { nightOn = true; nextHorn = t + rr(6, 14); }
-      if (nextHorn < until) { const s = Math.max(nextHorn, t); if (!paused) fogHorn(s); nextHorn = s + rr(45, 85); }
       if (nextCricket < until) { const s = Math.max(nextCricket, t); const d = cricket(s, rr(4300, 4900), 3 + Math.floor(R() * 6), rr(-0.9, 0.9)); nextCricket = s + d + rr(0.6, 4.5); }
     } else {
-      nightOn = false;
-      if (nextBoat < until) { const s = Math.max(nextBoat, t); if (!paused && night < 0.3) boatHorn(s); nextBoat = s + rr(70, 140); }
+      if (!foggy) nightOn = false;
+      if (nextBoat < until) { const s = Math.max(nextBoat, t); if (!paused && night < 0.3) boatHorn(s); nextBoat = s + (stretch === 'harbour' ? rr(30, 60) : rr(70, 140)); }
     }
   }
 
   // ------------------------------------------------------------------ continuous controls (≈20 Hz)
   function controls(fr) {
     const t = now();
-    const s = clamp(fr.speed / V_MAX, 0, 1.2); speedN = s; cadence = fr.cadence;
+    const s = clamp((fr.speed / V_CRUISE) * 0.6, 0, 1.2); speedN = s; speedU = fr.speed; cadence = fr.cadence;
+    wx = fr.weather || {}; tod = fr.tod ?? tod;
+    if (wx.stretch && PLACE[wx.stretch]) { stretch = wx.stretch; place = PLACE[stretch]; }
+    km = wx.km ?? km;
+    const day = clamp(1 - (fr.night || 0) * 1.6, 0, 1);
     gustV += (R() - 0.5) * 0.09 - (gust - 1) * 0.05; gustV *= 0.92; gust = clamp(gust + gustV, 0.55, 1.7);
     const hold = hops.some(h0 => fr.t - h0 >= HOP.hold0 && fr.t - h0 < HOP.hold1);
     const pedal = !fr.coasting && !hold && fr.cadence > 1;
@@ -436,6 +627,11 @@ export function createAudio(bus, opts = {}) {
     glide(N.chG.gain, pedal ? 0.13 * (0.45 + s) : 0, t, 0.05);
     glide(N.humG.gain, pedal ? 0.09 * (0.3 + s) : 0, t, 0.05);
     glide(N.chOsc.frequency, Math.max(1, (fr.cadence / 60) * AUDIO.teeth), t, 0.05);
+    glide(N.whine.frequency, Math.max(20, (fr.cadence / 60) * AUDIO.teeth * 6), t, 0.08);              // wind-up motor whine
+    glide(N.whineG.gain, pedal ? 0.018 * (0.4 + s) : 0, t, 0.06);
+    glide(N.murG.gain, 0.05 * place.crowd * day * (wx.rain > 0.3 ? 0.3 : 1), t, 2);
+    glide(N.rainG.gain, 0.16 * (wx.rain || 0), t, 1.5);
+    glide(N.pineG.gain, place.pines ? 0.05 * (0.4 + (wx.wind || 0) + 0.5 * s) : 0, t, 2);
     glide(N.humOsc.frequency, Math.max(0.5, (fr.cadence / 60) * 2), t, 0.05);         // two pedal strokes per turn
     glide(N.chBp.frequency, 2300 + 900 * s, t, 0.1);
     glide(N.tickBus.gain, 0.5 * (0.6 + 0.5 * Math.min(1, s)), t, 0.1);
@@ -469,7 +665,7 @@ export function createAudio(bus, opts = {}) {
   bus.on('ui:play', ({ on } = {}) => { if (!ac) return; if (on === false) { paused = true; applyMaster(); } else if (on === true) { paused = false; lastLive = performance.now(); applyMaster(); } });
   bus.on('ui:volume', ({ value } = {}) => api.setVolume(value));
   bus.on('ui:toggle', ({ key, value } = {}) => { if (key === 'music') { musicOn = value !== false; if (ac && N) pump(); } });
-  bus.on('egg:found', e => { if (ac && N && e && e.id) duckMusic(now()); });
+  bus.on('egg:found', e => { if (ac && N && wantOn && e && e.id) { const t = now() + 0.04; duckMusic(t); sting('egg', t, e.id); } });   // each egg: a little ta-da
 
   const api = {
     async enable() {

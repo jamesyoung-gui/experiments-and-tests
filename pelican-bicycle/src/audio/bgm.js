@@ -165,8 +165,8 @@ export function createBGM(ac, dest, o = {}) {
         }
       }
       const h = biquad(noiseArr(Math.floor(0.012 * sr)), 'bp', 900 + 8 * m, 1.2, sr);
-      for (let i = 0; i < h.length; i++) d[i] += h[i] * 0.25 * Math.exp(-i / (0.003 * sr));
-      for (let i = 0; i < 64; i++) d[i] *= i / 64;
+      for (let i = 0; i < h.length; i++) d[i] += h[i] * 0.25 * Math.exp(-i / (0.003 * sr)) * Math.min(1, i / 48);
+      for (let i = 0; i < 132; i++) d[i] *= i / 132;
       peakNorm(d, 0.9); fadeTail(d, Math.floor(0.4 * sr));
     }));
   }
@@ -185,10 +185,10 @@ export function createBGM(ac, dest, o = {}) {
   function banjoBuf(m) {                     // Karplus–Strong pluck, bright and short
     return memo('b' + m, () => buffer(1, 0.9, (d, c, n) => {
       const N = Math.max(2, Math.round(sr / mtof(m) - 0.5)), ring = noiseArr(N);
-      for (let i = 1; i < N; i++) ring[i] = 0.6 * ring[i] + 0.4 * ring[i - 1];
+      for (let p = 0; p < 2; p++) for (let i = 1; i < N; i++) ring[i] = 0.55 * ring[i] + 0.45 * ring[i - 1];
       for (let i = 0; i < n; i++) { const j = i % N, y = 0.5 * (ring[j] + ring[(j + 1) % N]) * 0.9965; d[i] = ring[j]; ring[j] = y; }
       biquad(d, 'hp', 140, 0.7, sr); peakNorm(d, 0.9); fadeTail(d, Math.floor(0.1 * sr));
-      for (let i = 0; i < 24; i++) d[i] *= i / 24;
+      for (let i = 0; i < 88; i++) d[i] *= i / 88;
     }));
   }
   const DR = {};
@@ -256,7 +256,7 @@ export function createBGM(ac, dest, o = {}) {
     bs.start(t, R() * 0.5); bs.stop(Math.min(end + 0.2, t + 0.65)); reap(bs, [bs, bg]);
     reap(o1, [o1, o2, vib, vd, lp, g]);
   }
-  function trumpet(t, d, m, v) {               // harmon-muted: thin, nasal, buzzy
+  function trumpet(t, d, m, v, wah) {          // harmon-muted: thin, nasal, buzzy (wah: plunger open → closed)
     const f = mtof(m), g = G(0), o1 = O('sawtooth', f), o2 = O('sawtooth', f), end = t + d;
     o1.detune.value = -5; o2.detune.value = 7;
     const hp = F('highpass', 650, 0.7), pk = F('peaking', 1750, 2.2, 9), lp = F('lowpass', 2400, 0.9);
@@ -264,7 +264,8 @@ export function createBGM(ac, dest, o = {}) {
     const vib = O('sine', 5.5), vd = G(0); wire(vib, vd); vd.connect(o1.detune); vd.connect(o2.detune);
     if (d > 0.42) { vd.gain.setValueAtTime(0, t + 0.18); vd.gain.linearRampToValueAtTime(13, t + Math.min(0.55, d)); }
     const a = 0.13 * v;
-    lp.frequency.setValueAtTime(900, t); lp.frequency.exponentialRampToValueAtTime(3600 + 1200 * v, t + 0.045); lp.frequency.setTargetAtTime(2600, t + 0.05, 0.2);
+    if (wah) { lp.Q.value = 4; lp.frequency.setValueAtTime(450, t); lp.frequency.exponentialRampToValueAtTime(3400, t + d * 0.35); lp.frequency.exponentialRampToValueAtTime(600, t + d); }
+    else { lp.frequency.setValueAtTime(900, t); lp.frequency.exponentialRampToValueAtTime(3600 + 1200 * v, t + 0.045); lp.frequency.setTargetAtTime(2600, t + 0.05, 0.2); }
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + 0.022); g.gain.setTargetAtTime(a * 0.72, t + 0.025, 0.15); g.gain.setTargetAtTime(0, end, 0.04);
     for (const x of [o1, o2, vib]) { x.start(t); x.stop(end + 0.4); }
     reap(o1, [o1, o2, vib, vd, hp, pk, lp, g]);
@@ -445,6 +446,20 @@ export function createBGM(ac, dest, o = {}) {
       }
     },
     setMood(m) { if (m) mood = { ...mood, ...m }; },
+    // event stings in the band's own voices (the page routes this instance to the effects bus)
+    sting(kind, t, id = '') {
+      drums();
+      if (kind === 'choke') buf('ride', DR.crash, t, 0.1, 0.55, 1, 0.022);                                  // cymbal choke (bell)
+      else if (kind === 'wah') { trumpet(t, 0.2, 67, 1, true); trumpet(t + 0.23, 0.46, 65, 0.95, true); }   // plunger "wah-wah" (hop)
+      else if (kind === 'trill') { for (let i = 0; i < 8; i++) clarinet(t + i * 0.068, 0.072, i % 2 ? 79 : 77, 0.75); clarinet(t + 0.56, 0.42, 84, 0.85); }   // gulp
+      else if (kind === 'egg') {                                                                              // a little "ta-da"
+        let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+        const M = [[72, 76, 79, 84], [77, 81, 84, 89], [74, 77, 81, 86], [79, 83, 86, 91], [70, 74, 77, 82]][h % 5];
+        M.forEach((m, i) => vibes(t + i * 0.085, 0.3, m, 0.8));
+        clarinet(t + 0.34, 0.55, M[3] - 12, 0.8); trumpet(t + 0.34, 0.55, M[1], 0.6);
+        buf('ride', DR.ride, t + 0.34, null, 0.5);
+      }
+    },
     info: () => ({ bar, section: BARS[bar].sec, running, next }),
   };
 }

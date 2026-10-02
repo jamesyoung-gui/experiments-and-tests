@@ -92,7 +92,7 @@ export const BARS = LOOP.length, LOOP_SEC = BARS * BAR;
 export const SECTIONS = (() => { let b = 0; return FORM.map(s => { const n = s.ch.split(' ').length, r = { id: s.id, name: s.name, from: b, bars: n }; b += n; return r; }); })();
 
 // ============================================================================ the synth
-const BASE = { kick: 0.4, snare: 0.26, hat: 0.24, bass: 0.13, pad: 0.095, arp: 0.09, lead: 0.1, bell: 0.12, fx: 0.065 };
+const BASE = { kick: 0.4, snare: 0.8, hat: 1.9, bass: 0.13, pad: 0.095, arp: 0.09, lead: 0.1, bell: 0.2, fx: 0.12 };
 export function createBGM(ac, dest, o = {}) {
   let seed = (o.seed ?? 7) >>> 0;
   const R = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -168,7 +168,7 @@ export function createBGM(ac, dest, o = {}) {
     const bus = G(v); bus.connect(part.snare);
     const x = O('triangle', 200), xg = G(0); x.frequency.setValueAtTime(215, t); x.frequency.exponentialRampToValueAtTime(170, t + 0.05); wire(x, xg, bus);
     const e1 = env(xg.gain, t, 0.55, 0.001, 0.08);
-    const s = ac.createBufferSource(), bp = F('bandpass', 2200, 0.6), sg = G(0); s.buffer = white; wire(s, bp, sg, bus);
+    const s = ac.createBufferSource(), bp = F('bandpass', 3000, 0.5), sg = G(0); s.buffer = white; wire(s, bp, sg, bus);
     const e2 = env(sg.gain, t, 0.75, 0.002, 0.12);
     const tl = ac.createBufferSource(), thp = F('highpass', 600, 0.5), tlp = F('lowpass', 10000, 0.5), tgn = G(0); tl.buffer = pink; wire(tl, thp, tlp, tgn, bus);
     const hold = gated ? 0.22 : 0.05;
@@ -183,7 +183,7 @@ export function createBGM(ac, dest, o = {}) {
     s.start(t, R() * 1.5); s.stop(u + 0.2); reap(s, [s, bp, g, pn]);
   }
   function hat(t, v, open) {
-    const s = ac.createBufferSource(), hp = F('highpass', 7800, 0.7), lp = F('lowpass', 14000, 0.7), g = G(0), pn = Pan(0.25); s.buffer = white;
+    const s = ac.createBufferSource(), hp = F('highpass', 7000, 0.7), lp = F('lowpass', 15000, 0.7), g = G(0), pn = Pan(0.25); s.buffer = white;
     wire(s, hp, lp, g, pn, part.hat); const e = env(g.gain, t, v, 0.0015, open ? 0.14 : 0.04); s.start(t, R() * 2); s.stop(e); reap(s, [s, hp, lp, g, pn]);
   }
   function crash(t, v) {
