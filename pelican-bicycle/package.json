@@ -10,6 +10,7 @@
     "check": "node tools/check-rig.mjs && node tools/lint.mjs"
   },
   "devDependencies": {
+    "@breezystack/lamejs": "^1.2.7",
     "esbuild": "0.28.2"
   }
 }
