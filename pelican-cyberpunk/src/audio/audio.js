@@ -685,7 +685,7 @@ export function createAudio(bus, opts = {}) {
     return X;
   }
   function buildMusic() {
-    E = createBGM(ac, N.music, { seed: (R() * 4294967296) >>> 0, inst: inst ? [...inst] : null, mood: musicMood, gain: 0.8,
+    E = createBGM(ac, N.music, { seed: (R() * 4294967296) >>> 0, inst: inst ? [...inst] : null, mood: musicMood, gain: 1.35,
       onLead: (m, t, d) => { if (mus.crooning) croonNote(t, m - 12, d); } });
     // the pelican's vocoder croon (persistent carrier + band bank; hums the hook while coasting)
     const cr = O('sawtooth', 220), sq = O('square', 220), sqG = G(0.3), mix = G(1), V = G(0), out = G(0.14), pn = Pan(0.08);

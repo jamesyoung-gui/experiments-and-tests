@@ -102,7 +102,7 @@ Adaptive quality: when the frame p95 stays above 18 ms the page sheds the compos
 - `check-eggs`: 17 eggs, 26 shots, 0 console errors, 0 failures.
 - `check-beats` (idle pacing, 248 s of live play): 31 rig beats, max gap 11.5 s, per 90 s window 11 / 11 / 11 / 12.
 - `check-baked`: 0 hard, 4 soft (size 2911 KB > 2048 KB (10-point target); gzip 561 KB > 500 KB (10-point target); full-frame SSIM 0.9188 < 0.97 target; rider SSIM 0.917 < 0.96 target); seam ratio 1.22, 681 animations on ≥ 60 s own loops.
-- Sizes: `dist/index.html` 1160.6 KB (467.3 KB gzip), `dist/pelican-bicycle.svg` 2911.1 KB (560.6 KB gzip).
+- Sizes: `dist/index.html` 1167.6 KB (469.9 KB gzip), `dist/pelican-bicycle.svg` 2911.1 KB (560.6 KB gzip).
 
 ## 制作过程 · How it was made (edition C, the engine this fork comes from)
 

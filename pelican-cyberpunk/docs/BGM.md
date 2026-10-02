@@ -1,133 +1,136 @@
 # 霓虹快递 · Neon Delivery (BGM.md)
 
-The background music of Neon Pelican: a synthwave / darksynth night drive. It is a composed piece, written out note by note in `src/audio/bgm.js` (score data plus one synth engine, no samples) and played live by `src/audio/audio.js` under the city. `tools/render-bgm.mjs` renders one loop offline to **`dist/bgm-cyberpunk.mp3`**, a standalone track you can download and share.
+This is the theme of Neon Pelican: cyber-Chinatown darksynth that should be recognisable in three seconds. It opens cold on a **talk-box shouting "pe-li-CAN!"** while the tape spins up, over a guzheng glissando and a reese bass. From there it runs through a Phrygian verse sung by an **erhu**, two drops carried by a **screaming portamento lead** and an **FM-growl bass**, and a breakdown where the **city PA announces "next stop… neon delivery"**. A **fake-out ending** follows, and then the final slam.
+
+Everything is synthesized in `src/audio/bgm.js` (score data plus one synth engine, no samples). `src/audio/audio.js` plays it live under the city. `tools/render-bgm.mjs` renders one loop to **`dist/bgm-cyberpunk.mp3`**.
 
 | | |
 |---|---|
 | **Title** | 霓虹快递 · Neon Delivery |
-| **Key** | A minor (Aeolian). B moves to the relative major (C). The final hook lifts a whole tone to **B minor**, and the outro brings it home to A minor. |
-| **Tempo / metre** | 104 bpm, 4/4, straight 16ths. The tempo is fixed and never follows the cadence. |
-| **Length** | 64 bars = **2:27.7** per loop. The MP3 is 2:30.3: the loop plus a 2.5 s natural tail. |
-| **Mood** | Night drive, cool and heroic. The bridge breaks down and builds, then the key lift opens the final chorus. |
+| **Key** | E minor with a **Phrygian** ♭II (F) in the verse. The pentatonic counter-lines are on E yu (E G A B D). The pre-drop dominant is **B major**. Drop 2 makes a **sudden major lift** into E major (C · D · **E**). The track ends on a bare E5 power chord, neither major nor minor: the mech's chord. |
+| **Tempo** | A fixed 96 bpm. The verse grooves half-time; the drops run four-on-the-floor at double-time energy. |
+| **Length** | 48 bars = **2:00.0** per loop. The MP3 is 2:02.6, which adds the final hit's tail. |
 
-## 1. Form (bar numbers, start times)
+## 1. The running order
 
 | Bars | Time | Section | What happens |
 |---|---|---|---|
-| 1–8 | 0:00 | **Intro · ignition** | Pad and arpeggio alone, with the filters opening bar by bar. The FM bell hints at the hook's head (bars 3 and 7). The kick, the octave bass and 16th hats come in at bar 5. A snare fill and a riser run into A. |
-| 9–16 | 0:18.5 | **A · the hook** | First statement of the hook on the saw lead. Four-on-the-floor kick, gated snare on 2 and 4, octave-bass 8ths, open hats on the off-beats. |
-| 17–24 | 0:36.9 | **A′ · hook, varied** | The hook comes back ornamented (a pick-up and an upper-octave answer). It turns to Dm and ends on Esus–E. The FM-bell counter-line enters, the bass doubles to 16ths and the hats fill to 16ths. |
-| 25–32 | 0:55.4 | **B · skyline** | Contrast: the C-major key area and a **half-time** groove (kick on 1 and the "and" of 3, snare on 3), 8th-note plucks, long soaring lead notes and a bigger pad. It ends on E, the dominant. |
-| 33–40 | 1:13.8 | **Bridge · breakdown and build** | Bars 33–36 drop the drums, hold the bass and close the music bus to 1 kHz. The FM bell plays the hook's head over the borrowed ♭VI colour (Dm · B♭ · F · C). Bars 37–40 build: the kick returns, the snare climbs from quarters to 8ths to 16ths, the filter opens and a riser runs in. The lead picks up over G → F♯ (V of B minor). The drums, bass and plucks stop for the last 8th, a "drop" gap under the lead's pick-up. |
-| 41–56 | 1:32.3 | **A″ · final hook (B minor)** | The big lift: A then A′, a whole tone up. The lead is doubled an octave up with a square sub-octave. A clap layers the snare, the hats run in 16ths, the bass in 16ths, the bell counter-line plays throughout, and there are crashes at bars 41 and 49. |
-| 57–64 | 2:09.2 | **Outro · home** | The hook's head twice more in B minor, then the turn home: **F → G → Am** (♭VI–♭VII–i). The drums thin out (snare out at bar 61, kick out at bar 63), the bass holds and fades, and the bell plays the head one last time in A minor, landing on a long A. Bar 64 (Am) flows straight into the Am intro. The loop seam is measured below. |
+| 1–2 | 0:00 | **Cold open** | A **tape-start**: everything spins up from two octaves down in 0.7 s. The talk-box hook **"pe-li-CAN!"** (B4–D5–E5), then **"ne-on de-li-ve-ry"**, under guzheng glissandos and a held reese. There are no drums. This is the 3-second signature. |
+| 3–6 | 0:05 | **Intro: cyber-Chinatown** | A half-time beat (kick 1 + "and" of 3, a big gated snare on 3), a syncopated reese, the guzheng ostinato and a first erhu phrase. The talk-box calls back every two bars. |
+| 7–14 | 0:15 | **Verse: the erhu** | Em · **F** · Em · D · Em · **F** · G · D. The Phrygian ♭II gives it its dark, old-town colour. The erhu sings the verse with slides into long notes and wide vibrato. The guzheng's pentatonic ostinato bends itself onto each chord (E→F and B→C over F). |
+| 15–18 | 0:35 | **Pre: the mech wakes** | C · D · **B · B**. The 16th reese climbs, the snare rolls up, and a riser runs. The screaming lead enters on a B7 arpeggio, the talk-box shouts "pe-li-can" in B major, and **the mech leitmotif** stabs in. The last beat is a **stutter edit**: 32nd chops, bit-crushed, then a silent 8th. |
+| 19–26 | 0:45 | **Drop 1: the scream** | Em · C · D · B · Em · C · Am · B. A huge impact, four-on-the-floor with clap and snare, and a **FM-growl bass** wobbling in 8ths (16ths in bars 22 and 26). The scream lead plays the drop hook with heavy portamento, a pitch scoop into every note and wide vibrato. The mech motif hits every four bars. The section ends in a **tape-stop** on its last beat: the whole band dives in pitch and dies. |
+| 27–34 | 1:05 | **Breakdown: "next stop"** | Em · Em · C · C · Am · Am · B · B, at about −8 dB against the drops. No drums at first: guzheng tremolo, a big dark pad and a sub. **The city PA** (vocoder on a phone-band horn with a slap echo) announces *"next stop… neon delivery… pelican… 到达"*. In bars 31–32 a **bit-crushed** half-time beat creeps in under a high erhu solo. In bars 33–34 the leitmotif rises, the snare rolls and a riser runs. Then another **tape-stop** at beat 3 of bar 34, and two beats of silence. |
+| 35–42 | 1:25 | **Drop 2: the major lift** | C · D · **E · E** · C · D · **E · E**. The minor key flips to **E major** and the scream jumps to G♯5 and E6. The erhu doubles in long tones, the talk-box answers in E major, and the growl switches to triplet wobbles on the E bars. There is a stutter at bar 38. |
+| 43–44 | 1:45 | **Fake-out ending** | One huge E hit, a **tape-stop** to silence, then a whole bar of nothing but the PA, quietly asking *"pe-li-can?"*… |
+| 45–48 | 1:50 | **Final slam** | …and the drop slams back in (Em · C · D), ending on the talk-box's longest **"pe-li-CAAAN!"**, the mech leitmotif and a final E5 hit with a sub-boom on beat 3. In the page the loop wraps to the cold open's tape-start. |
 
-## 2. Chord chart (one chord per bar)
-
-```
-Intro   | Am  | F   | C   | G   | Am  | F   | G   | E   |
-A       | Am  | F   | C   | G   | Am  | F   | G   | E   |
-A'      | Am  | F   | C   | G   | Dm  | F   | Esus| E   |
-B       | F   | G   | C   | Am  | F   | G   | C   | E   |      (C major area, half time)
-Bridge  | Dm  | Bb  | F   | C   | Dm  | Bb  | G   | F#  |      (bVI colour; F# = V of B minor)
-A''     | Bm  | G   | D   | A   | Bm  | G   | A   | F#  |      (A up a tone)
-        | Bm  | G   | D   | A   | Em  | G   | F#sus| F# |      (A' up a tone)
-Outro   | Bm  | G   | D   | A   | F   | G   | Am  | Am  |      (bVI - bVII - i: home)
-```
-
-## 3. The hook (the melody that comes back)
-
-The tokens are `pitch:sixteenths`. The motif is a leap up a fifth, then a stepwise fall: **A4 – E5 – D5 – C5**. It is answered by a rising run to G5.
+## 2. Chord chart
 
 ```
-A  (bars 9-16)   | A4:3 E5:3 D5:2 C5:6 r:2 | C5:2 D5:2 E5:3 F5:3 E5:2 C5:4 | G4:3 E5:3 D5:2 C5:6 r:2 | B4:2 C5:2 D5:4 G5:8 |
-                 | A4:3 E5:3 D5:2 C5:6 r:2 | C5:2 D5:2 E5:3 F5:3 A5:4 G5:2 | G5:3 F5:3 E5:2 D5:4 B4:4 | E5:6 D5:2 B4:4 G#4:4 |
-A' (bars 17-24)  | A4:2 C5:1 E5:3 D5:2 C5:2 E5:2 A5:4 | A5:2 F5:2 E5:3 F5:3 A5:4 C6:2 | G5:3 E5:3 D5:2 C5:4 E5:2 G5:2 | B5:4 A5:2 G5:2 D5:8 |
-                 | D5:3 A5:3 G5:2 F5:6 E5:2 | F5:2 G5:2 A5:3 C6:3 A5:2 F5:4 | E5:4 A5:4 B5:8 | G#5:12 r:4 |
-A'' (bars 41-56) = A then A', transposed +2 (B minor), octave-doubled
+Open    | Em  | Em  |
+Intro   | Em  | F   | Em  | D   |
+Verse   | Em  | F   | Em  | D   | Em  | F   | G   | D   |      F = Phrygian bII
+Pre     | C   | D   | B   | B   |                              B = major V (harmonic minor)
+Drop 1  | Em  | C   | D   | B   | Em  | C   | Am  | B   |
+Break   | Em  | Em  | C   | C   | Am  | Am  | B   | B   |
+Drop 2  | C   | D   | E   | E   | C   | D   | E   | E   |      the major lift
+Fake    | E   | -   |
+Final   | Em  | C   | D   | E5  |                              the mech's bare fifth
 ```
-- **A′** varies the hook. A pick-up C5 is added, the first phrase leaps on to A5, the answer climbs to C6, the motif is sequenced onto Dm (D5–A5–G5–F5), and the phrase ends on the leading tone G♯5.
-- **A″** is the fuller, final hook: the same tune a whole tone up, with the full arrangement.
-- The FM-bell counter-line answers in the second half of each bar, while the lead holds or moves slowly. For example, it plays C6–E6–A6 over Am and B6–G♯6–E6–B5 over the E turnaround.
 
-## 4. Instrumentation (all synthesized, `src/audio/bgm.js`)
+## 3. The themes
+
+- **The talk-box hook "pe-li-can"**: `B4:2:pe D5:2:li E5:4:kan` (in sixteenths), answered by `G5 A5 G5 E5 D5 E5` "ne-on de-li-ve-ry". It is all pentatonic, and it moves to B major (B–D♯–F♯) and E major (B–E–G♯) when the harmony lifts.
+- **The drop hook (scream lead)**: `E5 G5 B5 A5 G5 E5 | G5 E5 D5 B4 | A5 B5 D6 B5 A5 F#5 | F#5 D#5 B4`. Its second half climbs to E6. In drop 2 it is re-voiced for the major lift: G♯5 → E6, F♯6, and a held E6 scream to close.
+- **The mech leitmotif** comes from the suit's own "MECH ONLINE" HUD call (E–B–E–B), played as power-chord stabs: `E3 B3 E4 B4` (sixteenth, sixteenth, sixteenth, held). It appears in the pre, at every drop's downbeat, rising in the breakdown, in the fake-out hit and in the final bar. **In the page, the mech suit-up egg plays the same motif as its sting**, on the next beat, transposed to the current chord, with an impact.
+- **The pentatonic counter-melodies**:
+  - the guzheng ostinato `E4 B4 D5 E5 B4 A4 G4 A4`, fitted to each chord, with a 按音 (press-bend) up a whole tone at the end of every other bar;
+  - the erhu's verse line;
+  - the breakdown's erhu solo.
+
+## 4. The instruments (`src/audio/bgm.js`)
 
 | Part | Design |
 |---|---|
-| **Octave bass** | A saw plus a square (−7 cents) through a resonant low-pass (Q 4) with a per-note filter envelope. It pulses in 8ths or 16ths between the root and its octave, with a parallel `tanh` drive path for the darker moods. It is mono, with a 32 Hz high-pass. |
-| **Kick** | Four on the floor. A 165 → 48 Hz sine sweep with a click transient. Every kick drives the **sidechain pump** (pad, arp and bell dip to −10 dB and recover with τ ≈ 0.1 s). |
-| **Gated snare** | A triangle body, a band-passed noise crack, and the 80s **gated reverb**: a dense flat pink-noise tail held 220 ms, then cut in 15 ms. The roll and fill hits use a short gate. |
-| **Clap, hats, crash, riser** | A 3-burst clap layered on the A″ snare. Closed and open hats (high-passed noise, 16ths or off-beats). A long noise crash on section downbeats. Band-pass noise risers into A, the bridge build and A″. |
-| **Pad** | 4 voices × 2 saws detuned ±8 cents. A **low cut at 210 Hz** and a low-pass that opens through the intro. A stereo chorus (two LFO-swept 11 ms and 16 ms delays panned hard L and R), the sidechain pump, and a plate send. |
-| **Arp plucks** | A saw plus a +5 cent square through a plucky Q 3 filter envelope. The pattern is up-down or a leaping 0-2-1-3, in 16ths (8ths in B). A dotted-8th delay, panned against the dry signal. |
-| **Lead** | Two saws ±7 cents, plus an octave-up saw (A″ doubling) and a square sub-octave (A″). **Portamento** on every contiguous note (τ 30 ms), delayed vibrato on long notes (5.4 Hz, ±13 cents after 0.3 s), a filter "bite" on each attack, a dotted-8th ping-pong delay and a plate send. |
-| **FM bell** | A sine carrier with a **3.5 : 1** sine modulator whose index decays from 2.4 to 0.08 over 0.9 s, plus a 2× partial. The voices are panned alternately ±0.3 and feed the ping-pong delay and the plate. |
-| **Stings** | Gulp: a power-up bell arpeggio of the current chord. Wave: three falling bell notes. **Mech suit-up**: a filtered saw power-chord stab (a 300 → 5200 → 700 Hz sweep), a crash and a 4-note bell run. All land on the next beat, in the current chord. |
+| **Talk-box** | Two detuned saws through **three moving formant band-passes** (Q 6 / 9 / 11) with a vowel table (a e i o u, plus l m n y r). Plosives (p, k, t, d…) are filtered noise bursts with a dip in the voice; "-n" closes the formants nasally. It has portamento, light drive and the ping-pong delay. |
+| **City PA** | The same formant voice on a **square** carrier, through a phone-band horn (a 500 Hz high-pass, a +10 dB peak at 1.8 kHz, drive) and a 270 ms slap echo. It **bypasses the tape**, so it can speak over the fake-out silence. |
+| **Scream lead** | Three saws at −18 / 0 / +18 cents plus a square sub-octave, driven hard, then low-passed at 5.2 kHz. **Heavy portamento** on contiguous notes (τ 60 ms), a −150 cent scoop into every attack, and a delayed 30 cent vibrato. Ping-pong delay and plate. |
+| **Erhu** | Two saws (+5 cents) through a nasal body (a band-pass at 1 kHz and a +7 dB peak at 2.7 kHz). A bowed attack, a slide up from a whole tone below into long notes, a 6.3 Hz vibrato and plate reverb. |
+| **Guzheng** | A triangle plus a saw pluck with a bent attack (+20 cents settling in 25 ms), a bright filter decaying to 900 Hz, press-bends, tremolo picking and glissando rolls. Panned by pitch. |
+| **Reese bass** | Two saws at ±16 cents plus a sine sub through a resonant low-pass swept by a slow LFO. |
+| **FM growl** | A sine carrier and a sine modulator (1:1). An LFO **wobble**, synced at 8ths, 16ths or triplets, drives both the FM index and the filter, through a hard `tanh` drive. Bass is mono with a 30 Hz high-pass. |
+| **Mech stabs** | Power chords (root, fifth, octave) of detuned saw pairs, a 400 → 5000 Hz filter snap, and drive. |
+| **Drums** | A driven kick that pumps the pad and guzheng (sidechain-style), the 80s gated-reverb snare, a clap, 16th hats with open off-beats, crashes, impacts (a 62 → 27 Hz sub-boom plus a noise blast) and noise risers. |
+| **Pad** | 4 × 2 detuned saws, low cut at 200 Hz, a section-dependent low-pass, pumped. |
 
-**Humanising:** each note's timing gets a seeded random offset. The lead and bell move ±15 ms (legato notes ±6 ms), the arp and hats ±8–10 ms, the snare ±6 ms, and the kick and bass ±4 ms, so the four-on-the-floor stays locked as the style wants. Every hit also gets a velocity offset of ±10 %.
+**Glitch edits, done on the whole mix:**
+- a **tape** (one `ConstantSource` driving the detune of every pitched voice): tape-starts and tape-stops with a real speed curve (pitch = 1200·log2(speed)), the mix fading as it slows;
+- **stutters** (32nd-note chops at −10 dB, crossfaded into a 5-level **bit-crusher**);
+- the **bit-crush drop** in the breakdown;
+- silent gaps.
 
-**Mix:** parts → sidechain pump (pad, arp, bell) → bus high-pass 28 Hz → mood low-pass → duck → level. The engine has its own plate reverb (2.4 s, generated). In the page, the music feeds the page's master compressor and limiter (ceiling −3 dBFS). For the MP3, `render-bgm.mjs` masters in node: the gain is set to −15 LUFS integrated (ITU-R BS.1770), then a look-ahead peak limiter (1.5 ms, 120 ms release) runs. Its ceiling is lowered until the *decoded* MP3 peaks at or below −1.3 dBFS.
+**Humanising:** timing offsets of ±10–15 ms on the melodies and plucks, ±3–6 ms on the kick, bass and snare, and ±10 % velocity everywhere.
 
-## 5. In the page (`src/audio/audio.js`)
+## 5. In the page
 
-- **Off by default.** It starts with the existing music switch (`U`, or the synth-keyboard button in the control card; the music switch also opens the sound) and always starts from the intro. Turning it off fades it in 0.25 s and frees the voices 1.6 s later.
-- **Scheduling:** a lookahead scheduler, a 25 ms pump that schedules 200 ms ahead on the 16th grid. Persistent voices are driven by scheduled envelopes. After a stall it resyncs with no backlog. The context is suspended 100 ms after the tab is hidden.
-- **The tempo never moves** (104 bpm), whatever the cadence. The default cruise is now 42 rpm and nothing in the music is keyed to the cadence.
-- **It adapts gently, per beat** (levels and filters only):
-  - **dusk drive** (the default): the full mix;
-  - **day**: lighter drums and bass, a brighter pad and bell;
-  - **acid night**: the bass drive opens;
-  - **deep night**: the bus closes to 6.5 kHz, with fewer hats and a driven bass;
+- **Off by default.** It starts with the music switch (`U`, or the synth-keyboard button) from the cold open, and frees its voices 1.6 s after it is switched off.
+- **The tempo never moves:** it is 96 bpm at any cadence, including the new 42 rpm cruise.
+- **It thins or fills per beat:**
+  - **day**: lighter drums, the erhu and guzheng forward;
+  - **acid night**: more bass and stabs;
+  - **deep night**: the bus closes to 6.5 kHz, with fewer hats;
   - **downpour**: the bus closes to 3.2 kHz, with soft drums;
   - **neon tunnel**: the bus closes to 1.5 kHz;
-  - **scrapyard**: a driven bass;
-  - **temple**: the bells come forward;
-  - **arcade**: the plucks come forward;
-  - **sprint** (≥ 90 % of the sprint cadence): hats +30 %;
-  - **coasting**: the kick, snare and lead drop out, and the pelican croons the hook through its vocoder, an octave down.
-- **Ducking:**
-  - −4.4 dB under rig events (the bell, hop, wave and gulp) and under eggs (the mech suit-up holds it for 3.9 s);
-  - −3 dB under the pelican's voice;
-  - −2 dB under HUD bleeps and nearby gags.
+  - **old temple**: the erhu and guzheng +30 %;
+  - **arcade**: the talk-box forward;
+  - **sprint**: hats +30 %;
+  - **coasting**: the drums, the lead and the talk-box drop out, and the pelican croons the hook through its vocoder.
+- **Ducking:** −4.4 dB under rig events and eggs, −3 dB under the voice, −2 dB under the HUD.
+- **Stings on the beat:**
+  - gulp: a guzheng run up;
+  - wave: three falling plucks;
+  - mech suit-up: **the leitmotif**.
 
-  It recovers with a 0.5 s time constant.
-- **Stings on the beat**:
-  - the gulp, the wave and the mech suit-up (at the visor lock, 3.2 s into the suit-up);
-  - **the chime is in tune**: its two strikes take the current chord's tones.
-- `debug().music` reports `{on, built, bar, step, bpm, mode, section, chords, crooning}`.
+  The chime is tuned to the current chord.
+- **Level:** the music bus alone measures −18.0 dBFS RMS. Sound plus music measures −16.3 dBFS, peaking at −3.1 dBFS (`tools/render-sound.mjs --music`).
 
-## 6. Rendering the file
+## 6. The file, and the checks that remain
 
 ```
-node tools/render-bgm.mjs           # dist/bgm-cyberpunk.mp3 + peak / RMS / LUFS of the decoded MP3
-node tools/render-bgm.mjs --check   # + the listening analysis below (exits 1 on any failure)
+node tools/render-bgm.mjs           # dist/bgm-cyberpunk.mp3 (192 kbps, stereo, 44.1 kHz) + its peak / RMS / LUFS
+node tools/render-bgm.mjs --check   # + per-section levels, clicks per stem, the loop seam (exits 1 on a failure)
 ```
-The tool bundles `src/audio/bgm.js` with esbuild and renders it in headless Chromium (Playwright) with an `OfflineAudioContext`. It schedules like the live page, suspending every 0.5 s and pumping 1 s ahead, because queuing thousands of `AudioParam` events up front slows Chromium down quadratically. It renders one loop (bars 1–64, `loop: false`), lets the outro's voices release over a 2.5 s tail, and applies a 0.25 s fade-in and a 0.6 s raised-cosine fade at the very end. It then encodes in node with `@breezystack/lamejs` (192 kbps, stereo, 44.1 kHz) and decodes the MP3 back in Chromium to measure what a listener actually gets.
+The tool renders in headless Chromium with an `OfflineAudioContext`, scheduling like the page does. It masters in node: gain, then a look-ahead limiter whose ceiling is lowered until the decoded MP3 peaks at or below −1.3 dBFS. It encodes with `@breezystack/lamejs`, then decodes the MP3 back to measure it.
 
-**The MP3:** 3522 KB, 150.3 s. **Peak −1.70 dBFS, RMS −18.08 dBFS, integrated −15.39 LUFS**, 0 clipped samples.
+**The MP3:** 2873 KB, 122.6 s, **peak −1.34 dBFS, RMS −18.42 dBFS** (−15.4 LUFS integrated, reported but not a target). 0 clipped samples.
 
-## 7. Self-review by measurement (I can't listen, so I measured)
+Only the technical rules are gates now: **no clipping, no clicks, peak ≤ −1 dBFS.** The final run:
+- **The raw mix** peaks at −0.94 dBFS, with 0 samples at or above full scale. The MP3 has 0 clipped samples and peaks at −1.34 dBFS.
+- **Clicks:** 0 on every tonal stem (bass, pad, guzheng, erhu, lead, talk-box, stabs), each rendered alone through the full glitch chain. Two tests were run:
+  - sample steps above 3 × the stem's 99.99th percentile;
+  - cut-offs: a drop of more than 20 dB within 10 ms that stays down. A single-window phase null of the beating reese is not a cut.
 
-The final `--check` (seed 7) gave these results.
+  The stutters chop to −10 dB with 4 ms ramps, the tape-stops fade with the speed curve, and the plosives dip rather than gate.
+- **The loop seam** (the final bar into the cold open): the largest |Δx| is 0.015, against the excerpt's 99.9th percentile of 0.17.
+- **The tape is restored** after every stop: a measured guzheng E5 is 658 Hz in the breakdown, and the lead's F♯ sub is 370.6 Hz in drop 2.
+- **Dynamics** (mastered RMS per section, up to 10 s each):
 
-| Section (10 s from its start, mastered) | RMS dBFS | Low / mid / high energy % (<250 Hz / 250 Hz–4 kHz / 4–16 kHz) |
-|---|---|---|
-| Intro | −22.4 | 31 / 68 / 0.5 |
-| A | −17.1 | 52 / 44 / 4.9 |
-| A′ | −17.2 | 45 / 49 / 6.0 |
-| B | −17.2 | 49 / 46 / 4.9 |
-| Bridge | −20.2 | 51 / 49 / 0 (the breakdown, low-passed) |
-| A″ | −16.9 | 44 / 50 / 6.1 |
-| Outro | −17.6 | 56 / 40 / 5.0 |
+| Open | Intro | Verse | Pre | Drop 1 | Break | Drop 2 | Fake-out | Final |
+|---|---|---|---|---|---|---|---|---|
+| −20.3 | −20.1 | −21.2 | −18.7 | **−16.2** | −23.7 | **−15.4** | −22.5 | **−15.9** |
 
-- **Clipping:** 0 samples at or above 0 dBFS in the raw mix (peak −0.02 dBFS before mastering) and 0 in the MP3.
-- **Clicks:** 0 on every tonal stem (bass, pad, arp, lead, bell, each rendered alone for the full loop). Two tests were run: isolated sample steps above 3 × the stem's own 99.99th-percentile step, and drops of more than 20 dB between adjacent 10 ms windows.
-- **The hook against the score:** each lead note was rendered dry and solo, and its pitch measured by YIN 90 ms into the note. The expected pitches are re-read from the written score text. **A: 37/37, A′: 38/38, A″: 37/37** notes match. A″ is compared by pitch class, because its square sub-octave sits an octave below.
-- **The loop seam** (outro → intro, rendered with the engine looping by itself): the largest |Δx| within ±20 ms of the seam is 0.014, against the excerpt's 99.9th percentile of 0.198, so there is no discontinuity. The level is −26.2 dBFS in the 2 s before the seam and −24.1 dBFS in the 2 s after.
+The breakdown sits 8 dB under drop 2, and the fake-out bar is silent apart from the PA.
 
-**Iterations** (each a full render and `--check`):
-1. **First pass.** The raw mix peaked at +4.6 dBFS, with 6307 samples over full scale. All part levels came down 5 dB.
-2. **Too dark.** The 4–16 kHz band held 0.2 % of the energy and low frequencies 60–65 %. The lead, pad and arp filters opened (lead 3.6–5.2 kHz, pad 3.8–4.6 kHz, arp 4–5.6 kHz). The bass fades out over the last outro bar, so the outro hands over to the bass-less intro smoothly. The click detector's 1 ms windows were swapped for 10 ms windows: 1 ms cannot judge a 41 Hz bass.
-3. **A quiet intro and buried plucks.** The intro pad came up +2.6 dB and the arp +1.6 dB.
-4. **The hats and snare were still inaudible.** A per-part stem probe measured the hats at −52 dBFS and the snare at −39 dBFS, against a lead at −23. The snare came up +10 dB, the hats +16 dB and the bell +4.4 dB. The highs went from 1–2 % to 5–6 %, and the low band settled at 44–52 %.
-5. **The MP3's peak overshot.** The encoder's low-pass rings on the sharpest transients, so the decoded peak landed about 0.55 dB above the PCM peak. The limiter ceiling now iterates against the decoded MP3 until it peaks at or below −1.3 dBFS. In the final render, −1.8 → −2.21 dBFS PCM gave −1.70 dBFS decoded.
+**How it got here:** the first version was competent, generic synthwave: an A-minor saw lead, an FM bell and a tidy intro-A-A′-B-bridge-A″-outro form, checked note for note against its score. On the user's note ("more personality") it was rewritten from scratch around a talk-box name-hook, Chinese instruments, Phrygian and major-lift harmony, glitch edits, a PA breakdown, a fake-out and the mech leitmotif.
+
+These were the mixing passes after the rewrite:
+1. **Stray notes.** A parsing bug gave every empty track a stray note at each section start. Fixed.
+2. **Balance.**
+   - The talk-box (−2 dBFS peaks) and the PA (+3 dBFS) were far too loud: −10 and −16 dB.
+   - The kick and bass were dominating, so they came down.
+   - The snare, hats and stabs came up.
+   - The breakdown was trimmed to 0.55 of the drop level for contrast.
+3. **The fake-out PA** resonated on its formants (−6 dBFS): moved an octave down and halved.
+4. **Over-sharp edits.** The stutter and plosive dips were too abrupt, so they now chop and dip rather than gate. The cut detector was taught the difference between a phase null and a cut.
+5. **Headroom.** A 0.55 trim keeps the raw mix under 0 dBFS (it had peaked at +4 dBFS). The page gain went from 0.8 to 1.35 to compensate.

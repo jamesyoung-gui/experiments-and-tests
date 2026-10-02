@@ -114,6 +114,7 @@ const BURST = { p: 1200, b: 900, t: 4000, d: 3000, k: 2200, g: 1800, x: 4500, s:
 
 // ============================================================================ the synth
 const BASE = { kick: 0.4, snare: 1.0, hat: 2.0, bass: 0.11, pad: 0.1, zheng: 0.17, erhu: 0.13, lead: 0.085, talk: 0.15, stab: 0.14, pa: 0.08, fx: 0.16 };
+const TRIM = 0.55;   // headroom: the raw mix stays under 0 dBFS
 export function createBGM(ac, dest, o = {}) {
   let seed = (o.seed ?? 7) >>> 0;
   const R = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -305,7 +306,7 @@ export function createBGM(ac, dest, o = {}) {
   let lastMood = null;
   const moodAt = (bar, beat) => Object.assign({ lp: 20000, drive: 0 }, o.mood ? o.mood(bar, beat) : null);
   function levels(B, t, md) {
-    for (const k in BASE) tg(part[k].gain, on(k) * BASE[k] * (B.lvl[k] ?? 1) * (md[k] ?? 1) * B.dyn * (o.gain ?? 1), t, 0.05);
+    for (const k in BASE) tg(part[k].gain, on(k) * BASE[k] * TRIM * (B.lvl[k] ?? 1) * (md[k] ?? 1) * B.dyn * (o.gain ?? 1), t, 0.05);
     tg(busLp.frequency, md.lp, t, 0.3);
     lastMood = md;
   }

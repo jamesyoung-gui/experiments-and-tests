@@ -5,16 +5,17 @@
 Everything you hear is synthesized live in WebAudio by `src/audio/audio.js`. There are no samples and no audio files. Sound is **off by default**, and no `AudioContext` exists until the viewer turns sound on (`M` or the sound button). The **music has its own switch** (`U`, the synth-keyboard button → `ui:toggle {key:'music'}` → `state.toggles.music`; also `ui:music {on}` or `audio.setMusic(on)`). Turning sound on gives you the city first, and the track only plays when you ask for it.
 
 ## 1. The music: 霓虹快递 · Neon Delivery (see docs/BGM.md)
-A composed 64-bar synthwave piece (2:27.7 per loop) in A minor, 104 bpm, with the form Intro → A → A′ → B (C major, half time) → Bridge (breakdown and build) → A″ (the final hook, lifted to B minor) → Outro (home to A minor). It is written out in `src/audio/bgm.js`: the score data plus one synth engine with an octave bass, four-on-the-floor kick and sidechain pump, gated snare, detuned saw pad with chorus, portamento lead, arp plucks and an FM-bell counter-line. `tools/render-bgm.mjs` renders it to `dist/bgm-cyberpunk.mp3`.
-- **The tempo is fixed at 104 bpm.** It no longer follows the pedals (the old tempo ladder is gone), and the slower 42 rpm cruise changes nothing in the music.
-- **The city thins or fills it per beat**, through levels and filters:
-  - the mood, from `frame.tod` and the weather: day, dusk drive, acid night, deep night, downpour;
-  - the district: tunnel, scrapyard, temple, arcade;
-  - the pace: a sprint opens the hats, and a coast strips the drums and lead while the pelican croons the hook.
-- **It ducks** −4.4 / −3 / −2 dB under events, the voice and HUD bleeps.
-- **Stings** (gulp, wave, mech suit-up) land on the next beat in the current chord, and the chime is tuned to that chord too.
+The game's theme is a 48-bar cyber-Chinatown darksynth track (2:00 per loop) in E minor / Phrygian, at a fixed 96 bpm.
+- **It opens on a talk-box "pe-li-CAN!"** with a tape-start.
+- **Instruments:** an erhu-like synth and guzheng plucks on the pentatonic, a reese and FM-growl bass, and a screaming portamento lead.
+- **Leitmotif:** the mech suit-up's E–B–E–B call.
+- **Edits:** tape-stops, stutters, bit-crush, a city-PA vocoder breakdown, a major-lift second drop and a fake-out ending.
 
-BGM.md has the chord chart, the hook, the instrumentation and the measurements.
+It is written out in `src/audio/bgm.js`, and `tools/render-bgm.mjs` renders it to `dist/bgm-cyberpunk.mp3`.
+- **The tempo is fixed** and does not follow the pedals. The 42 rpm cruise changes nothing in the music.
+- **The city thins or fills it per beat**, through levels and filters: the mood (day, dusk drive, acid night, deep night, downpour), the district (tunnel, scrapyard, temple, arcade) and the pace. A sprint opens the hats; a coast strips the drums, lead and talk-box while the pelican croons the hook.
+- **It ducks** −4.4 / −3 / −2 dB under events, the voice and HUD bleeps.
+- **Stings** land on the next beat in the current chord: a guzheng run for the gulp, plucks for the wave, and the leitmotif for the mech suit-up. The chime is tuned to the current chord too.
 
 ## 6. The pelican's voice (a 9-band vocoder) and the HUD
 The carrier is a saw plus a pulse (and breath noise for aspirates). It runs through **9 fixed band-pass channels** (240 Hz … 3.8 kHz, Q 5.5), whose gains trace the formants of each vowel from a small table (m n u o a e i h), scaled ×1.12 for a bird. The result is a robot-bird voice whose pitches sit on the song's scale. A small **FM "bird-bot" chirp** (a sine carrier with a 2:1 modulator gliding between pitches) punctuates the lines: a rising chirp after "hup!", a three-chirp trill after "yo!", a falling chirp after "mm-hm!", a two-chirp trill after the idle "hmm-hm", and stray trills every 20–45 s.
@@ -69,7 +70,7 @@ The carrier is a saw plus a pulse (and breath noise for aspirates). It runs thro
   - fireworks → neon fireworks (boom, "pew", glitter). These run on the director's burst clock, and each boom arrives 0.35 s after its flash.
 
 ## 7b. The eggs
-- **The mech suit-up** (`egg:mech`), now bigger:
+- **The mech suit-up** (`egg:mech`), now bigger. Its HUD call is the music's leitmotif:
   - lock-on bleeps and a HUD-wake glitch;
   - the scan-ring whoosh;
   - eight servo whirs that walk across the stereo field, with latch clicks;
@@ -77,7 +78,7 @@ The carrier is a saw plus a pulse (and breath noise for aspirates). It runs thro
   - the power-up whine;
   - the **lock**: a driven **sub-boom** (a 58 → 24 Hz sine through a `tanh`), a mid punch and an air blast down the canyon. The ambience ducks to −9 dB and the music to −4.4 dB;
   - MECH ONLINE bleeps;
-  - with the music on, the track answers on the next beat with a power-chord stab, a crash and a bell run.
+  - with the music on, the track answers on the next beat with the leitmotif (E–B–E–B power-chord stabs on the current chord), a crash and an impact.
 
   Disarming plays the reverse servo run and falling bleeps.
 - **HACK** (the wireframe city): the audio watches `#scene.egg-hack`.
@@ -94,7 +95,7 @@ The carrier is a saw plus a pulse (and breath noise for aspirates). It runs thro
 - **Fades:** in 0.6 s, out 0.45 s, pause 0.4 s, hide 80 ms. The context is **suspended 100 ms after the tab is hidden** and resumed when it is shown. A stopped rAF (paused sim) fades the master out after 250 ms.
 - **Scheduler:** a 25 ms `setInterval` pump. It looks 120 ms ahead for the effects and freewheel, and 200 ms ahead on the 16th-note music clock. After a stall it drops the backlog (no burst of late notes).
 - **Cadence:** the default cruise is now **42 rpm**, and the sprint 72 rpm (`CADENCE`).
-  - Nothing tempo-like is keyed to the cadence any more: the music runs at a fixed 104 bpm.
+  - Nothing tempo-like is keyed to the cadence any more: the music runs at a fixed 96 bpm.
   - The things that should follow the pedals still do, and are physically derived: the freewheel tick rate (wheel rev/s × 18 pawls), the chain whirr (crank rev/s × teeth), the motor whine and the road and wind levels (speed).
   - The sprint threshold for the music's hats is relative (90 % of `CADENCE.sprint`).
 - **Measured** with `node tools/render-sound.mjs [--music] [--tod] [--rain] [--fog] [--district] [--solo]`: an OfflineAudioContext at 44.1 kHz, seed 7, on a scripted 30 s ride. The ride cruises at 42 rpm, with the chime at 3 s, a hop at 6 s, a coast at 10–15 s, a sprint to 72 rpm at 16–22 s, the gulp at 24 s and the wave at 27.5 s.
@@ -102,11 +103,10 @@ The carrier is a saw plus a pulse (and breath noise for aspirates). It runs thro
 | Render | RMS (30 s) | Peak |
 |---|---|---|
 | sound on, music off (the default), neon district | −20.5 dBFS | −3.3 dBFS |
-| sound + music, dusk drive | −16.6 dBFS | −2.6 dBFS |
-| sound + music, deep night / day / downpour | −16.7 / −16.7 / −15.3 dBFS | ≤ −2.8 dBFS |
-| sound + music, old temple (temple bells) | −16.6 dBFS | −2.6 dBFS |
+| sound + music, dusk drive | −16.3 dBFS | −3.1 dBFS |
+| sound + music, deep night in the downpour | −15.0 dBFS | −3.1 dBFS |
 | fish port in smog, music off | −20.0 dBFS | −3.3 dBFS |
-| music bus only | −18.0 dBFS | −2.7 dBFS |
+| music bus only | −18.0 dBFS | −3.1 dBFS |
 
 - No render clips. The music's own stems measure 0 clicks (docs/BGM.md §7).
 - **Test hooks:** `createAudio(bus, {context, clock, seed, solo, inst, music})`.
