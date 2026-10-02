@@ -165,8 +165,9 @@ if (arg('analyze', false)) {
       // a click is an isolated step: much larger than the slope both before AND after it (a musical onset keeps moving)
       const j = Math.abs(x[i] - x[i - 1]); if (j < 0.05) continue;
       let s = 0, a = 0; for (let k = i - w; k < i - 2; k++) s += Math.abs(x[k] - x[k - 1]);
-      for (let k = i + 2; k < i + 2 + 88; k++) a += Math.abs(x[k] - x[k - 1]);
-      if (j > 10 * (s / (w - 2)) + 0.03 && j > 5 * (a / 88)) { clicks++; if (at.length < 12) at.push((i / SR).toFixed(3)); i += w; }
+      for (let k = i + 2; k < i + 24; k++) a += Math.abs(x[k] - x[k - 1]);       // the next 0.5 ms: a click sits beside smooth signal,
+      if (j > 10 * (s / (w - 2)) + 0.03 && j > 5 * (a / 22)) {   // (a pluck / cymbal attack keeps swinging)
+        clicks++; if (at.length < 12) at.push((i / SR).toFixed(3)); i += w; }
     }
   }
   console.log(`click scan (mastered): ${clicks} suspicious discontinuities${at.length ? ' at ' + at.join(', ') + ' s' : ''}`);
