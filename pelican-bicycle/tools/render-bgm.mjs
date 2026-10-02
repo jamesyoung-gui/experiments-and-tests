@@ -157,18 +157,25 @@ if (dec.dur < 120 || dec.dur > 210) fail.push(`length ${dec.dur.toFixed(1)} s ou
 
 // ------------------------------------------------------------------ 2. listening analysis
 if (arg('analyze', false)) {
-  // clicks: a large sample-to-sample jump in a quiet neighbourhood (the mastered track)
-  let clicks = 0; const at = [];
-  for (const x of [full.L, full.R]) {
-    const w = Math.floor(0.01 * SR);
+  // clicks: a step shows as a spike in the second difference Δ² far above its local median (±5 ms). Smooth music
+  // (energy mostly < 5 kHz) has a tiny Δ²; noisy sources (brushes, cymbals) raise the local median with it.
+  function clickScan(x, at = []) {
+    let n = 0; const w = Math.floor(0.005 * SR), d2 = new Float32Array(x.length);
+    for (let i = 2; i < x.length; i++) d2[i] = Math.abs(x[i] - 2 * x[i - 1] + x[i - 2]);
     for (let i = w; i < x.length - w; i++) {
-      // a click is an isolated step: much larger than the slope both before AND after it (a musical onset keeps moving)
-      const j = Math.abs(x[i] - x[i - 1]); if (j < 0.05) continue;
-      let s = 0, a = 0; for (let k = i - w; k < i - 2; k++) s += Math.abs(x[k] - x[k - 1]);
-      for (let k = i + 2; k < i + 24; k++) a += Math.abs(x[k] - x[k - 1]);       // the next 0.5 ms: a click sits beside smooth signal,
-      if (j > 10 * (s / (w - 2)) + 0.03 && j > 5 * (a / 22)) {   // (a pluck / cymbal attack keeps swinging)
-        clicks++; if (at.length < 12) at.push((i / SR).toFixed(3)); i += w; }
+      if (d2[i] < 0.03) continue;
+      const win = Array.from(d2.subarray(i - w, i + w)).sort((a, b) => a - b), med = win[win.length >> 1];
+      if (d2[i] > 12 * med + 0.02) { n++; if (at.length < 12) at.push((i / SR).toFixed(3)); i += w; }
     }
+    return n;
+  }
+  const at = []; let clicks = 0;
+  for (const x of [full.L, full.R]) clicks += clickScan(x, at);
+  { // self-test: the detector must catch a 0.06 step injected into a quiet stretch of the real track, and only that
+    const seg = full.L.slice(Math.floor(0.6 * SR), Math.floor(1.6 * SR)), base = clickScan(seg);
+    for (let i = 22050; i < 22050 + 300; i++) seg[i] += 0.06 * (1 - (i - 22050) / 300);
+    const hit = clickScan(seg) - base; console.log(`click detector self-test: injected step found ${hit === 1 ? 'yes' : 'NO'}`);
+    if (hit !== 1) fail.push('click detector self-test failed');
   }
   console.log(`click scan (mastered): ${clicks} suspicious discontinuities${at.length ? ' at ' + at.join(', ') + ' s' : ''}`);
   if (at.length) for (const t of at.slice(0, 6)) console.log('   near ' + t + ': ' + full.log.filter(e => Math.abs(e.t - t) < 0.004).map(e => e.b + (e.n ? ':' + e.n : ':' + e.m)).join(' '));
