@@ -72,7 +72,7 @@ export const TILE = { road: 1884.96, roadside: 1696.46, foreground: 2450.44, sho
 
 // Time of day: 0/1 = midnight, .25 sunrise-ish, .5 noon, .70 golden hour (default), .76 sunset, .86 night
 export const TOD_DEFAULT = 0.70;
-export const CADENCE = { min: 20, stroll: 40, cruise: 60, sprint: 90, max: 110 };
+export const CADENCE = { min: 20, stroll: 30, cruise: 42, sprint: 72, max: 100 };   // slowed (user: the background moved too fast): cruise ≈ 16 km/h
 
 export const CAMERAS = {
   wide: { zoom: 1, fx: 800, fy: 450 },
