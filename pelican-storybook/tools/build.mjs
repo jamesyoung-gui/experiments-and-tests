@@ -26,7 +26,7 @@ const glyphPool = {
     });
   },
 };
-const r = await build({ entryPoints: [path.join(ROOT, 'src/main.js')], bundle: true, format: 'iife', minify: true, write: false, target: 'es2020', legalComments: 'none', plugins: [glyphPool] });
+const r = await build({ entryPoints: [path.join(ROOT, 'src/main.js')], bundle: true, format: 'iife', minify: true, write: false, target: ['es2020','safari15'], legalComments: 'none', plugins: [glyphPool] });
 const js = r.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const css = fs.readFileSync(path.join(ROOT, 'src/page.css'), 'utf8');
 const dev = fs.readFileSync(path.join(ROOT, 'src/index.dev.html'), 'utf8');

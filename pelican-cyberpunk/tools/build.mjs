@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const readmeOnly = process.argv.includes('--readme'), draft = process.argv.includes('--draft');
-const r = readmeOnly ? null : await build({ entryPoints: [path.join(ROOT, 'src/main.js')], bundle: true, format: 'iife', minify: true, write: false, target: 'es2020', legalComments: 'none' });
+const r = readmeOnly ? null : await build({ entryPoints: [path.join(ROOT, 'src/main.js')], bundle: true, format: 'iife', minify: true, write: false, target: ['es2020','safari15'], legalComments: 'none' });
 // ---- path-data packing (size budget): the glyph outline tables (lettering converted to paths in many modules) are
 // most of the bundle. Every long path-data string literal is replaced by __pbU("<packed>"), decoded once at load into
 // an equivalent path string (same command letters, same numbers in the same order, a blank between any two numbers:
