@@ -27,6 +27,7 @@
   .fridge{fill:#dfe9ef;stroke:#333;stroke-width:1.5}
   .counter{fill:#d9d4cc;stroke:#4a4540;stroke-width:2}
   .stool{fill:#3b3b3b;stroke:#111;stroke-width:1}
+  .wall-new{fill:#4a4a4a;stroke:#222;stroke-width:1}
   .cabinet{fill:#fff;stroke:#555;stroke-width:1}
   .ghost{fill:none;stroke:#8a8a8a;stroke-width:1;stroke-dasharray:3 3}
   .speaker{fill:#8a5a34;stroke:#2b1a0e;stroke-width:1.5}
@@ -69,8 +70,8 @@
   <rect class="annex" x="379.8" y="12.0" width="139.2" height="78.0" rx="0"/>
   <rect class="annex" x="375.0" y="96.0" width="138.0" height="114.0" rx="0"/>
   <rect class="z-bar" x="12.0" y="228.0" width="276.0" height="192.0" rx="0"/>
-  <rect class="z-rug" x="30.0" y="474.0" width="228.0" height="204.0" rx="0"/>
-  <rect class="z-work" x="300.0" y="354.0" width="270.0" height="264.0" rx="0"/>
+  <rect class="z-rug" x="318.0" y="432.0" width="258.0" height="162.0" rx="0"/>
+  <rect class="z-work" x="30.0" y="588.0" width="240.0" height="162.0" rx="0"/>
   <line class="tread" x1="379.8" y1="90.0" x2="379.8" y2="12.0"/>
   <line class="tread" x1="396.6" y1="90.0" x2="396.6" y2="12.0"/>
   <line class="tread" x1="413.4" y1="90.0" x2="413.4" y2="12.0"/>
@@ -180,45 +181,47 @@
   <circle class="stool" cx="123.0" cy="384.0" r="13.8"/>
   <circle class="stool" cx="201.0" cy="309.0" r="13.8"/>
   <circle class="stool" cx="201.0" cy="348.0" r="13.8"/>
-  <rect class="sofa" x="66.0" y="489.0" width="156.0" height="60.0" rx="3"/>
-  <text class="lbl" x="144.0" y="519.0">三人沙发</text>
-  <rect class="wood" x="102.0" y="576.0" width="84.0" height="42.0" rx="3"/>
-  <text class="lbl" x="144.0" y="597.0">茶几</text>
-  <rect class="leather" x="15.0" y="573.0" width="51.0" height="51.0" rx="3"/>
-  <text class="lbl lbl-inv" x="40.5" y="598.5">单人椅</text>
-  <rect class="leather" x="222.0" y="573.0" width="51.0" height="51.0" rx="3"/>
-  <text class="lbl lbl-inv" x="247.5" y="598.5">单人椅</text>
-  <circle class="lamp" cx="39.0" cy="510.0" r="12.0"/>
-  <circle class="lamp" cx="249.0" cy="510.0" r="12.0"/>
-  <rect class="wood" x="90.0" y="753.0" width="108.0" height="24.0" rx="3"/>
-  <text class="lbl" x="144.0" y="765.0">窗下矮柜</text>
-  <circle class="plant" cx="261.0" cy="678.0" r="18.0"/>
-  <rect class="wood" x="306.0" y="319.0" width="294.0" height="24.0" rx="3"/>
-  <text class="lbl" x="453.0" y="331.0">整面开放书架（前室隔墙）</text>
-  <rect class="desk" x="438.0" y="372.0" width="72.0" height="180.0" rx="3"/>
-  <text class="lbl lbl-inv" x="474.0" y="462.0" transform="rotate(-90 474.0 462.0)"><tspan x="474.0" dy="-0.6em">Massive 实木大桌</tspan><tspan x="474.0" dy="1.2em">3.0 × 1.2 m</tspan></text>
-  <rect class="dark" x="522.0" y="444.0" width="36.0" height="36.0" rx="3"/>
-  <text class="lbl lbl-inv" x="540.0" y="462.0">椅</text>
-  <rect class="box" x="579.0" y="360.0" width="24.0" height="216.0" rx="3"/>
-  <text class="lbl" x="591.0" y="468.0" transform="rotate(-90 591.0 468.0)">窗下矮柜</text>
+  <rect class="box" x="375.0" y="321.0" width="144.0" height="27.0" rx="3"/>
+  <rect class="sofa" x="369.0" y="519.0" width="156.0" height="57.0" rx="3"/>
+  <text class="lbl" x="447.0" y="547.5">三人沙发</text>
+  <rect class="wood" x="405.0" y="471.0" width="84.0" height="36.0" rx="3"/>
+  <text class="lbl" x="447.0" y="489.0">茶几</text>
+  <rect class="leather" x="306.0" y="450.0" width="51.0" height="51.0" rx="3"/>
+  <text class="lbl lbl-inv" x="331.5" y="475.5">单人椅</text>
+  <rect class="leather" x="537.0" y="450.0" width="51.0" height="51.0" rx="3"/>
+  <text class="lbl lbl-inv" x="562.5" y="475.5">单人椅</text>
+  <circle class="lamp" cx="345.0" cy="552.0" r="12.0"/>
   <circle class="plant" cx="576.0" cy="609.0" r="21.0"/>
+  <rect class="wood" x="30.0" y="549.0" width="168.0" height="24.0" rx="3"/>
+  <text class="lbl" x="114.0" y="561.0">双面矮书架 1.2 m 高</text>
+  <rect class="desk" x="54.0" y="612.0" width="180.0" height="72.0" rx="3"/>
+  <rect class="tv" x="102.0" y="618.0" width="84.0" height="6.0" rx="3"/>
+  <rect class="dark" x="126.0" y="693.0" width="36.0" height="33.0" rx="3"/>
+  <text class="lbl lbl-inv" x="144.0" y="709.5">椅</text>
+  <rect class="wood" x="66.0" y="756.0" width="174.0" height="21.0" rx="3"/>
+  <text class="lbl" x="153.0" y="766.5">窗下矮柜</text>
+  <circle class="plant" cx="261.0" cy="738.0" r="18.0"/>
+  <circle class="plant" cx="258.0" cy="558.0" r="19.8"/>
   <circle class="soft" cx="444.0" cy="750.0" r="39.0"/>
   <text class="lbl" x="444.0" y="773.4">户外桌椅（早咖啡）</text>
   <circle class="plant" cx="648.0" cy="684.0" r="18.0"/>
   <circle class="plant" cx="336.0" cy="828.0" r="18.0"/>
-  <line class="sound" x1="58.5" y1="721.5" x2="144.0" y2="528.0"/>
-  <line class="sound" x1="229.5" y1="721.5" x2="144.0" y2="528.0"/>
-  <rect class="speaker" x="48.0" y="711.0" width="21.0" height="21.0" rx="2"/>
-  <rect class="ghost" x="45.0" y="708.0" width="27.0" height="27.0" rx="0"/>
-  <text class="lbl" x="58.5" y="747.0">JBL 4329P</text>
-  <rect class="speaker" x="219.0" y="711.0" width="21.0" height="21.0" rx="2"/>
-  <rect class="ghost" x="216.0" y="708.0" width="27.0" height="27.0" rx="0"/>
-  <text class="lbl" x="229.5" y="747.0">JBL 4329P</text>
-  <rect class="tv" x="411.0" y="423.0" width="12.0" height="78.0" rx="2"/>
-  <text class="lbl" x="363.0" y="462.0"><tspan x="363.0" dy="-0.6em">55" 架高电视</tspan><tspan x="363.0" dy="1.2em">（当显示器）</tspan></text>
+  <line class="sound" x1="337.5" y1="358.5" x2="447.0" y2="546.0"/>
+  <line class="sound" x1="556.5" y1="358.5" x2="447.0" y2="546.0"/>
+  <rect class="speaker" x="327.0" y="348.0" width="21.0" height="21.0" rx="2"/>
+  <rect class="ghost" x="324.0" y="345.0" width="27.0" height="27.0" rx="0"/>
+  <text class="lbl" x="337.5" y="384.0">JBL 4329P</text>
+  <rect class="speaker" x="546.0" y="348.0" width="21.0" height="21.0" rx="2"/>
+  <rect class="ghost" x="543.0" y="345.0" width="27.0" height="27.0" rx="0"/>
+  <text class="lbl" x="556.5" y="384.0">JBL 4329P</text>
+  <rect class="tv" x="390.0" y="325.2" width="114.0" height="6.0" rx="2"/>
+  <text class="lbl" x="447.0" y="369.0">85" 电视（壁挂）</text>
   <text class="zone-lbl" x="222.0" y="279.0">吧台 ②</text>
-  <text class="zone-lbl" x="144.0" y="660.0">Lounge · 听音</text>
-  <text class="zone-lbl" x="360.0" y="594.0">工作室</text>
+  <text class="zone-lbl" x="447.0" y="417.0">客厅 · 看片 / 听歌</text>
+  <text class="zone-lbl" x="144.0" y="594.0">Deep work</text>
+  <text class="lbl lbl-inv" x="144.0" y="637.2">显示器 32"</text>
+  <text class="lbl lbl-inv" x="144.0" y="663.0">Massive 实木大桌 3.0 × 1.2 m</text>
+  <text class="note-c" x="144.0" y="492.0">（留白 / 大绿植）</text>
   <line class="dim" x1="0.0" y1="906.0" x2="696.0" y2="906.0"/>
   <line class="dim" x1="0.0" y1="898.8" x2="0.0" y2="913.2"/>
   <line class="dim" x1="6.0" y1="898.8" x2="6.0" y2="913.2"/>
@@ -246,8 +249,8 @@
   <line class="dim" x1="784.8" y1="0.0" x2="799.2" y2="0.0"/>
   <line class="dim" x1="784.8" y1="864.0" x2="799.2" y2="864.0"/>
   <text class="dim-txt" x="808.8" y="432.0" transform="rotate(-90 808.8 432.0)">14400</text>
-  <text class="title" x="-78.0" y="-135.0">方案 A · 西翼一条“吧台 → 听音 lounge”，东侧独立工作室</text>
-  <text class="note" x="-78.0" y="-105.0">两只 4329P 放在 lounge 南端对着沙发，晚上两个人在这里喝酒听歌；东半区是安静的 deep work 工作室</text>
+  <text class="title" x="-78.0" y="-135.0">方案 A · 东半区做客厅（大电视 + 4329P），西翼南端安静的 deep work</text>
+  <text class="note" x="-78.0" y="-105.0">电视和音箱靠前室隔墙那面整墙，沙发背对阳台；吧台在进门处；书桌在最里面，用双面矮书架和吧台隔开</text>
   <text class="note" x="-78.0" y="-81.0">尺寸按原图纸（mm）· 大厅净面积 ≈ 74 ㎡ · 整层含卫生间 / 储藏 / 前室 / 电梯楼梯 ≈ 125 ㎡</text>
   <g transform="translate(798.0,-102.0)"><path d="M0,-16 L7,10 L0,4 L-7,10 Z" fill="#333"/><text class="lbl" x="0" y="-26" style="font-weight:700">N</text></g>
 </svg>
