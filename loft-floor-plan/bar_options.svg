@@ -55,8 +55,8 @@
 </style>
 <rect class="bg" width="100%" height="100%"/>
 <text class="title" x="30" y="40">吧台三种做法（都从现有水吧的上下水长出来，北墙过道口留空）</text>
-<text class="panel-title" x="30" y="78">① 靠墙 L 形 + 高脚桌</text>
-<text class="note" x="30" y="98">最随意，像家里厨房；4 人围桌，站着坐着都行</text>
+<text class="panel-title" x="30" y="78">① 靠墙大 L（推荐）</text>
+<text class="note" x="30" y="98">台面约 5 m，不要岛台和吧凳；空出来的地方放一张可选小圆桌</text>
 <svg x="30" y="110" width="520" height="444" viewBox="-18 192 330 282">
 <rect class="platform" x="0.0" y="798.0" width="291.0" height="60.0" rx="0"/>
 <text class="lbl" x="144.0" y="828.0">空调平台</text>
@@ -172,18 +172,16 @@
 <text class="lbl" x="438.0" y="302.2">玄关柜</text>
 <rect class="bar" x="12.0" y="228.0" width="123.0" height="39.0" rx="3"/>
 <text class="lbl" x="73.5" y="247.5">咖啡机 · 磨豆机 · 水槽</text>
-<rect class="bar" x="12.0" y="267.0" width="39.0" height="39.0" rx="3"/>
-<text class="lbl" x="31.5" y="286.5" transform="rotate(-90 31.5 286.5)">制冰机</text>
-<rect class="fridge" x="12.0" y="306.0" width="39.0" height="36.0" rx="3"/>
-<text class="lbl" x="31.5" y="324.0" transform="rotate(-90 31.5 324.0)">饮料柜</text>
-<rect class="bar" x="12.0" y="342.0" width="39.0" height="72.0" rx="3"/>
-<text class="lbl" x="31.5" y="378.0" transform="rotate(-90 31.5 378.0)">酒架 · 调酒台</text>
-<rect class="counter" x="114.0" y="324.0" width="108.0" height="48.0" rx="3"/>
-<text class="lbl" x="168.0" y="348.0">高脚桌 1.8 × 0.8</text>
-<circle class="stool" cx="141.0" cy="303.0" r="13.8"/>
-<circle class="stool" cx="195.0" cy="303.0" r="13.8"/>
-<circle class="stool" cx="141.0" cy="393.0" r="13.8"/>
-<circle class="stool" cx="195.0" cy="393.0" r="13.8"/>
+<rect class="bar" x="12.0" y="267.0" width="39.0" height="42.0" rx="3"/>
+<text class="lbl" x="31.5" y="288.0" transform="rotate(-90 31.5 288.0)">制冰机</text>
+<rect class="fridge" x="12.0" y="309.0" width="39.0" height="39.0" rx="3"/>
+<text class="lbl" x="31.5" y="328.5" transform="rotate(-90 31.5 328.5)">饮料柜</text>
+<rect class="bar" x="12.0" y="348.0" width="39.0" height="108.0" rx="3"/>
+<text class="lbl" x="31.5" y="402.0" transform="rotate(-90 31.5 402.0)">调酒台 · 上方酒架</text>
+<circle class="wood" cx="162.0" cy="372.0" r="36.0"/>
+<circle class="soft" cx="162.0" cy="318.0" r="13.8"/>
+<circle class="soft" cx="114.0" cy="399.0" r="13.8"/>
+<circle class="soft" cx="210.0" cy="399.0" r="13.8"/>
 </svg>
 <rect x="30" y="110" width="520" height="444" fill="none" stroke="#bbb"/>
 <text class="panel-title" x="580" y="78">② 后吧台 + L 形前台</text>

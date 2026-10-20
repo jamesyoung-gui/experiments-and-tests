@@ -131,16 +131,15 @@ BASE = dict(
 
 # 三种吧台做法，都以现有水吧的上下水为起点（北墙 = 卫生间南墙，Y 3800；西墙内皮 X 200）。
 # 北墙 X 2300–3530 是去卫生间 / 储藏间的过道口，必须留空。
-BAR_WALL_L = [   # ① 靠墙 L 形 + 高脚桌：最随意，像厨房里的吧台
+BAR_WALL_L = [   # ① 靠墙大 L：北墙咖啡区 + 西墙调酒区，台面约 5 m，不要岛台和吧凳
     dict(r=(200, 3800, 2250, 4450), label="咖啡机 · 磨豆机 · 水槽", cls="bar"),
-    dict(r=(200, 4450, 850, 5100), label="制冰机", cls="bar", rot=True),
-    dict(r=(200, 5100, 850, 5700), label="饮料柜", cls="fridge", rot=True),
-    dict(r=(200, 5700, 850, 6900), label="酒架 · 调酒台", cls="bar", rot=True),
-    dict(r=(1900, 5400, 3700, 6200), label="高脚桌 1.8 × 0.8", cls="counter"),
-    dict(c=(2350, 5050, 230), label="", cls="stool"),
-    dict(c=(3250, 5050, 230), label="", cls="stool"),
-    dict(c=(2350, 6550, 230), label="", cls="stool"),
-    dict(c=(3250, 6550, 230), label="", cls="stool"),
+    dict(r=(200, 4450, 850, 5150), label="制冰机", cls="bar", rot=True),
+    dict(r=(200, 5150, 850, 5800), label="饮料柜", cls="fridge", rot=True),
+    dict(r=(200, 5800, 850, 7600), label="调酒台 · 上方酒架", cls="bar", rot=True),
+    dict(c=(2700, 6200, 600), label="", cls="wood"),
+    dict(c=(2700, 5300, 230), label="", cls="soft"),
+    dict(c=(1900, 6650, 230), label="", cls="soft"),
+    dict(c=(3500, 6650, 230), label="", cls="soft"),
 ]
 BAR_L_COUNTER = [  # ② 后吧台 + L 形前台：人在里面做，客人在外面坐，最有酒吧感
     dict(r=(200, 3800, 1650, 4400), label="咖啡机 · 水槽", cls="bar"),
@@ -181,20 +180,20 @@ BALCONY_SET = [
 PLAN_A = dict(
     file="plan_a",
     title="方案 A · 东半区做客厅（大电视 + 4329P），西翼南端安静的 deep work",
-    subtitle="电视挂东墙中间柱子上，沙发面朝东、阳台在右手边；单人椅背靠前室墙面朝阳台；书桌在最里面，用双面矮书架和吧台隔开",
+    subtitle="吧台靠墙做大 L（约 5 m 台面），不要岛台和高凳；大 L 沙发长边对电视、短边朝阳台；书桌在最里面，用双面矮书架隔开",
     pencil="applied",
     zones=[
-        dict(r=(200, 3800, 4800, 7000), label="", cls="z-bar"),
-        dict(r=(5400, 5500, 9300, 9700), label="", cls="z-rug"),
+        dict(r=(200, 3800, 4800, 7600), label="", cls="z-bar"),
+        dict(r=(5400, 5400, 9300, 9800), label="", cls="z-rug"),
         dict(r=(500, 9800, 4500, 12500), label="", cls="z-work"),
     ],
-    furniture=BAR_L_COUNTER + [
-        # 客厅：电视在东墙中间（柱子那段实墙），沙发面朝东，阳台在右手边
-        dict(r=(5600, 6575, 6600, 9175), label="三人沙发", cls="sofa", rot=True),
-        dict(r=(7000, 7175, 7800, 8575), label="茶几", cls="wood", rot=True),
-        dict(r=(6700, 5600, 7550, 6450), label="单人椅", cls="leather"),
-        dict(r=(8000, 5600, 8850, 6450), label="单人椅", cls="leather"),
-        dict(c=(5800, 9550, 200), label="", cls="lamp"),
+    furniture=BAR_WALL_L + [
+        # 客厅：大 L 沙发，长边面朝东墙电视，短边靠前室墙面朝阳台；单人椅在东北角
+        dict(r=(5600, 5500, 6600, 9300), label="大 L 形沙发", cls="sofa", rot=True),
+        dict(r=(6600, 5500, 7800, 6500), label="", cls="sofa"),
+        dict(r=(7000, 6950, 8200, 8350), label="茶几", cls="wood"),
+        dict(r=(8150, 5550, 9000, 6400), label="单人椅", cls="leather"),
+        dict(c=(6100, 9650, 200), label="", cls="lamp"),
         dict(c=(9100, 10300, 300), label="", cls="plant"),
         # 工作区
         dict(r=(500, 9150, 3300, 9550), label="双面矮书架 1.2 m 高", cls="wood"),
@@ -209,7 +208,8 @@ PLAN_A = dict(
             speakers=[(9400, 6100, 9750, 6450), (9400, 9300, 9750, 9650)],
             speaker_labels=[(9575, 5850), (9575, 9900)], listeners=[(6200, 7875)]),
     notes=[
-        (3700, 4650, "吧台 ②", "zone-lbl"),
+        (2600, 4750, "吧台 · 靠墙大 L", "zone-lbl"),
+        (2700, 6200, "小圆桌\n（可选）", "lbl"),
         (7900, 9400, "客厅 · 看片 / 听歌", "zone-lbl"),
         (2400, 9900, "Deep work", "zone-lbl"),
         (2400, 10620, "显示器 32\"", "lbl lbl-inv"),
@@ -264,7 +264,7 @@ BAR_SHEET = dict(
     title="吧台三种做法（都从现有水吧的上下水长出来，北墙过道口留空）",
     view=(-300, 3200, 5500, 4700),
     panels=[
-        ("① 靠墙 L 形 + 高脚桌", "最随意，像家里厨房；4 人围桌，站着坐着都行", BAR_WALL_L),
+        ("① 靠墙大 L（推荐）", "台面约 5 m，不要岛台和吧凳；空出来的地方放一张可选小圆桌", BAR_WALL_L),
         ("② 后吧台 + L 形前台", "人在里面做，客人坐外面，最有酒吧感；5 座", BAR_L_COUNTER),
         ("③ 平行式", "客人面朝调酒的人和西侧窄窗；后台最长，4 座", BAR_PARALLEL),
     ],
