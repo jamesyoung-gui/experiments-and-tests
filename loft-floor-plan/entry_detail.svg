@@ -34,6 +34,7 @@
   .z-lobby{fill:#c8a165;fill-opacity:.10;stroke:none}
   .sight{stroke:#c0392b;stroke-width:1.5;stroke-dasharray:5 4}
   .mirror{fill:#e8f4fa;stroke:#59606a;stroke-width:1}
+  .panel{fill:#3a3530;stroke:#1f1b18;stroke-width:1}
   .cabinet{fill:#fff;stroke:#555;stroke-width:1}
   .ghost{fill:none;stroke:#8a8a8a;stroke-width:1;stroke-dasharray:3 3}
   .speaker{fill:#8a5a34;stroke:#2b1a0e;stroke-width:1.5}
@@ -60,14 +61,14 @@
   .dim-txt{font-size:10px;fill:#555;text-anchor:middle;dominant-baseline:central}
 </style>
 <rect class="bg" width="100%" height="100%"/>
-<text class="title" x="30" y="40">入口缓冲：前室是公共楼道，门一开会看到什么</text>
+<text class="title" x="30" y="40">入口：电梯厅 → 入户门 → 玄关（整栋楼自家用，重点是回家的仪式感）</text>
 <text class="panel-title" x="30" y="78">现在：开门见吧台</text>
-<text class="note" x="30" y="98">门一开，楼道里的人能一眼看穿吧台和整个西翼；进门没地方换鞋放东西</text>
+<text class="note" x="30" y="98">门一开直接看穿吧台和整个西翼；进门没地方换鞋、挂外套、放钥匙</text>
 <svg x="30" y="110" width="640" height="299" viewBox="72 138 552 258">
 <rect class="platform" x="0.0" y="798.0" width="291.0" height="60.0" rx="0"/>
 <text class="lbl" x="144.0" y="828.0">空调平台</text>
 <polygon class="balcony" points="291.0,858.0 291.0,654.0 618.0,654.0 618.0,330.0 690.0,330.0 690.0,858.0"/>
-<text class="room" x="516.0" y="798.0">L 形阳台（朝南）≈ 29 ㎡</text>
+<text class="room" x="438.0" y="837.0">L 形阳台（朝南）≈ 29 ㎡</text>
 <rect class="floor" x="12.0" y="228.0" width="276.0" height="552.0" rx="0"/>
 <rect class="floor" x="288.0" y="319.0" width="318.0" height="323.0" rx="0"/>
 <rect class="floor" x="138.0" y="78.0" width="73.8" height="138.0" rx="0"/>
@@ -184,33 +185,32 @@
 <text class="lbl" x="31.5" y="328.5" transform="rotate(-90 31.5 328.5)">饮料柜</text>
 <rect class="bar" x="12.0" y="348.0" width="39.0" height="108.0" rx="3"/>
 <text class="lbl" x="31.5" y="402.0" transform="rotate(-90 31.5 402.0)">调酒台 · 上方酒架</text>
-<circle class="wood" cx="138.0" cy="390.0" r="36.0"/>
-<circle class="soft" cx="138.0" cy="336.0" r="13.8"/>
-<circle class="soft" cx="90.0" cy="417.0" r="13.8"/>
-<circle class="soft" cx="186.0" cy="417.0" r="13.8"/>
-<rect class="sofa" x="336.0" y="330.0" width="60.0" height="228.0" rx="3"/>
-<text class="lbl" x="366.0" y="444.0" transform="rotate(-90 366.0 444.0)">大 L 形沙发</text>
-<rect class="sofa" x="396.0" y="330.0" width="72.0" height="60.0" rx="3"/>
-<rect class="wood" x="420.0" y="417.0" width="72.0" height="84.0" rx="3"/>
-<text class="lbl" x="456.0" y="459.0">茶几</text>
-<rect class="leather" x="489.0" y="333.0" width="51.0" height="51.0" rx="3"/>
-<text class="lbl lbl-inv" x="514.5" y="358.5">单人椅</text>
-<circle class="lamp" cx="366.0" cy="579.0" r="12.0"/>
-<circle class="plant" cx="546.0" cy="618.0" r="18.0"/>
+<circle class="wood" cx="132.0" cy="444.0" r="24.0"/>
+<circle class="soft" cx="132.0" cy="406.2" r="13.8"/>
+<circle class="soft" cx="132.0" cy="481.8" r="13.8"/>
+<rect class="sofa" x="360.0" y="330.0" width="60.0" height="192.0" rx="3"/>
+<text class="lbl" x="390.0" y="426.0" transform="rotate(-90 390.0 426.0)">大 L 形沙发</text>
+<rect class="sofa" x="420.0" y="330.0" width="72.0" height="60.0" rx="3"/>
+<rect class="wood" x="339.0" y="348.0" width="18.0" height="156.0" rx="3"/>
+<text class="lbl" x="348.0" y="426.0" transform="rotate(-90 348.0 426.0)">背几</text>
+<circle class="lamp" cx="348.0" cy="519.0" r="10.8"/>
+<rect class="wood" x="444.0" y="420.0" width="72.0" height="84.0" rx="3"/>
+<text class="lbl" x="480.0" y="462.0">茶几</text>
+<rect class="panel" x="588.0" y="387.0" width="6.0" height="150.0" rx="3"/>
 <line class="sight" x1="285.0" y1="270.0" x2="78.0" y2="234.0"/>
 <line class="sight" x1="285.0" y1="270.0" x2="78.0" y2="336.0"/>
 <line class="sight" x1="285.0" y1="270.0" x2="78.0" y2="438.0"/>
 <line class="sight" x1="285.0" y1="270.0" x2="180.0" y2="450.0"/>
-<text class="lbl" x="330.0" y="285.0">（公共楼道）</text>
+<text class="lbl" x="330.0" y="285.0">（前室）</text>
 </svg>
 <rect x="30" y="110" width="640" height="299" fill="none" stroke="#bbb"/>
 <text class="panel-title" x="700" y="78">改后：楼梯口分界 → 电梯厅 → 门内玄关</text>
-<text class="note" x="700" y="98">楼梯口换地面材质；出电梯正对挂画；门内高柜挡视线，玄关面放鞋和外套，背面朝吧台做酒架</text>
+<text class="note" x="700" y="98">出电梯正对挂画和壁灯；门内北墙壁挂凳 + 镜子，正对一组挂衣鞋柜挡住视线，再转进吧台和客厅</text>
 <svg x="700" y="110" width="640" height="299" viewBox="72 138 552 258">
 <rect class="platform" x="0.0" y="798.0" width="291.0" height="60.0" rx="0"/>
 <text class="lbl" x="144.0" y="828.0">空调平台</text>
 <polygon class="balcony" points="291.0,858.0 291.0,654.0 618.0,654.0 618.0,330.0 690.0,330.0 690.0,858.0"/>
-<text class="room" x="516.0" y="798.0">L 形阳台（朝南）≈ 29 ㎡</text>
+<text class="room" x="438.0" y="837.0">L 形阳台（朝南）≈ 29 ㎡</text>
 <rect class="floor" x="12.0" y="228.0" width="276.0" height="552.0" rx="0"/>
 <rect class="floor" x="288.0" y="319.0" width="318.0" height="323.0" rx="0"/>
 <rect class="floor" x="138.0" y="78.0" width="73.8" height="138.0" rx="0"/>
@@ -310,9 +310,6 @@
 <path class="door" d="M 145.2 30.0 A 42.0 42.0 0 0 1 187.2 72.0"/>
 <line class="door-leaf" x1="288.0" y1="228.0" x2="373.0" y2="228.0"/>
 <path class="door" d="M 373.0 228.0 A 85.0 85.0 0 0 1 288.0 313.0"/>
-<rect class="cabinet" x="367.8" y="291.3" width="141.6" height="21.7" rx="0"/>
-<line class="lift" x1="367.8" y1="291.3" x2="509.4" y2="313.0"/>
-<line class="lift" x1="367.8" y1="313.0" x2="509.4" y2="291.3"/>
 <rect class="cabinet" x="12.0" y="678.6" width="25.8" height="57.0" rx="0"/>
 <line class="lift" x1="12.0" y1="678.6" x2="37.8" y2="735.6"/>
 <line class="lift" x1="12.0" y1="735.6" x2="37.8" y2="678.6"/>
@@ -320,7 +317,6 @@
 <text class="lbl" x="177.0" y="144.0">过道</text>
 <text class="room" x="294.0" y="114.0">储藏间</text>
 <text class="room" x="330.0" y="267.0">前室</text>
-<text class="lbl" x="438.0" y="302.2">玄关柜</text>
 <rect class="bar" x="12.0" y="228.0" width="123.0" height="39.0" rx="3"/>
 <text class="lbl" x="73.5" y="247.5">咖啡机 · 磨豆机 · 水槽</text>
 <rect class="bar" x="12.0" y="267.0" width="39.0" height="42.0" rx="3"/>
@@ -329,36 +325,33 @@
 <text class="lbl" x="31.5" y="328.5" transform="rotate(-90 31.5 328.5)">饮料柜</text>
 <rect class="bar" x="12.0" y="348.0" width="39.0" height="108.0" rx="3"/>
 <text class="lbl" x="31.5" y="402.0" transform="rotate(-90 31.5 402.0)">调酒台 · 上方酒架</text>
-<circle class="wood" cx="138.0" cy="390.0" r="36.0"/>
-<circle class="soft" cx="138.0" cy="336.0" r="13.8"/>
-<circle class="soft" cx="90.0" cy="417.0" r="13.8"/>
-<circle class="soft" cx="186.0" cy="417.0" r="13.8"/>
-<rect class="mirror" x="216.0" y="228.0" width="66.0" height="18.0" rx="3"/>
-<text class="lbl" x="249.0" y="237.0">镜子 · 钥匙台</text>
-<rect class="wood" x="174.0" y="282.0" width="36.0" height="72.0" rx="3"/>
-<text class="lbl" x="192.0" y="318.0" transform="rotate(-90 192.0 318.0)">双面高柜</text>
-<rect class="soft" x="210.0" y="297.0" width="24.0" height="36.0" rx="3"/>
-<text class="lbl" x="222.0" y="315.0" transform="rotate(-90 222.0 315.0)">换鞋凳</text>
+<circle class="wood" cx="132.0" cy="444.0" r="24.0"/>
+<circle class="soft" cx="132.0" cy="406.2" r="13.8"/>
+<circle class="soft" cx="132.0" cy="481.8" r="13.8"/>
+<rect class="soft" x="222.0" y="228.0" width="54.0" height="24.0" rx="3"/>
+<text class="lbl" x="249.0" y="240.0">壁挂凳 · 镜子</text>
+<rect class="wood" x="174.0" y="291.0" width="36.0" height="72.0" rx="3"/>
+<text class="lbl" x="192.0" y="327.0" transform="rotate(-90 192.0 327.0)">挂衣 · 鞋柜</text>
 <line class="boundary" x1="519.0" y1="217.2" x2="519.0" y2="312.0"/>
-<rect class="art" x="367.8" y="291.3" width="141.6" height="21.7" rx="3"/>
-<text class="lbl" x="438.6" y="302.2">悬空矮柜</text>
-<rect class="sofa" x="336.0" y="330.0" width="60.0" height="228.0" rx="3"/>
-<text class="lbl" x="366.0" y="444.0" transform="rotate(-90 366.0 444.0)">大 L 形沙发</text>
-<rect class="sofa" x="396.0" y="330.0" width="72.0" height="60.0" rx="3"/>
-<rect class="wood" x="420.0" y="417.0" width="72.0" height="84.0" rx="3"/>
-<text class="lbl" x="456.0" y="459.0">茶几</text>
-<rect class="leather" x="489.0" y="333.0" width="51.0" height="51.0" rx="3"/>
-<text class="lbl lbl-inv" x="514.5" y="358.5">单人椅</text>
-<circle class="lamp" cx="366.0" cy="579.0" r="12.0"/>
-<circle class="plant" cx="546.0" cy="618.0" r="18.0"/>
-<line class="sight" x1="285.0" y1="270.0" x2="210.0" y2="294.0"/>
-<line class="sight" x1="285.0" y1="270.0" x2="210.0" y2="330.0"/>
+<rect class="art" x="367.8" y="298.0" width="141.6" height="15.0" rx="3"/>
+<text class="lbl" x="438.6" y="305.5">悬空矮柜</text>
+<rect class="sofa" x="360.0" y="330.0" width="60.0" height="192.0" rx="3"/>
+<text class="lbl" x="390.0" y="426.0" transform="rotate(-90 390.0 426.0)">大 L 形沙发</text>
+<rect class="sofa" x="420.0" y="330.0" width="72.0" height="60.0" rx="3"/>
+<rect class="wood" x="339.0" y="348.0" width="18.0" height="156.0" rx="3"/>
+<text class="lbl" x="348.0" y="426.0" transform="rotate(-90 348.0 426.0)">背几</text>
+<circle class="lamp" cx="348.0" cy="519.0" r="10.8"/>
+<rect class="wood" x="444.0" y="420.0" width="72.0" height="84.0" rx="3"/>
+<text class="lbl" x="480.0" y="462.0">茶几</text>
+<rect class="panel" x="588.0" y="387.0" width="6.0" height="150.0" rx="3"/>
+<line class="sight" x1="285.0" y1="270.0" x2="210.0" y2="300.0"/>
+<line class="sight" x1="285.0" y1="270.0" x2="210.0" y2="354.0"/>
 <line class="sight" x1="285.0" y1="270.0" x2="150.0" y2="234.0"/>
-<text class="zone-lbl" x="261.0" y="270.0">玄关</text>
-<text class="lbl" x="261.0" y="288.0">落尘区</text>
-<text class="lbl" x="156.0" y="297.0">酒架面</text>
+<text class="zone-lbl" x="249.0" y="279.0">玄关</text>
+<text class="lbl" x="249.0" y="297.0">落尘区</text>
+<text class="lbl" x="156.0" y="327.0">背面木饰面</text>
 <text class="lbl" x="330.0" y="285.0">（电梯厅）</text>
-<text class="lbl" x="438.0" y="261.0"><tspan x="438.0" dy="-0.6em">玄关柜改悬空矮柜</tspan><tspan x="438.0" dy="1.2em">上方挂画 + 壁灯</tspan></text>
+<text class="lbl" x="438.0" y="261.0"><tspan x="438.0" dy="-0.6em">悬空矮柜 250 深</tspan><tspan x="438.0" dy="1.2em">上方挂画 + 壁灯</tspan></text>
 <text class="lbl" x="564.0" y="267.0"><tspan x="564.0" dy="-0.6em">楼梯口</tspan><tspan x="564.0" dy="1.2em">地面换材质</tspan></text>
 <text class="lbl" x="444.0" y="177.0">（3F 刷卡）</text>
 </svg>
