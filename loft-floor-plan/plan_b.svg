@@ -28,6 +28,9 @@
   .counter{fill:#d9d4cc;stroke:#4a4540;stroke-width:2}
   .stool{fill:#3b3b3b;stroke:#111;stroke-width:1}
   .wall-new{fill:#4a4a4a;stroke:#222;stroke-width:1}
+  .z-foyer{fill:#b9b2a6;fill-opacity:.45;stroke:#8a8277;stroke-width:1;stroke-dasharray:3 2}
+  .sight{stroke:#c0392b;stroke-width:1.5;stroke-dasharray:5 4}
+  .mirror{fill:#e8f4fa;stroke:#59606a;stroke-width:1}
   .cabinet{fill:#fff;stroke:#555;stroke-width:1}
   .ghost{fill:none;stroke:#8a8a8a;stroke-width:1;stroke-dasharray:3 3}
   .speaker{fill:#8a5a34;stroke:#2b1a0e;stroke-width:1.5}

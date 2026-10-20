@@ -28,6 +28,9 @@
   .counter{fill:#d9d4cc;stroke:#4a4540;stroke-width:2}
   .stool{fill:#3b3b3b;stroke:#111;stroke-width:1}
   .wall-new{fill:#4a4a4a;stroke:#222;stroke-width:1}
+  .z-foyer{fill:#b9b2a6;fill-opacity:.45;stroke:#8a8277;stroke-width:1;stroke-dasharray:3 2}
+  .sight{stroke:#c0392b;stroke-width:1.5;stroke-dasharray:5 4}
+  .mirror{fill:#e8f4fa;stroke:#59606a;stroke-width:1}
   .cabinet{fill:#fff;stroke:#555;stroke-width:1}
   .ghost{fill:none;stroke:#8a8a8a;stroke-width:1;stroke-dasharray:3 3}
   .speaker{fill:#8a5a34;stroke:#2b1a0e;stroke-width:1.5}
@@ -178,10 +181,10 @@
 <text class="lbl" x="31.5" y="328.5" transform="rotate(-90 31.5 328.5)">饮料柜</text>
 <rect class="bar" x="12.0" y="348.0" width="39.0" height="108.0" rx="3"/>
 <text class="lbl" x="31.5" y="402.0" transform="rotate(-90 31.5 402.0)">调酒台 · 上方酒架</text>
-<circle class="wood" cx="162.0" cy="372.0" r="36.0"/>
-<circle class="soft" cx="162.0" cy="318.0" r="13.8"/>
-<circle class="soft" cx="114.0" cy="399.0" r="13.8"/>
-<circle class="soft" cx="210.0" cy="399.0" r="13.8"/>
+<circle class="wood" cx="138.0" cy="390.0" r="36.0"/>
+<circle class="soft" cx="138.0" cy="336.0" r="13.8"/>
+<circle class="soft" cx="90.0" cy="417.0" r="13.8"/>
+<circle class="soft" cx="186.0" cy="417.0" r="13.8"/>
 </svg>
 <rect x="30" y="110" width="520" height="444" fill="none" stroke="#bbb"/>
 <text class="panel-title" x="580" y="78">② 后吧台 + L 形前台</text>

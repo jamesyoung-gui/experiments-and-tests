@@ -28,6 +28,9 @@
   .counter{fill:#d9d4cc;stroke:#4a4540;stroke-width:2}
   .stool{fill:#3b3b3b;stroke:#111;stroke-width:1}
   .wall-new{fill:#4a4a4a;stroke:#222;stroke-width:1}
+  .z-foyer{fill:#b9b2a6;fill-opacity:.45;stroke:#8a8277;stroke-width:1;stroke-dasharray:3 2}
+  .sight{stroke:#c0392b;stroke-width:1.5;stroke-dasharray:5 4}
+  .mirror{fill:#e8f4fa;stroke:#59606a;stroke-width:1}
   .cabinet{fill:#fff;stroke:#555;stroke-width:1}
   .ghost{fill:none;stroke:#8a8a8a;stroke-width:1;stroke-dasharray:3 3}
   .speaker{fill:#8a5a34;stroke:#2b1a0e;stroke-width:1.5}
@@ -70,6 +73,7 @@
   <rect class="annex" x="379.8" y="12.0" width="139.2" height="78.0" rx="0"/>
   <rect class="annex" x="375.0" y="96.0" width="138.0" height="114.0" rx="0"/>
   <rect class="z-bar" x="12.0" y="228.0" width="276.0" height="228.0" rx="0"/>
+  <rect class="z-foyer" x="210.0" y="228.0" width="78.0" height="90.0" rx="0"/>
   <rect class="z-rug" x="324.0" y="324.0" width="234.0" height="264.0" rx="0"/>
   <rect class="z-work" x="30.0" y="588.0" width="240.0" height="162.0" rx="0"/>
   <line class="tread" x1="379.8" y1="90.0" x2="379.8" y2="12.0"/>
@@ -177,10 +181,16 @@
   <text class="lbl" x="31.5" y="328.5" transform="rotate(-90 31.5 328.5)">饮料柜</text>
   <rect class="bar" x="12.0" y="348.0" width="39.0" height="108.0" rx="3"/>
   <text class="lbl" x="31.5" y="402.0" transform="rotate(-90 31.5 402.0)">调酒台 · 上方酒架</text>
-  <circle class="wood" cx="162.0" cy="372.0" r="36.0"/>
-  <circle class="soft" cx="162.0" cy="318.0" r="13.8"/>
-  <circle class="soft" cx="114.0" cy="399.0" r="13.8"/>
-  <circle class="soft" cx="210.0" cy="399.0" r="13.8"/>
+  <circle class="wood" cx="138.0" cy="390.0" r="36.0"/>
+  <circle class="soft" cx="138.0" cy="336.0" r="13.8"/>
+  <circle class="soft" cx="90.0" cy="417.0" r="13.8"/>
+  <circle class="soft" cx="186.0" cy="417.0" r="13.8"/>
+  <rect class="mirror" x="216.0" y="228.0" width="66.0" height="18.0" rx="3"/>
+  <text class="lbl" x="249.0" y="237.0">镜子 · 钥匙台</text>
+  <rect class="wood" x="174.0" y="282.0" width="36.0" height="72.0" rx="3"/>
+  <text class="lbl" x="192.0" y="318.0" transform="rotate(-90 192.0 318.0)">双面高柜</text>
+  <rect class="soft" x="210.0" y="297.0" width="24.0" height="36.0" rx="3"/>
+  <text class="lbl" x="222.0" y="315.0" transform="rotate(-90 222.0 315.0)">换鞋凳</text>
   <rect class="sofa" x="336.0" y="330.0" width="60.0" height="228.0" rx="3"/>
   <text class="lbl" x="366.0" y="444.0" transform="rotate(-90 366.0 444.0)">大 L 形沙发</text>
   <rect class="sofa" x="396.0" y="330.0" width="72.0" height="60.0" rx="3"/>
@@ -214,13 +224,17 @@
   <text class="lbl" x="574.5" y="594.0">JBL 4329P</text>
   <rect class="tv" x="586.8" y="420.9" width="6.0" height="103.2" rx="2"/>
   <text class="lbl" x="543.0" y="472.5"><tspan x="543.0" dy="-0.6em">77" 电视</tspan><tspan x="543.0" dy="1.2em">（壁挂）</tspan></text>
-  <text class="zone-lbl" x="156.0" y="285.0">吧台 · 靠墙大 L</text>
-  <text class="lbl" x="162.0" y="372.0"><tspan x="162.0" dy="-0.6em">小圆桌</tspan><tspan x="162.0" dy="1.2em">（可选）</tspan></text>
+  <text class="zone-lbl" x="261.0" y="270.0">玄关</text>
+  <text class="lbl" x="261.0" y="288.0">落尘区</text>
+  <text class="lbl" x="156.0" y="297.0">酒架面</text>
+  <text class="lbl" x="330.0" y="285.0">（公共楼道）</text>
+  <text class="zone-lbl" x="90.0" y="474.0">吧台 · 靠墙大 L</text>
+  <text class="lbl" x="138.0" y="390.0"><tspan x="138.0" dy="-0.6em">小圆桌</tspan><tspan x="138.0" dy="1.2em">（可选）</tspan></text>
   <text class="zone-lbl" x="474.0" y="564.0">客厅 · 看片 / 听歌</text>
   <text class="zone-lbl" x="144.0" y="594.0">Deep work</text>
   <text class="lbl lbl-inv" x="144.0" y="637.2">显示器 32"</text>
   <text class="lbl lbl-inv" x="144.0" y="663.0">Massive 实木大桌 3.0 × 1.2 m</text>
-  <text class="note-c" x="144.0" y="492.0">（留白 / 大绿植）</text>
+  <text class="note-c" x="144.0" y="513.0">（留白 / 大绿植）</text>
   <line class="dim" x1="0.0" y1="906.0" x2="696.0" y2="906.0"/>
   <line class="dim" x1="0.0" y1="898.8" x2="0.0" y2="913.2"/>
   <line class="dim" x1="6.0" y1="898.8" x2="6.0" y2="913.2"/>
@@ -248,8 +262,8 @@
   <line class="dim" x1="784.8" y1="0.0" x2="799.2" y2="0.0"/>
   <line class="dim" x1="784.8" y1="864.0" x2="799.2" y2="864.0"/>
   <text class="dim-txt" x="808.8" y="432.0" transform="rotate(-90 808.8 432.0)">14400</text>
-  <text class="title" x="-78.0" y="-135.0">方案 A · 东半区做客厅（大电视 + 4329P），西翼南端安静的 deep work</text>
-  <text class="note" x="-78.0" y="-105.0">吧台靠墙做大 L（约 5 m 台面），不要岛台和高凳；大 L 沙发长边对电视、短边朝阳台；书桌在最里面，用双面矮书架隔开</text>
+  <text class="title" x="-78.0" y="-135.0">方案 A · 玄关缓冲 + 靠墙大 L 吧台 + 东半区客厅 + 西翼南端 deep work</text>
+  <text class="note" x="-78.0" y="-105.0">前室是公共楼道：门内做玄关，正对门的双面高柜挡住视线；吧台靠墙大 L；大 L 沙发长边对电视、短边朝阳台；书桌在最里面</text>
   <text class="note" x="-78.0" y="-81.0">尺寸按原图纸（mm）· 大厅净面积 ≈ 74 ㎡ · 整层含卫生间 / 储藏 / 前室 / 电梯楼梯 ≈ 125 ㎡</text>
   <g transform="translate(798.0,-102.0)"><path d="M0,-16 L7,10 L0,4 L-7,10 Z" fill="#333"/><text class="lbl" x="0" y="-26" style="font-weight:700">N</text></g>
 </svg>
