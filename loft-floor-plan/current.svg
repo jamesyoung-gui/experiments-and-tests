@@ -1,15 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 907 1092" width="907" height="1092">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-90 -138 1056 942" width="1056" height="942">
 <style>
   .bg{fill:#fbfaf7}
   .floor{fill:#efe6d6}
+  .annex{fill:#e6e3dc}
+  .balcony{fill:#e3ece4;stroke:#7a8b7c;stroke-width:3}
+  .platform{fill:#eeeeee;stroke:#9a9a9a;stroke-width:1;stroke-dasharray:4 3}
   .wall{fill:#2b2b2b}
-  .annex{fill:#e4e1da;stroke:#2b2b2b;stroke-width:2}
-  .balcony{fill:#e3ece4;stroke:#7a8b7c;stroke-width:2;stroke-dasharray:6 4}
-  .tile{fill:#dcdcdc}
-  .beam{stroke:#b9ad99;stroke-width:1.2;stroke-dasharray:8 6;fill:none}
-  .window{fill:#bfe0f2;stroke:#2b6f96;stroke-width:1.5}
-  .glass{fill:#d7edf8;stroke:#2b6f96;stroke-width:1.5}
+  .column{fill:#111}
+  .window{fill:#cfe8f6;stroke:#2b6f96;stroke-width:1}
   .door{fill:none;stroke:#555;stroke-width:1.2}
+  .door-leaf{stroke:#555;stroke-width:2}
+  .tread{stroke:#888;stroke-width:1}
+  .lift{fill:none;stroke:#666;stroke-width:1}
+  .fixture{fill:#fff;stroke:#666;stroke-width:1}
   .wood{fill:#a87b55;stroke:#5d3d22;stroke-width:1}
   .soft{fill:#e9d8c4;stroke:#8a7660;stroke-width:1}
   .dark{fill:#3b3b3b;stroke:#111;stroke-width:1}
@@ -24,124 +27,208 @@
   .plant{fill:#9cc59a;stroke:#4f7d4c;stroke-width:1}
   .rug{fill:#f3f1ec;stroke:#a9a39a;stroke-width:1}
   .bar{fill:#f5f5f5;stroke:#333;stroke-width:1.5}
-  .z-gym{fill:#3a3a3a;fill-opacity:.18;stroke:#3a3a3a;stroke-width:1;stroke-dasharray:4 3}
+  .cabinet{fill:#fff;stroke:#555;stroke-width:1}
+  .z-gym{fill:#3a3a3a;fill-opacity:.16;stroke:#3a3a3a;stroke-width:1;stroke-dasharray:4 3}
   .z-rug{fill:#8d96a0;fill-opacity:.16;stroke:#8d96a0;stroke-width:1;stroke-dasharray:4 3}
   .z-plyo{fill:#e07a2f;fill-opacity:.12;stroke:#e07a2f;stroke-width:1.5;stroke-dasharray:6 3}
   .tv{fill:#111;stroke:#000}
   .tv-ghost{fill:none;stroke:#111;stroke-width:1.2;stroke-dasharray:4 3}
   .arrow{fill:none;stroke:#c0392b;stroke-width:1.6}
+  .pencil-add{fill:#e67e22;stroke:#e67e22}
+  .pencil-add-line{fill:none;stroke:#e67e22;stroke-width:2.5}
+  .pencil-del{fill:none;stroke:#d62d20;stroke-width:2;stroke-dasharray:5 3}
+  .pencil-x{stroke:#d62d20;stroke-width:2}
   text{font-family:"PingFang SC","Noto Sans CJK SC","WenQuanYi Zen Hei","Microsoft YaHei",sans-serif;fill:#222}
   .lbl{font-size:11px;text-anchor:middle;dominant-baseline:central}
   .lbl-inv{fill:#fff}
-  .zone-lbl{font-size:12px;font-weight:600;text-anchor:middle;fill:#444}
-  .room-lbl{font-size:14px;font-weight:700;fill:#555;letter-spacing:2px}
+  .room{font-size:13px;font-weight:700;fill:#555;text-anchor:middle;dominant-baseline:central;letter-spacing:1px}
+  .zone-lbl{font-size:12px;font-weight:600;text-anchor:middle;dominant-baseline:central;fill:#444}
+  .pencil-lbl{font-size:11px;font-weight:600;fill:#c0392b;text-anchor:middle;dominant-baseline:central}
   .title{font-size:20px;font-weight:700}
   .note{font-size:11px;fill:#666}
   .dim{stroke:#777;stroke-width:1;fill:none}
-  .dim-txt{font-size:11px;fill:#555;text-anchor:middle}
+  .dim-txt{font-size:10px;fill:#555;text-anchor:middle;dominant-baseline:central}
 </style>
-<rect class="bg" width="100%" height="100%"/>
+<rect class="bg" x="-90" y="-138" width="100%" height="100%"/>
   <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker></defs>
-  <rect class="balcony" x="123.2" y="100.8" width="448.0" height="140.0" rx="0"/>
-  <text class="room-lbl" x="347.2" y="120.4">阳台 ≈ 20 ㎡</text>
-  <rect class="annex" x="537.6" y="800.8" width="100.8" height="145.6" rx="0"/>
-  <text class="lbl" x="588.0" y="873.6"><tspan x="588.0" dy="-0.6em">卫生间 /</tspan><tspan x="588.0" dy="1.2em">小储藏室*</tspan></text>
-  <rect class="annex" x="425.6" y="800.8" width="112.0" height="112.0" rx="0"/>
-  <text class="lbl" x="481.6" y="856.8">门厅/楼梯*</text>
-  <rect class="floor" x="67.2" y="240.8" width="728.0" height="560.0" rx="0"/>
-  <rect class="tile" x="638.4" y="666.4" width="156.8" height="134.4" rx="0"/>
-  <line class="beam" x1="309.9" y1="800.8" x2="309.9" y2="240.8"/>
-  <line class="beam" x1="552.5" y1="800.8" x2="552.5" y2="240.8"/>
-  <line class="beam" x1="67.2" y1="520.8" x2="795.2" y2="520.8"/>
-  <rect class="wall" x="53.8" y="800.8" width="754.9" height="13.4" rx="0"/>
-  <rect class="wall" x="53.8" y="227.4" width="754.9" height="13.4" rx="0"/>
-  <rect class="wall" x="53.8" y="240.8" width="13.4" height="560.0" rx="0"/>
-  <rect class="wall" x="795.2" y="240.8" width="13.4" height="560.0" rx="0"/>
-  <rect class="bg" x="53.8" y="548.8" width="13.4" height="67.2" rx="0"/>
-  <rect class="window" x="57.8" y="548.8" width="5.4" height="67.2" rx="0"/>
-  <text class="note" x="23.0" y="582.4" transform="rotate(-90 23.0 582.4)">纱帘窗</text>
-  <rect class="bg" x="53.8" y="408.8" width="13.4" height="67.2" rx="0"/>
-  <rect class="window" x="57.8" y="408.8" width="5.4" height="67.2" rx="0"/>
-  <text class="note" x="23.0" y="442.4" transform="rotate(-90 23.0 442.4)">纱帘窗</text>
-  <rect class="bg" x="795.2" y="554.4" width="13.4" height="44.8" rx="0"/>
-  <rect class="window" x="799.2" y="554.4" width="5.4" height="44.8" rx="0"/>
-  <rect class="bg" x="795.2" y="487.2" width="13.4" height="44.8" rx="0"/>
-  <rect class="window" x="799.2" y="487.2" width="5.4" height="44.8" rx="0"/>
-  <rect class="bg" x="795.2" y="364.0" width="13.4" height="44.8" rx="0"/>
-  <rect class="window" x="799.2" y="364.0" width="5.4" height="44.8" rx="0"/>
-  <text class="note" x="839.4" y="386.4" transform="rotate(-90 839.4 386.4)">竖长窗×3</text>
-  <rect class="bg" x="112.0" y="227.4" width="67.2" height="13.4" rx="0"/>
-  <rect class="glass" x="112.0" y="231.4" width="67.2" height="5.4" rx="0"/>
-  <rect class="bg" x="179.2" y="227.4" width="89.6" height="13.4" rx="0"/>
-  <line class="door" x1="179.2" y1="240.8" x2="179.2" y2="285.6"/>
-  <path class="door" d="M 179.2 285.6 A 44.8 44.8 0 0 0 224.0 240.8"/>
-  <line class="door" x1="268.8" y1="240.8" x2="268.8" y2="285.6"/>
-  <path class="door" d="M 268.8 285.6 A 44.8 44.8 0 0 1 224.0 240.8"/>
-  <text class="note" x="224.0" y="210.6">阳台门</text>
-  <rect class="bg" x="268.8" y="227.4" width="347.2" height="13.4" rx="0"/>
-  <rect class="glass" x="268.8" y="231.4" width="347.2" height="5.4" rx="0"/>
-  <text class="note" x="442.4" y="210.6">落地窗（整面窗帘）</text>
-  <rect class="bg" x="649.6" y="227.4" width="56.0" height="13.4" rx="0"/>
-  <rect class="window" x="649.6" y="231.4" width="56.0" height="5.4" rx="0"/>
-  <rect class="bg" x="459.2" y="800.8" width="50.4" height="13.4" rx="0"/>
-  <line class="door" x1="459.2" y1="800.8" x2="459.2" y2="750.4"/>
-  <path class="door" d="M 459.2 750.4 A 50.4 50.4 0 0 1 509.6 800.8"/>
-  <text class="lbl" x="484.4" y="831.0">入口*</text>
-  <rect class="bg" x="537.6" y="800.8" width="100.8" height="13.4" rx="0"/>
-  <rect class="bar" x="649.6" y="764.4" width="145.6" height="36.4" rx="0"/>
-  <text class="lbl" x="705.6" y="782.6">水吧（固定）</text>
-  <circle class="window" cx="761.6" cy="782.3" r="7.8"/>
-  <rect class="wood" x="84.0" y="775.6" width="347.2" height="22.4" rx="3"/>
-  <text class="lbl" x="257.6" y="786.8">胡桃木书架 / 陶器架</text>
-  <rect class="wood" x="70.0" y="484.4" width="25.2" height="50.4" rx="3"/>
-  <text class="lbl" x="82.6" y="509.6">佛龛</text>
-  <rect class="wood" x="123.2" y="515.2" width="89.6" height="44.8" rx="3"/>
-  <text class="lbl" x="168.0" y="537.6">实木书桌</text>
-  <rect class="soft" x="106.4" y="604.8" width="33.6" height="33.6" rx="3"/>
-  <text class="lbl" x="123.2" y="621.6">藤椅</text>
-  <rect class="wood" x="190.4" y="616.0" width="67.2" height="39.2" rx="3"/>
-  <text class="lbl" x="224.0" y="635.6">藤编茶几</text>
-  <circle class="lamp" cx="100.8" cy="448.0" r="14.0"/>
-  <text class="lbl" x="100.8" y="473.2">落地灯</text>
-  <circle class="plant" cx="123.2" cy="274.4" r="19.6"/>
-  <text class="lbl" x="123.2" y="305.2">绿植</text>
-  <circle class="rug" cx="358.4" cy="431.2" r="61.6"/>
-  <text class="lbl" x="358.4" y="465.1">圆地毯</text>
-  <circle class="soft" cx="341.6" cy="414.4" r="15.7"/>
-  <circle class="soft" cx="386.4" cy="448.0" r="15.7"/>
-  <rect class="dark" x="268.8" y="478.8" width="42.0" height="42.0" rx="3"/>
-  <text class="lbl lbl-inv" x="289.8" y="499.8">黑色转椅</text>
-  <rect class="soft" x="425.6" y="268.8" width="61.6" height="50.4" rx="3"/>
-  <text class="lbl" x="456.4" y="294.0">折叠椅(粉毯)</text>
-  <circle class="soft" cx="548.8" cy="347.2" r="22.4"/>
-  <text class="lbl" x="548.8" y="380.8">斑马懒人包</text>
-  <rect class="wood" x="621.6" y="252.0" width="95.2" height="36.4" rx="3"/>
-  <text class="lbl" x="669.2" y="270.2">杂物桌</text>
-  <rect class="box" x="728.0" y="252.0" width="56.0" height="33.6" rx="3"/>
-  <text class="lbl" x="756.0" y="268.8">纸箱</text>
-  <rect class="box" x="753.2" y="291.2" width="33.6" height="61.6" rx="3"/>
-  <text class="lbl" x="770.0" y="322.0">衣架</text>
-  <rect class="metal" x="781.2" y="327.6" width="6.7" height="33.6" rx="3"/>
-  <rect class="box" x="764.4" y="408.8" width="28.0" height="56.0" rx="3"/>
-  <text class="lbl" x="778.4" y="436.8">矮柜</text>
-  <rect class="dark" x="739.2" y="442.4" width="44.8" height="78.4" rx="3"/>
-  <text class="lbl lbl-inv" x="761.6" y="481.6">SkiErg</text>
-  <rect class="dark" x="616.0" y="599.2" width="140.0" height="33.6" rx="3"/>
-  <text class="lbl lbl-inv" x="686.0" y="616.0">划船机</text>
-  <rect class="mat" x="604.8" y="487.2" width="112.0" height="56.0" rx="3"/>
-  <text class="lbl lbl-inv" x="660.8" y="515.2">训练垫</text>
-  <rect class="dark" x="716.8" y="537.6" width="50.4" height="33.6" rx="3"/>
-  <text class="lbl lbl-inv" x="742.0" y="554.4">哑铃/药球</text>
-  <line class="dim" x1="67.2" y1="985.6" x2="795.2" y2="985.6"/>
-  <line class="dim" x1="67.2" y1="994.0" x2="67.2" y2="977.2"/>
-  <line class="dim" x1="795.2" y1="994.0" x2="795.2" y2="977.2"/>
-  <text class="dim-txt" x="431.2" y="1002.4">≈ 13.0 m</text>
-  <line class="dim" x1="864.6" y1="800.8" x2="864.6" y2="240.8"/>
-  <line class="dim" x1="856.2" y1="800.8" x2="873.0" y2="800.8"/>
-  <line class="dim" x1="856.2" y1="240.8" x2="873.0" y2="240.8"/>
-  <text class="dim-txt" x="881.4" y="520.8" transform="rotate(-90 881.4 520.8)">≈ 10.0 m</text>
-  <text class="title" x="16.8" y="28.0">现状 · Current layout（照片还原，2026-02）</text>
-  <text class="note" x="16.8" y="50.4">大厅 ≈ 130 ㎡ · 层高约 3.5 m · 虚线 = 井字格吊顶梁 · 灰色 = 水吧前瓷砖区</text>
-  <g transform="translate(834.4,39.2)"><path d="M0,-16 L7,10 L0,4 L-7,10 Z" fill="#333"/><text class="lbl" x="0" y="-24">阳台侧</text></g>
-  <text class="note" x="16.8" y="1075.2">* 入口 / 卫生间 / 储藏室位置由照片推断，尺寸为目测估算，请用实测值修改 floor_plan.py 顶部常量。</text>
+  <rect class="platform" x="6.0" y="0.0" width="60.0" height="291.0" rx="0"/>
+  <text class="lbl" x="36.0" y="144.0" transform="rotate(-90 36.0 144.0)">空调平台</text>
+  <polygon class="balcony" points="6.0,291.0 210.0,291.0 210.0,618.0 534.0,618.0 534.0,690.0 6.0,690.0"/>
+  <text class="room" x="108.0" y="648.0">L 形阳台 ≈ 29 ㎡</text>
+  <rect class="floor" x="84.0" y="12.0" width="552.0" height="276.0" rx="0"/>
+  <rect class="floor" x="222.0" y="288.0" width="323.0" height="318.0" rx="0"/>
+  <rect class="floor" x="648.0" y="138.0" width="138.0" height="73.8" rx="0"/>
+  <rect class="annex" x="648.0" y="12.0" width="204.0" height="126.0" rx="0"/>
+  <rect class="annex" x="654.0" y="375.0" width="114.0" height="138.0" rx="0"/>
+  <rect class="annex" x="648.0" y="519.0" width="204.0" height="87.0" rx="0"/>
+  <rect class="annex" x="774.0" y="379.8" width="78.0" height="139.2" rx="0"/>
+  <rect class="annex" x="648.0" y="217.8" width="204.0" height="151.2" rx="0"/>
+  <rect class="annex" x="792.0" y="138.0" width="60.0" height="79.8" rx="0"/>
+  <rect class="annex" x="551.0" y="288.0" width="85.0" height="87.0" rx="0"/>
+  <rect class="annex" x="551.0" y="375.0" width="97.0" height="231.0" rx="0"/>
+  <line class="tread" x1="774.0" y1="379.8" x2="852.0" y2="379.8"/>
+  <line class="tread" x1="774.0" y1="396.6" x2="852.0" y2="396.6"/>
+  <line class="tread" x1="774.0" y1="413.4" x2="852.0" y2="413.4"/>
+  <line class="tread" x1="774.0" y1="430.2" x2="852.0" y2="430.2"/>
+  <line class="tread" x1="774.0" y1="447.0" x2="852.0" y2="447.0"/>
+  <line class="tread" x1="774.0" y1="463.8" x2="852.0" y2="463.8"/>
+  <line class="tread" x1="774.0" y1="480.6" x2="852.0" y2="480.6"/>
+  <line class="tread" x1="774.0" y1="497.4" x2="852.0" y2="497.4"/>
+  <line class="tread" x1="774.0" y1="514.2" x2="852.0" y2="514.2"/>
+  <line class="tread" x1="660.0" y1="523.8" x2="660.0" y2="597.0"/>
+  <line class="tread" x1="676.8" y1="523.8" x2="676.8" y2="597.0"/>
+  <line class="tread" x1="693.6" y1="523.8" x2="693.6" y2="597.0"/>
+  <line class="tread" x1="710.4" y1="523.8" x2="710.4" y2="597.0"/>
+  <line class="tread" x1="727.2" y1="523.8" x2="727.2" y2="597.0"/>
+  <line class="tread" x1="744.0" y1="523.8" x2="744.0" y2="597.0"/>
+  <line class="tread" x1="760.8" y1="523.8" x2="760.8" y2="597.0"/>
+  <text class="lbl" x="712.8" y="560.4">楼梯 ↓</text>
+  <rect class="lift" x="669.0" y="393.0" width="84.0" height="102.0" rx="0"/>
+  <line class="lift" x1="669.0" y1="393.0" x2="753.0" y2="495.0"/>
+  <line class="lift" x1="669.0" y1="495.0" x2="753.0" y2="393.0"/>
+  <text class="room" x="711.0" y="444.0">电梯</text>
+  <circle class="fixture" cx="687.0" cy="54.0" r="8.4"/>
+  <rect class="fixture" x="660.0" y="105.0" width="60.0" height="30.0" rx="0"/>
+  <ellipse class="fixture" cx="690.0" cy="120.0" rx="18.0" ry="10.2"/>
+  <rect class="fixture" x="735.0" y="16.8" width="48.0" height="46.2" rx="10"/>
+  <ellipse class="fixture" cx="822.0" cy="54.0" rx="15.6" ry="21.6"/>
+  <rect class="wall" x="66.0" y="0.0" width="798.0" height="12.0" rx="0"/>
+  <rect class="wall" x="66.0" y="0.0" width="18.0" height="291.0" rx="0"/>
+  <rect class="wall" x="66.0" y="279.0" width="156.0" height="12.0" rx="0"/>
+  <rect class="wall" x="210.0" y="279.0" width="12.0" height="339.0" rx="0"/>
+  <rect class="wall" x="210.0" y="606.0" width="654.0" height="12.0" rx="0"/>
+  <rect class="wall" x="852.0" y="0.0" width="12.0" height="618.0" rx="0"/>
+  <rect class="wall" x="636.0" y="12.0" width="12.0" height="126.0" rx="0"/>
+  <rect class="wall" x="636.0" y="138.0" width="99.0" height="10.8" rx="0"/>
+  <rect class="wall" x="777.0" y="138.0" width="15.0" height="10.8" rx="0"/>
+  <rect class="wall" x="792.0" y="129.0" width="60.0" height="9.0" rx="0"/>
+  <rect class="wall" x="726.0" y="12.0" width="3.0" height="126.0" rx="0"/>
+  <rect class="wall" x="786.0" y="12.0" width="6.0" height="75.0" rx="0"/>
+  <rect class="wall" x="786.0" y="123.0" width="6.0" height="15.0" rx="0"/>
+  <rect class="wall" x="786.0" y="138.0" width="6.0" height="7.2" rx="0"/>
+  <rect class="wall" x="786.0" y="187.2" width="6.0" height="30.6" rx="0"/>
+  <rect class="wall" x="636.0" y="211.8" width="156.0" height="6.0" rx="0"/>
+  <rect class="wall" x="636.0" y="211.8" width="12.0" height="163.2" rx="0"/>
+  <rect class="wall" x="636.0" y="369.0" width="216.0" height="6.0" rx="0"/>
+  <rect class="wall" x="648.0" y="375.0" width="6.0" height="33.0" rx="0"/>
+  <rect class="wall" x="648.0" y="462.0" width="6.0" height="57.0" rx="0"/>
+  <rect class="wall" x="648.0" y="513.0" width="126.0" height="6.0" rx="0"/>
+  <rect class="wall" x="768.0" y="375.0" width="6.0" height="144.0" rx="0"/>
+  <rect class="wall" x="545.0" y="291.0" width="6.0" height="315.0" rx="0"/>
+  <rect class="column" x="99.0" y="0.0" width="27.0" height="27.0" rx="0"/>
+  <rect class="column" x="376.2" y="0.0" width="30.6" height="27.0" rx="0"/>
+  <rect class="column" x="636.0" y="0.0" width="27.0" height="27.0" rx="0"/>
+  <rect class="column" x="99.0" y="273.0" width="27.0" height="27.0" rx="0"/>
+  <rect class="column" x="207.0" y="594.0" width="27.0" height="24.0" rx="0"/>
+  <rect class="column" x="376.2" y="594.0" width="30.6" height="24.0" rx="0"/>
+  <rect class="column" x="639.0" y="594.0" width="24.0" height="24.0" rx="0"/>
+  <rect class="column" x="636.0" y="264.0" width="30.0" height="30.0" rx="0"/>
+  <rect class="window" x="189.0" y="2.4" width="186.0" height="7.2" rx="0"/>
+  <rect class="window" x="408.0" y="2.4" width="225.0" height="7.2" rx="0"/>
+  <rect class="window" x="70.8" y="65.4" width="8.4" height="36.6" rx="0"/>
+  <rect class="window" x="70.8" y="138.0" width="8.4" height="34.8" rx="0"/>
+  <rect class="window" x="70.8" y="210.0" width="8.4" height="22.8" rx="0"/>
+  <rect class="window" x="212.4" y="297.0" width="7.2" height="114.0" rx="0"/>
+  <rect class="window" x="212.4" y="498.0" width="7.2" height="96.0" rx="0"/>
+  <rect class="window" x="237.0" y="608.4" width="138.0" height="7.2" rx="0"/>
+  <rect class="window" x="408.0" y="608.4" width="129.0" height="7.2" rx="0"/>
+  <rect class="floor" x="210.0" y="411.0" width="12.0" height="87.0" rx="0"/>
+  <line class="door-leaf" x1="222.0" y1="411.0" x2="265.5" y2="411.0"/>
+  <path class="door" d="M 265.5 411.0 A 43.5 43.5 0 0 1 222.0 454.5"/>
+  <line class="door-leaf" x1="222.0" y1="498.0" x2="265.5" y2="498.0"/>
+  <path class="door" d="M 265.5 498.0 A 43.5 43.5 0 0 0 222.0 454.5"/>
+  <line class="door-leaf" x1="777.0" y1="148.8" x2="777.0" y2="190.8"/>
+  <path class="door" d="M 777.0 190.8 A 42.0 42.0 0 0 1 735.0 148.8"/>
+  <line class="door-leaf" x1="792.0" y1="87.0" x2="828.0" y2="87.0"/>
+  <path class="door" d="M 828.0 87.0 A 36.0 36.0 0 0 1 792.0 123.0"/>
+  <line class="door-leaf" x1="792.0" y1="145.2" x2="834.0" y2="145.2"/>
+  <path class="door" d="M 834.0 145.2 A 42.0 42.0 0 0 1 792.0 187.2"/>
+  <line class="door-leaf" x1="636.0" y1="288.0" x2="636.0" y2="373.0"/>
+  <path class="door" d="M 636.0 373.0 A 85.0 85.0 0 0 1 551.0 288.0"/>
+  <rect class="cabinet" x="551.0" y="367.8" width="21.7" height="141.6" rx="0"/>
+  <line class="lift" x1="551.0" y1="367.8" x2="572.7" y2="509.4"/>
+  <line class="lift" x1="551.0" y1="509.4" x2="572.7" y2="367.8"/>
+  <rect class="cabinet" x="128.4" y="12.0" width="57.0" height="25.8" rx="0"/>
+  <line class="lift" x1="128.4" y1="12.0" x2="185.4" y2="37.8"/>
+  <line class="lift" x1="128.4" y1="37.8" x2="185.4" y2="12.0"/>
+  <text class="room" x="756.0" y="99.0">卫生间</text>
+  <text class="lbl" x="720.0" y="180.0">过道</text>
+  <text class="room" x="738.0" y="288.0"><tspan x="738.0" dy="-0.6em">储藏间</tspan><tspan x="738.0" dy="1.2em">(堆杂物)</tspan></text>
+  <text class="room" x="593.4" y="327.0">前室</text>
+  <text class="lbl" x="593.4" y="348.0">（玄关）</text>
+  <text class="lbl" x="561.8" y="438.0" transform="rotate(-90 561.8 438.0)">玄关柜</text>
+  <text class="room" x="384.0" y="360.0">大厅</text>
+  <rect class="bar" x="609.0" y="39.0" width="27.0" height="96.0" rx="3"/>
+  <text class="lbl" x="622.5" y="87.0" transform="rotate(-90 622.5 87.0)">水吧(固定)</text>
+  <rect class="box" x="99.0" y="18.0" width="57.0" height="42.0" rx="3"/>
+  <text class="lbl" x="127.5" y="39.0">纸箱</text>
+  <rect class="wood" x="99.0" y="120.0" width="42.0" height="96.0" rx="3"/>
+  <text class="lbl" x="120.0" y="168.0" transform="rotate(-90 120.0 168.0)">杂物桌</text>
+  <rect class="box" x="198.0" y="18.0" width="72.0" height="36.0" rx="3"/>
+  <text class="lbl" x="234.0" y="36.0">衣架</text>
+  <rect class="mirror" x="288.0" y="13.2" width="30.0" height="9.6" rx="3"/>
+  <rect class="box" x="360.0" y="13.2" width="60.0" height="25.8" rx="3"/>
+  <text class="lbl" x="390.0" y="26.1">矮柜</text>
+  <rect class="dark" x="510.0" y="15.0" width="42.0" height="48.0" rx="3"/>
+  <text class="lbl lbl-inv" x="531.0" y="39.0">SkiErg</text>
+  <rect class="dark" x="378.0" y="54.0" width="48.0" height="27.0" rx="3"/>
+  <text class="lbl lbl-inv" x="402.0" y="67.5">哑铃/药球</text>
+  <rect class="mat" x="420.0" y="96.0" width="90.0" height="54.0" rx="3"/>
+  <text class="lbl lbl-inv" x="465.0" y="123.0">训练垫</text>
+  <rect class="dark" x="558.0" y="78.0" width="36.0" height="144.0" rx="3"/>
+  <text class="lbl lbl-inv" x="576.0" y="150.0" transform="rotate(-90 576.0 150.0)">划船机</text>
+  <circle class="soft" cx="180.0" cy="222.0" r="24.0"/>
+  <text class="lbl" x="180.0" y="258.0">斑马懒人包</text>
+  <rect class="soft" x="231.0" y="306.0" width="60.0" height="54.0" rx="3"/>
+  <text class="lbl" x="261.0" y="333.0">折叠椅</text>
+  <circle class="rug" cx="324.0" cy="444.0" r="66.0"/>
+  <text class="lbl" x="324.0" y="496.8">圆地毯</text>
+  <circle class="soft" cx="306.0" cy="426.0" r="16.8"/>
+  <circle class="soft" cx="348.0" cy="468.0" r="16.8"/>
+  <rect class="dark" x="384.0" y="462.0" width="42.0" height="42.0" rx="3"/>
+  <text class="lbl lbl-inv" x="405.0" y="483.0">转椅</text>
+  <rect class="wood" x="438.0" y="426.0" width="66.0" height="42.0" rx="3"/>
+  <text class="lbl" x="471.0" y="447.0">藤编茶几</text>
+  <rect class="wood" x="519.0" y="300.0" width="26.0" height="300.0" rx="3"/>
+  <text class="lbl" x="532.0" y="450.0" transform="rotate(-90 532.0 450.0)">胡桃木书架 / 陶器架</text>
+  <rect class="wood" x="360.0" y="534.0" width="96.0" height="45.0" rx="3"/>
+  <text class="lbl" x="408.0" y="556.5">实木书桌</text>
+  <rect class="wood" x="378.0" y="582.0" width="30.0" height="21.0" rx="3"/>
+  <text class="lbl" x="393.0" y="592.5">佛龛</text>
+  <rect class="soft" x="477.0" y="558.0" width="36.0" height="36.0" rx="3"/>
+  <text class="lbl" x="495.0" y="576.0">藤椅</text>
+  <circle class="lamp" cx="300.0" cy="582.0" r="13.2"/>
+  <text class="lbl" x="300.0" y="556.8">落地灯</text>
+  <circle class="plant" cx="243.0" cy="579.0" r="19.2"/>
+  <text class="lbl" x="243.0" y="547.8">绿植</text>
+  <text class="dim-txt" x="108.0" y="718.8">3400</text>
+  <text class="dim-txt" x="216.0" y="718.8">200</text>
+  <text class="dim-txt" x="383.5" y="718.8">5383</text>
+  <text class="dim-txt" x="548.0" y="718.8">100</text>
+  <text class="dim-txt" x="599.5" y="718.8">1617</text>
+  <text class="dim-txt" x="750.0" y="718.8">3400</text>
+  <line class="dim" x1="6.0" y1="732.0" x2="852.0" y2="732.0"/>
+  <line class="dim" x1="6.0" y1="724.8" x2="6.0" y2="739.2"/>
+  <line class="dim" x1="210.0" y1="724.8" x2="210.0" y2="739.2"/>
+  <line class="dim" x1="222.0" y1="724.8" x2="222.0" y2="739.2"/>
+  <line class="dim" x1="545.0" y1="724.8" x2="545.0" y2="739.2"/>
+  <line class="dim" x1="551.0" y1="724.8" x2="551.0" y2="739.2"/>
+  <line class="dim" x1="648.0" y1="724.8" x2="648.0" y2="739.2"/>
+  <line class="dim" x1="852.0" y1="724.8" x2="852.0" y2="739.2"/>
+  <line class="dim" x1="0.0" y1="774.0" x2="864.0" y2="774.0"/>
+  <line class="dim" x1="0.0" y1="766.8" x2="0.0" y2="781.2"/>
+  <line class="dim" x1="864.0" y1="766.8" x2="864.0" y2="781.2"/>
+  <text class="dim-txt" x="432.0" y="760.8">14400</text>
+  <line class="dim" x1="-42.0" y1="0.0" x2="-42.0" y2="696.0"/>
+  <line class="dim" x1="-49.2" y1="0.0" x2="-34.8" y2="0.0"/>
+  <line class="dim" x1="-49.2" y1="6.0" x2="-34.8" y2="6.0"/>
+  <line class="dim" x1="-49.2" y1="291.0" x2="-34.8" y2="291.0"/>
+  <line class="dim" x1="-49.2" y1="618.0" x2="-34.8" y2="618.0"/>
+  <line class="dim" x1="-49.2" y1="696.0" x2="-34.8" y2="696.0"/>
+  <text class="dim-txt" x="-57.0" y="148.5" transform="rotate(-90 -57.0 148.5)">4750</text>
+  <text class="dim-txt" x="-57.0" y="454.5" transform="rotate(-90 -57.0 454.5)">5450</text>
+  <text class="dim-txt" x="-57.0" y="657.0" transform="rotate(-90 -57.0 657.0)">1300</text>
+  <text class="title" x="-78.0" y="-99.0">现状 · Current layout</text>
+  <text class="note" x="-78.0" y="-69.0">家具位置按 2026-02 的现场照片还原（格局已按铅笔修改）</text>
+  <text class="note" x="-78.0" y="-45.0">尺寸按原图纸（mm）· 大厅净面积 ≈ 74 ㎡ · 整层含卫生间 / 储藏 / 前室 / 电梯楼梯 ≈ 125 ㎡</text>
 </svg>
