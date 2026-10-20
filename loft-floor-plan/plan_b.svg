@@ -29,6 +29,9 @@
   .stool{fill:#3b3b3b;stroke:#111;stroke-width:1}
   .wall-new{fill:#4a4a4a;stroke:#222;stroke-width:1}
   .z-foyer{fill:#b9b2a6;fill-opacity:.45;stroke:#8a8277;stroke-width:1;stroke-dasharray:3 2}
+  .boundary{stroke:#8a5a34;stroke-width:3;stroke-dasharray:8 4}
+  .art{fill:#f1e4cc;stroke:#8a5a34;stroke-width:1.5}
+  .z-lobby{fill:#c8a165;fill-opacity:.10;stroke:none}
   .sight{stroke:#c0392b;stroke-width:1.5;stroke-dasharray:5 4}
   .mirror{fill:#e8f4fa;stroke:#59606a;stroke-width:1}
   .cabinet{fill:#fff;stroke:#555;stroke-width:1}

@@ -153,7 +153,19 @@ ENTRY_NOTES = [
     (4350, 4500, "玄关", "zone-lbl"),
     (4350, 4800, "落尘区", "lbl"),
     (2600, 4950, "酒架面", "lbl"),
-    (5500, 4750, "（公共楼道）", "lbl"),
+    (5500, 4750, "（电梯厅）", "lbl"),
+]
+# 门外的前室整栋楼只有自家用，当电梯厅来做：楼梯口换地面材质当公私分界，
+# 玄关柜改悬空矮柜、上方挂画配壁灯（出电梯正对），电梯 3F 刷卡。
+LOBBY = [
+    dict(l=(8650, 3620, 8650, 5200), cls="boundary"),
+    dict(r=(6130, 4855, 8490, 5217), label="悬空矮柜", cls="art"),
+]
+LOBBY_ZONES = [dict(r=(4800, 3600, 8650, 5217), label="", cls="z-lobby")]
+LOBBY_NOTES = [
+    (7300, 4350, "玄关柜改悬空矮柜\n上方挂画 + 壁灯", "lbl"),
+    (9400, 4450, "楼梯口\n地面换材质", "lbl"),
+    (7400, 2950, "（3F 刷卡）", "lbl"),
 ]
 BAR_L_COUNTER = [  # ② 后吧台 + L 形前台：人在里面做，客人在外面坐，最有酒吧感
     dict(r=(200, 3800, 1650, 4400), label="咖啡机 · 水槽", cls="bar"),
@@ -217,14 +229,15 @@ PLAN_A = dict(
     zones=[
         dict(r=(200, 3800, 4800, 7600), label="", cls="z-bar"),
         dict(r=(3500, 3800, 4800, 5300), label="", cls="z-foyer"),
+    ] + LOBBY_ZONES + [
         dict(r=(5400, 5400, 9300, 9800), label="", cls="z-rug"),
         dict(r=(500, 9800, 4500, 12500), label="", cls="z-work"),
     ],
-    furniture=BAR_WALL_L + ENTRY + LIVING_A + WORK_A + BALCONY_SET,
+    furniture=BAR_WALL_L + ENTRY + LOBBY + LIVING_A + WORK_A + BALCONY_SET,
     av=dict(tv=(9780, 7015, 9880, 8735), tv_label=(9050, 7875), tv_text='77" 电视\n（壁挂）',
             speakers=[(9400, 6100, 9750, 6450), (9400, 9300, 9750, 9650)],
             speaker_labels=[(9575, 5850), (9575, 9900)], listeners=[(6200, 7875)]),
-    notes=ENTRY_NOTES + [
+    notes=ENTRY_NOTES + LOBBY_NOTES + [
         (1500, 7900, "吧台 · 靠墙大 L", "zone-lbl"),
         (2300, 6500, "小圆桌\n（可选）", "lbl"),
         (7900, 9400, "客厅 · 看片 / 听歌", "zone-lbl"),
@@ -291,17 +304,17 @@ DOOR_EYE = (4750, 4500)   # 站在门口往里看
 ENTRY_SHEET = dict(
     file="entry_detail",
     title="入口缓冲：前室是公共楼道，门一开会看到什么",
-    view=(1200, 3200, 6000, 4300),
+    view=(1200, 2300, 9200, 4300),
     panel_w=640,
     panels=[
         ("现在：开门见吧台", "门一开，楼道里的人能一眼看穿吧台和整个西翼；进门没地方换鞋放东西",
          BAR_WALL_L + LIVING_A + [dict(l=(*DOOR_EYE, x, y), cls="sight") for x, y in
                                   ((1300, 3900), (1300, 5600), (1300, 7300), (3000, 7500))],
          [(5500, 4750, "（公共楼道）", "lbl")]),
-        ("改后：玄关 + 双面高柜屏风", "正对门的高柜挡住视线；玄关面放鞋和外套，背面朝吧台做酒架；北侧 0.9 m 去吧台 / 卫生间，南侧去客厅",
-         BAR_WALL_L + ENTRY + LIVING_A + [dict(l=(*DOOR_EYE, x, y), cls="sight") for x, y in
-                                          ((3500, 4900), (3500, 5500), (2500, 3900))],
-         ENTRY_NOTES, [dict(r=(3500, 3800, 4800, 5300), label="", cls="z-foyer")]),
+        ("改后：楼梯口分界 → 电梯厅 → 门内玄关", "楼梯口换地面材质；出电梯正对挂画；门内高柜挡视线，玄关面放鞋和外套，背面朝吧台做酒架",
+         BAR_WALL_L + ENTRY + LOBBY + LIVING_A + [dict(l=(*DOOR_EYE, x, y), cls="sight") for x, y in
+                                                  ((3500, 4900), (3500, 5500), (2500, 3900))],
+         ENTRY_NOTES + LOBBY_NOTES, [dict(r=(3500, 3800, 4800, 5300), label="", cls="z-foyer")] + LOBBY_ZONES),
     ],
 )
 
@@ -336,6 +349,9 @@ STYLE = """
   .stool{fill:#3b3b3b;stroke:#111;stroke-width:1}
   .wall-new{fill:#4a4a4a;stroke:#222;stroke-width:1}
   .z-foyer{fill:#b9b2a6;fill-opacity:.45;stroke:#8a8277;stroke-width:1;stroke-dasharray:3 2}
+  .boundary{stroke:#8a5a34;stroke-width:3;stroke-dasharray:8 4}
+  .art{fill:#f1e4cc;stroke:#8a5a34;stroke-width:1.5}
+  .z-lobby{fill:#c8a165;fill-opacity:.10;stroke:none}
   .sight{stroke:#c0392b;stroke-width:1.5;stroke-dasharray:5 4}
   .mirror{fill:#e8f4fa;stroke:#59606a;stroke-width:1}
   .cabinet{fill:#fff;stroke:#555;stroke-width:1}
