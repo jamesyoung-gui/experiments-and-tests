@@ -181,22 +181,21 @@ BALCONY_SET = [
 PLAN_A = dict(
     file="plan_a",
     title="方案 A · 东半区做客厅（大电视 + 4329P），西翼南端安静的 deep work",
-    subtitle="电视和音箱靠前室隔墙那面整墙，沙发背对阳台；吧台在进门处；书桌在最里面，用双面矮书架和吧台隔开",
+    subtitle="电视挂东墙中间柱子上，沙发面朝东、阳台在右手边；单人椅背靠前室墙面朝阳台；书桌在最里面，用双面矮书架和吧台隔开",
     pencil="applied",
     zones=[
         dict(r=(200, 3800, 4800, 7000), label="", cls="z-bar"),
-        dict(r=(5300, 7200, 9600, 9900), label="", cls="z-rug"),
+        dict(r=(5400, 5500, 9300, 9700), label="", cls="z-rug"),
         dict(r=(500, 9800, 4500, 12500), label="", cls="z-work"),
     ],
     furniture=BAR_L_COUNTER + [
-        # 客厅：85" 电视壁挂在前室隔墙上，4329P 落地架放两侧
-        dict(r=(6250, 5350, 8650, 5800), label="", cls="box"),
-        dict(r=(6150, 8650, 8750, 9600), label="三人沙发", cls="sofa"),
-        dict(r=(6750, 7850, 8150, 8450), label="茶几", cls="wood"),
-        dict(r=(5100, 7500, 5950, 8350), label="单人椅", cls="leather"),
-        dict(r=(8950, 7500, 9800, 8350), label="单人椅", cls="leather"),
-        dict(c=(5750, 9200, 200), label="", cls="lamp"),
-        dict(c=(9600, 10150, 350), label="", cls="plant"),
+        # 客厅：电视在东墙中间（柱子那段实墙），沙发面朝东，阳台在右手边
+        dict(r=(5600, 6575, 6600, 9175), label="三人沙发", cls="sofa", rot=True),
+        dict(r=(7000, 7175, 7800, 8575), label="茶几", cls="wood", rot=True),
+        dict(r=(6700, 5600, 7550, 6450), label="单人椅", cls="leather"),
+        dict(r=(8000, 5600, 8850, 6450), label="单人椅", cls="leather"),
+        dict(c=(5800, 9550, 200), label="", cls="lamp"),
+        dict(c=(9100, 10300, 300), label="", cls="plant"),
         # 工作区
         dict(r=(500, 9150, 3300, 9550), label="双面矮书架 1.2 m 高", cls="wood"),
         dict(r=(900, 10200, 3900, 11400), label="", cls="desk"),
@@ -206,12 +205,12 @@ PLAN_A = dict(
         dict(c=(4350, 12300, 300), label="", cls="plant"),
         dict(c=(4300, 9300, 330), label="", cls="plant"),
     ] + BALCONY_SET,
-    av=dict(tv=(6500, 5420, 8400, 5520), tv_label=(7450, 6150), tv_text='85" 电视（壁挂）',
-            speakers=[(5450, 5800, 5800, 6150), (9100, 5800, 9450, 6150)],
-            speaker_labels=[(5625, 6400), (9275, 6400)], listeners=[(7450, 9100)]),
+    av=dict(tv=(9780, 7015, 9880, 8735), tv_label=(9050, 7875), tv_text='77" 电视\n（壁挂）',
+            speakers=[(9400, 6100, 9750, 6450), (9400, 9300, 9750, 9650)],
+            speaker_labels=[(9575, 5850), (9575, 9900)], listeners=[(6200, 7875)]),
     notes=[
         (3700, 4650, "吧台 ②", "zone-lbl"),
-        (7450, 6950, "客厅 · 看片 / 听歌", "zone-lbl"),
+        (7900, 9400, "客厅 · 看片 / 听歌", "zone-lbl"),
         (2400, 9900, "Deep work", "zone-lbl"),
         (2400, 10620, "显示器 32\"", "lbl lbl-inv"),
         (2400, 11050, "Massive 实木大桌 3.0 × 1.2 m", "lbl lbl-inv"),

@@ -11,7 +11,7 @@ python3 floor_plan.py     # 生成 base.svg / plan_a.svg / plan_b.svg / bar_opti
 | --- | --- |
 | `floor_plan.py` | 建筑数据用图纸坐标（`DRAWING_*`），家具用转正后的平面坐标，渲染成 SVG |
 | `base.svg` / `.png` | 原图纸 + 铅笔修改（红色 = 划掉，橙色 = 新增） |
-| `plan_a.svg` / `.png` | 方案 A：东半区做客厅（85" 电视 + 4329P 在前室隔墙那面），西翼南端做 deep work |
+| `plan_a.svg` / `.png` | 方案 A：东半区做客厅（77" 电视挂东墙中间、4329P 在两侧，沙发面朝东、阳台在侧面），西翼南端做 deep work |
 | `plan_b.svg` / `.png` | 方案 B：西翼新加一道电视墙隔开吧台和 lounge，东半区做工作室 |
 | `bar_options.svg` / `.png` | 吧台三种做法：① 靠墙 L 形 + 高脚桌，② 后吧台 + L 形前台，③ 平行式 |
 
