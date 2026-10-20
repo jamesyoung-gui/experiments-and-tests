@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-三层平面图（工厂楼上：吧台 + 工作 + lounge）——纯代码生成 SVG，无第三方依赖。
+三层平面图（小洋楼 3F：吧台 + 工作 + lounge）——纯代码生成 SVG，无第三方依赖。
 
-    python3 floor_plan.py     # 生成 base.svg / proposed.svg
+    python3 floor_plan.py     # 生成 base.svg / plan_a.svg / plan_b.svg / bar_options.svg
 
 建筑几何按原施工图纸《三层平面图》数字化（DRAWING_* 常量，图纸坐标），
 并带上图纸上的铅笔修改：
@@ -115,60 +115,142 @@ DRAWING_WET_BAR = (10150, 650, 10600, 2250)          # 现有小水吧
 DIMS_X = [0, 100, 4850, 10300, 11600]                # 图纸 y -> 平面 X
 DIMS_Y = [100, 3500, 3700, 9083, 9183, 10800, 14200]  # 图纸 x -> 平面 Y
 
-# ---------------------------------------------------------------- 两张图（家具用平面坐标）
+# ---------------------------------------------------------------- 方案（家具用平面坐标）
 BASE = dict(
     file="base",
     title="三层平面图 · 原图纸 + 铅笔修改（上北下南）",
     subtitle="红色 = 铅笔划掉（取消），橙色 = 铅笔新增",
     pencil="show",
-    zones=[], furniture=[], av=None,
+    zones=[], furniture=[], av=None, notes=[],
     labels={"hall": "画室\n（原图纸用途）"},
 )
 
-PROPOSED = dict(
-    file="proposed",
-    title="规划 · 吧台 + 大桌办公 + Lounge",
-    subtitle="进门即吧台（日咖夜酒）· 西翼南段 lounge 朝窗区 · 东半区大桌办公，背靠东窗，电视 + JBL 4329P 在面前",
+# 三种吧台做法，都以现有水吧的上下水为起点（北墙 = 卫生间南墙，Y 3800；西墙内皮 X 200）。
+# 北墙 X 2300–3530 是去卫生间 / 储藏间的过道口，必须留空。
+BAR_WALL_L = [   # ① 靠墙 L 形 + 高脚桌：最随意，像厨房里的吧台
+    dict(r=(200, 3800, 2250, 4450), label="咖啡机 · 磨豆机 · 水槽", cls="bar"),
+    dict(r=(200, 4450, 850, 5100), label="制冰机", cls="bar", rot=True),
+    dict(r=(200, 5100, 850, 5700), label="饮料柜", cls="fridge", rot=True),
+    dict(r=(200, 5700, 850, 6900), label="酒架 · 调酒台", cls="bar", rot=True),
+    dict(r=(1900, 5400, 3700, 6200), label="高脚桌 1.8 × 0.8", cls="counter"),
+    dict(c=(2350, 5050, 230), label="", cls="stool"),
+    dict(c=(3250, 5050, 230), label="", cls="stool"),
+    dict(c=(2350, 6550, 230), label="", cls="stool"),
+    dict(c=(3250, 6550, 230), label="", cls="stool"),
+]
+BAR_L_COUNTER = [  # ② 后吧台 + L 形前台：人在里面做，客人在外面坐，最有酒吧感
+    dict(r=(200, 3800, 1650, 4400), label="咖啡机 · 水槽", cls="bar"),
+    dict(r=(1650, 3800, 2250, 4400), label="饮料柜", cls="fridge"),
+    dict(r=(200, 5400, 3000, 6050), label="L 形吧台（石材）", cls="counter"),
+    dict(r=(2350, 4900, 3000, 5400), label="", cls="counter"),
+    dict(c=(650, 6400, 230), label="", cls="stool"),
+    dict(c=(1350, 6400, 230), label="", cls="stool"),
+    dict(c=(2050, 6400, 230), label="", cls="stool"),
+    dict(c=(3350, 5150, 230), label="", cls="stool"),
+    dict(c=(3350, 5800, 230), label="", cls="stool"),
+]
+BAR_PARALLEL = [   # ③ 平行式：后台 L 靠墙，前台平行西墙，客人面朝调酒的人和西窗（日落）
+    dict(r=(200, 3800, 2250, 4400), label="咖啡机 · 水槽", cls="bar"),
+    dict(r=(200, 4400, 800, 5000), label="制冰", cls="bar", rot=True),
+    dict(r=(200, 5000, 800, 5600), label="饮料柜", cls="fridge", rot=True),
+    dict(r=(200, 5600, 800, 7000), label="酒架 · 调酒", cls="bar", rot=True),
+    dict(r=(1700, 4900, 2400, 7200), label="前台（石材）", cls="counter", rot=True),
+    dict(c=(2750, 5350, 230), label="", cls="stool"),
+    dict(c=(2750, 6050, 230), label="", cls="stool"),
+    dict(c=(2750, 6750, 230), label="", cls="stool"),
+    dict(c=(2050, 7550, 230), label="", cls="stool"),
+]
+
+DESK_STUDIO_EAST = [   # 东半区工作室：人背靠东窗面向西，电视在前，屏幕后面是开敞空间不逆光
+    dict(r=(5100, 5317, 10000, 5717), label="整面开放书架（前室隔墙）", cls="wood"),
+    dict(r=(7300, 6200, 8500, 9200), label="Massive 实木大桌\n3.0 × 1.2 m", cls="desk", rot=True),
+    dict(r=(8700, 7400, 9300, 8000), label="椅", cls="dark"),
+    dict(r=(9650, 6000, 10050, 9600), label="窗下矮柜", cls="box", rot=True),
+    dict(c=(9600, 10150, 350), label="", cls="plant"),
+]
+BALCONY_SET = [
+    dict(c=(7400, 12500, 650), label="户外桌椅（早咖啡）", cls="soft"),
+    dict(c=(10800, 11400, 300), label="", cls="plant"),
+    dict(c=(5600, 13800, 300), label="", cls="plant"),
+]
+
+PLAN_A = dict(
+    file="plan_a",
+    title="方案 A · 西翼一条“吧台 → 听音 lounge”，东侧独立工作室",
+    subtitle="两只 4329P 放在 lounge 南端对着沙发，晚上两个人在这里喝酒听歌；东半区是安静的 deep work 工作室",
     pencil="applied",
     zones=[
-        dict(r=(200, 3800, 4800, 7000), label="吧台区 · 日咖夜酒", cls="z-bar", at=(3500, 4900)),
-        dict(r=(600, 7600, 4200, 10600), label="", cls="z-rug"),
+        dict(r=(200, 3800, 4800, 7000), label="", cls="z-bar"),
+        dict(r=(500, 7900, 4300, 11300), label="", cls="z-rug"),
         dict(r=(5000, 5900, 9500, 10300), label="", cls="z-work"),
     ],
-    furniture=[
-        # 吧台：后吧台沿用现有水电，半岛吧台抵西墙，从东侧进吧台内
-        dict(r=(250, 3800, 1650, 4400), label="后吧台\n咖啡机 · 水槽", cls="bar"),
-        dict(r=(1650, 3800, 2250, 4400), label="半高\n饮料柜", cls="fridge"),
-        dict(r=(200, 5400, 3300, 6350), label="半岛吧台 3.1 × 0.95 m（石材台面）", cls="counter"),
-        dict(c=(650, 6750, 230), label="", cls="stool"),
-        dict(c=(1400, 6750, 230), label="", cls="stool"),
-        dict(c=(2150, 6750, 230), label="", cls="stool"),
-        dict(c=(2900, 6750, 230), label="", cls="stool"),
-        # Lounge：沙发背对吧台，面向南端窗区；两把单人椅分列两侧
-        dict(r=(900, 7800, 3700, 8800), label="三人沙发", cls="sofa"),
-        dict(r=(1600, 9150, 3000, 9900), label="茶几", cls="wood"),
-        dict(r=(250, 9100, 1100, 9950), label="单人椅", cls="leather"),
-        dict(r=(3500, 9100, 4350, 9950), label="单人椅", cls="leather"),
-        dict(c=(500, 8100, 200), label="落地灯", cls="lamp"),
-        dict(c=(4200, 8100, 200), label="", cls="lamp"),
-        dict(r=(1100, 12600, 4400, 12950), label="窗下矮柜 / 黑胶", cls="wood"),
-        dict(c=(4150, 11300, 380), label="大绿植", cls="plant"),
-        dict(c=(1500, 11600, 300), label="", cls="plant"),
-        # 工作区：大桌南北向，人背靠东窗面向西
-        dict(r=(5100, 5317, 10000, 5717), label="整面开放书架（前室隔墙）", cls="wood"),
-        dict(r=(7300, 6200, 8500, 9200), label="Massive 实木大桌\n3.0 × 1.2 m", cls="desk", rot=True),
-        dict(r=(8700, 7400, 9300, 8000), label="椅", cls="dark"),
-        dict(r=(9650, 6000, 10050, 9600), label="窗下矮柜（打印 / 文件）", cls="box", rot=True),
-        dict(c=(9600, 10150, 350), label="", cls="plant"),
-        # 阳台
-        dict(c=(7400, 12500, 650), label="户外桌椅", cls="soft"),
-        dict(c=(10800, 11400, 300), label="", cls="plant"),
-        dict(c=(5600, 13800, 300), label="", cls="plant"),
+    furniture=BAR_L_COUNTER + [
+        dict(r=(1100, 8150, 3700, 9150), label="三人沙发", cls="sofa"),
+        dict(r=(1700, 9600, 3100, 10300), label="茶几", cls="wood"),
+        dict(r=(250, 9550, 1100, 10400), label="单人椅", cls="leather"),
+        dict(r=(3700, 9550, 4550, 10400), label="单人椅", cls="leather"),
+        dict(c=(650, 8500, 200), label="", cls="lamp"),
+        dict(c=(4150, 8500, 200), label="", cls="lamp"),
+        dict(r=(1500, 12550, 3300, 12950), label="窗下矮柜", cls="wood"),
+        dict(c=(4350, 11300, 300), label="", cls="plant"),
+    ] + DESK_STUDIO_EAST + BALCONY_SET,
+    av=dict(tv=(6850, 7050, 7050, 8350), tv_label=(6050, 7700),
+            speakers=[(800, 11850, 1150, 12200), (3650, 11850, 4000, 12200)],
+            speaker_labels=[(975, 12450), (3825, 12450)], listeners=[(2400, 8800)]),
+    notes=[
+        (3700, 4650, "吧台 ②", "zone-lbl"),
+        (2400, 11000, "Lounge · 听音", "zone-lbl"),
+        (6000, 9900, "工作室", "zone-lbl"),
     ],
-    # 架高电视当显示器 + 一对 JBL 4329P（落地架），和桌边构成听音三角
-    av=dict(tv=(6850, 7050, 7050, 8350), speakers=[(6780, 6300, 7130, 6650), (6780, 8750, 7130, 9100)],
-            seat=(9000, 7700)),
     labels={"hall": ""},
+)
+
+PLAN_B = dict(
+    file="plan_b",
+    title="方案 B · 桌子、沙发、电视、音箱同一条轴",
+    subtitle="桌前近场听，沙发在桌后越过桌面看电视；东半区留给两把单人椅 + 茶几，靠阳台喝咖啡聊天",
+    pencil="applied",
+    zones=[
+        dict(r=(200, 3800, 4800, 7900), label="", cls="z-bar"),
+        dict(r=(500, 8000, 4300, 12500), label="", cls="z-work"),
+        dict(r=(5300, 7300, 9500, 9800), label="", cls="z-rug"),
+    ],
+    furniture=BAR_PARALLEL + [
+        dict(r=(1100, 8300, 3700, 9300), label="三人沙发（桌后）", cls="sofa"),
+        dict(c=(750, 8800, 230), label="", cls="wood"),
+        dict(c=(4050, 8800, 230), label="边几", cls="wood"),
+        dict(r=(900, 10700, 3900, 11800), label="Massive 实木大桌 3.0 × 1.1 m", cls="desk"),
+        dict(r=(2100, 10000, 2700, 10550), label="椅", cls="dark"),
+        dict(r=(5100, 5317, 10000, 5717), label="整面开放书架（前室隔墙）", cls="wood"),
+        dict(r=(5600, 7900, 6500, 8800), label="单人椅", cls="leather"),
+        dict(r=(8300, 7900, 9200, 8800), label="单人椅", cls="leather"),
+        dict(r=(6900, 8000, 7900, 8700), label="茶几", cls="wood"),
+        dict(r=(9650, 6000, 10050, 9600), label="窗下矮柜", cls="box", rot=True),
+        dict(c=(9600, 10150, 350), label="", cls="plant"),
+        dict(c=(5500, 6300, 380), label="", cls="plant"),
+        dict(c=(4350, 11000, 300), label="", cls="plant"),
+    ] + BALCONY_SET,
+    av=dict(tv=(1750, 12250, 3050, 12450), tv_label=(2400, 12700), tv_text='55" 架高电视', speaker_text="4329P",
+            speakers=[(850, 12000, 1200, 12350), (3600, 12000, 3950, 12350)],
+            speaker_labels=[(1025, 12650), (3775, 12650)], listeners=[(2400, 10250), (2400, 8900)]),
+    notes=[
+        (3700, 4150, "吧台 ③", "zone-lbl"),
+        (2400, 9750, "工作 + 观影 / 听音", "zone-lbl"),
+        (7400, 9500, "阳台边咖啡角", "zone-lbl"),
+        (7400, 6800, "（留空：走动 / 以后放长桌）", "note-c"),
+    ],
+    labels={"hall": ""},
+)
+
+BAR_SHEET = dict(
+    file="bar_options",
+    title="吧台三种做法（都从现有水吧的上下水长出来，北墙过道口留空）",
+    view=(-300, 3200, 5500, 4700),
+    panels=[
+        ("① 靠墙 L 形 + 高脚桌", "最随意，像家里厨房；4 人围桌，站着坐着都行", BAR_WALL_L),
+        ("② 后吧台 + L 形前台", "人在里面做，客人坐外面，最有酒吧感；5 座", BAR_L_COUNTER),
+        ("③ 平行式", "客人面朝调酒的人和西窗看日落；后台最长，4 座", BAR_PARALLEL),
+    ],
 )
 
 # ---------------------------------------------------------------- 样式
@@ -218,6 +300,8 @@ STYLE = """
   .zone-lbl{font-size:12px;font-weight:600;text-anchor:middle;dominant-baseline:central;fill:#5a4a35}
   .pencil-lbl{font-size:11px;font-weight:600;fill:#c0392b;text-anchor:middle;dominant-baseline:central}
   .title{font-size:20px;font-weight:700}
+  .panel-title{font-size:15px;font-weight:700}
+  .note-c{font-size:11px;fill:#888;text-anchor:middle;dominant-baseline:central}
   .note{font-size:11px;fill:#666}
   .dim{stroke:#777;stroke-width:1;fill:none}
   .dim-txt{font-size:10px;fill:#555;text-anchor:middle;dominant-baseline:central}
@@ -411,18 +495,15 @@ def draw_furniture(c, items):
 def draw_av(c, av):
     if not av:
         return
-    sx, sy = av["seat"]
-    for x0, y0, x1, y1 in av["speakers"]:
-        mx, my = (x0 + x1) / 2, (y0 + y1) / 2
-        c.line(mx, my, sx, sy, "sound")
+    for sx, sy in av["listeners"]:
+        for x0, y0, x1, y1 in av["speakers"]:
+            c.line((x0 + x1) / 2, (y0 + y1) / 2, sx, sy, "sound")
+    for (x0, y0, x1, y1), (lx, ly) in zip(av["speakers"], av["speaker_labels"]):
         c.rect(x0, y0, x1, y1, "speaker", rx=2)
         c.rect(x0 - 50, y0 - 50, x1 + 50, y1 + 50, "ghost")
+        c.text(lx, ly, av.get("speaker_text", "JBL 4329P"))
     c.rect(*av["tv"], "tv", rx=2)
-    tx0, ty0, tx1, ty1 = av["tv"]
-    c.text(tx0 - 750, (ty0 + ty1) / 2, '55" 架高电视\n（当显示器）')
-    s0, s1 = av["speakers"]
-    c.text(s0[0] - 650, (s0[1] + s0[3]) / 2, "JBL 4329P")
-    c.text(s1[0] - 650, (s1[1] + s1[3]) / 2, "JBL 4329P")
+    c.text(*av["tv_label"], av.get("tv_text", '55" 架高电视\n（当显示器）'), "lbl")
 
 
 def draw_zone_labels(c, plan):
@@ -432,10 +513,8 @@ def draw_zone_labels(c, plan):
         x0, y0, x1, y1 = z["r"]
         tx, ty = z.get("at", ((x0 + x1) / 2, y1 - 250))
         c.text(tx, ty, z["label"], "zone-lbl")
-    if plan["file"] == "proposed":
-        c.text(2400, 10350, "Lounge · 地毯", "zone-lbl")
-        c.text(6000, 9900, "工作区", "zone-lbl")
-        c.text(2600, 12000, "窗区（绿植 · 阅读）", "zone-lbl")
+    for x, y, text, cls in plan.get("notes", []):
+        c.text(x, y, text, cls)
 
 
 def draw_dims(c):
@@ -475,24 +554,60 @@ def draw_header(c, plan):
           f'<text class="lbl" x="0" y="-26" style="font-weight:700">N</text></g>')
 
 
-def render(plan):
-    c = Canvas()
+def render_body(c, plan):
     draw_shell(c, plan)
     draw_furniture(c, plan["furniture"])
     draw_av(c, plan["av"])
     draw_zone_labels(c, plan)
     if plan["pencil"] == "show":
         draw_pencil_marks(c)
+
+
+def render(plan):
+    c = Canvas()
+    render_body(c, plan)
     draw_dims(c)
     draw_header(c, plan)
     return c.svg()
 
 
+def render_bar_sheet(sheet):
+    """三个吧台方案并排放大，每个面板是一个嵌套 <svg>，viewBox 自动裁切。"""
+    vx, vy, vw, vh = (v * SCALE for v in sheet["view"])
+    panel_w, gap, top = 520, 30, 110
+    panel_h = panel_w * vh / vw
+    total_w = 3 * panel_w + 4 * gap
+    total_h = top + panel_h + 30
+    out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {total_w:.0f} {total_h:.0f}" '
+           f'width="{total_w:.0f}" height="{total_h:.0f}">', f'<style>{STYLE}</style>',
+           '<rect class="bg" width="100%" height="100%"/>',
+           f'<text class="title" x="{gap}" y="40">{sheet["title"]}</text>']
+    for i, (name, desc, items) in enumerate(sheet["panels"]):
+        x = gap + i * (panel_w + gap)
+        plan = dict(file=sheet["file"], pencil="applied", zones=[], furniture=items, av=None,
+                    notes=[], labels={"hall": ""})
+        c = Canvas()
+        render_body(c, plan)
+        out.append(f'<text class="panel-title" x="{x}" y="78">{name}</text>')
+        out.append(f'<text class="note" x="{x}" y="98">{desc}</text>')
+        out.append(f'<svg x="{x}" y="{top}" width="{panel_w}" height="{panel_h:.0f}" '
+                   f'viewBox="{vx:.0f} {vy:.0f} {vw:.0f} {vh:.0f}">')
+        out.extend(c.parts)
+        out.append('</svg>')
+        out.append(f'<rect x="{x}" y="{top}" width="{panel_w}" height="{panel_h:.0f}" '
+                   f'fill="none" stroke="#bbb"/>')
+    out.append('</svg>\n')
+    return "\n".join(out)
+
+
 def main():
-    for plan in (BASE, PROPOSED):
+    for plan in (BASE, PLAN_A, PLAN_B):
         path = OUT_DIR / f'{plan["file"]}.svg'
         path.write_text(render(plan), encoding="utf-8")
         print(f"wrote {path}")
+    path = OUT_DIR / f'{BAR_SHEET["file"]}.svg'
+    path.write_text(render_bar_sheet(BAR_SHEET), encoding="utf-8")
+    print(f"wrote {path}")
 
 
 if __name__ == "__main__":

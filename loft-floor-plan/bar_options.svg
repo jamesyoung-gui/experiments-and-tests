@@ -1,0 +1,426 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1680 584" width="1680" height="584">
+<style>
+  .bg{fill:#fbfaf7}
+  .floor{fill:#efe6d6}
+  .annex{fill:#e6e3dc}
+  .balcony{fill:#e3ece4;stroke:#7a8b7c;stroke-width:3}
+  .platform{fill:#eeeeee;stroke:#9a9a9a;stroke-width:1;stroke-dasharray:4 3}
+  .wall{fill:#2b2b2b}
+  .column{fill:#111}
+  .window{fill:#cfe8f6;stroke:#2b6f96;stroke-width:1}
+  .door{fill:none;stroke:#555;stroke-width:1.2}
+  .door-leaf{stroke:#555;stroke-width:2}
+  .tread{stroke:#888;stroke-width:1}
+  .lift{fill:none;stroke:#666;stroke-width:1}
+  .fixture{fill:#fff;stroke:#666;stroke-width:1}
+  .wood{fill:#a87b55;stroke:#5d3d22;stroke-width:1}
+  .desk{fill:#7a5236;stroke:#3e2614;stroke-width:1.5}
+  .soft{fill:#e9d8c4;stroke:#8a7660;stroke-width:1}
+  .sofa{fill:#c9b79c;stroke:#7d6a50;stroke-width:1.5}
+  .dark{fill:#3b3b3b;stroke:#111;stroke-width:1}
+  .leather{fill:#6b4429;stroke:#3b2414;stroke-width:1}
+  .box{fill:#eadcc3;stroke:#8a7660;stroke-width:1}
+  .lamp{fill:#fff3c4;stroke:#b89a2e;stroke-width:1}
+  .plant{fill:#9cc59a;stroke:#4f7d4c;stroke-width:1}
+  .bar{fill:#f5f5f5;stroke:#333;stroke-width:1.5}
+  .fridge{fill:#dfe9ef;stroke:#333;stroke-width:1.5}
+  .counter{fill:#d9d4cc;stroke:#4a4540;stroke-width:2}
+  .stool{fill:#3b3b3b;stroke:#111;stroke-width:1}
+  .cabinet{fill:#fff;stroke:#555;stroke-width:1}
+  .ghost{fill:none;stroke:#8a8a8a;stroke-width:1;stroke-dasharray:3 3}
+  .speaker{fill:#8a5a34;stroke:#2b1a0e;stroke-width:1.5}
+  .tv{fill:#111;stroke:#000}
+  .z-bar{fill:#c8a165;fill-opacity:.12;stroke:#c8a165;stroke-width:1;stroke-dasharray:4 3}
+  .z-rug{fill:#8d96a0;fill-opacity:.18;stroke:#8d96a0;stroke-width:1;stroke-dasharray:4 3}
+  .z-work{fill:#7a5236;fill-opacity:.07;stroke:#7a5236;stroke-width:1;stroke-dasharray:4 3}
+  .sound{fill:none;stroke:#c0392b;stroke-width:1;stroke-dasharray:3 3}
+  .pencil-add{fill:#e67e22;stroke:#e67e22}
+  .pencil-add-line{fill:none;stroke:#e67e22;stroke-width:2.5}
+  .pencil-del{fill:none;stroke:#d62d20;stroke-width:2;stroke-dasharray:5 3}
+  .pencil-x{stroke:#d62d20;stroke-width:2}
+  text{font-family:"PingFang SC","Noto Sans CJK SC","WenQuanYi Zen Hei","Microsoft YaHei",sans-serif;fill:#222}
+  .lbl{font-size:11px;text-anchor:middle;dominant-baseline:central}
+  .lbl-inv{fill:#fff}
+  .room{font-size:13px;font-weight:700;fill:#555;text-anchor:middle;dominant-baseline:central;letter-spacing:1px}
+  .zone-lbl{font-size:12px;font-weight:600;text-anchor:middle;dominant-baseline:central;fill:#5a4a35}
+  .pencil-lbl{font-size:11px;font-weight:600;fill:#c0392b;text-anchor:middle;dominant-baseline:central}
+  .title{font-size:20px;font-weight:700}
+  .panel-title{font-size:15px;font-weight:700}
+  .note-c{font-size:11px;fill:#888;text-anchor:middle;dominant-baseline:central}
+  .note{font-size:11px;fill:#666}
+  .dim{stroke:#777;stroke-width:1;fill:none}
+  .dim-txt{font-size:10px;fill:#555;text-anchor:middle;dominant-baseline:central}
+</style>
+<rect class="bg" width="100%" height="100%"/>
+<text class="title" x="30" y="40">吧台三种做法（都从现有水吧的上下水长出来，北墙过道口留空）</text>
+<text class="panel-title" x="30" y="78">① 靠墙 L 形 + 高脚桌</text>
+<text class="note" x="30" y="98">最随意，像家里厨房；4 人围桌，站着坐着都行</text>
+<svg x="30" y="110" width="520" height="444" viewBox="-18 192 330 282">
+<rect class="platform" x="0.0" y="798.0" width="291.0" height="60.0" rx="0"/>
+<text class="lbl" x="144.0" y="828.0">空调平台</text>
+<polygon class="balcony" points="291.0,858.0 291.0,654.0 618.0,654.0 618.0,330.0 690.0,330.0 690.0,858.0"/>
+<text class="room" x="516.0" y="798.0">L 形阳台（朝南）≈ 29 ㎡</text>
+<rect class="floor" x="12.0" y="228.0" width="276.0" height="552.0" rx="0"/>
+<rect class="floor" x="288.0" y="319.0" width="318.0" height="323.0" rx="0"/>
+<rect class="floor" x="138.0" y="78.0" width="73.8" height="138.0" rx="0"/>
+<rect class="annex" x="12.0" y="12.0" width="126.0" height="204.0" rx="0"/>
+<rect class="annex" x="217.8" y="12.0" width="151.2" height="204.0" rx="0"/>
+<rect class="annex" x="138.0" y="12.0" width="79.8" height="60.0" rx="0"/>
+<rect class="annex" x="288.0" y="228.0" width="87.0" height="85.0" rx="0"/>
+<rect class="annex" x="375.0" y="216.0" width="231.0" height="97.0" rx="0"/>
+<rect class="annex" x="519.0" y="12.0" width="87.0" height="204.0" rx="0"/>
+<rect class="annex" x="379.8" y="12.0" width="139.2" height="78.0" rx="0"/>
+<rect class="annex" x="375.0" y="96.0" width="138.0" height="114.0" rx="0"/>
+<line class="tread" x1="379.8" y1="90.0" x2="379.8" y2="12.0"/>
+<line class="tread" x1="396.6" y1="90.0" x2="396.6" y2="12.0"/>
+<line class="tread" x1="413.4" y1="90.0" x2="413.4" y2="12.0"/>
+<line class="tread" x1="430.2" y1="90.0" x2="430.2" y2="12.0"/>
+<line class="tread" x1="447.0" y1="90.0" x2="447.0" y2="12.0"/>
+<line class="tread" x1="463.8" y1="90.0" x2="463.8" y2="12.0"/>
+<line class="tread" x1="480.6" y1="90.0" x2="480.6" y2="12.0"/>
+<line class="tread" x1="497.4" y1="90.0" x2="497.4" y2="12.0"/>
+<line class="tread" x1="514.2" y1="90.0" x2="514.2" y2="12.0"/>
+<line class="tread" x1="523.8" y1="204.0" x2="597.0" y2="204.0"/>
+<line class="tread" x1="523.8" y1="187.2" x2="597.0" y2="187.2"/>
+<line class="tread" x1="523.8" y1="170.4" x2="597.0" y2="170.4"/>
+<line class="tread" x1="523.8" y1="153.6" x2="597.0" y2="153.6"/>
+<line class="tread" x1="523.8" y1="136.8" x2="597.0" y2="136.8"/>
+<line class="tread" x1="523.8" y1="120.0" x2="597.0" y2="120.0"/>
+<line class="tread" x1="523.8" y1="103.2" x2="597.0" y2="103.2"/>
+<text class="lbl" x="560.4" y="151.2">楼梯 ↓</text>
+<rect class="lift" x="393.0" y="111.0" width="102.0" height="84.0" rx="0"/>
+<line class="lift" x1="393.0" y1="111.0" x2="495.0" y2="195.0"/>
+<line class="lift" x1="393.0" y1="195.0" x2="495.0" y2="111.0"/>
+<text class="room" x="444.0" y="153.0">电梯</text>
+<circle class="fixture" cx="54.0" cy="177.0" r="8.4"/>
+<rect class="fixture" x="105.0" y="144.0" width="30.0" height="60.0" rx="0"/>
+<ellipse class="fixture" cx="120.0" cy="174.0" rx="10.2" ry="18.0"/>
+<rect class="fixture" x="16.8" y="81.0" width="46.2" height="48.0" rx="10"/>
+<ellipse class="fixture" cx="54.0" cy="42.0" rx="21.6" ry="15.6"/>
+<rect class="wall" x="0.0" y="0.0" width="12.0" height="798.0" rx="0"/>
+<rect class="wall" x="0.0" y="780.0" width="291.0" height="18.0" rx="0"/>
+<rect class="wall" x="279.0" y="642.0" width="12.0" height="156.0" rx="0"/>
+<rect class="wall" x="279.0" y="642.0" width="339.0" height="12.0" rx="0"/>
+<rect class="wall" x="606.0" y="0.0" width="12.0" height="654.0" rx="0"/>
+<rect class="wall" x="0.0" y="0.0" width="618.0" height="12.0" rx="0"/>
+<rect class="wall" x="12.0" y="216.0" width="126.0" height="12.0" rx="0"/>
+<rect class="wall" x="138.0" y="129.0" width="10.8" height="99.0" rx="0"/>
+<rect class="wall" x="138.0" y="72.0" width="10.8" height="15.0" rx="0"/>
+<rect class="wall" x="129.0" y="12.0" width="9.0" height="60.0" rx="0"/>
+<rect class="wall" x="12.0" y="135.0" width="126.0" height="3.0" rx="0"/>
+<rect class="wall" x="12.0" y="72.0" width="75.0" height="6.0" rx="0"/>
+<rect class="wall" x="123.0" y="72.0" width="15.0" height="6.0" rx="0"/>
+<rect class="wall" x="138.0" y="72.0" width="7.2" height="6.0" rx="0"/>
+<rect class="wall" x="187.2" y="72.0" width="30.6" height="6.0" rx="0"/>
+<rect class="wall" x="211.8" y="72.0" width="6.0" height="156.0" rx="0"/>
+<rect class="wall" x="211.8" y="216.0" width="163.2" height="12.0" rx="0"/>
+<rect class="wall" x="369.0" y="12.0" width="6.0" height="216.0" rx="0"/>
+<rect class="wall" x="375.0" y="210.0" width="33.0" height="6.0" rx="0"/>
+<rect class="wall" x="462.0" y="210.0" width="57.0" height="6.0" rx="0"/>
+<rect class="wall" x="513.0" y="90.0" width="6.0" height="126.0" rx="0"/>
+<rect class="wall" x="375.0" y="90.0" width="144.0" height="6.0" rx="0"/>
+<rect class="wall" x="291.0" y="313.0" width="315.0" height="6.0" rx="0"/>
+<rect class="column" x="0.0" y="738.0" width="27.0" height="27.0" rx="0"/>
+<rect class="column" x="0.0" y="457.2" width="27.0" height="30.6" rx="0"/>
+<rect class="column" x="0.0" y="201.0" width="27.0" height="27.0" rx="0"/>
+<rect class="column" x="273.0" y="738.0" width="27.0" height="27.0" rx="0"/>
+<rect class="column" x="594.0" y="630.0" width="24.0" height="27.0" rx="0"/>
+<rect class="column" x="594.0" y="457.2" width="24.0" height="30.6" rx="0"/>
+<rect class="column" x="594.0" y="201.0" width="24.0" height="24.0" rx="0"/>
+<rect class="column" x="264.0" y="198.0" width="30.0" height="30.0" rx="0"/>
+<rect class="window" x="2.4" y="489.0" width="7.2" height="186.0" rx="0"/>
+<rect class="window" x="2.4" y="231.0" width="7.2" height="225.0" rx="0"/>
+<rect class="window" x="65.4" y="784.8" width="36.6" height="8.4" rx="0"/>
+<rect class="window" x="138.0" y="784.8" width="34.8" height="8.4" rx="0"/>
+<rect class="window" x="210.0" y="784.8" width="22.8" height="8.4" rx="0"/>
+<rect class="window" x="297.0" y="644.4" width="114.0" height="7.2" rx="0"/>
+<rect class="window" x="498.0" y="644.4" width="96.0" height="7.2" rx="0"/>
+<rect class="window" x="608.4" y="489.0" width="7.2" height="138.0" rx="0"/>
+<rect class="window" x="608.4" y="327.0" width="7.2" height="129.0" rx="0"/>
+<rect class="floor" x="411.0" y="642.0" width="87.0" height="12.0" rx="0"/>
+<line class="door-leaf" x1="411.0" y1="642.0" x2="411.0" y2="598.5"/>
+<path class="door" d="M 411.0 598.5 A 43.5 43.5 0 0 1 454.5 642.0"/>
+<line class="door-leaf" x1="498.0" y1="642.0" x2="498.0" y2="598.5"/>
+<path class="door" d="M 498.0 598.5 A 43.5 43.5 0 0 0 454.5 642.0"/>
+<line class="door-leaf" x1="148.8" y1="87.0" x2="190.8" y2="87.0"/>
+<path class="door" d="M 190.8 87.0 A 42.0 42.0 0 0 1 148.8 129.0"/>
+<line class="door-leaf" x1="87.0" y1="72.0" x2="87.0" y2="36.0"/>
+<path class="door" d="M 87.0 36.0 A 36.0 36.0 0 0 1 123.0 72.0"/>
+<line class="door-leaf" x1="145.2" y1="72.0" x2="145.2" y2="30.0"/>
+<path class="door" d="M 145.2 30.0 A 42.0 42.0 0 0 1 187.2 72.0"/>
+<line class="door-leaf" x1="288.0" y1="228.0" x2="373.0" y2="228.0"/>
+<path class="door" d="M 373.0 228.0 A 85.0 85.0 0 0 1 288.0 313.0"/>
+<rect class="cabinet" x="367.8" y="291.3" width="141.6" height="21.7" rx="0"/>
+<line class="lift" x1="367.8" y1="291.3" x2="509.4" y2="313.0"/>
+<line class="lift" x1="367.8" y1="313.0" x2="509.4" y2="291.3"/>
+<rect class="cabinet" x="12.0" y="678.6" width="25.8" height="57.0" rx="0"/>
+<line class="lift" x1="12.0" y1="678.6" x2="37.8" y2="735.6"/>
+<line class="lift" x1="12.0" y1="735.6" x2="37.8" y2="678.6"/>
+<text class="room" x="108.0" y="99.0">卫生间</text>
+<text class="lbl" x="177.0" y="144.0">过道</text>
+<text class="room" x="294.0" y="114.0">储藏间</text>
+<text class="room" x="330.0" y="267.0">前室</text>
+<text class="lbl" x="438.0" y="302.2">玄关柜</text>
+<rect class="bar" x="12.0" y="228.0" width="123.0" height="39.0" rx="3"/>
+<text class="lbl" x="73.5" y="247.5">咖啡机 · 磨豆机 · 水槽</text>
+<rect class="bar" x="12.0" y="267.0" width="39.0" height="39.0" rx="3"/>
+<text class="lbl" x="31.5" y="286.5" transform="rotate(-90 31.5 286.5)">制冰机</text>
+<rect class="fridge" x="12.0" y="306.0" width="39.0" height="36.0" rx="3"/>
+<text class="lbl" x="31.5" y="324.0" transform="rotate(-90 31.5 324.0)">饮料柜</text>
+<rect class="bar" x="12.0" y="342.0" width="39.0" height="72.0" rx="3"/>
+<text class="lbl" x="31.5" y="378.0" transform="rotate(-90 31.5 378.0)">酒架 · 调酒台</text>
+<rect class="counter" x="114.0" y="324.0" width="108.0" height="48.0" rx="3"/>
+<text class="lbl" x="168.0" y="348.0">高脚桌 1.8 × 0.8</text>
+<circle class="stool" cx="141.0" cy="303.0" r="13.8"/>
+<circle class="stool" cx="195.0" cy="303.0" r="13.8"/>
+<circle class="stool" cx="141.0" cy="393.0" r="13.8"/>
+<circle class="stool" cx="195.0" cy="393.0" r="13.8"/>
+</svg>
+<rect x="30" y="110" width="520" height="444" fill="none" stroke="#bbb"/>
+<text class="panel-title" x="580" y="78">② 后吧台 + L 形前台</text>
+<text class="note" x="580" y="98">人在里面做，客人坐外面，最有酒吧感；5 座</text>
+<svg x="580" y="110" width="520" height="444" viewBox="-18 192 330 282">
+<rect class="platform" x="0.0" y="798.0" width="291.0" height="60.0" rx="0"/>
+<text class="lbl" x="144.0" y="828.0">空调平台</text>
+<polygon class="balcony" points="291.0,858.0 291.0,654.0 618.0,654.0 618.0,330.0 690.0,330.0 690.0,858.0"/>
+<text class="room" x="516.0" y="798.0">L 形阳台（朝南）≈ 29 ㎡</text>
+<rect class="floor" x="12.0" y="228.0" width="276.0" height="552.0" rx="0"/>
+<rect class="floor" x="288.0" y="319.0" width="318.0" height="323.0" rx="0"/>
+<rect class="floor" x="138.0" y="78.0" width="73.8" height="138.0" rx="0"/>
+<rect class="annex" x="12.0" y="12.0" width="126.0" height="204.0" rx="0"/>
+<rect class="annex" x="217.8" y="12.0" width="151.2" height="204.0" rx="0"/>
+<rect class="annex" x="138.0" y="12.0" width="79.8" height="60.0" rx="0"/>
+<rect class="annex" x="288.0" y="228.0" width="87.0" height="85.0" rx="0"/>
+<rect class="annex" x="375.0" y="216.0" width="231.0" height="97.0" rx="0"/>
+<rect class="annex" x="519.0" y="12.0" width="87.0" height="204.0" rx="0"/>
+<rect class="annex" x="379.8" y="12.0" width="139.2" height="78.0" rx="0"/>
+<rect class="annex" x="375.0" y="96.0" width="138.0" height="114.0" rx="0"/>
+<line class="tread" x1="379.8" y1="90.0" x2="379.8" y2="12.0"/>
+<line class="tread" x1="396.6" y1="90.0" x2="396.6" y2="12.0"/>
+<line class="tread" x1="413.4" y1="90.0" x2="413.4" y2="12.0"/>
+<line class="tread" x1="430.2" y1="90.0" x2="430.2" y2="12.0"/>
+<line class="tread" x1="447.0" y1="90.0" x2="447.0" y2="12.0"/>
+<line class="tread" x1="463.8" y1="90.0" x2="463.8" y2="12.0"/>
+<line class="tread" x1="480.6" y1="90.0" x2="480.6" y2="12.0"/>
+<line class="tread" x1="497.4" y1="90.0" x2="497.4" y2="12.0"/>
+<line class="tread" x1="514.2" y1="90.0" x2="514.2" y2="12.0"/>
+<line class="tread" x1="523.8" y1="204.0" x2="597.0" y2="204.0"/>
+<line class="tread" x1="523.8" y1="187.2" x2="597.0" y2="187.2"/>
+<line class="tread" x1="523.8" y1="170.4" x2="597.0" y2="170.4"/>
+<line class="tread" x1="523.8" y1="153.6" x2="597.0" y2="153.6"/>
+<line class="tread" x1="523.8" y1="136.8" x2="597.0" y2="136.8"/>
+<line class="tread" x1="523.8" y1="120.0" x2="597.0" y2="120.0"/>
+<line class="tread" x1="523.8" y1="103.2" x2="597.0" y2="103.2"/>
+<text class="lbl" x="560.4" y="151.2">楼梯 ↓</text>
+<rect class="lift" x="393.0" y="111.0" width="102.0" height="84.0" rx="0"/>
+<line class="lift" x1="393.0" y1="111.0" x2="495.0" y2="195.0"/>
+<line class="lift" x1="393.0" y1="195.0" x2="495.0" y2="111.0"/>
+<text class="room" x="444.0" y="153.0">电梯</text>
+<circle class="fixture" cx="54.0" cy="177.0" r="8.4"/>
+<rect class="fixture" x="105.0" y="144.0" width="30.0" height="60.0" rx="0"/>
+<ellipse class="fixture" cx="120.0" cy="174.0" rx="10.2" ry="18.0"/>
+<rect class="fixture" x="16.8" y="81.0" width="46.2" height="48.0" rx="10"/>
+<ellipse class="fixture" cx="54.0" cy="42.0" rx="21.6" ry="15.6"/>
+<rect class="wall" x="0.0" y="0.0" width="12.0" height="798.0" rx="0"/>
+<rect class="wall" x="0.0" y="780.0" width="291.0" height="18.0" rx="0"/>
+<rect class="wall" x="279.0" y="642.0" width="12.0" height="156.0" rx="0"/>
+<rect class="wall" x="279.0" y="642.0" width="339.0" height="12.0" rx="0"/>
+<rect class="wall" x="606.0" y="0.0" width="12.0" height="654.0" rx="0"/>
+<rect class="wall" x="0.0" y="0.0" width="618.0" height="12.0" rx="0"/>
+<rect class="wall" x="12.0" y="216.0" width="126.0" height="12.0" rx="0"/>
+<rect class="wall" x="138.0" y="129.0" width="10.8" height="99.0" rx="0"/>
+<rect class="wall" x="138.0" y="72.0" width="10.8" height="15.0" rx="0"/>
+<rect class="wall" x="129.0" y="12.0" width="9.0" height="60.0" rx="0"/>
+<rect class="wall" x="12.0" y="135.0" width="126.0" height="3.0" rx="0"/>
+<rect class="wall" x="12.0" y="72.0" width="75.0" height="6.0" rx="0"/>
+<rect class="wall" x="123.0" y="72.0" width="15.0" height="6.0" rx="0"/>
+<rect class="wall" x="138.0" y="72.0" width="7.2" height="6.0" rx="0"/>
+<rect class="wall" x="187.2" y="72.0" width="30.6" height="6.0" rx="0"/>
+<rect class="wall" x="211.8" y="72.0" width="6.0" height="156.0" rx="0"/>
+<rect class="wall" x="211.8" y="216.0" width="163.2" height="12.0" rx="0"/>
+<rect class="wall" x="369.0" y="12.0" width="6.0" height="216.0" rx="0"/>
+<rect class="wall" x="375.0" y="210.0" width="33.0" height="6.0" rx="0"/>
+<rect class="wall" x="462.0" y="210.0" width="57.0" height="6.0" rx="0"/>
+<rect class="wall" x="513.0" y="90.0" width="6.0" height="126.0" rx="0"/>
+<rect class="wall" x="375.0" y="90.0" width="144.0" height="6.0" rx="0"/>
+<rect class="wall" x="291.0" y="313.0" width="315.0" height="6.0" rx="0"/>
+<rect class="column" x="0.0" y="738.0" width="27.0" height="27.0" rx="0"/>
+<rect class="column" x="0.0" y="457.2" width="27.0" height="30.6" rx="0"/>
+<rect class="column" x="0.0" y="201.0" width="27.0" height="27.0" rx="0"/>
+<rect class="column" x="273.0" y="738.0" width="27.0" height="27.0" rx="0"/>
+<rect class="column" x="594.0" y="630.0" width="24.0" height="27.0" rx="0"/>
+<rect class="column" x="594.0" y="457.2" width="24.0" height="30.6" rx="0"/>
+<rect class="column" x="594.0" y="201.0" width="24.0" height="24.0" rx="0"/>
+<rect class="column" x="264.0" y="198.0" width="30.0" height="30.0" rx="0"/>
+<rect class="window" x="2.4" y="489.0" width="7.2" height="186.0" rx="0"/>
+<rect class="window" x="2.4" y="231.0" width="7.2" height="225.0" rx="0"/>
+<rect class="window" x="65.4" y="784.8" width="36.6" height="8.4" rx="0"/>
+<rect class="window" x="138.0" y="784.8" width="34.8" height="8.4" rx="0"/>
+<rect class="window" x="210.0" y="784.8" width="22.8" height="8.4" rx="0"/>
+<rect class="window" x="297.0" y="644.4" width="114.0" height="7.2" rx="0"/>
+<rect class="window" x="498.0" y="644.4" width="96.0" height="7.2" rx="0"/>
+<rect class="window" x="608.4" y="489.0" width="7.2" height="138.0" rx="0"/>
+<rect class="window" x="608.4" y="327.0" width="7.2" height="129.0" rx="0"/>
+<rect class="floor" x="411.0" y="642.0" width="87.0" height="12.0" rx="0"/>
+<line class="door-leaf" x1="411.0" y1="642.0" x2="411.0" y2="598.5"/>
+<path class="door" d="M 411.0 598.5 A 43.5 43.5 0 0 1 454.5 642.0"/>
+<line class="door-leaf" x1="498.0" y1="642.0" x2="498.0" y2="598.5"/>
+<path class="door" d="M 498.0 598.5 A 43.5 43.5 0 0 0 454.5 642.0"/>
+<line class="door-leaf" x1="148.8" y1="87.0" x2="190.8" y2="87.0"/>
+<path class="door" d="M 190.8 87.0 A 42.0 42.0 0 0 1 148.8 129.0"/>
+<line class="door-leaf" x1="87.0" y1="72.0" x2="87.0" y2="36.0"/>
+<path class="door" d="M 87.0 36.0 A 36.0 36.0 0 0 1 123.0 72.0"/>
+<line class="door-leaf" x1="145.2" y1="72.0" x2="145.2" y2="30.0"/>
+<path class="door" d="M 145.2 30.0 A 42.0 42.0 0 0 1 187.2 72.0"/>
+<line class="door-leaf" x1="288.0" y1="228.0" x2="373.0" y2="228.0"/>
+<path class="door" d="M 373.0 228.0 A 85.0 85.0 0 0 1 288.0 313.0"/>
+<rect class="cabinet" x="367.8" y="291.3" width="141.6" height="21.7" rx="0"/>
+<line class="lift" x1="367.8" y1="291.3" x2="509.4" y2="313.0"/>
+<line class="lift" x1="367.8" y1="313.0" x2="509.4" y2="291.3"/>
+<rect class="cabinet" x="12.0" y="678.6" width="25.8" height="57.0" rx="0"/>
+<line class="lift" x1="12.0" y1="678.6" x2="37.8" y2="735.6"/>
+<line class="lift" x1="12.0" y1="735.6" x2="37.8" y2="678.6"/>
+<text class="room" x="108.0" y="99.0">卫生间</text>
+<text class="lbl" x="177.0" y="144.0">过道</text>
+<text class="room" x="294.0" y="114.0">储藏间</text>
+<text class="room" x="330.0" y="267.0">前室</text>
+<text class="lbl" x="438.0" y="302.2">玄关柜</text>
+<rect class="bar" x="12.0" y="228.0" width="87.0" height="36.0" rx="3"/>
+<text class="lbl" x="55.5" y="246.0">咖啡机 · 水槽</text>
+<rect class="fridge" x="99.0" y="228.0" width="36.0" height="36.0" rx="3"/>
+<text class="lbl" x="117.0" y="246.0">饮料柜</text>
+<rect class="counter" x="12.0" y="324.0" width="168.0" height="39.0" rx="3"/>
+<text class="lbl" x="96.0" y="343.5">L 形吧台（石材）</text>
+<rect class="counter" x="141.0" y="294.0" width="39.0" height="30.0" rx="3"/>
+<circle class="stool" cx="39.0" cy="384.0" r="13.8"/>
+<circle class="stool" cx="81.0" cy="384.0" r="13.8"/>
+<circle class="stool" cx="123.0" cy="384.0" r="13.8"/>
+<circle class="stool" cx="201.0" cy="309.0" r="13.8"/>
+<circle class="stool" cx="201.0" cy="348.0" r="13.8"/>
+</svg>
+<rect x="580" y="110" width="520" height="444" fill="none" stroke="#bbb"/>
+<text class="panel-title" x="1130" y="78">③ 平行式</text>
+<text class="note" x="1130" y="98">客人面朝调酒的人和西窗看日落；后台最长，4 座</text>
+<svg x="1130" y="110" width="520" height="444" viewBox="-18 192 330 282">
+<rect class="platform" x="0.0" y="798.0" width="291.0" height="60.0" rx="0"/>
+<text class="lbl" x="144.0" y="828.0">空调平台</text>
+<polygon class="balcony" points="291.0,858.0 291.0,654.0 618.0,654.0 618.0,330.0 690.0,330.0 690.0,858.0"/>
+<text class="room" x="516.0" y="798.0">L 形阳台（朝南）≈ 29 ㎡</text>
+<rect class="floor" x="12.0" y="228.0" width="276.0" height="552.0" rx="0"/>
+<rect class="floor" x="288.0" y="319.0" width="318.0" height="323.0" rx="0"/>
+<rect class="floor" x="138.0" y="78.0" width="73.8" height="138.0" rx="0"/>
+<rect class="annex" x="12.0" y="12.0" width="126.0" height="204.0" rx="0"/>
+<rect class="annex" x="217.8" y="12.0" width="151.2" height="204.0" rx="0"/>
+<rect class="annex" x="138.0" y="12.0" width="79.8" height="60.0" rx="0"/>
+<rect class="annex" x="288.0" y="228.0" width="87.0" height="85.0" rx="0"/>
+<rect class="annex" x="375.0" y="216.0" width="231.0" height="97.0" rx="0"/>
+<rect class="annex" x="519.0" y="12.0" width="87.0" height="204.0" rx="0"/>
+<rect class="annex" x="379.8" y="12.0" width="139.2" height="78.0" rx="0"/>
+<rect class="annex" x="375.0" y="96.0" width="138.0" height="114.0" rx="0"/>
+<line class="tread" x1="379.8" y1="90.0" x2="379.8" y2="12.0"/>
+<line class="tread" x1="396.6" y1="90.0" x2="396.6" y2="12.0"/>
+<line class="tread" x1="413.4" y1="90.0" x2="413.4" y2="12.0"/>
+<line class="tread" x1="430.2" y1="90.0" x2="430.2" y2="12.0"/>
+<line class="tread" x1="447.0" y1="90.0" x2="447.0" y2="12.0"/>
+<line class="tread" x1="463.8" y1="90.0" x2="463.8" y2="12.0"/>
+<line class="tread" x1="480.6" y1="90.0" x2="480.6" y2="12.0"/>
+<line class="tread" x1="497.4" y1="90.0" x2="497.4" y2="12.0"/>
+<line class="tread" x1="514.2" y1="90.0" x2="514.2" y2="12.0"/>
+<line class="tread" x1="523.8" y1="204.0" x2="597.0" y2="204.0"/>
+<line class="tread" x1="523.8" y1="187.2" x2="597.0" y2="187.2"/>
+<line class="tread" x1="523.8" y1="170.4" x2="597.0" y2="170.4"/>
+<line class="tread" x1="523.8" y1="153.6" x2="597.0" y2="153.6"/>
+<line class="tread" x1="523.8" y1="136.8" x2="597.0" y2="136.8"/>
+<line class="tread" x1="523.8" y1="120.0" x2="597.0" y2="120.0"/>
+<line class="tread" x1="523.8" y1="103.2" x2="597.0" y2="103.2"/>
+<text class="lbl" x="560.4" y="151.2">楼梯 ↓</text>
+<rect class="lift" x="393.0" y="111.0" width="102.0" height="84.0" rx="0"/>
+<line class="lift" x1="393.0" y1="111.0" x2="495.0" y2="195.0"/>
+<line class="lift" x1="393.0" y1="195.0" x2="495.0" y2="111.0"/>
+<text class="room" x="444.0" y="153.0">电梯</text>
+<circle class="fixture" cx="54.0" cy="177.0" r="8.4"/>
+<rect class="fixture" x="105.0" y="144.0" width="30.0" height="60.0" rx="0"/>
+<ellipse class="fixture" cx="120.0" cy="174.0" rx="10.2" ry="18.0"/>
+<rect class="fixture" x="16.8" y="81.0" width="46.2" height="48.0" rx="10"/>
+<ellipse class="fixture" cx="54.0" cy="42.0" rx="21.6" ry="15.6"/>
+<rect class="wall" x="0.0" y="0.0" width="12.0" height="798.0" rx="0"/>
+<rect class="wall" x="0.0" y="780.0" width="291.0" height="18.0" rx="0"/>
+<rect class="wall" x="279.0" y="642.0" width="12.0" height="156.0" rx="0"/>
+<rect class="wall" x="279.0" y="642.0" width="339.0" height="12.0" rx="0"/>
+<rect class="wall" x="606.0" y="0.0" width="12.0" height="654.0" rx="0"/>
+<rect class="wall" x="0.0" y="0.0" width="618.0" height="12.0" rx="0"/>
+<rect class="wall" x="12.0" y="216.0" width="126.0" height="12.0" rx="0"/>
+<rect class="wall" x="138.0" y="129.0" width="10.8" height="99.0" rx="0"/>
+<rect class="wall" x="138.0" y="72.0" width="10.8" height="15.0" rx="0"/>
+<rect class="wall" x="129.0" y="12.0" width="9.0" height="60.0" rx="0"/>
+<rect class="wall" x="12.0" y="135.0" width="126.0" height="3.0" rx="0"/>
+<rect class="wall" x="12.0" y="72.0" width="75.0" height="6.0" rx="0"/>
+<rect class="wall" x="123.0" y="72.0" width="15.0" height="6.0" rx="0"/>
+<rect class="wall" x="138.0" y="72.0" width="7.2" height="6.0" rx="0"/>
+<rect class="wall" x="187.2" y="72.0" width="30.6" height="6.0" rx="0"/>
+<rect class="wall" x="211.8" y="72.0" width="6.0" height="156.0" rx="0"/>
+<rect class="wall" x="211.8" y="216.0" width="163.2" height="12.0" rx="0"/>
+<rect class="wall" x="369.0" y="12.0" width="6.0" height="216.0" rx="0"/>
+<rect class="wall" x="375.0" y="210.0" width="33.0" height="6.0" rx="0"/>
+<rect class="wall" x="462.0" y="210.0" width="57.0" height="6.0" rx="0"/>
+<rect class="wall" x="513.0" y="90.0" width="6.0" height="126.0" rx="0"/>
+<rect class="wall" x="375.0" y="90.0" width="144.0" height="6.0" rx="0"/>
+<rect class="wall" x="291.0" y="313.0" width="315.0" height="6.0" rx="0"/>
+<rect class="column" x="0.0" y="738.0" width="27.0" height="27.0" rx="0"/>
+<rect class="column" x="0.0" y="457.2" width="27.0" height="30.6" rx="0"/>
+<rect class="column" x="0.0" y="201.0" width="27.0" height="27.0" rx="0"/>
+<rect class="column" x="273.0" y="738.0" width="27.0" height="27.0" rx="0"/>
+<rect class="column" x="594.0" y="630.0" width="24.0" height="27.0" rx="0"/>
+<rect class="column" x="594.0" y="457.2" width="24.0" height="30.6" rx="0"/>
+<rect class="column" x="594.0" y="201.0" width="24.0" height="24.0" rx="0"/>
+<rect class="column" x="264.0" y="198.0" width="30.0" height="30.0" rx="0"/>
+<rect class="window" x="2.4" y="489.0" width="7.2" height="186.0" rx="0"/>
+<rect class="window" x="2.4" y="231.0" width="7.2" height="225.0" rx="0"/>
+<rect class="window" x="65.4" y="784.8" width="36.6" height="8.4" rx="0"/>
+<rect class="window" x="138.0" y="784.8" width="34.8" height="8.4" rx="0"/>
+<rect class="window" x="210.0" y="784.8" width="22.8" height="8.4" rx="0"/>
+<rect class="window" x="297.0" y="644.4" width="114.0" height="7.2" rx="0"/>
+<rect class="window" x="498.0" y="644.4" width="96.0" height="7.2" rx="0"/>
+<rect class="window" x="608.4" y="489.0" width="7.2" height="138.0" rx="0"/>
+<rect class="window" x="608.4" y="327.0" width="7.2" height="129.0" rx="0"/>
+<rect class="floor" x="411.0" y="642.0" width="87.0" height="12.0" rx="0"/>
+<line class="door-leaf" x1="411.0" y1="642.0" x2="411.0" y2="598.5"/>
+<path class="door" d="M 411.0 598.5 A 43.5 43.5 0 0 1 454.5 642.0"/>
+<line class="door-leaf" x1="498.0" y1="642.0" x2="498.0" y2="598.5"/>
+<path class="door" d="M 498.0 598.5 A 43.5 43.5 0 0 0 454.5 642.0"/>
+<line class="door-leaf" x1="148.8" y1="87.0" x2="190.8" y2="87.0"/>
+<path class="door" d="M 190.8 87.0 A 42.0 42.0 0 0 1 148.8 129.0"/>
+<line class="door-leaf" x1="87.0" y1="72.0" x2="87.0" y2="36.0"/>
+<path class="door" d="M 87.0 36.0 A 36.0 36.0 0 0 1 123.0 72.0"/>
+<line class="door-leaf" x1="145.2" y1="72.0" x2="145.2" y2="30.0"/>
+<path class="door" d="M 145.2 30.0 A 42.0 42.0 0 0 1 187.2 72.0"/>
+<line class="door-leaf" x1="288.0" y1="228.0" x2="373.0" y2="228.0"/>
+<path class="door" d="M 373.0 228.0 A 85.0 85.0 0 0 1 288.0 313.0"/>
+<rect class="cabinet" x="367.8" y="291.3" width="141.6" height="21.7" rx="0"/>
+<line class="lift" x1="367.8" y1="291.3" x2="509.4" y2="313.0"/>
+<line class="lift" x1="367.8" y1="313.0" x2="509.4" y2="291.3"/>
+<rect class="cabinet" x="12.0" y="678.6" width="25.8" height="57.0" rx="0"/>
+<line class="lift" x1="12.0" y1="678.6" x2="37.8" y2="735.6"/>
+<line class="lift" x1="12.0" y1="735.6" x2="37.8" y2="678.6"/>
+<text class="room" x="108.0" y="99.0">卫生间</text>
+<text class="lbl" x="177.0" y="144.0">过道</text>
+<text class="room" x="294.0" y="114.0">储藏间</text>
+<text class="room" x="330.0" y="267.0">前室</text>
+<text class="lbl" x="438.0" y="302.2">玄关柜</text>
+<rect class="bar" x="12.0" y="228.0" width="123.0" height="36.0" rx="3"/>
+<text class="lbl" x="73.5" y="246.0">咖啡机 · 水槽</text>
+<rect class="bar" x="12.0" y="264.0" width="36.0" height="36.0" rx="3"/>
+<text class="lbl" x="30.0" y="282.0" transform="rotate(-90 30.0 282.0)">制冰</text>
+<rect class="fridge" x="12.0" y="300.0" width="36.0" height="36.0" rx="3"/>
+<text class="lbl" x="30.0" y="318.0" transform="rotate(-90 30.0 318.0)">饮料柜</text>
+<rect class="bar" x="12.0" y="336.0" width="36.0" height="84.0" rx="3"/>
+<text class="lbl" x="30.0" y="378.0" transform="rotate(-90 30.0 378.0)">酒架 · 调酒</text>
+<rect class="counter" x="102.0" y="294.0" width="42.0" height="138.0" rx="3"/>
+<text class="lbl" x="123.0" y="363.0" transform="rotate(-90 123.0 363.0)">前台（石材）</text>
+<circle class="stool" cx="165.0" cy="321.0" r="13.8"/>
+<circle class="stool" cx="165.0" cy="363.0" r="13.8"/>
+<circle class="stool" cx="165.0" cy="405.0" r="13.8"/>
+<circle class="stool" cx="123.0" cy="453.0" r="13.8"/>
+</svg>
+<rect x="1130" y="110" width="520" height="444" fill="none" stroke="#bbb"/>
+</svg>
