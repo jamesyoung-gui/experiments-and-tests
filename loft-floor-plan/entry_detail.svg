@@ -36,6 +36,7 @@
   .mirror{fill:#e8f4fa;stroke:#59606a;stroke-width:1}
   .panel{fill:#3a3530;stroke:#1f1b18;stroke-width:1}
   .acoustic{fill:#7d8c6a;stroke:#4f5a40;stroke-width:1}
+  .status{fill:#f0a830;stroke:#a86d10;stroke-width:1.5}
   .cabinet{fill:#fff;stroke:#555;stroke-width:1}
   .ghost{fill:none;stroke:#8a8a8a;stroke-width:1;stroke-dasharray:3 3}
   .speaker{fill:#8a5a34;stroke:#2b1a0e;stroke-width:1.5}
@@ -62,9 +63,9 @@
   .dim-txt{font-size:10px;fill:#555;text-anchor:middle;dominant-baseline:central}
 </style>
 <rect class="bg" width="100%" height="100%"/>
-<text class="title" x="30" y="40">入口：电梯厅 → 入户门 → 玄关（整栋楼自家用，重点是回家的仪式感）</text>
-<text class="panel-title" x="30" y="78">现在：开门见吧台</text>
-<text class="note" x="30" y="98">门一开直接看穿吧台和整个西翼；进门没地方换鞋、挂外套、放钥匙</text>
+<text class="title" x="30" y="40">入口缓冲：鞋柜和玄关在 1 楼，3 楼这扇门是家里面的门（门不动）</text>
+<text class="panel-title" x="30" y="78">现在：楼梯间 → 门 → 直接进吧台</text>
+<text class="note" x="30" y="98">门外是普通楼梯间，门内一步就到吧台，没有任何过渡</text>
 <svg x="30" y="110" width="640" height="299" viewBox="72 138 552 258">
 <rect class="platform" x="0.0" y="798.0" width="291.0" height="60.0" rx="0"/>
 <text class="lbl" x="144.0" y="828.0">空调平台</text>
@@ -212,8 +213,8 @@
 <text class="lbl" x="330.0" y="285.0">（前室）</text>
 </svg>
 <rect x="30" y="110" width="640" height="299" fill="none" stroke="#bbb"/>
-<text class="panel-title" x="700" y="78">改后：楼梯口分界 → 电梯厅 → 门内玄关</text>
-<text class="note" x="700" y="98">出电梯正对挂画和壁灯；门内北墙壁挂凳 + 镜子，正对一组挂衣鞋柜挡住视线，再转进吧台和客厅</text>
+<text class="panel-title" x="700" y="78">改后：安静的电梯厅 → 门槛先压 → 吧台转角亮起来</text>
+<text class="note" x="700" y="98">门外：状态灯、出电梯正对挂画；门内：1 m 门槛区换材质、吊顶压低，视线尽头是吧台转角的吊灯和器物</text>
 <svg x="700" y="110" width="640" height="299" viewBox="72 138 552 258">
 <rect class="platform" x="0.0" y="798.0" width="291.0" height="60.0" rx="0"/>
 <text class="lbl" x="144.0" y="828.0">空调平台</text>
@@ -230,7 +231,7 @@
 <rect class="annex" x="519.0" y="12.0" width="87.0" height="204.0" rx="0"/>
 <rect class="annex" x="379.8" y="12.0" width="139.2" height="78.0" rx="0"/>
 <rect class="annex" x="375.0" y="96.0" width="138.0" height="114.0" rx="0"/>
-<rect class="z-foyer" x="210.0" y="228.0" width="78.0" height="90.0" rx="0"/>
+<rect class="z-foyer" x="228.0" y="228.0" width="60.0" height="85.0" rx="0"/>
 <rect class="z-lobby" x="288.0" y="216.0" width="231.0" height="97.0" rx="0"/>
 <line class="tread" x1="379.8" y1="90.0" x2="379.8" y2="12.0"/>
 <line class="tread" x1="396.6" y1="90.0" x2="396.6" y2="12.0"/>
@@ -338,11 +339,10 @@
 <circle class="wood" cx="132.0" cy="444.0" r="24.0"/>
 <circle class="soft" cx="165.0" cy="426.0" r="13.8"/>
 <circle class="soft" cx="165.0" cy="462.0" r="13.8"/>
-<rect class="soft" x="234.0" y="228.0" width="48.0" height="21.0" rx="3"/>
-<text class="lbl" x="258.0" y="238.5">壁挂凳 · 镜子</text>
-<rect class="wood" x="174.0" y="300.0" width="36.0" height="72.0" rx="3"/>
-<text class="lbl" x="192.0" y="336.0" transform="rotate(-90 192.0 336.0)">挂衣 · 鞋柜</text>
+<rect class="soft" x="234.0" y="228.0" width="48.0" height="9.0" rx="3"/>
+<circle class="lamp" cx="282.0" cy="306.0" r="5.4"/>
 <line class="boundary" x1="519.0" y1="217.2" x2="519.0" y2="312.0"/>
+<circle class="status" cx="303.0" cy="222.0" r="6.6"/>
 <rect class="art" x="367.8" y="298.0" width="141.6" height="15.0" rx="3"/>
 <text class="lbl" x="438.6" y="305.5">悬空矮柜</text>
 <rect class="sofa" x="360.0" y="330.0" width="60.0" height="192.0" rx="3"/>
@@ -359,16 +359,15 @@
 <circle class="plant" cx="570.0" cy="609.0" r="21.0"/>
 <rect class="panel" x="588.0" y="336.0" width="6.0" height="249.0" rx="3"/>
 <rect class="acoustic" x="510.0" y="319.0" width="48.0" height="5.0" rx="3"/>
-<line class="sight" x1="285.0" y1="270.0" x2="210.0" y2="300.0"/>
-<line class="sight" x1="285.0" y1="270.0" x2="210.0" y2="354.0"/>
-<line class="sight" x1="285.0" y1="270.0" x2="150.0" y2="234.0"/>
-<text class="zone-lbl" x="252.0" y="273.0">玄关</text>
-<text class="lbl" x="252.0" y="291.0">落尘区</text>
-<text class="lbl" x="156.0" y="336.0">背面木饰面</text>
-<text class="lbl" x="330.0" y="285.0">（电梯厅）</text>
-<text class="lbl" x="438.0" y="261.0"><tspan x="438.0" dy="-0.6em">悬空矮柜 250 深</tspan><tspan x="438.0" dy="1.2em">上方挂画 + 壁灯</tspan></text>
+<line class="sight" x1="285.0" y1="270.0" x2="36.0" y2="288.0"/>
+<text class="lbl" x="258.0" y="249.0">手机台 · 挂钩</text>
+<text class="zone-lbl" x="258.0" y="273.0">门槛区</text>
+<text class="lbl" x="255.0" y="291.0">换地面 · 吊顶压低</text>
+<text class="note-c" x="258.0" y="327.0">场景面板：日 / 工作 / 夜 / 全关</text>
+<text class="note-c" x="387.0" y="232.2">← 状态灯：琥珀 = 工作中 · 绿 = 吧台开</text>
+<text class="lbl" x="438.0" y="261.0"><tspan x="438.0" dy="-0.6em">悬空矮柜 + 挂画 + 画灯</tspan><tspan x="438.0" dy="1.2em">（出电梯第一眼）</tspan></text>
 <text class="lbl" x="564.0" y="267.0"><tspan x="564.0" dy="-0.6em">楼梯口</tspan><tspan x="564.0" dy="1.2em">地面换材质</tspan></text>
-<text class="lbl" x="444.0" y="177.0">（3F 刷卡）</text>
+<text class="lbl" x="90.0" y="210.0"></text>
 </svg>
 <rect x="700" y="110" width="640" height="299" fill="none" stroke="#bbb"/>
 </svg>

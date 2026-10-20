@@ -144,29 +144,31 @@ BAR_WALL_L = [   # ① 靠墙大 L：北墙咖啡区 + 西墙调酒区，台面�
     dict(c=(2750, 7700, 230), label="", cls="soft"),
 ]
 
-# 玄关：整栋楼是自家的，前室当“自家电梯厅”，门内玄关重点是回家的仪式感和顺手收纳。
-# 北墙一组：壁挂换鞋凳 + 镜子 + 钥匙托；正对门一组单面高柜（挂衣 + 鞋），背面木饰面朝吧台。
+# 入口缓冲：真正的玄关和鞋柜在 1 楼入口，3 楼这扇门是家里面的门，不需要换鞋收纳。
+# 门本身不动。门外安静（一幅画 + 状态灯），门内先压后放（门槛换材质、吊顶压低），
+# 再一下子看到吧台转角那盏吊灯。
 ENTRY = [
-    dict(r=(3900, 3800, 4700, 4150), label="壁挂凳 · 镜子", cls="soft"),
-    dict(r=(2900, 5000, 3500, 6200), label="挂衣 · 鞋柜", cls="wood", rot=True),
+    dict(r=(3900, 3800, 4700, 3950), label="", cls="soft"),   # 150 深薄台面：手机停机坪 + 挂钩
+    dict(c=(4700, 5100, 90), label="", cls="lamp"),            # 门边灯光场景面板
 ]
 ENTRY_NOTES = [
-    (4200, 4550, "玄关", "zone-lbl"),
-    (4200, 4850, "落尘区", "lbl"),
-    (2600, 5600, "背面木饰面", "lbl"),
-    (5500, 4750, "（电梯厅）", "lbl"),
+    (4300, 4150, "手机台 · 挂钩", "lbl"),
+    (4300, 4550, "门槛区", "zone-lbl"),
+    (4250, 4850, "换地面 · 吊顶压低", "lbl"),
+    (4300, 5450, "场景面板：日 / 工作 / 夜 / 全关", "note-c"),
 ]
-# 前室当自家电梯厅：楼梯口换地面材质当分界；玄关柜改 250 深悬空矮柜，上方挂画配壁灯（出电梯正对）；
-# 电梯 3F 刷卡；入户门 1.4 m 门扇扫过的范围什么都不放，加闭门器和地吸。
+# 前室：门外是自家楼梯间，不放鞋柜，只做氛围。
+# 门边一盏状态灯；对着电梯一组 250 深悬空矮柜 + 挂画 + 画灯；楼梯口换地面材质。
 LOBBY = [
     dict(l=(8650, 3620, 8650, 5200), cls="boundary"),
+    dict(c=(5050, 3700, 110), label="", cls="status"),
     dict(r=(6130, 4967, 8490, 5217), label="悬空矮柜", cls="art"),
 ]
 LOBBY_ZONES = [dict(r=(4800, 3600, 8650, 5217), label="", cls="z-lobby")]
 LOBBY_NOTES = [
-    (7300, 4350, "悬空矮柜 250 深\n上方挂画 + 壁灯", "lbl"),
+    (6450, 3870, "← 状态灯：琥珀 = 工作中 · 绿 = 吧台开", "note-c"),
+    (7300, 4350, "悬空矮柜 + 挂画 + 画灯\n（出电梯第一眼）", "lbl"),
     (9400, 4450, "楼梯口\n地面换材质", "lbl"),
-    (7400, 2950, "（3F 刷卡）", "lbl"),
 ]
 BAR_L_COUNTER = [  # ② 后吧台 + L 形前台：人在里面做，客人在外面坐，最有酒吧感
     dict(r=(200, 3800, 1650, 4400), label="咖啡机 · 水槽", cls="bar"),
@@ -236,12 +238,12 @@ WORK_A = [   # 书架单面朝北（对着读书角），和书桌对齐；书�
 
 PLAN_A = dict(
     file="plan_a",
-    title="方案 A · 电梯厅 → 玄关 → 靠墙大 L 吧台 · 东半区客厅 · 西翼 deep work",
-    subtitle="前室当自家电梯厅；门内玄关（壁挂凳 + 挂衣鞋柜）；吧台靠墙大 L；客厅东墙整面影音墙，单人椅在东南角；西窗坐榻；书桌在最里面",
+    title="方案 A · 门槛先压后放 → 靠墙大 L 吧台 · 东半区客厅 · 西翼 deep work",
+    subtitle="门外状态灯 + 出电梯正对挂画，门内门槛区先压后放；吧台靠墙大 L；客厅东墙整面影音墙，单人椅在东南角；西窗坐榻；书桌在最里面",
     pencil="applied",
     zones=[
         dict(r=(200, 3800, 4800, 8300), label="", cls="z-bar"),
-        dict(r=(3500, 3800, 4800, 5300), label="", cls="z-foyer"),
+        dict(r=(3800, 3800, 4800, 5217), label="", cls="z-foyer"),
     ] + LOBBY_ZONES + [
         dict(r=(5500, 5400, 9300, 9800), label="", cls="z-rug"),
         dict(r=(500, 9200, 4500, 12500), label="", cls="z-work"),
@@ -321,18 +323,18 @@ BAR_SHEET = dict(
 DOOR_EYE = (4750, 4500)   # 站在门口往里看
 ENTRY_SHEET = dict(
     file="entry_detail",
-    title="入口：电梯厅 → 入户门 → 玄关（整栋楼自家用，重点是回家的仪式感）",
+    title="入口缓冲：鞋柜和玄关在 1 楼，3 楼这扇门是家里面的门（门不动）",
     view=(1200, 2300, 9200, 4300),
     panel_w=640,
     panels=[
-        ("现在：开门见吧台", "门一开直接看穿吧台和整个西翼；进门没地方换鞋、挂外套、放钥匙",
+        ("现在：楼梯间 → 门 → 直接进吧台", "门外是普通楼梯间，门内一步就到吧台，没有任何过渡",
          BAR_WALL_L + LIVING_A + [dict(l=(*DOOR_EYE, x, y), cls="sight") for x, y in
                                   ((1300, 3900), (1300, 5600), (1300, 7300), (3000, 7500))],
          [(5500, 4750, "（前室）", "lbl")]),
-        ("改后：楼梯口分界 → 电梯厅 → 门内玄关", "出电梯正对挂画和壁灯；门内北墙壁挂凳 + 镜子，正对一组挂衣鞋柜挡住视线，再转进吧台和客厅",
-         BAR_WALL_L + ENTRY + LOBBY + LIVING_A + [dict(l=(*DOOR_EYE, x, y), cls="sight") for x, y in
-                                                  ((3500, 5000), (3500, 5900), (2500, 3900))],
-         ENTRY_NOTES + LOBBY_NOTES, [dict(r=(3500, 3800, 4800, 5300), label="", cls="z-foyer")] + LOBBY_ZONES),
+        ("改后：安静的电梯厅 → 门槛先压 → 吧台转角亮起来", "门外：状态灯、出电梯正对挂画；门内：1 m 门槛区换材质、吊顶压低，视线尽头是吧台转角的吊灯和器物",
+         BAR_WALL_L + ENTRY + LOBBY + LIVING_A + [dict(l=(*DOOR_EYE, 600, 4800), cls="sight")],
+         ENTRY_NOTES + LOBBY_NOTES + [(1500, 3500, "", "lbl")],
+         [dict(r=(3800, 3800, 4800, 5217), label="", cls="z-foyer")] + LOBBY_ZONES),
     ],
 )
 
@@ -374,6 +376,7 @@ STYLE = """
   .mirror{fill:#e8f4fa;stroke:#59606a;stroke-width:1}
   .panel{fill:#3a3530;stroke:#1f1b18;stroke-width:1}
   .acoustic{fill:#7d8c6a;stroke:#4f5a40;stroke-width:1}
+  .status{fill:#f0a830;stroke:#a86d10;stroke-width:1.5}
   .cabinet{fill:#fff;stroke:#555;stroke-width:1}
   .ghost{fill:none;stroke:#8a8a8a;stroke-width:1;stroke-dasharray:3 3}
   .speaker{fill:#8a5a34;stroke:#2b1a0e;stroke-width:1.5}

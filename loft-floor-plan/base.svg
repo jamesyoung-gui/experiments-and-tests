@@ -36,6 +36,7 @@
   .mirror{fill:#e8f4fa;stroke:#59606a;stroke-width:1}
   .panel{fill:#3a3530;stroke:#1f1b18;stroke-width:1}
   .acoustic{fill:#7d8c6a;stroke:#4f5a40;stroke-width:1}
+  .status{fill:#f0a830;stroke:#a86d10;stroke-width:1.5}
   .cabinet{fill:#fff;stroke:#555;stroke-width:1}
   .ghost{fill:none;stroke:#8a8a8a;stroke-width:1;stroke-dasharray:3 3}
   .speaker{fill:#8a5a34;stroke:#2b1a0e;stroke-width:1.5}
