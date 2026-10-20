@@ -133,25 +133,27 @@ BASE = dict(
 # 北墙 X 2300–3530 是去卫生间 / 储藏间的过道口，必须留空。
 BAR_WALL_L = [   # ① 靠墙大 L：北墙咖啡区 + 西墙调酒区，台面约 5 m，不要岛台和吧凳
     dict(r=(200, 3800, 2250, 4450), label="咖啡机 · 磨豆机 · 水槽", cls="bar"),
-    dict(r=(200, 4450, 850, 5150), label="制冰机", cls="bar", rot=True),
+    # 西北转角台面留空，摆一件器物、上方一盏吊灯，正好落在入户门的视线尽头
+    dict(r=(200, 4450, 850, 5150), label="留空台面", cls="bar", rot=True),
     dict(r=(200, 5150, 850, 5800), label="饮料柜", cls="fridge", rot=True),
-    dict(r=(200, 5800, 850, 7600), label="调酒台 · 上方酒架", cls="bar", rot=True),
-    # 两人小圆桌放在调酒台南侧，台前留 ≥ 0.95 m 操作空间
+    dict(r=(200, 5800, 850, 7000), label="调酒台", cls="bar", rot=True),
+    dict(r=(200, 7000, 850, 7600), label="制冰机", cls="bar", rot=True),
+    # 两人小圆桌在调酒台南侧，凳子放东侧面朝吧台和西窗
     dict(c=(2200, 7400, 400), label="", cls="wood"),
-    dict(c=(2200, 6770, 230), label="", cls="soft"),
-    dict(c=(2200, 8030, 230), label="", cls="soft"),
+    dict(c=(2750, 7100, 230), label="", cls="soft"),
+    dict(c=(2750, 7700, 230), label="", cls="soft"),
 ]
 
 # 玄关：整栋楼是自家的，前室当“自家电梯厅”，门内玄关重点是回家的仪式感和顺手收纳。
 # 北墙一组：壁挂换鞋凳 + 镜子 + 钥匙托；正对门一组单面高柜（挂衣 + 鞋），背面木饰面朝吧台。
 ENTRY = [
-    dict(r=(3700, 3800, 4600, 4200), label="壁挂凳 · 镜子", cls="soft"),
-    dict(r=(2900, 4850, 3500, 6050), label="挂衣 · 鞋柜", cls="wood", rot=True),
+    dict(r=(3900, 3800, 4700, 4150), label="壁挂凳 · 镜子", cls="soft"),
+    dict(r=(2900, 5000, 3500, 6200), label="挂衣 · 鞋柜", cls="wood", rot=True),
 ]
 ENTRY_NOTES = [
-    (4150, 4650, "玄关", "zone-lbl"),
-    (4150, 4950, "落尘区", "lbl"),
-    (2600, 5450, "背面木饰面", "lbl"),
+    (4200, 4550, "玄关", "zone-lbl"),
+    (4200, 4850, "落尘区", "lbl"),
+    (2600, 5600, "背面木饰面", "lbl"),
     (5500, 4750, "（电梯厅）", "lbl"),
 ]
 # 前室当自家电梯厅：楼梯口换地面材质当分界；玄关柜改 250 深悬空矮柜，上方挂画配壁灯（出电梯正对）；
@@ -210,14 +212,18 @@ LIVING_A = [   # 大 L 沙发：长边 3.2 m 面朝东墙电视，短边靠前�
     dict(r=(5650, 5800, 5950, 8400), label="背几", cls="wood", rot=True),
     dict(c=(5800, 8650, 180), label="", cls="lamp"),
     dict(r=(7400, 7000, 8600, 8400), label="茶几", cls="wood"),
-    # 东墙 2.5 m 深色电视背景板，封住中间两扇窄窗，电视对准东窗对称轴
-    dict(r=(9800, 6450, 9900, 8950), label="", cls="panel"),
+    # 单人椅回到客厅东南角，斜放朝向沙发和电视（椅背 ≤ 800 mm，不挡南音箱）
+    dict(r=(7700, 8850, 8550, 9700), label="单人椅", cls="leather"),
+    dict(c=(8950, 9200, 200), label="", cls="wood"),
+    dict(c=(9500, 10150, 350), label="", cls="plant"),
+    # 东墙整面影音墙：深色背板 Y5600–9750，中间两扇窗封在板后，外侧两扇在板上留洞（遮光 + 纱双层卷帘）
+    dict(r=(9800, 5600, 9900, 9750), label="", cls="panel"),
+    # 北音箱第一反射点：前室隔墙上贴一块吸声板
+    dict(r=(8500, 5317, 9300, 5400), label="", cls="acoustic"),
 ]
-READING_A = [   # 单人椅挪到西翼中段，靠书架北面和西窗，做读书 / 喝咖啡角
-    dict(r=(400, 8300, 1250, 9100), label="单人椅", cls="leather"),
-    dict(c=(1500, 8500, 200), label="", cls="wood"),
+READING_A = [   # 西翼中段：窗边嵌入坐榻 + 落地灯，书架前和书桌西端都留出通道
+    dict(r=(200, 8350, 700, 9150), label="窗边坐榻", cls="soft", rot=True),
     dict(c=(500, 8050, 180), label="", cls="lamp"),
-    dict(c=(4450, 8800, 420), label="", cls="plant"),
 ]
 WORK_A = [   # 书架单面朝北（对着读书角），和书桌对齐；书桌北移，两头都能进
     dict(r=(900, 9300, 3900, 9650), label="书架（单面朝北）", cls="wood"),
@@ -230,14 +236,14 @@ WORK_A = [   # 书架单面朝北（对着读书角），和书桌对齐；书�
 
 PLAN_A = dict(
     file="plan_a",
-    title="方案 A · 电梯厅 → 玄关 → 靠墙大 L 吧台 · 东半区客厅 · 西翼读书角 + deep work",
-    subtitle="前室当自家电梯厅；门内玄关（壁挂凳 + 挂衣鞋柜）；吧台靠墙大 L；大 L 沙发对电视背景板；单人椅做读书角；书桌在最里面",
+    title="方案 A · 电梯厅 → 玄关 → 靠墙大 L 吧台 · 东半区客厅 · 西翼 deep work",
+    subtitle="前室当自家电梯厅；门内玄关（壁挂凳 + 挂衣鞋柜）；吧台靠墙大 L；客厅东墙整面影音墙，单人椅在东南角；西窗坐榻；书桌在最里面",
     pencil="applied",
     zones=[
         dict(r=(200, 3800, 4800, 8300), label="", cls="z-bar"),
         dict(r=(3500, 3800, 4800, 5300), label="", cls="z-foyer"),
     ] + LOBBY_ZONES + [
-        dict(r=(5500, 5400, 9300, 9500), label="", cls="z-rug"),
+        dict(r=(5500, 5400, 9300, 9800), label="", cls="z-rug"),
         dict(r=(500, 9200, 4500, 12500), label="", cls="z-work"),
     ],
     furniture=BAR_WALL_L + ENTRY + LOBBY + LIVING_A + READING_A + WORK_A + BALCONY_SET,
@@ -245,11 +251,14 @@ PLAN_A = dict(
             speakers=[(9400, 5835, 9750, 6185), (9400, 9190, 9750, 9540)],
             speaker_labels=[(9575, 5600), (9575, 9800)], listeners=[(6500, 7690)]),
     notes=ENTRY_NOTES + LOBBY_NOTES + [
-        (1600, 4800, "吧台 · 靠墙大 L", "zone-lbl"),
+        (1900, 5300, "吧台 · 靠墙大 L", "zone-lbl"),
         (2200, 7400, "小圆桌", "lbl"),
-        (8300, 9200, "客厅 · 看片 / 听歌", "zone-lbl"),
-        (2350, 8800, "读书角", "lbl"),
-        (4450, 8800, "大绿植", "lbl"),
+        (6500, 9300, "客厅 · 看片 / 听歌", "zone-lbl"),
+        (8780, 5950, "吸声板", "lbl"),
+        (10900, 7690, "外侧两窗留洞\n双层卷帘", "note-c"),
+        (7600, 11450, "南面玻璃全宽遮光帘", "note-c"),
+        (2400, 14100, "外机放东端 · 减振 + 隔声屏", "note-c"),
+        (2350, 4750, "← 转角吊灯 + 器物（门的视线尽头）", "note-c"),
         (2400, 11900, "Deep work", "zone-lbl"),
         (2400, 10150, "显示器 32\"", "lbl lbl-inv"),
         (2400, 10550, "Massive 实木大桌 3.0 × 1.2 m", "lbl lbl-inv"),
@@ -364,6 +373,7 @@ STYLE = """
   .sight{stroke:#c0392b;stroke-width:1.5;stroke-dasharray:5 4}
   .mirror{fill:#e8f4fa;stroke:#59606a;stroke-width:1}
   .panel{fill:#3a3530;stroke:#1f1b18;stroke-width:1}
+  .acoustic{fill:#7d8c6a;stroke:#4f5a40;stroke-width:1}
   .cabinet{fill:#fff;stroke:#555;stroke-width:1}
   .ghost{fill:none;stroke:#8a8a8a;stroke-width:1;stroke-dasharray:3 3}
   .speaker{fill:#8a5a34;stroke:#2b1a0e;stroke-width:1.5}

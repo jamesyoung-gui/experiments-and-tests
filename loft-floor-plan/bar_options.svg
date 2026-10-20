@@ -35,6 +35,7 @@
   .sight{stroke:#c0392b;stroke-width:1.5;stroke-dasharray:5 4}
   .mirror{fill:#e8f4fa;stroke:#59606a;stroke-width:1}
   .panel{fill:#3a3530;stroke:#1f1b18;stroke-width:1}
+  .acoustic{fill:#7d8c6a;stroke:#4f5a40;stroke-width:1}
   .cabinet{fill:#fff;stroke:#555;stroke-width:1}
   .ghost{fill:none;stroke:#8a8a8a;stroke-width:1;stroke-dasharray:3 3}
   .speaker{fill:#8a5a34;stroke:#2b1a0e;stroke-width:1.5}
@@ -180,14 +181,16 @@
 <rect class="bar" x="12.0" y="228.0" width="123.0" height="39.0" rx="3"/>
 <text class="lbl" x="73.5" y="247.5">咖啡机 · 磨豆机 · 水槽</text>
 <rect class="bar" x="12.0" y="267.0" width="39.0" height="42.0" rx="3"/>
-<text class="lbl" x="31.5" y="288.0" transform="rotate(-90 31.5 288.0)">制冰机</text>
+<text class="lbl" x="31.5" y="288.0" transform="rotate(-90 31.5 288.0)">留空台面</text>
 <rect class="fridge" x="12.0" y="309.0" width="39.0" height="39.0" rx="3"/>
 <text class="lbl" x="31.5" y="328.5" transform="rotate(-90 31.5 328.5)">饮料柜</text>
-<rect class="bar" x="12.0" y="348.0" width="39.0" height="108.0" rx="3"/>
-<text class="lbl" x="31.5" y="402.0" transform="rotate(-90 31.5 402.0)">调酒台 · 上方酒架</text>
+<rect class="bar" x="12.0" y="348.0" width="39.0" height="72.0" rx="3"/>
+<text class="lbl" x="31.5" y="384.0" transform="rotate(-90 31.5 384.0)">调酒台</text>
+<rect class="bar" x="12.0" y="420.0" width="39.0" height="36.0" rx="3"/>
+<text class="lbl" x="31.5" y="438.0" transform="rotate(-90 31.5 438.0)">制冰机</text>
 <circle class="wood" cx="132.0" cy="444.0" r="24.0"/>
-<circle class="soft" cx="132.0" cy="406.2" r="13.8"/>
-<circle class="soft" cx="132.0" cy="481.8" r="13.8"/>
+<circle class="soft" cx="165.0" cy="426.0" r="13.8"/>
+<circle class="soft" cx="165.0" cy="462.0" r="13.8"/>
 </svg>
 <rect x="30" y="110" width="520" height="444" fill="none" stroke="#bbb"/>
 <text class="panel-title" x="580" y="78">② 后吧台 + L 形前台</text>
