@@ -12,8 +12,8 @@
 
 图纸是横着画的。出图时统一逆时针转 90°，变成上北下南左西右东：
   - 南：L 形大阳台 + 阳台对开门
-  - 西：两段长窗
-  - 东：两扇窗（原佛龛在两窗之间）
+  - 西：五扇窄窗（北三南二）
+  - 东：四扇窄窗，两两一组（原佛龛在两组之间）
   - 北：卫生间、储藏间、前室、电梯、楼梯
 
 坐标：单位毫米。
@@ -89,12 +89,16 @@ DRAWING_COLUMNS = [
 DRAWING_PARTITION_ORIGINAL = [(9083, 6130, 9183, 8950), (9083, 9980, 9183, 10100)]
 DRAWING_PARTITION_PENCIL = [(9083, 4850, 9183, 10100)]
 DRAWING_PENCIL_ADDED_WALLS = [(9083, 4850, 9183, 6130), (9083, 8950, 9183, 9980)]
+# 窄窗（图纸上墙体里画三道线的那几段，约 0.6 m 宽，窗间是实墙）
 DRAWING_WINDOWS = [
-    (3150, 40, 6250, 160), (6800, 40, 10550, 160),           # 西墙两段长窗
-    (1180, 1090, 1320, 1700), (1180, 2300, 1320, 2880), (1180, 3500, 1320, 3880),  # 西翼南窗
-    (3540, 4950, 3660, 6850), (3540, 8300, 3660, 9900),      # 南面落地玻璃
-    (3950, 10140, 6250, 10260), (6800, 10140, 8950, 10260),  # 东墙两扇窗
+    (3900, 40, 4500, 160), (5090, 40, 5660, 160),            # 西墙南段两扇
+    (7240, 40, 7830, 160), (8435, 40, 9020, 160), (9630, 40, 10220, 160),  # 西墙北段三扇（照片里拉百叶的）
+    (1180, 1130, 1320, 1690), (1180, 2340, 1320, 2910), (1180, 3490, 1320, 4060),  # 西翼南端三扇
+    (4740, 10140, 5330, 10260), (5530, 10140, 6125, 10260),  # 东墙两扇（原佛龛南侧）
+    (7300, 10140, 7890, 10260), (8090, 10140, 8685, 10260),  # 东墙两扇（原佛龛北侧）
 ]
+# 朝阳台的落地玻璃（阳台对开门两侧）
+DRAWING_GLASS = [(3540, 4950, 3660, 6850), (3540, 8300, 3660, 9900)]
 # 门：gap 为墙上开洞；leaves 里每扇门是 (合页点, 门扇打开后的端点, 关门时的端点)
 DRAWING_DOORS = [
     dict(gap=(3500, 6850, 3700, 8300), leaves=[((3700, 6850), (4425, 6850), (3700, 7575)),
@@ -149,7 +153,7 @@ BAR_L_COUNTER = [  # ② 后吧台 + L 形前台：人在里面做，客人在�
     dict(c=(3350, 5150, 230), label="", cls="stool"),
     dict(c=(3350, 5800, 230), label="", cls="stool"),
 ]
-BAR_PARALLEL = [   # ③ 平行式：后台 L 靠墙，前台平行西墙，客人面朝调酒的人和西窗（日落）
+BAR_PARALLEL = [   # ③ 平行式：后台 L 靠墙，前台平行西墙，客人面朝调酒的人和西窗
     dict(r=(200, 3800, 2250, 4400), label="咖啡机 · 水槽", cls="bar"),
     dict(r=(200, 4400, 800, 5000), label="制冰", cls="bar", rot=True),
     dict(r=(200, 5000, 800, 5600), label="饮料柜", cls="fridge", rot=True),
@@ -249,7 +253,7 @@ BAR_SHEET = dict(
     panels=[
         ("① 靠墙 L 形 + 高脚桌", "最随意，像家里厨房；4 人围桌，站着坐着都行", BAR_WALL_L),
         ("② 后吧台 + L 形前台", "人在里面做，客人坐外面，最有酒吧感；5 座", BAR_L_COUNTER),
-        ("③ 平行式", "客人面朝调酒的人和西窗看日落；后台最长，4 座", BAR_PARALLEL),
+        ("③ 平行式", "客人面朝调酒的人和西侧窄窗；后台最长，4 座", BAR_PARALLEL),
     ],
 )
 
@@ -262,7 +266,8 @@ STYLE = """
   .platform{fill:#eeeeee;stroke:#9a9a9a;stroke-width:1;stroke-dasharray:4 3}
   .wall{fill:#2b2b2b}
   .column{fill:#111}
-  .window{fill:#cfe8f6;stroke:#2b6f96;stroke-width:1}
+  .window{fill:#cfe8f6;stroke:#2b6f96;stroke-width:1.5}
+  .glass{fill:#a9d6ef;stroke:#2b6f96;stroke-width:1}
   .door{fill:none;stroke:#555;stroke-width:1.2}
   .door-leaf{stroke:#555;stroke-width:2}
   .tread{stroke:#888;stroke-width:1}
@@ -426,6 +431,10 @@ def draw_shell(c, plan):
         c.rect(*rot_rect(col), "column")
     for win in DRAWING_WINDOWS:
         c.rect(*rot_rect(win), "window")
+    for g in DRAWING_GLASS:
+        c.rect(*rot_rect(g), "glass")
+        x0, y0, x1, y1 = rot_rect(g)
+        c.text((x0 + x1) / 2, y1 + 250, "落地玻璃", "note-c")
 
     # 门
     for d in DRAWING_DOORS:

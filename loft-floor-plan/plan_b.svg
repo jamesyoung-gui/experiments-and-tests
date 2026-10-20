@@ -7,7 +7,8 @@
   .platform{fill:#eeeeee;stroke:#9a9a9a;stroke-width:1;stroke-dasharray:4 3}
   .wall{fill:#2b2b2b}
   .column{fill:#111}
-  .window{fill:#cfe8f6;stroke:#2b6f96;stroke-width:1}
+  .window{fill:#cfe8f6;stroke:#2b6f96;stroke-width:1.5}
+  .glass{fill:#a9d6ef;stroke:#2b6f96;stroke-width:1}
   .door{fill:none;stroke:#555;stroke-width:1.2}
   .door-leaf{stroke:#555;stroke-width:2}
   .tread{stroke:#888;stroke-width:1}
@@ -127,15 +128,22 @@
   <rect class="column" x="594.0" y="457.2" width="24.0" height="30.6" rx="0"/>
   <rect class="column" x="594.0" y="201.0" width="24.0" height="24.0" rx="0"/>
   <rect class="column" x="264.0" y="198.0" width="30.0" height="30.0" rx="0"/>
-  <rect class="window" x="2.4" y="489.0" width="7.2" height="186.0" rx="0"/>
-  <rect class="window" x="2.4" y="231.0" width="7.2" height="225.0" rx="0"/>
-  <rect class="window" x="65.4" y="784.8" width="36.6" height="8.4" rx="0"/>
-  <rect class="window" x="138.0" y="784.8" width="34.8" height="8.4" rx="0"/>
-  <rect class="window" x="210.0" y="784.8" width="22.8" height="8.4" rx="0"/>
-  <rect class="window" x="297.0" y="644.4" width="114.0" height="7.2" rx="0"/>
-  <rect class="window" x="498.0" y="644.4" width="96.0" height="7.2" rx="0"/>
-  <rect class="window" x="608.4" y="489.0" width="7.2" height="138.0" rx="0"/>
-  <rect class="window" x="608.4" y="327.0" width="7.2" height="129.0" rx="0"/>
+  <rect class="window" x="2.4" y="594.0" width="7.2" height="36.0" rx="0"/>
+  <rect class="window" x="2.4" y="524.4" width="7.2" height="34.2" rx="0"/>
+  <rect class="window" x="2.4" y="394.2" width="7.2" height="35.4" rx="0"/>
+  <rect class="window" x="2.4" y="322.8" width="7.2" height="35.1" rx="0"/>
+  <rect class="window" x="2.4" y="250.8" width="7.2" height="35.4" rx="0"/>
+  <rect class="window" x="67.8" y="784.8" width="33.6" height="8.4" rx="0"/>
+  <rect class="window" x="140.4" y="784.8" width="34.2" height="8.4" rx="0"/>
+  <rect class="window" x="209.4" y="784.8" width="34.2" height="8.4" rx="0"/>
+  <rect class="window" x="608.4" y="544.2" width="7.2" height="35.4" rx="0"/>
+  <rect class="window" x="608.4" y="496.5" width="7.2" height="35.7" rx="0"/>
+  <rect class="window" x="608.4" y="390.6" width="7.2" height="35.4" rx="0"/>
+  <rect class="window" x="608.4" y="342.9" width="7.2" height="35.7" rx="0"/>
+  <rect class="glass" x="297.0" y="644.4" width="114.0" height="7.2" rx="0"/>
+  <text class="note-c" x="354.0" y="666.6">落地玻璃</text>
+  <rect class="glass" x="498.0" y="644.4" width="96.0" height="7.2" rx="0"/>
+  <text class="note-c" x="546.0" y="666.6">落地玻璃</text>
   <rect class="floor" x="411.0" y="642.0" width="87.0" height="12.0" rx="0"/>
   <line class="door-leaf" x1="411.0" y1="642.0" x2="411.0" y2="598.5"/>
   <path class="door" d="M 411.0 598.5 A 43.5 43.5 0 0 1 454.5 642.0"/>
